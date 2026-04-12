@@ -1,0 +1,81 @@
+/**
+ * PayPal REST API v2 helper — server-side only.
+ * Uses client-credentials OAuth to get an access token.
+ */
+
+const PAYPAL_BASE =
+  process.env.PAYPAL_MODE === "live"
+    ? "https://api-m.paypal.com"
+    : "https://api-m.sandbox.paypal.com";
+
+async function getAccessToken(): Promise<string> {
+  const creds = Buffer.from(
+    `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
+  ).toString("base64");
+
+  const res = await fetch(`${PAYPAL_BASE}/v1/oauth2/token`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${creds}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: "grant_type=client_credentials",
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error(`PayPal auth failed: ${res.status}`);
+  }
+
+  const json = await res.json();
+  return json.access_token as string;
+}
+
+export async function createPayPalOrder(amountCents: number, description: string) {
+  const token = await getAccessToken();
+  const amountUSD = (amountCents / 100).toFixed(2);
+
+  const res = await fetch(`${PAYPAL_BASE}/v2/checkout/orders`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      "PayPal-Request-Id": `order-${Date.now()}`,
+    },
+    body: JSON.stringify({
+      intent: "CAPTURE",
+      purchase_units: [
+        {
+          amount: { currency_code: "USD", value: amountUSD },
+          description,
+        },
+      ],
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`PayPal create order failed: ${err}`);
+  }
+
+  return res.json() as Promise<{ id: string; links: { href: string; rel: string }[] }>;
+}
+
+export async function capturePayPalOrder(orderId: string) {
+  const token = await getAccessToken();
+
+  const res = await fetch(`${PAYPAL_BASE}/v2/checkout/orders/${orderId}/capture`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`PayPal capture failed: ${err}`);
+  }
+
+  return res.json();
+}

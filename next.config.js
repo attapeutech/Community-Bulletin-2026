@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverExternalPackages: ["pg", "bcryptjs"],
   images: {
     remotePatterns: [
       {
@@ -8,12 +9,9 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "assets.yourdomain.com", // replace with your R2 custom domain
+        hostname: "assets.yourdomain.com",
       },
     ],
-  },
-  experimental: {
-    serverComponentsExternalPackages: ["pg", "bcryptjs"],
   },
 };
 

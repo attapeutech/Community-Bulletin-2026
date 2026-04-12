@@ -12,23 +12,23 @@ export default function TwoFactorPage() {
   const [loading, setLoading] = useState(false);
   const [useBackup, setUseBackup] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (code.length < 6) { toast.error("Please enter a valid code."); return; }
-    setLoading(true);
-    try {
-      if (useBackup) {
-        await twoFactor.verifyBackupCode({ code, callbackURL: "/dashboard" });
-      } else {
-        await twoFactor.verifyTotp({ code, callbackURL: "/dashboard" });
-      }
-      router.push("/dashboard");
-    } catch {
-      toast.error("Invalid code. Please try again.");
-    } finally {
-      setLoading(false);
+async function handleSubmit(e: React.FormEvent) {
+  e.preventDefault();
+  if (code.length < 6) { toast.error("Please enter a valid code."); return; }
+  setLoading(true);
+  try {
+    if (useBackup) {
+      await twoFactor.verifyBackupCode({ code });
+    } else {
+      await twoFactor.verifyTotp({ code });
     }
+    router.push("/dashboard");
+  } catch {
+    toast.error("Invalid code. Please try again.");
+  } finally {
+    setLoading(false);
   }
+}
 
   return (
     <AuthLayout>

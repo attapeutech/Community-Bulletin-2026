@@ -12,10 +12,9 @@ const PUBLIC_ROUTES = [
   "/display",
 ];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Always allow public routes, auth API, static files
   if (
     PUBLIC_ROUTES.some((r) => pathname === r || pathname.startsWith(r + "/")) ||
     pathname.startsWith("/api/auth") ||
@@ -26,7 +25,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Lightweight cookie-based check — safe for Edge Runtime
   const sessionCookie = getSessionCookie(request);
 
   if (!sessionCookie) {

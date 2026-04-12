@@ -1,0 +1,19 @@
+{
+  "/(auth)/forgot-password/page": "/forgot-password",
+  "/(auth)/login/page": "/login",
+  "/(auth)/register/page": "/register",
+  "/(auth)/reset-password/page": "/reset-password",
+  "/(auth)/two-factor/page": "/two-factor",
+  "/(auth)/verify-email/page": "/verify-email",
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/api/auth/[...all]/route": "/api/auth/[...all]",
+  "/api/locations/route": "/api/locations",
+  "/api/upload/presign/route": "/api/upload/presign",
+  "/dashboard/admin/page": "/dashboard/admin",
+  "/dashboard/approver/page": "/dashboard/approver",
+  "/dashboard/page": "/dashboard",
+  "/dashboard/store-owner/page": "/dashboard/store-owner",
+  "/dashboard/user/page": "/dashboard/user",
+  "/page": "/"
+}

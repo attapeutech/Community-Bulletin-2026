@@ -11,8 +11,9 @@ export const {
   signOut,
   signUp,
   useSession,
-  forgetPassword,
-  resetPassword,
-  verifyEmail,
   twoFactor,
 } = authClient;
+
+export const forgetPassword = authClient.requestPasswordReset;
+export const resetPassword = authClient.resetPassword;
+export const verifyEmail = authClient.verifyEmail;

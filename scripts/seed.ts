@@ -1,129 +1,97 @@
-import { db } from "../src/lib/db/client";
+import * as dotenv from "dotenv";
+dotenv.config({ path: ".env" });
+dotenv.config({ path: ".env.local" });
+
+console.log("DATABASE_URL loaded:", !!process.env.DATABASE_URL);
+
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
+import { eq } from "drizzle-orm";
 import {
-  countries,
-  states,
-  cities,
-  postalCodes,
-  users,
+  countries, states, cities, postalCodes, users,
 } from "../src/lib/db/schema";
 import { hash } from "bcryptjs";
-import * as dotenv from "dotenv";
-dotenv.config();
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL! });
+const db = drizzle(pool);
 
 async function seed() {
   console.log("🌱 Seeding database...");
 
-  // ─── Countries ───────────────────────────────────────────
   console.log("  → Countries");
-  const [us] = await db
-    .insert(countries)
-    .values({
-      name: "United States",
-      code: "US",
-      phoneCode: "+1",
-      currencyCode: "USD",
-      currencySymbol: "$",
-    })
-    .onConflictDoNothing()
-    .returning();
+  const [us] = await db.insert(countries).values({
+    name: "United States", code: "US",
+    phoneCode: "+1", currencyCode: "USD", currencySymbol: "$",
+  }).onConflictDoNothing().returning();
 
-  const countryId = us?.id;
-  if (!countryId) {
-    console.log("  ✓ Countries already seeded, skipping.");
-  }
+  const existing = await db.select().from(countries).where(eq(countries.code, "US")).limit(1);
+  const usId = us?.id ?? existing[0]?.id;
+  if (!usId) { console.log("❌ No country ID"); process.exit(1); }
 
-  // ─── States (sample — extend with full US list) ──────────
   console.log("  → States");
-  const stateData = [
-    { name: "Washington", code: "WA" },
-    { name: "California", code: "CA" },
-    { name: "New York", code: "NY" },
-    { name: "Texas", code: "TX" },
-    { name: "Florida", code: "FL" },
-    { name: "Illinois", code: "IL" },
-    { name: "Oregon", code: "OR" },
-    { name: "Colorado", code: "CO" },
-  ];
+  await db.insert(states).values([
+    { name: "Washington", code: "WA", countryId: usId },
+    { name: "California", code: "CA", countryId: usId },
+    { name: "New York", code: "NY", countryId: usId },
+    { name: "Texas", code: "TX", countryId: usId },
+    { name: "Florida", code: "FL", countryId: usId },
+    { name: "Illinois", code: "IL", countryId: usId },
+    { name: "Oregon", code: "OR", countryId: usId },
+    { name: "Colorado", code: "CO", countryId: usId },
+  ]).onConflictDoNothing();
 
-  const [waState] = await db
-    .insert(states)
-    .values(
-      stateData.map((s) => ({
-        ...s,
-        countryId: countryId ?? "",
-      }))
-    )
-    .onConflictDoNothing()
-    .returning();
+  const wa = await db.select().from(states).where(eq(states.code, "WA")).limit(1);
+  const waId = wa[0]?.id;
+  if (!waId) { console.log("❌ No WA ID"); process.exit(1); }
 
-  // ─── Cities (sample for WA) ──────────────────────────────
   console.log("  → Cities");
-  const waId = waState?.id;
-  const cityData = waId
-    ? [
-        { stateId: waId, name: "Seattle" },
-        { stateId: waId, name: "Bellevue" },
-        { stateId: waId, name: "Tacoma" },
-        { stateId: waId, name: "Spokane" },
-        { stateId: waId, name: "Bothell" },
-        { stateId: waId, name: "Redmond" },
-        { stateId: waId, name: "Kirkland" },
-      ]
-    : [];
+  await db.insert(cities).values([
+    { stateId: waId, name: "Seattle" },
+    { stateId: waId, name: "Bellevue" },
+    { stateId: waId, name: "Tacoma" },
+    { stateId: waId, name: "Spokane" },
+    { stateId: waId, name: "Redmond" },
+    { stateId: waId, name: "Kirkland" },
+  ]).onConflictDoNothing();
 
-  const [seattleCity] = await db
-    .insert(cities)
-    .values(cityData)
-    .onConflictDoNothing()
-    .returning();
+  const seattle = await db.select().from(cities).where(eq(cities.name, "Seattle")).limit(1);
+  const seattleId = seattle[0]?.id;
+  if (!seattleId) { console.log("❌ No Seattle ID"); process.exit(1); }
 
-  // ─── Postal codes (sample for Seattle) ───────────────────
   console.log("  → Postal codes");
-  const seattleId = seattleCity?.id;
-  const postalData = seattleId && waId
-    ? [
-        { stateId: waId, cityId: seattleId, code: "98101" },
-        { stateId: waId, cityId: seattleId, code: "98102" },
-        { stateId: waId, cityId: seattleId, code: "98103" },
-        { stateId: waId, cityId: seattleId, code: "98104" },
-        { stateId: waId, cityId: seattleId, code: "98105" },
-        { stateId: waId, cityId: seattleId, code: "98109" },
-        { stateId: waId, cityId: seattleId, code: "98115" },
-        { stateId: waId, cityId: seattleId, code: "98121" },
-      ]
-    : [];
+  await db.insert(postalCodes).values([
+    { stateId: waId, cityId: seattleId, code: "98101" },
+    { stateId: waId, cityId: seattleId, code: "98102" },
+    { stateId: waId, cityId: seattleId, code: "98103" },
+    { stateId: waId, cityId: seattleId, code: "98104" },
+    { stateId: waId, cityId: seattleId, code: "98105" },
+    { stateId: waId, cityId: seattleId, code: "98109" },
+    { stateId: waId, cityId: seattleId, code: "98115" },
+    { stateId: waId, cityId: seattleId, code: "98121" },
+  ]).onConflictDoNothing();
 
-  await db.insert(postalCodes).values(postalData).onConflictDoNothing();
-
-  // ─── Seed admin user ─────────────────────────────────────
   console.log("  → Admin user");
-  const passwordHash = await hash("Admin@123!", 12);
-  await db
-    .insert(users)
-    .values({
-      name: "Platform Admin",
-      email: "admin@adboard.com",
-      emailVerified: true,
-      passwordHash,
-      role: "admin",
-    })
-    .onConflictDoNothing();
+  await db.insert(users).values({
+    name: "Platform Admin",
+    email: "admin@communitybulletin.com",
+    emailVerified: true,
+    passwordHash: await hash("Admin@123!", 12),
+    role: "admin",
+  }).onConflictDoNothing();
 
-  // ─── Seed approver user ──────────────────────────────────
   console.log("  → Approver user");
-  const approverHash = await hash("Approver@123!", 12);
-  await db
-    .insert(users)
-    .values({
-      name: "Ad Approver",
-      email: "approver@adboard.com",
-      emailVerified: true,
-      passwordHash: approverHash,
-      role: "approver",
-    })
-    .onConflictDoNothing();
+  await db.insert(users).values({
+    name: "Ad Approver",
+    email: "approver@communitybulletin.com",
+    emailVerified: true,
+    passwordHash: await hash("Approver@123!", 12),
+    role: "approver",
+  }).onConflictDoNothing();
 
-  console.log("✅ Seed complete!");
+  console.log("\n✅ Seed complete!");
+  console.log("   Admin:    admin@communitybulletin.com / Admin@123!");
+  console.log("   Approver: approver@communitybulletin.com / Approver@123!");
+  await pool.end();
   process.exit(0);
 }
 

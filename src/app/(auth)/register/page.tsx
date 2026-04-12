@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AuthLayout } from "@/components/auth/AuthLayout";
-import { signUp } from "@/lib/auth/client";
+import { signIn, signUp } from "@/lib/auth/client";
 import { toast } from "sonner";
 
 export default function RegisterPage() {
@@ -162,7 +162,7 @@ export default function RegisterPage() {
 
       {/* Google */}
       <button
-        onClick={() => signUp.social?.({ provider: "google", callbackURL: "/dashboard" })}
+        onClick={() => signIn.social?.({ provider: "google", callbackURL: "/dashboard" })}
         className="w-full h-10 rounded-lg flex items-center justify-center gap-2 font-medium"
         style={{ background: "#fff", border: "1px solid #D1DDE8", fontSize: 13, color: "#3D5068" }}
       >

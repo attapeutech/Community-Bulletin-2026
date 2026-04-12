@@ -1,19 +1,43 @@
 import { requireApproverOrAdmin } from "@/lib/auth/session";
+import { db } from "@/lib/db/client";
+import { ads, locations, users } from "@/lib/db/schema";
+import { eq, and, desc } from "drizzle-orm";
+import ApproverQueueClient from "./ApproverQueueClient";
 
 export default async function ApproverDashboard() {
   await requireApproverOrAdmin();
 
-  return (
-    <div>
-      <h1 style={{ fontFamily: "Georgia,serif", fontSize: 26, fontWeight: 700, color: "#1A3A5C", marginBottom: 6 }}>
-        Review Ads
-      </h1>
-      <p style={{ color: "#6B8FA8", fontSize: 14, marginBottom: 32 }}>
-        Review and approve or deny submitted ads.
-      </p>
-      <div style={{ background: "#fff", borderRadius: 12, border: "0.5px solid #D8E4EE", padding: 48, textAlign: "center" }}>
-        <p style={{ color: "#6B8FA8", fontSize: 14 }}>Approver dashboard coming in Phase 4.</p>
-      </div>
-    </div>
-  );
+  const pending = await db
+    .select({
+      id: ads.id,
+      title: ads.title,
+      description: ads.description,
+      imageUrl: ads.imageUrl,
+      status: ads.status,
+      paymentStatus: ads.paymentStatus,
+      createdAt: ads.createdAt,
+      user: {
+        id: users.id,
+        name: users.name,
+        email: users.email,
+      },
+      location: {
+        id: locations.id,
+        storeName: locations.storeName,
+        slug: locations.slug,
+        addressLine1: locations.addressLine1,
+      },
+    })
+    .from(ads)
+    .innerJoin(users, eq(ads.userId, users.id))
+    .innerJoin(locations, eq(ads.locationId, locations.id))
+    .where(
+      and(
+        eq(ads.status, "pending"),
+        eq(ads.paymentStatus, "paid")
+      )
+    )
+    .orderBy(desc(ads.createdAt));
+
+  return <ApproverQueueClient initialAds={pending} />;
 }

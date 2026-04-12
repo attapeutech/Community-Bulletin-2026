@@ -1,7 +1,51 @@
-import { createServer } from "http";
+import { createServer, IncomingMessage, ServerResponse } from "http";
 import { Server } from "socket.io";
 
-const httpServer = createServer();
+const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
+  // Internal notification endpoint — called by Next.js API routes
+  if (req.method === "POST" && req.url === "/internal/notify") {
+    let body = "";
+    req.on("data", (chunk) => (body += chunk));
+    req.on("end", () => {
+      try {
+        const payload = JSON.parse(body) as {
+          type: "display" | "dashboard";
+          slug?: string;
+          adId?: string;
+          status?: string;
+          locationSlug?: string;
+        };
+
+        if (payload.type === "display" && payload.slug) {
+          notifyDisplayScreen(payload.slug);
+        } else if (payload.type === "dashboard") {
+          notifyDashboard({
+            adId: payload.adId!,
+            status: payload.status!,
+            locationSlug: payload.locationSlug!,
+          });
+        }
+
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ok: true }));
+      } catch {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ok: false }));
+      }
+    });
+    return;
+  }
+
+  // Health check
+  if (req.method === "GET" && req.url === "/health") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ ok: true }));
+    return;
+  }
+
+  res.writeHead(404);
+  res.end();
+});
 
 export const io = new Server(httpServer, {
   cors: {

@@ -1,3 +1,0 @@
-module.exports=[45083,e=>e.a(async(t,a)=>{try{let t=await e.y("prettier-3c69a91af3bc4731/plugins/html");e.n(t),a()}catch(e){a(e)}},!0),42551,e=>e.a(async(t,a)=>{try{let t=await e.y("prettier-3c69a91af3bc4731/standalone");e.n(t),a()}catch(e){a(e)}},!0),81111,(e,t,a)=>{t.exports=e.x("node:stream",()=>require("node:stream"))},24640,e=>{e.v(t=>Promise.all(["server/chunks/[externals]__0zy2gpu._.js","server/chunks/node_modules_next_dist_compiled_02xlhbw._.js"].map(t=>e.l(t))).then(()=>t(37072)))}];
-
-//# sourceMappingURL=%5Broot-of-the-server%5D__0~5gph7._.js.map

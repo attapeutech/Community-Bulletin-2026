@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import Link from "next/link";
 import { Icon } from "@/components/layout/Icon";
+import { SignOutButton } from "@/components/layout/SignOutButton";
 
 export default async function DashboardLayout({
   children,
@@ -15,11 +16,10 @@ export default async function DashboardLayout({
   const user = session.user as any;
 
   const navItems = [
-    { href: "/dashboard", label: "Overview", roles: ["user", "store_owner", "approver", "admin"] },
-    { href: "/dashboard/user", label: "My Ads", roles: ["user", "store_owner", "approver", "admin"] },
-    { href: "/dashboard/store-owner", label: "My Locations", roles: ["store_owner", "admin"] },
-    { href: "/dashboard/approver", label: "Review Ads", roles: ["approver", "admin"] },
-    { href: "/dashboard/admin", label: "Admin Panel", roles: ["admin"] },
+    { href: "/dashboard/user",        label: "My Ads",        roles: ["user", "store_owner", "approver", "admin"] },
+    { href: "/dashboard/store-owner", label: role === "admin" ? "All Locations" : "My Locations", roles: ["store_owner", "admin"] },
+    { href: "/dashboard/approver",    label: "Review Ads",    roles: ["approver", "admin"] },
+    { href: "/dashboard/admin",       label: "Admin Panel",   roles: ["admin"] },
   ].filter((item) => item.roles.includes(role));
 
   return (
@@ -35,15 +35,19 @@ export default async function DashboardLayout({
         flexShrink: 0,
       }}>
         {/* Logo */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32, paddingLeft: 8 }}>
-          <div style={{ background: "#E8EFF6", borderRadius: 10, padding: 6 }}>
-            <Icon size={28} />
+        <Link href="/dashboard/user" style={{ textDecoration: "none" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32, paddingLeft: 8 }}>
+            <div style={{ background: "#E8EFF6", borderRadius: 10, padding: 6 }}>
+              <Icon size={28} />
+            </div>
+            <div>
+              <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, color: "#fff", fontSize: 13, lineHeight: 1.1 }}>Community</div>
+              <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, color: "#E8563A", fontSize: 13, lineHeight: 1.1 }}>
+                Bulletin<span style={{ color: "#4A90C4", fontSize: 10, fontWeight: 400 }}>.com</span>
+              </div>
+            </div>
           </div>
-          <div>
-            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, color: "#fff", fontSize: 13, lineHeight: 1.1 }}>Community</div>
-            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, color: "#E8563A", fontSize: 13, lineHeight: 1.1 }}>Bulletin<span style={{ color: "#4A90C4", fontSize: 10, fontWeight: 400 }}>.com</span></div>
-          </div>
-        </div>
+        </Link>
 
         {/* Nav */}
         {navItems.map((item) => (
@@ -58,7 +62,6 @@ export default async function DashboardLayout({
               textDecoration: "none",
               fontSize: 14,
               fontWeight: 500,
-              transition: "background 0.15s",
             }}
           >
             {item.label}
@@ -85,19 +88,7 @@ export default async function DashboardLayout({
               {role.replace("_", " ")}
             </div>
           </div>
-          <Link
-            href="/api/auth/sign-out"
-            style={{
-              display: "block",
-              padding: "10px 14px",
-              borderRadius: 8,
-              color: "#9DC4E0",
-              textDecoration: "none",
-              fontSize: 13,
-            }}
-          >
-            Sign out
-          </Link>
+          <SignOutButton />
         </div>
       </aside>
 

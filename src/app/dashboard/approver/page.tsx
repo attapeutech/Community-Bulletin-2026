@@ -39,5 +39,11 @@ export default async function ApproverDashboard() {
     )
     .orderBy(desc(ads.createdAt));
 
-  return <ApproverQueueClient initialAds={pending} />;
+  // Serialize Date objects to ISO strings before crossing the server→client boundary
+  const serialized = pending.map((a) => ({
+    ...a,
+    createdAt: a.createdAt.toISOString(),
+  }));
+
+  return <ApproverQueueClient initialAds={serialized} />;
 }

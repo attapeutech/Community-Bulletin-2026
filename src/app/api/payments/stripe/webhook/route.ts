@@ -11,9 +11,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-12
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 // POST /api/payments/stripe/webhook
-// Disable body parsing — we need raw bytes for signature verification
-export const config = { api: { bodyParser: false } };
-
+// Next.js App Router exposes the raw body via req.arrayBuffer() — no special config needed.
 export async function POST(req: NextRequest) {
   const rawBody = await req.arrayBuffer();
   const buf = Buffer.from(rawBody);

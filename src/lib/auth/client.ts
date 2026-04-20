@@ -13,7 +13,8 @@ const client = authClient as any;
 
 export const { signIn, signOut, signUp, useSession } = authClient;
 
-export const twoFactor     = client.twoFactor;
-export const forgetPassword = client.forgetPassword;
-export const resetPassword  = client.resetPassword;
-export const verifyEmail    = client.verifyEmail;
+export const twoFactor              = client.twoFactor;
+export const forgetPassword          = client.forgetPassword;
+export const resetPassword           = client.resetPassword;
+export const verifyEmail             = client.verifyEmail;
+export const sendVerificationEmail   = client.sendVerificationEmail;

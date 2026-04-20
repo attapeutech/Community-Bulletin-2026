@@ -1,12 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AuthLayout } from "@/components/auth/AuthLayout";
-import { signIn } from "@/lib/auth/client";
+import { signIn, sendVerificationEmail } from "@/lib/auth/client";
 import { toast } from "sonner";
 
 const schema = z.object({
@@ -55,20 +56,41 @@ const GoogleIcon = () => (
 
 export default function LoginPage() {
   const router = useRouter();
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
   async function onSubmit(data: FormData) {
+    setUnverifiedEmail(null);
     try {
       const result = await signIn.email({ email: data.email, password: data.password, callbackURL: "/dashboard" });
       if (result.error) {
-        toast.error(result.error.message ?? "Invalid email or password.");
+        const msg = result.error.message ?? "";
+        if (msg.toLowerCase().includes("email not verified") || msg.toLowerCase().includes("email_not_verified")) {
+          setUnverifiedEmail(data.email);
+          return;
+        }
+        toast.error(msg || "Invalid email or password.");
         return;
       }
       router.push("/dashboard");
     } catch {
       toast.error("Something went wrong. Please try again.");
+    }
+  }
+
+  async function handleResend() {
+    if (!unverifiedEmail) return;
+    setResending(true);
+    try {
+      await sendVerificationEmail({ email: unverifiedEmail, callbackURL: "/dashboard" });
+      toast.success("Verification email sent! Please check your inbox.");
+    } catch {
+      toast.error("Failed to resend. Please try again.");
+    } finally {
+      setResending(false);
     }
   }
 
@@ -90,6 +112,50 @@ export default function LoginPage() {
         <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#4A90C4", flexShrink: 0, display: "inline-block" }} />
         Two-factor authentication is enabled for your security.
       </div>
+
+      {unverifiedEmail && (
+        <div style={{
+          background: "#FFFBEB", border: "1px solid #FCD34D",
+          borderRadius: 8, padding: "12px 14px", marginBottom: 20,
+        }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+              <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                stroke="#D97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: "0 0 6px", fontSize: 13, fontWeight: 600, color: "#92400E" }}>
+                Email not verified
+              </p>
+              <p style={{ margin: "0 0 10px", fontSize: 12, color: "#78350F", lineHeight: 1.5 }}>
+                Please verify your email address before signing in. Check your inbox for a verification link.
+              </p>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={resending}
+                  style={{
+                    fontSize: 12, fontWeight: 600, color: "#92400E",
+                    background: "none", border: "1px solid #D97706",
+                    borderRadius: 6, padding: "4px 10px", cursor: resending ? "not-allowed" : "pointer",
+                    opacity: resending ? 0.6 : 1,
+                  }}
+                >
+                  {resending ? "Sending…" : "Resend verification email"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUnverifiedEmail(null)}
+                  style={{ fontSize: 12, color: "#A8A29E", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: "flex", flexDirection: "column" }}>
         <div style={{ marginBottom: 16 }}>

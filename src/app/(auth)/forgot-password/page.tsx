@@ -1,19 +1,21 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { forgetPassword } from "@/lib/auth/client";
 import { toast } from "sonner";
 
+const schema = z.object({
+  email: z.string().email("Enter a valid email address"),
+});
+type FormData = z.infer<typeof schema>;
+
 const label: React.CSSProperties = {
   display: "block", marginBottom: 6, fontSize: 11, fontWeight: 600,
   color: "#4A5568", textTransform: "uppercase", letterSpacing: "0.04em",
-};
-const input: React.CSSProperties = {
-  width: "100%", height: 40, borderRadius: 8, padding: "0 12px",
-  border: "1px solid #D1DDE8", background: "#F7F9FC", color: "#1A3A5C",
-  fontSize: 14, outline: "none", boxSizing: "border-box",
 };
 const primaryBtn: React.CSSProperties = {
   width: "100%", height: 44, borderRadius: 8, border: "none",
@@ -21,31 +23,32 @@ const primaryBtn: React.CSSProperties = {
 };
 const iconCircle = (bg: string): React.CSSProperties => ({
   width: 56, height: 56, borderRadius: "50%", background: bg,
-  display: "flex", alignItems: "center", justifyContent: "center",
-  margin: "0 auto 16px",
+  display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px",
 });
 
-export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
+function FieldError({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c" }}>{msg}</p>;
+}
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
+export default function ForgotPasswordPage() {
+  const { register, handleSubmit, watch, formState: { errors, isSubmitting, isSubmitSuccessful } } = useForm<FormData>({
+    resolver: zodResolver(schema),
+  });
+
+  const emailValue = watch("email", "");
+
+  async function onSubmit(data: FormData) {
     try {
-      await forgetPassword({ email, redirectTo: "/reset-password" });
-      setSent(true);
+      await forgetPassword({ email: data.email, redirectTo: "/reset-password" });
     } catch {
       toast.error("Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
     }
   }
 
   return (
     <AuthLayout>
-      {sent ? (
+      {isSubmitSuccessful ? (
         <div style={{ textAlign: "center", padding: "16px 0" }}>
           <div style={iconCircle("#EEF6FF")}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -56,17 +59,14 @@ export default function ForgotPasswordPage() {
             Check your email
           </h1>
           <p style={{ fontSize: 13, color: "#6B8FA8", lineHeight: 1.6, margin: "0 0 20px" }}>
-            We sent a password reset link to <strong style={{ color: "#1A3A5C" }}>{email}</strong>.{" "}
+            We sent a password reset link to <strong style={{ color: "#1A3A5C" }}>{emailValue}</strong>.{" "}
             The link expires in 1 hour.
           </p>
           <p style={{ fontSize: 12, color: "#9DC4E0" }}>
             Didn&apos;t receive it?{" "}
-            <button
-              onClick={() => setSent(false)}
-              style={{ color: "#4A90C4", fontWeight: 600, background: "none", border: "none", cursor: "pointer", fontSize: 12 }}
-            >
+            <Link href="/forgot-password" style={{ color: "#4A90C4", fontWeight: 600, textDecoration: "none" }}>
               Try again
-            </button>
+            </Link>
           </p>
         </div>
       ) : (
@@ -78,25 +78,29 @@ export default function ForgotPasswordPage() {
             Enter the email address for your account and we&apos;ll send you a reset link.
           </p>
 
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div>
               <label style={label}>Email address</label>
               <input
                 type="email"
-                required
                 placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={input}
+                {...register("email")}
+                style={{
+                  width: "100%", height: 40, borderRadius: 8, padding: "0 12px",
+                  border: `1px solid ${errors.email ? "#fca5a5" : "#D1DDE8"}`,
+                  background: errors.email ? "#fff5f5" : "#F7F9FC",
+                  color: "#1A3A5C", fontSize: 14, outline: "none", boxSizing: "border-box",
+                }}
               />
+              <FieldError msg={errors.email?.message} />
             </div>
 
             <button
               type="submit"
-              disabled={loading}
-              style={{ ...primaryBtn, opacity: loading ? 0.6 : 1, cursor: loading ? "not-allowed" : "pointer" }}
+              disabled={isSubmitting}
+              style={{ ...primaryBtn, opacity: isSubmitting ? 0.6 : 1, cursor: isSubmitting ? "not-allowed" : "pointer" }}
             >
-              {loading ? "Sending…" : "Send reset link"}
+              {isSubmitting ? "Sending…" : "Send reset link"}
             </button>
           </form>
 

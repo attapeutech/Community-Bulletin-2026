@@ -1,73 +1,48 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { signIn } from "@/lib/auth/client";
 import { toast } from "sonner";
 
+const schema = z.object({
+  email: z.string().email("Enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+type FormData = z.infer<typeof schema>;
+
 const s = {
   label: {
-    display: "block",
-    marginBottom: 6,
-    fontSize: 11,
-    fontWeight: 600,
-    color: "#4A5568",
-    textTransform: "uppercase" as const,
-    letterSpacing: "0.04em",
+    display: "block", marginBottom: 6, fontSize: 11, fontWeight: 600,
+    color: "#4A5568", textTransform: "uppercase" as const, letterSpacing: "0.04em",
   },
-  input: {
-    width: "100%",
-    height: 40,
-    borderRadius: 8,
-    padding: "0 12px",
-    border: "1px solid #D1DDE8",
-    background: "#F7F9FC",
-    color: "#1A3A5C",
-    fontSize: 14,
-    outline: "none",
-    boxSizing: "border-box" as const,
-  },
+  input: (err?: boolean): React.CSSProperties => ({
+    width: "100%", height: 40, borderRadius: 8, padding: "0 12px",
+    border: `1px solid ${err ? "#fca5a5" : "#D1DDE8"}`,
+    background: err ? "#fff5f5" : "#F7F9FC",
+    color: "#1A3A5C", fontSize: 14, outline: "none", boxSizing: "border-box",
+  }),
   primaryBtn: {
-    width: "100%",
-    height: 44,
-    borderRadius: 8,
-    border: "none",
-    background: "#1A3A5C",
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: 600,
-    cursor: "pointer",
+    width: "100%", height: 44, borderRadius: 8, border: "none",
+    background: "#1A3A5C", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer",
   },
-  dividerRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: 12,
-    margin: "16px 0",
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    background: "#E8EDF2",
-    border: "none",
-  },
+  dividerRow: { display: "flex", alignItems: "center", gap: 12, margin: "16px 0" },
+  dividerLine: { flex: 1, height: 1, background: "#E8EDF2", border: "none" },
   googleBtn: {
-    width: "100%",
-    height: 40,
-    borderRadius: 8,
-    border: "1px solid #D1DDE8",
-    background: "#fff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    fontSize: 13,
-    fontWeight: 500,
-    color: "#3D5068",
-    cursor: "pointer",
+    width: "100%", height: 40, borderRadius: 8, border: "1px solid #D1DDE8",
+    background: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+    gap: 8, fontSize: 13, fontWeight: 500, color: "#3D5068", cursor: "pointer",
   },
 } as const;
+
+function FieldError({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c" }}>{msg}</p>;
+}
 
 const GoogleIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
@@ -80,15 +55,13 @@ const GoogleIcon = () => (
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
+    resolver: zodResolver(schema),
+  });
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
+  async function onSubmit(data: FormData) {
     try {
-      const result = await signIn.email({ email, password, callbackURL: "/dashboard" });
+      const result = await signIn.email({ email: data.email, password: data.password, callbackURL: "/dashboard" });
       if (result.error) {
         toast.error(result.error.message ?? "Invalid email or password.");
         return;
@@ -96,8 +69,6 @@ export default function LoginPage() {
       router.push("/dashboard");
     } catch {
       toast.error("Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -110,7 +81,6 @@ export default function LoginPage() {
         Sign in to your CommunityBulletin account
       </p>
 
-      {/* 2FA notice */}
       <div style={{
         display: "flex", alignItems: "center", gap: 8,
         background: "#EEF6FF", border: "1px solid #BED8F0",
@@ -121,32 +91,30 @@ export default function LoginPage() {
         Two-factor authentication is enabled for your security.
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column" }}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: "flex", flexDirection: "column" }}>
         <div style={{ marginBottom: 16 }}>
           <label style={s.label}>Email address</label>
           <input
             type="email"
-            required
             placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={s.input}
+            {...register("email")}
+            style={s.input(!!errors.email)}
           />
+          <FieldError msg={errors.email?.message} />
         </div>
 
         <div style={{ marginBottom: 4 }}>
           <label style={s.label}>Password</label>
           <input
             type="password"
-            required
             placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={s.input}
+            {...register("password")}
+            style={s.input(!!errors.password)}
           />
+          <FieldError msg={errors.password?.message} />
         </div>
 
-        <div style={{ textAlign: "right", marginBottom: 16, marginTop: 4 }}>
+        <div style={{ textAlign: "right", marginBottom: 16, marginTop: 8 }}>
           <Link href="/forgot-password" style={{ fontSize: 12, color: "#4A90C4", textDecoration: "none" }}>
             Forgot password?
           </Link>
@@ -154,10 +122,10 @@ export default function LoginPage() {
 
         <button
           type="submit"
-          disabled={loading}
-          style={{ ...s.primaryBtn, opacity: loading ? 0.6 : 1, cursor: loading ? "not-allowed" : "pointer" }}
+          disabled={isSubmitting}
+          style={{ ...s.primaryBtn, opacity: isSubmitting ? 0.6 : 1, cursor: isSubmitting ? "not-allowed" : "pointer" }}
         >
-          {loading ? "Signing in…" : "Sign in"}
+          {isSubmitting ? "Signing in…" : "Sign in"}
         </button>
       </form>
 

@@ -1,77 +1,54 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { signIn, signUp } from "@/lib/auth/client";
 import { toast } from "sonner";
 
+const schema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  confirm: z.string(),
+}).refine((d) => d.password === d.confirm, {
+  message: "Passwords do not match",
+  path: ["confirm"],
+});
+type FormData = z.infer<typeof schema>;
+
 const s = {
   label: {
-    display: "block",
-    marginBottom: 6,
-    fontSize: 11,
-    fontWeight: 600,
-    color: "#4A5568",
-    textTransform: "uppercase" as const,
-    letterSpacing: "0.04em",
+    display: "block", marginBottom: 6, fontSize: 11, fontWeight: 600,
+    color: "#4A5568", textTransform: "uppercase" as const, letterSpacing: "0.04em",
   },
-  input: {
-    width: "100%",
-    height: 40,
-    borderRadius: 8,
-    padding: "0 12px",
-    border: "1px solid #D1DDE8",
-    background: "#F7F9FC",
-    color: "#1A3A5C",
-    fontSize: 14,
-    outline: "none",
-    boxSizing: "border-box" as const,
-  },
-  field: {
-    marginBottom: 16,
-  },
+  input: (err?: boolean): React.CSSProperties => ({
+    width: "100%", height: 40, borderRadius: 8, padding: "0 12px",
+    border: `1px solid ${err ? "#fca5a5" : "#D1DDE8"}`,
+    background: err ? "#fff5f5" : "#F7F9FC",
+    color: "#1A3A5C", fontSize: 14, outline: "none", boxSizing: "border-box",
+  }),
+  field: { marginBottom: 16 },
   primaryBtn: {
-    width: "100%",
-    height: 44,
-    borderRadius: 8,
-    border: "none",
-    background: "#1A3A5C",
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: 600,
-    cursor: "pointer",
-    marginTop: 4,
+    width: "100%", height: 44, borderRadius: 8, border: "none",
+    background: "#1A3A5C", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", marginTop: 4,
   },
-  dividerRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: 12,
-    margin: "16px 0",
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    background: "#E8EDF2",
-    border: "none",
-  },
+  dividerRow: { display: "flex", alignItems: "center", gap: 12, margin: "16px 0" },
+  dividerLine: { flex: 1, height: 1, background: "#E8EDF2", border: "none" },
   googleBtn: {
-    width: "100%",
-    height: 40,
-    borderRadius: 8,
-    border: "1px solid #D1DDE8",
-    background: "#fff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    fontSize: 13,
-    fontWeight: 500,
-    color: "#3D5068",
-    cursor: "pointer",
+    width: "100%", height: 40, borderRadius: 8, border: "1px solid #D1DDE8",
+    background: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+    gap: 8, fontSize: 13, fontWeight: 500, color: "#3D5068", cursor: "pointer",
   },
 } as const;
+
+function FieldError({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c" }}>{msg}</p>;
+}
 
 const GoogleIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
@@ -84,29 +61,16 @@ const GoogleIcon = () => (
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
-  const [loading, setLoading] = useState(false);
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
+    resolver: zodResolver(schema),
+  });
 
-  function set(field: string, value: string) {
-    setForm((f) => ({ ...f, [field]: value }));
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (form.password !== form.confirm) {
-      toast.error("Passwords do not match.");
-      return;
-    }
-    if (form.password.length < 8) {
-      toast.error("Password must be at least 8 characters.");
-      return;
-    }
-    setLoading(true);
+  async function onSubmit(data: FormData) {
     try {
       const result = await signUp.email({
-        name: form.name,
-        email: form.email,
-        password: form.password,
+        name: data.name,
+        email: data.email,
+        password: data.password,
         callbackURL: "/dashboard",
       });
       if (result.error) {
@@ -117,8 +81,6 @@ export default function RegisterPage() {
       router.push("/login");
     } catch {
       toast.error("Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -131,53 +93,29 @@ export default function RegisterPage() {
         Start advertising in your community today.
       </p>
 
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column" }}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: "flex", flexDirection: "column" }}>
         <div style={s.field}>
           <label style={s.label}>Full name</label>
-          <input
-            type="text"
-            required
-            placeholder="Jane Smith"
-            value={form.name}
-            onChange={(e) => set("name", e.target.value)}
-            style={s.input}
-          />
+          <input type="text" placeholder="Jane Smith" {...register("name")} style={s.input(!!errors.name)} />
+          <FieldError msg={errors.name?.message} />
         </div>
 
         <div style={s.field}>
           <label style={s.label}>Email address</label>
-          <input
-            type="email"
-            required
-            placeholder="you@example.com"
-            value={form.email}
-            onChange={(e) => set("email", e.target.value)}
-            style={s.input}
-          />
+          <input type="email" placeholder="you@example.com" {...register("email")} style={s.input(!!errors.email)} />
+          <FieldError msg={errors.email?.message} />
         </div>
 
         <div style={s.field}>
           <label style={s.label}>Password</label>
-          <input
-            type="password"
-            required
-            placeholder="Min. 8 characters"
-            value={form.password}
-            onChange={(e) => set("password", e.target.value)}
-            style={s.input}
-          />
+          <input type="password" placeholder="Min. 8 characters" {...register("password")} style={s.input(!!errors.password)} />
+          <FieldError msg={errors.password?.message} />
         </div>
 
         <div style={s.field}>
           <label style={s.label}>Confirm password</label>
-          <input
-            type="password"
-            required
-            placeholder="Re-enter password"
-            value={form.confirm}
-            onChange={(e) => set("confirm", e.target.value)}
-            style={s.input}
-          />
+          <input type="password" placeholder="Re-enter password" {...register("confirm")} style={s.input(!!errors.confirm)} />
+          <FieldError msg={errors.confirm?.message} />
         </div>
 
         <p style={{ fontSize: 11, color: "#9DC4E0", margin: "0 0 16px" }}>
@@ -189,10 +127,10 @@ export default function RegisterPage() {
 
         <button
           type="submit"
-          disabled={loading}
-          style={{ ...s.primaryBtn, opacity: loading ? 0.6 : 1, cursor: loading ? "not-allowed" : "pointer" }}
+          disabled={isSubmitting}
+          style={{ ...s.primaryBtn, opacity: isSubmitting ? 0.6 : 1, cursor: isSubmitting ? "not-allowed" : "pointer" }}
         >
-          {loading ? "Creating account…" : "Create account"}
+          {isSubmitting ? "Creating account…" : "Create account"}
         </button>
       </form>
 

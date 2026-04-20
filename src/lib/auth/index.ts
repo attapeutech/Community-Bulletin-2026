@@ -61,6 +61,11 @@ export const auth = betterAuth({
   },
 
   trustedOrigins: [process.env.NEXT_PUBLIC_APP_URL!],
+
+  advanced: {
+    // @ts-expect-error — generateId exists at runtime but missing from v1.6.2 types
+    generateId: () => crypto.randomUUID(),
+  },
 });
 
 export type Auth = typeof auth;

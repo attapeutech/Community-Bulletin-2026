@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { twoFactor } from "better-auth/plugins";
+import { randomUUID } from "node:crypto";
 import { db } from "@/lib/db/client";
 import * as schema from "@/lib/db/schema";
 import { sendVerificationEmail, sendPasswordResetEmail } from "@/lib/email/templates";
@@ -61,6 +62,9 @@ export const auth = betterAuth({
   },
 
   trustedOrigins: [process.env.NEXT_PUBLIC_APP_URL!],
-});
+
+  // Better Auth v1.6.2 defaults to nanoid; force UUID to match the schema's uuid columns
+  ...({ advanced: { generateId: randomUUID } } as object),
+} as Parameters<typeof betterAuth>[0]);
 
 export type Auth = typeof auth;

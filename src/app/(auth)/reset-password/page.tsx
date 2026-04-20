@@ -1,20 +1,27 @@
 "use client";
 
-import { useState, Suspense } from "react";
 import Link from "next/link";
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { resetPassword } from "@/lib/auth/client";
 import { toast } from "sonner";
 
+const schema = z.object({
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  confirm: z.string(),
+}).refine((d) => d.password === d.confirm, {
+  message: "Passwords do not match",
+  path: ["confirm"],
+});
+type FormData = z.infer<typeof schema>;
+
 const label: React.CSSProperties = {
   display: "block", marginBottom: 6, fontSize: 11, fontWeight: 600,
   color: "#4A5568", textTransform: "uppercase", letterSpacing: "0.04em",
-};
-const input: React.CSSProperties = {
-  width: "100%", height: 40, borderRadius: 8, padding: "0 12px",
-  border: "1px solid #D1DDE8", background: "#F7F9FC", color: "#1A3A5C",
-  fontSize: 14, outline: "none", boxSizing: "border-box",
 };
 const primaryBtn: React.CSSProperties = {
   width: "100%", height: 44, borderRadius: 8, border: "none",
@@ -22,36 +29,41 @@ const primaryBtn: React.CSSProperties = {
 };
 const iconCircle = (bg: string): React.CSSProperties => ({
   width: 56, height: 56, borderRadius: "50%", background: bg,
-  display: "flex", alignItems: "center", justifyContent: "center",
-  margin: "0 auto 16px",
+  display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px",
 });
+
+function FieldError({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c" }}>{msg}</p>;
+}
+
+function inputStyle(err?: boolean): React.CSSProperties {
+  return {
+    width: "100%", height: 40, borderRadius: 8, padding: "0 12px",
+    border: `1px solid ${err ? "#fca5a5" : "#D1DDE8"}`,
+    background: err ? "#fff5f5" : "#F7F9FC",
+    color: "#1A3A5C", fontSize: 14, outline: "none", boxSizing: "border-box",
+  };
+}
 
 function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
+  const { register, handleSubmit, formState: { errors, isSubmitting, isSubmitSuccessful } } = useForm<FormData>({
+    resolver: zodResolver(schema),
+  });
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (password !== confirm) { toast.error("Passwords do not match."); return; }
-    if (password.length < 8) { toast.error("Password must be at least 8 characters."); return; }
+  async function onSubmit(data: FormData) {
     if (!token) { toast.error("Invalid or expired reset link."); return; }
-    setLoading(true);
     try {
-      await resetPassword({ newPassword: password, token });
-      setDone(true);
+      await resetPassword({ newPassword: data.password, token });
     } catch {
       toast.error("Reset link is invalid or has expired.");
-    } finally {
-      setLoading(false);
     }
   }
 
-  if (done) {
+  if (isSubmitSuccessful) {
     return (
       <div style={{ textAlign: "center", padding: "16px 0" }}>
         <div style={iconCircle("#EDFBF4")}>
@@ -65,10 +77,7 @@ function ResetPasswordForm() {
         <p style={{ fontSize: 13, color: "#6B8FA8", margin: "0 0 24px" }}>
           Your password has been reset successfully.
         </p>
-        <button
-          onClick={() => router.push("/login")}
-          style={primaryBtn}
-        >
+        <button onClick={() => router.push("/login")} style={primaryBtn}>
           Back to sign in
         </button>
       </div>
@@ -83,21 +92,23 @@ function ResetPasswordForm() {
       <p style={{ fontSize: 13, color: "#6B8FA8", margin: "0 0 24px" }}>
         Choose a strong password for your account.
       </p>
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <div>
           <label style={label}>New password</label>
-          <input type="password" required placeholder="Min. 8 characters" value={password} onChange={(e) => setPassword(e.target.value)} style={input} />
+          <input type="password" placeholder="Min. 8 characters" {...register("password")} style={inputStyle(!!errors.password)} />
+          <FieldError msg={errors.password?.message} />
         </div>
         <div>
           <label style={label}>Confirm password</label>
-          <input type="password" required placeholder="Re-enter password" value={confirm} onChange={(e) => setConfirm(e.target.value)} style={input} />
+          <input type="password" placeholder="Re-enter password" {...register("confirm")} style={inputStyle(!!errors.confirm)} />
+          <FieldError msg={errors.confirm?.message} />
         </div>
         <button
           type="submit"
-          disabled={loading}
-          style={{ ...primaryBtn, opacity: loading ? 0.6 : 1, cursor: loading ? "not-allowed" : "pointer" }}
+          disabled={isSubmitting}
+          style={{ ...primaryBtn, opacity: isSubmitting ? 0.6 : 1, cursor: isSubmitting ? "not-allowed" : "pointer" }}
         >
-          {loading ? "Updating…" : "Update password"}
+          {isSubmitting ? "Updating…" : "Update password"}
         </button>
       </form>
       <p style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "#6B8FA8" }}>

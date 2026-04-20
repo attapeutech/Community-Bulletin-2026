@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 const ACCENT = "#1A3A5C";
 
@@ -12,6 +15,14 @@ const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   expired:   { bg: "#f1f5f9", color: "#475569" },
   cancelled: { bg: "#f1f5f9", color: "#475569" },
 };
+
+const editSchema = z.object({
+  storeName:    z.string().min(2,  "Store name must be at least 2 characters"),
+  displayName:  z.string().optional(),
+  addressLine1: z.string().min(5,  "Enter a full street address"),
+  addressLine2: z.string().optional(),
+});
+type EditFormData = z.infer<typeof editSchema>;
 
 type Ad = {
   id: string; title: string; imageUrl: string; status: string;
@@ -31,6 +42,20 @@ function Badge({ bg, color, label }: { bg: string; color: string; label: string 
   return <span style={{ display: "inline-block", padding: "2px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: bg, color }}>{label}</span>;
 }
 
+function FieldError({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c" }}>{msg}</p>;
+}
+
+function inputStyle(err?: boolean): React.CSSProperties {
+  return {
+    width: "100%", height: 40, borderRadius: 8, padding: "0 12px",
+    border: `1px solid ${err ? "#fca5a5" : "#D1DDE8"}`,
+    background: err ? "#fff5f5" : "#F7F9FC",
+    color: ACCENT, fontSize: 14, outline: "none", boxSizing: "border-box",
+  };
+}
+
 export default function LocationDetailClient({
   location, initialAds, isAdmin,
 }: {
@@ -42,20 +67,27 @@ export default function LocationDetailClient({
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [editMode, setEditMode] = useState(false);
-  const [editForm, setEditForm] = useState({ storeName: location.storeName, displayName: location.displayName ?? "", addressLine1: location.addressLine1, addressLine2: location.addressLine2 ?? "" });
+
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<EditFormData>({
+    resolver: zodResolver(editSchema),
+    defaultValues: {
+      storeName:    location.storeName,
+      displayName:  location.displayName ?? "",
+      addressLine1: location.addressLine1,
+      addressLine2: location.addressLine2 ?? "",
+    },
+  });
 
   function showToast(msg: string, ok: boolean) {
     setToast({ msg, ok });
     setTimeout(() => setToast(null), 3500);
   }
 
-  // Move ad up/down in carousel order
   function moveAd(index: number, dir: -1 | 1) {
     const next = [...adList];
     const swap = index + dir;
     if (swap < 0 || swap >= next.length) return;
     [next[index], next[swap]] = [next[swap], next[index]];
-    // Assign new displayOrder values
     setAdList(next.map((a, i) => ({ ...a, displayOrder: i })));
   }
 
@@ -78,13 +110,12 @@ export default function LocationDetailClient({
     }
   }
 
-  async function saveEdit() {
-    setSaving(true);
+  async function onEditSubmit(data: EditFormData) {
     try {
       const res = await fetch(`/api/locations/${location.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify(data),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
@@ -92,12 +123,17 @@ export default function LocationDetailClient({
       setEditMode(false);
     } catch (e: any) {
       showToast(e.message || "Update failed", false);
-    } finally {
-      setSaving(false);
     }
   }
 
   const approvedAds = adList.filter((a) => a.status === "approved");
+
+  const EDIT_FIELDS: { label: string; field: keyof EditFormData }[] = [
+    { label: "Store name",               field: "storeName" },
+    { label: "Display name (on screen)", field: "displayName" },
+    { label: "Address line 1",           field: "addressLine1" },
+    { label: "Address line 2",           field: "addressLine2" },
+  ];
 
   return (
     <div style={{ maxWidth: 760 }}>
@@ -138,30 +174,26 @@ export default function LocationDetailClient({
       {editMode && (
         <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: 24, marginBottom: 24 }}>
           <h2 style={{ fontFamily: "Georgia,serif", fontSize: 17, color: ACCENT, marginBottom: 16 }}>Edit Location Details</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {[
-              { label: "Store name", field: "storeName" },
-              { label: "Display name (on screen)", field: "displayName" },
-              { label: "Address line 1", field: "addressLine1" },
-              { label: "Address line 2", field: "addressLine2" },
-            ].map(({ label, field }) => (
+          <form onSubmit={handleSubmit(onEditSubmit)} noValidate style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {EDIT_FIELDS.map(({ label, field }) => (
               <div key={field}>
                 <label style={{ display: "block", marginBottom: 6, fontSize: 11, fontWeight: 600, color: "#4A5568", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   {label}
                 </label>
-                <input
-                  value={(editForm as any)[field]}
-                  onChange={e => setEditForm(f => ({ ...f, [field]: e.target.value }))}
-                  style={{ width: "100%", height: 40, borderRadius: 8, padding: "0 12px", border: "1px solid #D1DDE8", background: "#F7F9FC", color: ACCENT, fontSize: 14, outline: "none", boxSizing: "border-box" }}
-                />
+                <input {...register(field)} style={inputStyle(!!errors[field])} />
+                <FieldError msg={errors[field]?.message} />
               </div>
             ))}
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <button onClick={saveEdit} disabled={saving} style={{ padding: "10px 24px", borderRadius: 8, background: "#16a34a", color: "#fff", border: "none", fontSize: 14, fontWeight: 600, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}>
-                {saving ? "Saving…" : "Save Changes"}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                style={{ padding: "10px 24px", borderRadius: 8, background: "#16a34a", color: "#fff", border: "none", fontSize: 14, fontWeight: 600, cursor: isSubmitting ? "not-allowed" : "pointer", opacity: isSubmitting ? 0.7 : 1 }}
+              >
+                {isSubmitting ? "Saving…" : "Save Changes"}
               </button>
             </div>
-          </div>
+          </form>
         </div>
       )}
 
@@ -189,15 +221,11 @@ export default function LocationDetailClient({
           <div>
             {adList.filter(a => a.status === "approved").map((ad, idx, arr) => (
               <div key={ad.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 24px", borderBottom: idx < arr.length - 1 ? "1px solid #D8E4EE" : "none" }}>
-                {/* Order arrows */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   <button onClick={() => moveAd(adList.indexOf(ad), -1)} disabled={idx === 0} style={{ background: "none", border: "1px solid #D8E4EE", borderRadius: 4, width: 24, height: 24, cursor: idx === 0 ? "not-allowed" : "pointer", fontSize: 12, color: idx === 0 ? "#D8E4EE" : ACCENT }}>▲</button>
                   <button onClick={() => moveAd(adList.indexOf(ad), 1)} disabled={idx === arr.length - 1} style={{ background: "none", border: "1px solid #D8E4EE", borderRadius: 4, width: 24, height: 24, cursor: idx === arr.length - 1 ? "not-allowed" : "pointer", fontSize: 12, color: idx === arr.length - 1 ? "#D8E4EE" : ACCENT }}>▼</button>
                 </div>
-
-                {/* Position number */}
                 <div style={{ width: 24, textAlign: "center", fontSize: 12, color: "#9DC4E0", fontWeight: 600 }}>{idx + 1}</div>
-
                 <img src={ad.imageUrl} alt={ad.title} style={{ width: 64, height: 44, objectFit: "cover", borderRadius: 6, flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600, fontSize: 14, color: ACCENT }}>{ad.title}</div>

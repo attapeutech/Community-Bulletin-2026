@@ -84,6 +84,7 @@ export async function send2FACodeEmail({
 }
 
 
+export async function sendAdSubmittedEmail({
   to,
   userName,
   adTitle,

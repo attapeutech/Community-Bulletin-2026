@@ -105,7 +105,10 @@ export default function LoginPage() {
         setFormError(msg || "Incorrect password. Please try again.");
         return;
       }
-      router.push("/dashboard");
+      // Check if this user has 2FA enabled; if so send OTP and redirect
+      const twoFaRes = await fetch("/api/auth/2fa/send", { method: "POST" });
+      const twoFaJson = await twoFaRes.json();
+      router.push(twoFaJson.required ? "/two-factor" : "/dashboard");
     } catch {
       setFormError("Something went wrong. Please try again.");
     }

@@ -6,7 +6,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AuthLayout } from "@/components/auth/AuthLayout";
-import { forgetPassword } from "@/lib/auth/client";
 import { toast } from "sonner";
 
 const schema = z.object({
@@ -42,9 +41,14 @@ export default function ForgotPasswordPage() {
 
   async function onSubmit(data: FormData) {
     try {
-      const result = await forgetPassword({ email: data.email, redirectTo: "/reset-password" });
-      if (result.error) {
-        toast.error(result.error.message ?? "No account found with that email address.");
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: data.email, redirectTo: "/reset-password" }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        toast.error(json.error ?? "No account found with that email address.");
         return;
       }
       setSent(true);

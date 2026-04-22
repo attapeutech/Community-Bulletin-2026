@@ -67,6 +67,17 @@ export default function RegisterPage() {
 
   async function onSubmit(data: FormData) {
     try {
+      const check = await fetch("/api/auth/check-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: data.email }),
+      });
+      const { exists } = await check.json();
+      if (exists) {
+        toast.error("An account with this email already exists. Please sign in instead.");
+        return;
+      }
+
       const result = await signUp.email({
         name: data.name,
         email: data.email,

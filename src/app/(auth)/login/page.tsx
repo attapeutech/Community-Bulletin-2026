@@ -65,6 +65,17 @@ export default function LoginPage() {
   async function onSubmit(data: FormData) {
     setUnverifiedEmail(null);
     try {
+      const check = await fetch("/api/auth/check-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: data.email }),
+      });
+      const { exists } = await check.json();
+      if (!exists) {
+        toast.error("No account found with that email address.");
+        return;
+      }
+
       const result = await signIn.email({ email: data.email, password: data.password, callbackURL: "/dashboard" });
       if (result.error) {
         const msg = result.error.message ?? "";
@@ -72,7 +83,7 @@ export default function LoginPage() {
           setUnverifiedEmail(data.email);
           return;
         }
-        toast.error(msg || "Invalid email or password.");
+        toast.error(msg || "Incorrect password. Please try again.");
         return;
       }
       router.push("/dashboard");

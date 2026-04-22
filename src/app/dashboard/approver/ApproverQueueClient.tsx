@@ -2,9 +2,13 @@
 
 import { useState, useCallback } from "react";
 import { useDashboardSocket } from "@/lib/socket/client";
+import { Check, X } from "lucide-react";
 
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
 
 type Ad = {
   id: string;
@@ -104,9 +108,14 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
     <div>
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-6 right-6 z-[9999] px-5 py-3 rounded-xl text-sm font-medium text-white shadow-lg max-w-[380px] ${toast.ok ? "bg-green-800" : "bg-red-800"}`}>
-          {toast.msg}
-        </div>
+        <Alert
+          className={cn(
+            "fixed top-6 right-6 z-[9999] w-auto max-w-[380px] shadow-lg border-0 text-white",
+            toast.ok ? "bg-green-800" : "bg-red-800"
+          )}
+        >
+          <AlertDescription className="text-white font-medium">{toast.msg}</AlertDescription>
+        </Alert>
       )}
 
       <div className="flex items-center justify-between mb-1.5">
@@ -130,18 +139,19 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
           </CardContent>
         </Card>
       ) : (
-        <div className={`grid gap-6 ${selected ? "grid-cols-2" : "grid-cols-1"}`}>
+        <div className={cn("grid gap-6", selected ? "grid-cols-2" : "grid-cols-1")}>
           {/* Queue list */}
           <div className="flex flex-col gap-3">
             {queue.map((ad) => (
               <button
                 key={ad.id}
                 onClick={() => { setSelected(ad); setMode(null); setReviewNote(""); }}
-                className={`w-full text-left flex gap-3.5 items-start p-4 rounded-xl border cursor-pointer transition-colors
-                  ${selected?.id === ad.id
+                className={cn(
+                  "w-full text-left flex gap-3.5 items-start p-4 rounded-xl border cursor-pointer transition-colors",
+                  selected?.id === ad.id
                     ? "bg-blue-50 border-2 border-[#4A90C4]"
                     : "bg-white border border-[#D8E4EE] hover:border-[#4A90C4]"
-                  }`}
+                )}
               >
                 <img
                   src={ad.imageUrl}
@@ -174,6 +184,8 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
                 <p className="text-[13px] text-[#6B8FA8] mb-3">{selected.description}</p>
               )}
 
+              <Separator className="mb-4" />
+
               <div className="grid gap-1.5 text-xs mb-5">
                 <div><span className="text-[#9DC4E0]">Location: </span>{selected.location.storeName}</div>
                 <div><span className="text-[#9DC4E0]">Address: </span>{selected.location.addressLine1}</div>
@@ -200,13 +212,15 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
                     className="flex-1 bg-green-600 hover:bg-green-700 text-white h-10 text-sm font-semibold"
                     onClick={() => setMode("approve")}
                   >
-                    ✓ Approve
+                    <Check className="w-4 h-4 mr-1.5" />
+                    Approve
                   </Button>
                   <Button
                     className="flex-1 bg-red-600 hover:bg-red-700 text-white h-10 text-sm font-semibold"
                     onClick={() => setMode("deny")}
                   >
-                    ✕ Deny
+                    <X className="w-4 h-4 mr-1.5" />
+                    Deny
                   </Button>
                 </div>
               )}

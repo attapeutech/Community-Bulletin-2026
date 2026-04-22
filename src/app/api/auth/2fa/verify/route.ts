@@ -31,13 +31,8 @@ export async function POST(req: NextRequest) {
   // Mark this session as 2FA-verified (expires with the session — 7 days)
   const sessionToken = (session as any).session?.token as string;
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-  await db
-    .insert(verifications)
-    .values({ identifier: `2fa_ok:${sessionToken}`, value: userId, expiresAt })
-    .onConflictDoUpdate({
-      target: verifications.identifier,
-      set: { value: userId, expiresAt, updatedAt: new Date() },
-    });
+  await db.delete(verifications).where(eq(verifications.identifier, `2fa_ok:${sessionToken}`));
+  await db.insert(verifications).values({ identifier: `2fa_ok:${sessionToken}`, value: userId, expiresAt });
 
   return NextResponse.json({ ok: true });
 }

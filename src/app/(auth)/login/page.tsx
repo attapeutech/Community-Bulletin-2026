@@ -45,6 +45,23 @@ function FieldError({ msg }: { msg?: string }) {
   return <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c" }}>{msg}</p>;
 }
 
+function FormError({ msg }: { msg: string | null }) {
+  if (!msg) return null;
+  return (
+    <div style={{
+      background: "#FEF2F2", border: "1px solid #fca5a5", borderRadius: 8,
+      padding: "10px 14px", marginBottom: 16,
+      display: "flex", gap: 8, alignItems: "flex-start",
+    }}>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+        <circle cx="12" cy="12" r="10" stroke="#b91c1c" strokeWidth="1.5"/>
+        <path d="M12 8v4m0 4h.01" stroke="#b91c1c" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+      <span style={{ fontSize: 13, color: "#b91c1c" }}>{msg}</span>
+    </div>
+  );
+}
+
 const GoogleIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -56,6 +73,7 @@ const GoogleIcon = () => (
 
 export default function LoginPage() {
   const router = useRouter();
+  const [formError, setFormError] = useState<string | null>(null);
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
@@ -63,6 +81,7 @@ export default function LoginPage() {
   });
 
   async function onSubmit(data: FormData) {
+    setFormError(null);
     setUnverifiedEmail(null);
     try {
       const check = await fetch("/api/auth/check-email", {
@@ -72,7 +91,7 @@ export default function LoginPage() {
       });
       const { exists } = await check.json();
       if (!exists) {
-        toast.error("No account found with that email address.");
+        setFormError("No account found with that email address.");
         return;
       }
 
@@ -83,12 +102,12 @@ export default function LoginPage() {
           setUnverifiedEmail(data.email);
           return;
         }
-        toast.error(msg || "Incorrect password. Please try again.");
+        setFormError(msg || "Incorrect password. Please try again.");
         return;
       }
       router.push("/dashboard");
     } catch {
-      toast.error("Something went wrong. Please try again.");
+      setFormError("Something went wrong. Please try again.");
     }
   }
 
@@ -99,7 +118,7 @@ export default function LoginPage() {
       await sendVerificationEmail({ email: unverifiedEmail, callbackURL: "/dashboard" });
       toast.success("Verification email sent! Please check your inbox.");
     } catch {
-      toast.error("Failed to resend. Please try again.");
+      setFormError("Failed to resend verification email. Please try again.");
     } finally {
       setResending(false);
     }
@@ -196,6 +215,8 @@ export default function LoginPage() {
             Forgot password?
           </Link>
         </div>
+
+        <FormError msg={formError} />
 
         <button
           type="submit"

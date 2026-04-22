@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -50,6 +51,23 @@ function FieldError({ msg }: { msg?: string }) {
   return <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c" }}>{msg}</p>;
 }
 
+function FormError({ msg }: { msg: string | null }) {
+  if (!msg) return null;
+  return (
+    <div style={{
+      background: "#FEF2F2", border: "1px solid #fca5a5", borderRadius: 8,
+      padding: "10px 14px", marginBottom: 16,
+      display: "flex", gap: 8, alignItems: "flex-start",
+    }}>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+        <circle cx="12" cy="12" r="10" stroke="#b91c1c" strokeWidth="1.5"/>
+        <path d="M12 8v4m0 4h.01" stroke="#b91c1c" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+      <span style={{ fontSize: 13, color: "#b91c1c" }}>{msg}</span>
+    </div>
+  );
+}
+
 const GoogleIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -61,11 +79,13 @@ const GoogleIcon = () => (
 
 export default function RegisterPage() {
   const router = useRouter();
+  const [formError, setFormError] = useState<string | null>(null);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
   async function onSubmit(data: FormData) {
+    setFormError(null);
     try {
       const check = await fetch("/api/auth/check-email", {
         method: "POST",
@@ -74,7 +94,7 @@ export default function RegisterPage() {
       });
       const { exists } = await check.json();
       if (exists) {
-        toast.error("An account with this email already exists. Please sign in instead.");
+        setFormError("An account with this email already exists. Please sign in instead.");
         return;
       }
 
@@ -85,13 +105,13 @@ export default function RegisterPage() {
         callbackURL: "/dashboard",
       });
       if (result.error) {
-        toast.error(result.error.message ?? "Registration failed.");
+        setFormError(result.error.message ?? "Registration failed. Please try again.");
         return;
       }
       toast.success("Account created! Please check your email to verify your account.");
       router.push("/login");
     } catch {
-      toast.error("Something went wrong. Please try again.");
+      setFormError("Something went wrong. Please try again.");
     }
   }
 
@@ -135,6 +155,8 @@ export default function RegisterPage() {
           {" "}and{" "}
           <Link href="/privacy" style={{ color: "#4A90C4", textDecoration: "none" }}>Privacy Policy</Link>.
         </p>
+
+        <FormError msg={formError} />
 
         <button
           type="submit"

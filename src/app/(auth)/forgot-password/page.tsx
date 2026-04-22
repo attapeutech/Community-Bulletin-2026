@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,7 +33,8 @@ function FieldError({ msg }: { msg?: string }) {
 }
 
 export default function ForgotPasswordPage() {
-  const { register, handleSubmit, watch, formState: { errors, isSubmitting, isSubmitSuccessful } } = useForm<FormData>({
+  const [sent, setSent] = useState(false);
+  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
@@ -40,7 +42,12 @@ export default function ForgotPasswordPage() {
 
   async function onSubmit(data: FormData) {
     try {
-      await forgetPassword({ email: data.email, redirectTo: "/reset-password" });
+      const result = await forgetPassword({ email: data.email, redirectTo: "/reset-password" });
+      if (result.error) {
+        toast.error(result.error.message ?? "No account found with that email address.");
+        return;
+      }
+      setSent(true);
     } catch {
       toast.error("Something went wrong. Please try again.");
     }
@@ -48,7 +55,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <AuthLayout>
-      {isSubmitSuccessful ? (
+      {sent ? (
         <div style={{ textAlign: "center", padding: "16px 0" }}>
           <div style={iconCircle("#EEF6FF")}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">

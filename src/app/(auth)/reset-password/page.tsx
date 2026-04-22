@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -8,7 +9,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { resetPassword } from "@/lib/auth/client";
-import { toast } from "sonner";
 
 const schema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
@@ -37,6 +37,23 @@ function FieldError({ msg }: { msg?: string }) {
   return <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c" }}>{msg}</p>;
 }
 
+function FormError({ msg }: { msg: string | null }) {
+  if (!msg) return null;
+  return (
+    <div style={{
+      background: "#FEF2F2", border: "1px solid #fca5a5", borderRadius: 8,
+      padding: "10px 14px", marginBottom: 16,
+      display: "flex", gap: 8, alignItems: "flex-start",
+    }}>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+        <circle cx="12" cy="12" r="10" stroke="#b91c1c" strokeWidth="1.5"/>
+        <path d="M12 8v4m0 4h.01" stroke="#b91c1c" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+      <span style={{ fontSize: 13, color: "#b91c1c" }}>{msg}</span>
+    </div>
+  );
+}
+
 function inputStyle(err?: boolean): React.CSSProperties {
   return {
     width: "100%", height: 40, borderRadius: 8, padding: "0 12px",
@@ -50,20 +67,31 @@ function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
-  const { register, handleSubmit, formState: { errors, isSubmitting, isSubmitSuccessful } } = useForm<FormData>({
+  const [done, setDone] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
   async function onSubmit(data: FormData) {
-    if (!token) { toast.error("Invalid or expired reset link."); return; }
+    setFormError(null);
+    if (!token) {
+      setFormError("Invalid or expired reset link. Please request a new one.");
+      return;
+    }
     try {
-      await resetPassword({ newPassword: data.password, token });
+      const result = await resetPassword({ newPassword: data.password, token });
+      if (result.error) {
+        setFormError(result.error.message ?? "Reset link is invalid or has expired.");
+        return;
+      }
+      setDone(true);
     } catch {
-      toast.error("Reset link is invalid or has expired.");
+      setFormError("Reset link is invalid or has expired. Please request a new one.");
     }
   }
 
-  if (isSubmitSuccessful) {
+  if (done) {
     return (
       <div style={{ textAlign: "center", padding: "16px 0" }}>
         <div style={iconCircle("#EDFBF4")}>
@@ -103,6 +131,9 @@ function ResetPasswordForm() {
           <input type="password" placeholder="Re-enter password" {...register("confirm")} style={inputStyle(!!errors.confirm)} />
           <FieldError msg={errors.confirm?.message} />
         </div>
+
+        <FormError msg={formError} />
+
         <button
           type="submit"
           disabled={isSubmitting}

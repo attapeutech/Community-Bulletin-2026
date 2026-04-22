@@ -6,8 +6,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AuthLayout } from "@/components/auth/AuthLayout";
-import { forgetPassword } from "@/lib/auth/client";
-import { toast } from "sonner";
 
 const schema = z.object({
   email: z.string().email("Enter a valid email address"),
@@ -32,8 +30,26 @@ function FieldError({ msg }: { msg?: string }) {
   return <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c" }}>{msg}</p>;
 }
 
+function FormError({ msg }: { msg: string | null }) {
+  if (!msg) return null;
+  return (
+    <div style={{
+      background: "#FEF2F2", border: "1px solid #fca5a5", borderRadius: 8,
+      padding: "10px 14px", marginBottom: 16,
+      display: "flex", gap: 8, alignItems: "flex-start",
+    }}>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+        <circle cx="12" cy="12" r="10" stroke="#b91c1c" strokeWidth="1.5"/>
+        <path d="M12 8v4m0 4h.01" stroke="#b91c1c" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+      <span style={{ fontSize: 13, color: "#b91c1c" }}>{msg}</span>
+    </div>
+  );
+}
+
 export default function ForgotPasswordPage() {
   const [sent, setSent] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
@@ -41,15 +57,21 @@ export default function ForgotPasswordPage() {
   const emailValue = watch("email", "");
 
   async function onSubmit(data: FormData) {
+    setFormError(null);
     try {
-      const result = await forgetPassword({ email: data.email, redirectTo: "/reset-password" });
-      if (result.error) {
-        toast.error(result.error.message ?? "No account found with that email address.");
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: data.email, redirectTo: "/reset-password" }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setFormError(json.error ?? "No account found with that email address.");
         return;
       }
       setSent(true);
     } catch {
-      toast.error("Something went wrong. Please try again.");
+      setFormError("Something went wrong. Please try again.");
     }
   }
 
@@ -101,6 +123,8 @@ export default function ForgotPasswordPage() {
               />
               <FieldError msg={errors.email?.message} />
             </div>
+
+            <FormError msg={formError} />
 
             <button
               type="submit"

@@ -1,6 +1,5 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { twoFactor } from "better-auth/plugins";
 import { randomUUID } from "node:crypto";
 import { db } from "@/lib/db/client";
 import * as schema from "@/lib/db/schema";
@@ -34,13 +33,6 @@ export const auth = betterAuth({
     },
     autoSignInAfterVerification: true,
   },
-
-  plugins: [
-    twoFactor({
-      issuer: "AdBoard",
-      totpOptions: { period: 30, digits: 6 },
-    }) as any,
-  ],
 
   user: {
     additionalFields: {

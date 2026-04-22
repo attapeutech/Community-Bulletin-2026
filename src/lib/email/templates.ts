@@ -58,7 +58,32 @@ export async function sendPasswordResetEmail({
 
 // ─── Ad Status Emails ────────────────────────────────────────────────────────
 
-export async function sendAdSubmittedEmail({
+export async function send2FACodeEmail({
+  to,
+  name,
+  code,
+}: {
+  to: string;
+  name: string;
+  code: string;
+}) {
+  return sendEmail({
+    to,
+    subject: "Your login verification code",
+    html: `
+      <div style="font-family:sans-serif;max-width:560px;margin:0 auto">
+        <h2>Your verification code</h2>
+        <p>Hi ${name}, use the code below to complete your sign-in.</p>
+        <div style="background:#f1f5f9;border-radius:8px;padding:24px;text-align:center;margin:24px 0">
+          <span style="font-family:monospace;font-size:36px;font-weight:700;letter-spacing:0.3em;color:#1A3A5C">${code}</span>
+        </div>
+        <p style="color:#6b7280;font-size:14px">This code expires in 10 minutes. If you did not attempt to sign in, please change your password immediately.</p>
+      </div>
+    `,
+  });
+}
+
+
   to,
   userName,
   adTitle,

@@ -1,6 +1,9 @@
 import { auth } from "./index";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { db } from "@/lib/db/client";
+import { verifications } from "@/lib/db/schema";
+import { eq, and, gt } from "drizzle-orm";
 import type { User } from "@/lib/db/schema";
 
 export type UserRole = "user" | "store_owner" | "approver" | "admin";
@@ -15,6 +18,22 @@ export async function getSession() {
 export async function requireAuth() {
   const session = await getSession();
   if (!session) redirect("/login");
+
+  const user = session.user as unknown as User;
+
+  if (user.twoFactorEnabled) {
+    const sessionToken = (session as any).session?.token as string | undefined;
+    if (!sessionToken) redirect("/two-factor");
+
+    const verified = await db.query.verifications.findFirst({
+      where: and(
+        eq(verifications.identifier, `2fa_ok:${sessionToken}`),
+        gt(verifications.expiresAt, new Date())
+      ),
+    });
+    if (!verified) redirect("/two-factor");
+  }
+
   return session;
 }
 

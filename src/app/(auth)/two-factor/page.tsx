@@ -1,35 +1,66 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AuthLayout } from "@/components/auth/AuthLayout";
-import { twoFactor } from "@/lib/auth/client";
-import { toast } from "sonner";
 
-const primaryBtn: React.CSSProperties = {
-  width: "100%", height: 44, borderRadius: 8, border: "none",
-  background: "#1A3A5C", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer",
-};
+function FormError({ msg }: { msg: string | null }) {
+  if (!msg) return null;
+  return (
+    <div style={{
+      background: "#FEF2F2", border: "1px solid #fca5a5", borderRadius: 8,
+      padding: "10px 14px", marginBottom: 16,
+      display: "flex", gap: 8, alignItems: "flex-start",
+    }}>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+        <circle cx="12" cy="12" r="10" stroke="#b91c1c" strokeWidth="1.5"/>
+        <path d="M12 8v4m0 4h.01" stroke="#b91c1c" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+      <span style={{ fontSize: 13, color: "#b91c1c" }}>{msg}</span>
+    </div>
+  );
+}
 
 export default function TwoFactorPage() {
   const router = useRouter();
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
-  const [useBackup, setUseBackup] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  useEffect(() => {
+    sendCode();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function sendCode() {
+    setResending(true);
+    try {
+      await fetch("/api/auth/2fa/send", { method: "POST" });
+      setSent(true);
+    } finally {
+      setResending(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (code.length < 6) { toast.error("Please enter a valid code."); return; }
+    if (code.length !== 6) { setFormError("Please enter the 6-digit code."); return; }
+    setFormError(null);
     setLoading(true);
     try {
-      if (useBackup) {
-        await twoFactor.verifyBackupCode({ code });
-      } else {
-        await twoFactor.verifyTotp({ code });
+      const res = await fetch("/api/auth/2fa/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setFormError(json.error ?? "Invalid code. Please try again.");
+        return;
       }
       router.push("/dashboard");
-    } catch {
-      toast.error("Invalid code. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -44,18 +75,17 @@ export default function TwoFactorPage() {
           margin: "0 auto 16px",
         }}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <rect x="5" y="11" width="14" height="10" rx="2" stroke="#4A90C4" strokeWidth="1.5"/>
-            <path d="M8 11V7a4 4 0 018 0v4" stroke="#4A90C4" strokeWidth="1.5" strokeLinecap="round"/>
-            <circle cx="12" cy="16" r="1.5" fill="#4A90C4"/>
+            <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              stroke="#4A90C4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </div>
         <h1 style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 21, color: "#1A3A5C", margin: "0 0 8px" }}>
-          Two-factor verification
+          Check your email
         </h1>
         <p style={{ fontSize: 13, color: "#6B8FA8", lineHeight: 1.6, margin: 0 }}>
-          {useBackup
-            ? "Enter one of your backup codes to access your account."
-            : "Enter the 6-digit code from your authenticator app."}
+          {sent
+            ? "We sent a 6-digit verification code to your email address."
+            : "Sending your verification code…"}
         </p>
       </div>
 
@@ -65,42 +95,54 @@ export default function TwoFactorPage() {
             display: "block", marginBottom: 6, fontSize: 11, fontWeight: 600,
             color: "#4A5568", textTransform: "uppercase", letterSpacing: "0.04em",
           }}>
-            {useBackup ? "Backup code" : "Authenticator code"}
+            Verification code
           </label>
           <input
             type="text"
-            required
-            placeholder={useBackup ? "xxxxxxxx" : "000000"}
-            maxLength={useBackup ? 10 : 6}
+            inputMode="numeric"
+            maxLength={6}
+            placeholder="000000"
             value={code}
-            onChange={(e) => setCode(e.target.value.replace(/\s/g, ""))}
-            style={{
-              width: "100%", height: 48, borderRadius: 8, padding: "0 12px",
-              border: "1px solid #D1DDE8", background: "#F7F9FC", color: "#1A3A5C",
-              fontSize: 22, outline: "none", textAlign: "center",
-              fontFamily: "monospace", letterSpacing: "0.3em", boxSizing: "border-box",
-            }}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
             autoFocus
             autoComplete="one-time-code"
-            inputMode="numeric"
+            style={{
+              width: "100%", height: 52, borderRadius: 8, padding: "0 12px",
+              border: "1px solid #D1DDE8", background: "#F7F9FC", color: "#1A3A5C",
+              fontSize: 26, outline: "none", textAlign: "center",
+              fontFamily: "monospace", letterSpacing: "0.4em", boxSizing: "border-box",
+            }}
           />
         </div>
 
+        <FormError msg={formError} />
+
         <button
           type="submit"
-          disabled={loading}
-          style={{ ...primaryBtn, opacity: loading ? 0.6 : 1, cursor: loading ? "not-allowed" : "pointer" }}
+          disabled={loading || !sent}
+          style={{
+            width: "100%", height: 44, borderRadius: 8, border: "none",
+            background: "#1A3A5C", color: "#fff", fontSize: 14, fontWeight: 600,
+            opacity: (loading || !sent) ? 0.6 : 1,
+            cursor: (loading || !sent) ? "not-allowed" : "pointer",
+          }}
         >
           {loading ? "Verifying…" : "Verify"}
         </button>
       </form>
 
       <p style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "#6B8FA8" }}>
+        Didn&apos;t receive it?{" "}
         <button
-          onClick={() => { setUseBackup(!useBackup); setCode(""); }}
-          style={{ color: "#4A90C4", fontWeight: 600, background: "none", border: "none", cursor: "pointer", fontSize: 13 }}
+          onClick={sendCode}
+          disabled={resending}
+          style={{
+            color: "#4A90C4", fontWeight: 600, background: "none",
+            border: "none", cursor: resending ? "not-allowed" : "pointer",
+            fontSize: 13, opacity: resending ? 0.6 : 1,
+          }}
         >
-          {useBackup ? "Use authenticator app instead" : "Use a backup code instead"}
+          {resending ? "Sending…" : "Resend code"}
         </button>
       </p>
     </AuthLayout>

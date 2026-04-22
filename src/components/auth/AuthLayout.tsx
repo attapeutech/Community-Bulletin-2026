@@ -12,7 +12,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
         justifyContent: "space-between", alignItems: "center",
       }}>
         {/* Logo hero */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, flex: 1, justifyContent: "center" }}>
+        <Link href="/" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, flex: 1, justifyContent: "center", textDecoration: "none" }}>
           <div style={{ background: "#E8EFF6", borderRadius: 22, padding: 16, display: "flex", width: 112, height: 112, alignItems: "center", justifyContent: "center" }}>
             <Icon size={80} />
           </div>
@@ -26,7 +26,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
               Digital in-store advertising
             </div>
           </div>
-        </div>
+        </Link>
 
         {/* Hero copy */}
         <div style={{ textAlign: "center", paddingBottom: 20 }}>

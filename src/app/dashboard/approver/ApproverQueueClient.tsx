@@ -1,7 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useDashboardSocket } from "@/lib/socket/client";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 type Ad = {
   id: string;
@@ -14,8 +17,6 @@ type Ad = {
   user: { id: string; name: string; email: string };
   location: { id: string; storeName: string; slug: string; addressLine1: string };
 };
-
-const ACCENT = "#1A3A5C";
 
 export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }) {
   const [queue, setQueue] = useState<Ad[]>(initialAds);
@@ -103,72 +104,54 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
     <div>
       {/* Toast */}
       {toast && (
-        <div style={{
-          position: "fixed",
-          top: 24,
-          right: 24,
-          zIndex: 9999,
-          padding: "12px 20px",
-          borderRadius: 10,
-          background: toast.ok ? "#166534" : "#991b1b",
-          color: "#fff",
-          fontSize: 14,
-          fontWeight: 500,
-          boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-          maxWidth: 380,
-        }}>
+        <div className={`fixed top-6 right-6 z-[9999] px-5 py-3 rounded-xl text-sm font-medium text-white shadow-lg max-w-[380px] ${toast.ok ? "bg-green-800" : "bg-red-800"}`}>
           {toast.msg}
         </div>
       )}
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-        <h1 style={{ fontFamily: "Georgia,serif", fontSize: 26, fontWeight: 700, color: ACCENT }}>
+      <div className="flex items-center justify-between mb-1.5">
+        <h1 className="font-serif text-[26px] font-bold text-[#1A3A5C]">
           Review Ads
         </h1>
-        <div style={{ fontSize: 13, color: "#6B8FA8" }}>
+        <div className="text-[13px] text-[#6B8FA8]">
           {queue.length} ad{queue.length !== 1 ? "s" : ""} awaiting review
         </div>
       </div>
-      <p style={{ color: "#6B8FA8", fontSize: 14, marginBottom: 32 }}>
+      <p className="text-[#6B8FA8] text-sm mb-8">
         Ads are shown only after payment is confirmed. Review image, title, and content before approving.
       </p>
 
       {queue.length === 0 ? (
-        <div style={{ background: "#fff", borderRadius: 12, border: "0.5px solid #D8E4EE", padding: 48, textAlign: "center" }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
-          <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: ACCENT, marginBottom: 8 }}>All caught up!</h2>
-          <p style={{ color: "#6B8FA8", fontSize: 14 }}>No ads are currently pending review.</p>
-        </div>
+        <Card className="rounded-xl border-[#D8E4EE]">
+          <CardContent className="py-12 text-center">
+            <div className="text-[40px] mb-3">✅</div>
+            <h2 className="font-serif text-[18px] text-[#1A3A5C] mb-2">All caught up!</h2>
+            <p className="text-[#6B8FA8] text-sm">No ads are currently pending review.</p>
+          </CardContent>
+        </Card>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: selected ? "1fr 1fr" : "1fr", gap: 24 }}>
+        <div className={`grid gap-6 ${selected ? "grid-cols-2" : "grid-cols-1"}`}>
           {/* Queue list */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div className="flex flex-col gap-3">
             {queue.map((ad) => (
               <button
                 key={ad.id}
                 onClick={() => { setSelected(ad); setMode(null); setReviewNote(""); }}
-                style={{
-                  background: selected?.id === ad.id ? "#EBF4FF" : "#fff",
-                  border: selected?.id === ad.id ? "2px solid #4A90C4" : "1px solid #D8E4EE",
-                  borderRadius: 12,
-                  padding: 16,
-                  textAlign: "left",
-                  cursor: "pointer",
-                  display: "flex",
-                  gap: 14,
-                  alignItems: "flex-start",
-                  width: "100%",
-                }}
+                className={`w-full text-left flex gap-3.5 items-start p-4 rounded-xl border cursor-pointer transition-colors
+                  ${selected?.id === ad.id
+                    ? "bg-blue-50 border-2 border-[#4A90C4]"
+                    : "bg-white border border-[#D8E4EE] hover:border-[#4A90C4]"
+                  }`}
               >
                 <img
                   src={ad.imageUrl}
                   alt={ad.title}
-                  style={{ width: 80, height: 56, objectFit: "cover", borderRadius: 6, flexShrink: 0 }}
+                  className="w-20 h-14 object-cover rounded-md shrink-0"
                 />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, fontSize: 14, color: ACCENT, marginBottom: 2 }}>{ad.title}</div>
-                  <div style={{ fontSize: 12, color: "#6B8FA8" }}>{ad.location.storeName}</div>
-                  <div style={{ fontSize: 11, color: "#9DC4E0", marginTop: 4 }}>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-sm text-[#1A3A5C] mb-0.5">{ad.title}</div>
+                  <div className="text-xs text-[#6B8FA8]">{ad.location.storeName}</div>
+                  <div className="text-[11px] text-[#9DC4E0] mt-1">
                     By {ad.user.name} · {new Date(ad.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                   </div>
                 </div>
@@ -178,24 +161,25 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
 
           {/* Detail panel */}
           {selected && (
-            <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: 24, position: "sticky", top: 24 }}>
+            <div className="bg-white rounded-xl border border-[#D8E4EE] p-6 sticky top-6">
               {/* Ad preview */}
               <img
                 src={selected.imageUrl}
                 alt={selected.title}
-                style={{ width: "100%", maxHeight: 220, objectFit: "cover", borderRadius: 8, marginBottom: 16 }}
+                className="w-full max-h-[220px] object-cover rounded-lg mb-4"
               />
 
-              <h3 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: ACCENT, marginBottom: 4 }}>{selected.title}</h3>
+              <h3 className="font-serif text-[18px] text-[#1A3A5C] mb-1">{selected.title}</h3>
               {selected.description && (
-                <p style={{ fontSize: 13, color: "#6B8FA8", marginBottom: 12 }}>{selected.description}</p>
+                <p className="text-[13px] text-[#6B8FA8] mb-3">{selected.description}</p>
               )}
 
-              <div style={{ display: "grid", gap: 6, fontSize: 12, marginBottom: 20 }}>
-                <div><span style={{ color: "#9DC4E0" }}>Location: </span>{selected.location.storeName}</div>
-                <div><span style={{ color: "#9DC4E0" }}>Address: </span>{selected.location.addressLine1}</div>
-                <div><span style={{ color: "#9DC4E0" }}>Submitted by: </span>{selected.user.name} ({selected.user.email})</div>
-                <div><span style={{ color: "#9DC4E0" }}>Submitted: </span>
+              <div className="grid gap-1.5 text-xs mb-5">
+                <div><span className="text-[#9DC4E0]">Location: </span>{selected.location.storeName}</div>
+                <div><span className="text-[#9DC4E0]">Address: </span>{selected.location.addressLine1}</div>
+                <div><span className="text-[#9DC4E0]">Submitted by: </span>{selected.user.name} ({selected.user.email})</div>
+                <div>
+                  <span className="text-[#9DC4E0]">Submitted: </span>
                   {new Date(selected.createdAt).toLocaleDateString("en-US", { dateStyle: "long" })}
                 </div>
               </div>
@@ -204,67 +188,58 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
               <a
                 href={`/display/${selected.location.slug}`}
                 target="_blank"
-                style={{ fontSize: 12, color: "#4A90C4", textDecoration: "none", display: "inline-block", marginBottom: 20 }}
+                className="text-xs text-[#4A90C4] no-underline inline-block mb-5"
               >
                 Preview display screen ↗
               </a>
 
               {/* Action buttons */}
               {!mode && (
-                <div style={{ display: "flex", gap: 12 }}>
-                  <button
+                <div className="flex gap-3">
+                  <Button
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white h-10 text-sm font-semibold"
                     onClick={() => setMode("approve")}
-                    style={{
-                      flex: 1, padding: "10px 16px", background: "#16a34a", color: "#fff",
-                      border: "none", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer",
-                    }}
                   >
                     ✓ Approve
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white h-10 text-sm font-semibold"
                     onClick={() => setMode("deny")}
-                    style={{
-                      flex: 1, padding: "10px 16px", background: "#dc2626", color: "#fff",
-                      border: "none", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer",
-                    }}
                   >
                     ✕ Deny
-                  </button>
+                  </Button>
                 </div>
               )}
 
               {/* Confirm approve */}
               {mode === "approve" && (
-                <div style={{ background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 8, padding: 16 }}>
-                  <p style={{ fontSize: 13, color: "#166534", marginBottom: 12 }}>
+                <div className="bg-green-50 border border-green-300 rounded-lg p-4">
+                  <p className="text-[13px] text-green-800 mb-3">
                     This ad will go live immediately for 30 days. The advertiser will be notified.
                   </p>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button
+                  <div className="flex gap-2">
+                    <Button
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white h-10 text-sm font-semibold"
                       onClick={handleApprove}
                       disabled={loading}
-                      style={{
-                        flex: 1, padding: "10px 16px", background: "#16a34a", color: "#fff",
-                        border: "none", borderRadius: 8, fontSize: 14, fontWeight: 600,
-                        cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1,
-                      }}
                     >
                       {loading ? "Approving…" : "Confirm Approve"}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="bg-[#E8EFF6] text-[#1A3A5C] border-0 h-10 text-sm hover:bg-[#D8E4EE]"
                       onClick={() => setMode(null)}
-                      style={{ padding: "10px 16px", background: "#E8EFF6", color: ACCENT, border: "none", borderRadius: 8, fontSize: 14, cursor: "pointer" }}
                     >
                       Cancel
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
 
               {/* Deny form */}
               {mode === "deny" && (
-                <div style={{ background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 8, padding: 16 }}>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#991b1b", marginBottom: 6 }}>
+                <div className="bg-red-50 border border-red-300 rounded-lg p-4">
+                  <label className="block text-[13px] font-semibold text-red-800 mb-1.5">
                     Reason for denial *
                   </label>
                   <textarea
@@ -272,36 +247,23 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
                     onChange={(e) => setReviewNote(e.target.value)}
                     placeholder="Explain why the ad is not approved (visible to advertiser)…"
                     rows={3}
-                    style={{
-                      width: "100%",
-                      padding: "8px 12px",
-                      border: "1px solid #fca5a5",
-                      borderRadius: 6,
-                      fontSize: 13,
-                      resize: "vertical",
-                      marginBottom: 12,
-                      boxSizing: "border-box",
-                    }}
+                    className="w-full px-3 py-2 border border-red-300 rounded-md text-[13px] resize-y mb-3 box-border bg-white focus:outline-none focus:ring-1 focus:ring-red-400"
                   />
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button
+                  <div className="flex gap-2">
+                    <Button
+                      className="flex-1 bg-red-600 hover:bg-red-700 text-white h-10 text-sm font-semibold disabled:opacity-70"
                       onClick={handleDeny}
                       disabled={loading || reviewNote.trim().length < 10}
-                      style={{
-                        flex: 1, padding: "10px 16px", background: "#dc2626", color: "#fff",
-                        border: "none", borderRadius: 8, fontSize: 14, fontWeight: 600,
-                        cursor: (loading || reviewNote.trim().length < 10) ? "not-allowed" : "pointer",
-                        opacity: (loading || reviewNote.trim().length < 10) ? 0.7 : 1,
-                      }}
                     >
                       {loading ? "Denying…" : "Confirm Deny & Refund"}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="bg-[#E8EFF6] text-[#1A3A5C] border-0 h-10 text-sm hover:bg-[#D8E4EE]"
                       onClick={() => { setMode(null); setReviewNote(""); }}
-                      style={{ padding: "10px 16px", background: "#E8EFF6", color: ACCENT, border: "none", borderRadius: 8, fontSize: 14, cursor: "pointer" }}
                     >
                       Cancel
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}

@@ -9,6 +9,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { resetPassword } from "@/lib/auth/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const schema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
@@ -19,48 +24,19 @@ const schema = z.object({
 });
 type FormData = z.infer<typeof schema>;
 
-const label: React.CSSProperties = {
-  display: "block", marginBottom: 6, fontSize: 11, fontWeight: 600,
-  color: "#4A5568", textTransform: "uppercase", letterSpacing: "0.04em",
-};
-const primaryBtn: React.CSSProperties = {
-  width: "100%", height: 44, borderRadius: 8, border: "none",
-  background: "#1A3A5C", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer",
-};
-const iconCircle = (bg: string): React.CSSProperties => ({
-  width: 56, height: 56, borderRadius: "50%", background: bg,
-  display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px",
-});
-
 function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null;
-  return <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c" }}>{msg}</p>;
+  return <p className="text-xs text-destructive mt-1">{msg}</p>;
 }
 
 function FormError({ msg }: { msg: string | null }) {
   if (!msg) return null;
   return (
-    <div style={{
-      background: "#FEF2F2", border: "1px solid #fca5a5", borderRadius: 8,
-      padding: "10px 14px", marginBottom: 16,
-      display: "flex", gap: 8, alignItems: "flex-start",
-    }}>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
-        <circle cx="12" cy="12" r="10" stroke="#b91c1c" strokeWidth="1.5"/>
-        <path d="M12 8v4m0 4h.01" stroke="#b91c1c" strokeWidth="1.5" strokeLinecap="round"/>
-      </svg>
-      <span style={{ fontSize: 13, color: "#b91c1c" }}>{msg}</span>
-    </div>
+    <Alert variant="destructive" className="mb-4">
+      <AlertCircle className="h-4 w-4" />
+      <AlertDescription>{msg}</AlertDescription>
+    </Alert>
   );
-}
-
-function inputStyle(err?: boolean): React.CSSProperties {
-  return {
-    width: "100%", height: 40, borderRadius: 8, padding: "0 12px",
-    border: `1px solid ${err ? "#fca5a5" : "#D1DDE8"}`,
-    background: err ? "#fff5f5" : "#F7F9FC",
-    color: "#1A3A5C", fontSize: 14, outline: "none", boxSizing: "border-box",
-  };
 }
 
 function ResetPasswordForm() {
@@ -93,57 +69,61 @@ function ResetPasswordForm() {
 
   if (done) {
     return (
-      <div style={{ textAlign: "center", padding: "16px 0" }}>
-        <div style={iconCircle("#EDFBF4")}>
+      <div className="text-center py-4">
+        <div className="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-4">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path d="M5 13l4 4L19 7" stroke="#1D9E75" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </div>
-        <h1 style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 21, color: "#1A3A5C", margin: "0 0 8px" }}>
+        <h1 className="font-serif font-bold text-[21px] text-primary m-0 mb-2">
           Password updated!
         </h1>
-        <p style={{ fontSize: 13, color: "#6B8FA8", margin: "0 0 24px" }}>
+        <p className="text-[13px] text-muted-foreground mt-0 mb-6">
           Your password has been reset successfully.
         </p>
-        <button onClick={() => router.push("/login")} style={primaryBtn}>
+        <Button onClick={() => router.push("/login")} className="w-full h-11">
           Back to sign in
-        </button>
+        </Button>
       </div>
     );
   }
 
   return (
     <>
-      <h1 style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 21, color: "#1A3A5C", margin: "0 0 4px" }}>
+      <h1 className="font-serif font-bold text-[21px] text-primary m-0 mb-1">
         Set new password
       </h1>
-      <p style={{ fontSize: 13, color: "#6B8FA8", margin: "0 0 24px" }}>
+      <p className="text-[13px] text-muted-foreground mt-0 mb-6">
         Choose a strong password for your account.
       </p>
-      <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
         <div>
-          <label style={label}>New password</label>
-          <input type="password" placeholder="Min. 8 characters" {...register("password")} style={inputStyle(!!errors.password)} />
+          <Label className="block mb-1.5 text-[11px] font-semibold text-foreground/70 uppercase tracking-[0.04em]">
+            New password
+          </Label>
+          <Input type="password" placeholder="Min. 8 characters" {...register("password")} className={errors.password ? "border-destructive bg-destructive/5" : ""} />
           <FieldError msg={errors.password?.message} />
         </div>
         <div>
-          <label style={label}>Confirm password</label>
-          <input type="password" placeholder="Re-enter password" {...register("confirm")} style={inputStyle(!!errors.confirm)} />
+          <Label className="block mb-1.5 text-[11px] font-semibold text-foreground/70 uppercase tracking-[0.04em]">
+            Confirm password
+          </Label>
+          <Input type="password" placeholder="Re-enter password" {...register("confirm")} className={errors.confirm ? "border-destructive bg-destructive/5" : ""} />
           <FieldError msg={errors.confirm?.message} />
         </div>
 
         <FormError msg={formError} />
 
-        <button
+        <Button
           type="submit"
           disabled={isSubmitting}
-          style={{ ...primaryBtn, opacity: isSubmitting ? 0.6 : 1, cursor: isSubmitting ? "not-allowed" : "pointer" }}
+          className="w-full h-11"
         >
           {isSubmitting ? "Updating…" : "Update password"}
-        </button>
+        </Button>
       </form>
-      <p style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "#6B8FA8" }}>
-        <Link href="/login" style={{ color: "#E8563A", fontWeight: 600, textDecoration: "none" }}>
+      <p className="text-center mt-5 text-[13px] text-muted-foreground">
+        <Link href="/login" className="text-destructive font-semibold no-underline">
           Back to sign in
         </Link>
       </p>
@@ -154,7 +134,7 @@ function ResetPasswordForm() {
 export default function ResetPasswordPage() {
   return (
     <AuthLayout>
-      <Suspense fallback={<div style={{ color: "#6B8FA8", fontSize: 14 }}>Loading…</div>}>
+      <Suspense fallback={<div className="text-muted-foreground text-sm">Loading…</div>}>
         <ResetPasswordForm />
       </Suspense>
     </AuthLayout>

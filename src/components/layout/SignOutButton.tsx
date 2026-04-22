@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { signOut } from "@/lib/auth/client";
+import { Button } from "@/components/ui/button";
 
 export function SignOutButton() {
   const router = useRouter();
@@ -12,22 +13,12 @@ export function SignOutButton() {
   }
 
   return (
-    <button
+    <Button
+      variant="ghost"
       onClick={handleSignOut}
-      style={{
-        display: "block",
-        width: "100%",
-        textAlign: "left",
-        padding: "10px 14px",
-        borderRadius: 8,
-        color: "#9DC4E0",
-        fontSize: 13,
-        background: "none",
-        border: "none",
-        cursor: "pointer",
-      }}
+      className="w-full justify-start px-3.5 py-2.5 text-[#9DC4E0] text-[13px] hover:bg-white/10 hover:text-[#9DC4E0] rounded-lg h-auto font-normal"
     >
       Sign out
-    </button>
+    </Button>
   );
 }

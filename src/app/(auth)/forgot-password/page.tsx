@@ -6,44 +6,29 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AuthLayout } from "@/components/auth/AuthLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const schema = z.object({
   email: z.string().email("Enter a valid email address"),
 });
 type FormData = z.infer<typeof schema>;
 
-const label: React.CSSProperties = {
-  display: "block", marginBottom: 6, fontSize: 11, fontWeight: 600,
-  color: "#4A5568", textTransform: "uppercase", letterSpacing: "0.04em",
-};
-const primaryBtn: React.CSSProperties = {
-  width: "100%", height: 44, borderRadius: 8, border: "none",
-  background: "#1A3A5C", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer",
-};
-const iconCircle = (bg: string): React.CSSProperties => ({
-  width: 56, height: 56, borderRadius: "50%", background: bg,
-  display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px",
-});
-
 function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null;
-  return <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c" }}>{msg}</p>;
+  return <p className="text-xs text-destructive mt-1">{msg}</p>;
 }
 
 function FormError({ msg }: { msg: string | null }) {
   if (!msg) return null;
   return (
-    <div style={{
-      background: "#FEF2F2", border: "1px solid #fca5a5", borderRadius: 8,
-      padding: "10px 14px", marginBottom: 16,
-      display: "flex", gap: 8, alignItems: "flex-start",
-    }}>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
-        <circle cx="12" cy="12" r="10" stroke="#b91c1c" strokeWidth="1.5"/>
-        <path d="M12 8v4m0 4h.01" stroke="#b91c1c" strokeWidth="1.5" strokeLinecap="round"/>
-      </svg>
-      <span style={{ fontSize: 13, color: "#b91c1c" }}>{msg}</span>
-    </div>
+    <Alert variant="destructive" className="mb-4">
+      <AlertCircle className="h-4 w-4" />
+      <AlertDescription>{msg}</AlertDescription>
+    </Alert>
   );
 }
 
@@ -78,66 +63,63 @@ export default function ForgotPasswordPage() {
   return (
     <AuthLayout>
       {sent ? (
-        <div style={{ textAlign: "center", padding: "16px 0" }}>
-          <div style={iconCircle("#EEF6FF")}>
+        <div className="text-center py-4">
+          <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="#4A90C4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <h1 style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 21, color: "#1A3A5C", margin: "0 0 8px" }}>
+          <h1 className="font-serif font-bold text-[21px] text-primary m-0 mb-2">
             Check your email
           </h1>
-          <p style={{ fontSize: 13, color: "#6B8FA8", lineHeight: 1.6, margin: "0 0 20px" }}>
-            We sent a password reset link to <strong style={{ color: "#1A3A5C" }}>{emailValue}</strong>.{" "}
+          <p className="text-[13px] text-muted-foreground leading-relaxed mt-0 mb-5">
+            We sent a password reset link to <strong className="text-primary">{emailValue}</strong>.{" "}
             The link expires in 1 hour.
           </p>
-          <p style={{ fontSize: 12, color: "#9DC4E0" }}>
+          <p className="text-xs text-muted-foreground">
             Didn&apos;t receive it?{" "}
-            <Link href="/forgot-password" style={{ color: "#4A90C4", fontWeight: 600, textDecoration: "none" }}>
+            <Link href="/forgot-password" className="text-accent font-semibold no-underline">
               Try again
             </Link>
           </p>
         </div>
       ) : (
         <>
-          <h1 style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 21, color: "#1A3A5C", margin: "0 0 4px" }}>
+          <h1 className="font-serif font-bold text-[21px] text-primary m-0 mb-1">
             Forgot your password?
           </h1>
-          <p style={{ fontSize: 13, color: "#6B8FA8", lineHeight: 1.6, margin: "0 0 24px" }}>
+          <p className="text-[13px] text-muted-foreground leading-relaxed mt-0 mb-6">
             Enter the email address for your account and we&apos;ll send you a reset link.
           </p>
 
-          <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
             <div>
-              <label style={label}>Email address</label>
-              <input
+              <Label className="block mb-1.5 text-[11px] font-semibold text-foreground/70 uppercase tracking-[0.04em]">
+                Email address
+              </Label>
+              <Input
                 type="email"
                 placeholder="you@example.com"
                 {...register("email")}
-                style={{
-                  width: "100%", height: 40, borderRadius: 8, padding: "0 12px",
-                  border: `1px solid ${errors.email ? "#fca5a5" : "#D1DDE8"}`,
-                  background: errors.email ? "#fff5f5" : "#F7F9FC",
-                  color: "#1A3A5C", fontSize: 14, outline: "none", boxSizing: "border-box",
-                }}
+                className={errors.email ? "border-destructive bg-destructive/5" : ""}
               />
               <FieldError msg={errors.email?.message} />
             </div>
 
             <FormError msg={formError} />
 
-            <button
+            <Button
               type="submit"
               disabled={isSubmitting}
-              style={{ ...primaryBtn, opacity: isSubmitting ? 0.6 : 1, cursor: isSubmitting ? "not-allowed" : "pointer" }}
+              className="w-full h-11"
             >
               {isSubmitting ? "Sending…" : "Send reset link"}
-            </button>
+            </Button>
           </form>
 
-          <p style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "#6B8FA8" }}>
+          <p className="text-center mt-5 text-[13px] text-muted-foreground">
             Remembered it?{" "}
-            <Link href="/login" style={{ color: "#E8563A", fontWeight: 600, textDecoration: "none" }}>
+            <Link href="/login" className="text-destructive font-semibold no-underline">
               Back to sign in
             </Link>
           </p>

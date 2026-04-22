@@ -5,67 +5,39 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
+import { AlertCircle, CheckCircle2, Upload } from "lucide-react";
 
-/* ── shared styles ─────────────────────────────────────────── */
-const card: React.CSSProperties = {
-  background: "#fff", borderRadius: 12, border: "1px solid #E2EAF2", padding: "24px 28px", marginBottom: 24,
-};
-const cardTitle: React.CSSProperties = {
-  fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 16, color: "#1A3A5C", marginBottom: 4,
-};
-const cardSub: React.CSSProperties = {
-  fontSize: 12, color: "#6B8FA8", marginBottom: 20,
-};
-const labelStyle: React.CSSProperties = {
-  display: "block", marginBottom: 6, fontSize: 11, fontWeight: 600,
-  color: "#4A5568", textTransform: "uppercase", letterSpacing: "0.04em",
-};
-const inputStyle = (err?: boolean): React.CSSProperties => ({
-  width: "100%", height: 40, borderRadius: 8, padding: "0 12px",
-  border: `1px solid ${err ? "#fca5a5" : "#D1DDE8"}`,
-  background: err ? "#fff5f5" : "#F7F9FC",
-  color: "#1A3A5C", fontSize: 14, outline: "none", boxSizing: "border-box",
-});
-const saveBtn = (loading: boolean): React.CSSProperties => ({
-  height: 38, borderRadius: 8, border: "none", padding: "0 20px",
-  background: "#1A3A5C", color: "#fff", fontSize: 13, fontWeight: 600,
-  cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1,
-});
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
+/* ── Field-level validation error ──────────────────────────── */
 function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null;
-  return <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c" }}>{msg}</p>;
+  return <p className="mt-1 text-xs text-red-700">{msg}</p>;
 }
 
+/* ── Inline error banner ────────────────────────────────────── */
 function InlineError({ msg }: { msg: string | null }) {
   if (!msg) return null;
   return (
-    <div style={{
-      background: "#FEF2F2", border: "1px solid #fca5a5", borderRadius: 8,
-      padding: "10px 14px", marginBottom: 14,
-      display: "flex", gap: 8, alignItems: "center",
-    }}>
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-        <circle cx="12" cy="12" r="10" stroke="#b91c1c" strokeWidth="1.5"/>
-        <path d="M12 8v4m0 4h.01" stroke="#b91c1c" strokeWidth="1.5" strokeLinecap="round"/>
-      </svg>
-      <span style={{ fontSize: 13, color: "#b91c1c" }}>{msg}</span>
-    </div>
+    <Alert variant="destructive" className="mb-3.5 py-2.5 px-3.5">
+      <AlertCircle className="h-4 w-4" />
+      <AlertDescription className="text-[13px]">{msg}</AlertDescription>
+    </Alert>
   );
 }
 
+/* ── Inline success banner ──────────────────────────────────── */
 function InlineSuccess({ msg }: { msg: string | null }) {
   if (!msg) return null;
   return (
-    <div style={{
-      background: "#F0FDF4", border: "1px solid #86EFAC", borderRadius: 8,
-      padding: "10px 14px", marginBottom: 14,
-      display: "flex", gap: 8, alignItems: "center",
-    }}>
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-        <path d="M5 13l4 4L19 7" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-      <span style={{ fontSize: 13, color: "#15803d" }}>{msg}</span>
+    <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-800 rounded-lg px-3.5 py-2.5 mb-3.5">
+      <CheckCircle2 className="h-[15px] w-[15px] shrink-0 text-green-600" />
+      <span className="text-[13px]">{msg}</span>
     </div>
   );
 }
@@ -97,22 +69,32 @@ function NameSection({ initialName }: { initialName: string }) {
   }
 
   return (
-    <div style={card}>
-      <p style={cardTitle}>Personal information</p>
-      <p style={cardSub}>Update your display name.</p>
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <div style={{ marginBottom: 16 }}>
-          <label style={labelStyle}>Full name</label>
-          <input type="text" {...register("name")} style={inputStyle(!!errors.name)} />
-          <FieldError msg={errors.name?.message} />
-        </div>
-        <InlineError msg={error} />
-        <InlineSuccess msg={success} />
-        <button type="submit" disabled={isSubmitting} style={saveBtn(isSubmitting)}>
-          {isSubmitting ? "Saving…" : "Save name"}
-        </button>
-      </form>
-    </div>
+    <Card className="mb-6 rounded-xl border-[#E2EAF2]">
+      <CardHeader className="pb-1">
+        <CardTitle className="font-serif text-base text-[#1A3A5C]">Personal information</CardTitle>
+        <CardDescription className="text-xs text-[#6B8FA8]">Update your display name.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <div className="mb-4">
+            <label className="block mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
+              Full name
+            </label>
+            <Input
+              type="text"
+              {...register("name")}
+              className={errors.name ? "border-red-300 bg-red-50" : "border-[#D1DDE8] bg-[#F7F9FC]"}
+            />
+            <FieldError msg={errors.name?.message} />
+          </div>
+          <InlineError msg={error} />
+          <InlineSuccess msg={success} />
+          <Button type="submit" disabled={isSubmitting} className="bg-[#1A3A5C] hover:bg-[#1A3A5C]/90 h-9 px-5 text-[13px]">
+            {isSubmitting ? "Saving…" : "Save name"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -145,32 +127,57 @@ function PasswordSection() {
   }
 
   return (
-    <div style={card}>
-      <p style={cardTitle}>Change password</p>
-      <p style={cardSub}>Choose a strong password for your account.</p>
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>Current password</label>
-          <input type="password" placeholder="••••••••" {...register("currentPassword")} style={inputStyle(!!errors.currentPassword)} />
-          <FieldError msg={errors.currentPassword?.message} />
-        </div>
-        <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>New password</label>
-          <input type="password" placeholder="Min. 8 characters" {...register("newPassword")} style={inputStyle(!!errors.newPassword)} />
-          <FieldError msg={errors.newPassword?.message} />
-        </div>
-        <div style={{ marginBottom: 16 }}>
-          <label style={labelStyle}>Confirm new password</label>
-          <input type="password" placeholder="Re-enter new password" {...register("confirm")} style={inputStyle(!!errors.confirm)} />
-          <FieldError msg={errors.confirm?.message} />
-        </div>
-        <InlineError msg={error} />
-        <InlineSuccess msg={success} />
-        <button type="submit" disabled={isSubmitting} style={saveBtn(isSubmitting)}>
-          {isSubmitting ? "Updating…" : "Update password"}
-        </button>
-      </form>
-    </div>
+    <Card className="mb-6 rounded-xl border-[#E2EAF2]">
+      <CardHeader className="pb-1">
+        <CardTitle className="font-serif text-base text-[#1A3A5C]">Change password</CardTitle>
+        <CardDescription className="text-xs text-[#6B8FA8]">Choose a strong password for your account.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <div className="mb-3.5">
+            <label className="block mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
+              Current password
+            </label>
+            <Input
+              type="password"
+              placeholder="••••••••"
+              {...register("currentPassword")}
+              className={errors.currentPassword ? "border-red-300 bg-red-50" : "border-[#D1DDE8] bg-[#F7F9FC]"}
+            />
+            <FieldError msg={errors.currentPassword?.message} />
+          </div>
+          <div className="mb-3.5">
+            <label className="block mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
+              New password
+            </label>
+            <Input
+              type="password"
+              placeholder="Min. 8 characters"
+              {...register("newPassword")}
+              className={errors.newPassword ? "border-red-300 bg-red-50" : "border-[#D1DDE8] bg-[#F7F9FC]"}
+            />
+            <FieldError msg={errors.newPassword?.message} />
+          </div>
+          <div className="mb-4">
+            <label className="block mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
+              Confirm new password
+            </label>
+            <Input
+              type="password"
+              placeholder="Re-enter new password"
+              {...register("confirm")}
+              className={errors.confirm ? "border-red-300 bg-red-50" : "border-[#D1DDE8] bg-[#F7F9FC]"}
+            />
+            <FieldError msg={errors.confirm?.message} />
+          </div>
+          <InlineError msg={error} />
+          <InlineSuccess msg={success} />
+          <Button type="submit" disabled={isSubmitting} className="bg-[#1A3A5C] hover:bg-[#1A3A5C]/90 h-9 px-5 text-[13px]">
+            {isSubmitting ? "Updating…" : "Update password"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -178,34 +185,29 @@ function PasswordSection() {
 function AvatarSection({ name, email }: { name: string; email: string }) {
   const initials = name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
   return (
-    <div style={card}>
-      <p style={cardTitle}>Profile photo</p>
-      <p style={cardSub}>Upload a photo to personalise your account.</p>
-      <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-        <div style={{
-          width: 72, height: 72, borderRadius: "50%", background: "#1A3A5C",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 24, fontWeight: 700, color: "#fff", flexShrink: 0,
-        }}>
-          {initials}
-        </div>
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 600, color: "#1A3A5C", marginBottom: 2 }}>{name}</div>
-          <div style={{ fontSize: 12, color: "#6B8FA8", marginBottom: 10 }}>{email}</div>
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            fontSize: 12, color: "#6B8FA8", background: "#F4F7FB",
-            border: "1px dashed #D1DDE8", borderRadius: 8, padding: "6px 14px",
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"
-                stroke="#9DC4E0" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            Photo upload coming soon — Cloudflare R2 integration pending
+    <Card className="mb-6 rounded-xl border-[#E2EAF2]">
+      <CardHeader className="pb-1">
+        <CardTitle className="font-serif text-base text-[#1A3A5C]">Profile photo</CardTitle>
+        <CardDescription className="text-xs text-[#6B8FA8]">Upload a photo to personalise your account.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center gap-5">
+          <Avatar className="w-[72px] h-[72px] shrink-0">
+            <AvatarFallback className="bg-[#1A3A5C] text-white text-2xl font-bold">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="text-sm font-semibold text-[#1A3A5C] mb-0.5">{name}</div>
+            <div className="text-xs text-[#6B8FA8] mb-2.5">{email}</div>
+            <div className="inline-flex items-center gap-1.5 text-xs text-[#6B8FA8] bg-[#F4F7FB] border border-dashed border-[#D1DDE8] rounded-lg px-3.5 py-1.5">
+              <Upload className="w-3.5 h-3.5 text-[#9DC4E0]" />
+              Photo upload coming soon — Cloudflare R2 integration pending
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -234,52 +236,37 @@ function TwoFactorSection({ enabled }: { enabled: boolean }) {
   }
 
   return (
-    <div style={card}>
-      <p style={cardTitle}>Two-factor authentication</p>
-      <p style={cardSub}>Add an extra layer of security to your account.</p>
-
-      <div style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        background: on ? "#F0FDF4" : "#F7F9FC",
-        border: `1px solid ${on ? "#86EFAC" : "#D1DDE8"}`,
-        borderRadius: 10, padding: "16px 20px",
-      }}>
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 600, color: "#1A3A5C", marginBottom: 2 }}>
-            Email verification code
+    <Card className="mb-6 rounded-xl border-[#E2EAF2]">
+      <CardHeader className="pb-1">
+        <CardTitle className="font-serif text-base text-[#1A3A5C]">Two-factor authentication</CardTitle>
+        <CardDescription className="text-xs text-[#6B8FA8]">Add an extra layer of security to your account.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className={`flex items-center justify-between rounded-[10px] px-5 py-4 border ${on ? "bg-green-50 border-green-200" : "bg-[#F7F9FC] border-[#D1DDE8]"}`}>
+          <div>
+            <div className="text-sm font-semibold text-[#1A3A5C] mb-0.5">
+              Email verification code
+            </div>
+            <div className="text-xs text-[#6B8FA8]">
+              {on
+                ? "A 6-digit code will be sent to your email on each login."
+                : "Enable to receive a one-time code by email when you sign in."}
+            </div>
           </div>
-          <div style={{ fontSize: 12, color: "#6B8FA8" }}>
-            {on
-              ? "A 6-digit code will be sent to your email on each login."
-              : "Enable to receive a one-time code by email when you sign in."}
-          </div>
+          <Switch
+            checked={on}
+            onCheckedChange={handleToggle}
+            disabled={loading}
+            className="shrink-0 ml-4"
+          />
         </div>
-        <button
-          onClick={handleToggle}
-          disabled={loading}
-          style={{
-            flexShrink: 0,
-            width: 48, height: 26, borderRadius: 13, border: "none",
-            background: on ? "#1A3A5C" : "#D1DDE8",
-            cursor: loading ? "not-allowed" : "pointer",
-            position: "relative", transition: "background 0.2s",
-            opacity: loading ? 0.6 : 1,
-          }}
-        >
-          <span style={{
-            position: "absolute", top: 3,
-            left: on ? 25 : 3,
-            width: 20, height: 20, borderRadius: "50%",
-            background: "#fff", transition: "left 0.2s",
-          }} />
-        </button>
-      </div>
 
-      <div style={{ marginTop: 14 }}>
-        <InlineError msg={error} />
-        <InlineSuccess msg={success} />
-      </div>
-    </div>
+        <div className="mt-3.5">
+          <InlineError msg={error} />
+          <InlineSuccess msg={success} />
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -294,11 +281,11 @@ export function ProfileClient({
   twoFactorEnabled: boolean;
 }) {
   return (
-    <div style={{ maxWidth: 600 }}>
-      <h1 style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 22, color: "#1A3A5C", margin: "0 0 4px" }}>
+    <div className="max-w-[600px]">
+      <h1 className="font-serif font-bold text-[22px] text-[#1A3A5C] mb-1">
         Account settings
       </h1>
-      <p style={{ fontSize: 13, color: "#6B8FA8", margin: "0 0 28px" }}>
+      <p className="text-[13px] text-[#6B8FA8] mb-7">
         Manage your profile and security preferences.
       </p>
 

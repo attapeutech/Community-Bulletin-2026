@@ -5,6 +5,19 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const schema = z.object({
   storeName:    z.string().min(2,  "Store name must be at least 2 characters"),
@@ -19,26 +32,9 @@ const schema = z.object({
 });
 type FormData = z.infer<typeof schema>;
 
-const ACCENT = "#1A3A5C";
-const inp: React.CSSProperties = {
-  width: "100%", height: 40, borderRadius: 8, padding: "0 12px",
-  border: "1px solid #D1DDE8", background: "#F7F9FC", color: ACCENT,
-  fontSize: 14, outline: "none", boxSizing: "border-box",
-};
-const lbl: React.CSSProperties = {
-  display: "block", marginBottom: 6, fontSize: 11, fontWeight: 600,
-  color: "#4A5568", textTransform: "uppercase", letterSpacing: "0.04em",
-};
-
-function inputStyle(err?: boolean): React.CSSProperties {
-  return { ...inp, border: `1px solid ${err ? "#fca5a5" : "#D1DDE8"}`, background: err ? "#fff5f5" : "#F7F9FC" };
-}
-function selectStyle(err?: boolean): React.CSSProperties {
-  return { ...inputStyle(err), cursor: "pointer" };
-}
 function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null;
-  return <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c" }}>{msg}</p>;
+  return <p className="mt-1 text-xs text-red-700">{msg}</p>;
 }
 
 type Option = { id: string; name: string };
@@ -112,100 +108,220 @@ export default function NewLocationPage() {
   }
 
   return (
-    <div style={{ maxWidth: 640 }}>
-      <a href="/dashboard/store-owner" style={{ fontSize: 13, color: "#6B8FA8", textDecoration: "none", display: "inline-block", marginBottom: 24 }}>
+    <div className="max-w-[640px]">
+      <a
+        href="/dashboard/store-owner"
+        className="inline-block mb-6 text-[13px] text-[#6B8FA8] no-underline hover:underline"
+      >
         ← Back to locations
       </a>
-      <h1 style={{ fontFamily: "Georgia,serif", fontSize: 26, fontWeight: 700, color: ACCENT, marginBottom: 4 }}>Add Location</h1>
-      <p style={{ color: "#6B8FA8", fontSize: 14, marginBottom: 32 }}>Register a store location where ads will be displayed on screen.</p>
+      <h1 className="font-serif text-[26px] font-bold text-[#1A3A5C] mb-1">Add Location</h1>
+      <p className="text-[#6B8FA8] text-sm mb-8">
+        Register a store location where ads will be displayed on screen.
+      </p>
 
       {submitError && (
-        <div style={{ background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 8, padding: "10px 14px", marginBottom: 20, fontSize: 13, color: "#b91c1c" }}>
-          {submitError}
-        </div>
+        <Alert variant="destructive" className="mb-5">
+          <AlertDescription>{submitError}</AlertDescription>
+        </Alert>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: 32, display: "flex", flexDirection: "column", gap: 20 }}>
+      <Card className="border-[#D8E4EE]">
+        <CardContent className="pt-8">
+          <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">
 
-        <div>
-          <label style={lbl}>Store name *</label>
-          <input {...register("storeName")} placeholder="e.g. Whole Foods Market" style={inputStyle(!!errors.storeName)} />
-          <FieldError msg={errors.storeName?.message} />
-        </div>
+            <div>
+              <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
+                Store name *
+              </Label>
+              <Input
+                {...register("storeName")}
+                placeholder="e.g. Whole Foods Market"
+                className={cn(
+                  "h-10 text-sm text-[#1A3A5C] bg-[#F7F9FC] border-[#D1DDE8]",
+                  errors.storeName && "border-red-300 bg-red-50"
+                )}
+              />
+              <FieldError msg={errors.storeName?.message} />
+            </div>
 
-        <div>
-          <label style={lbl}>Display name (shown on screen)</label>
-          <input {...register("displayName")} placeholder="Optional — defaults to store name" style={inputStyle()} />
-        </div>
+            <div>
+              <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
+                Display name (shown on screen)
+              </Label>
+              <Input
+                {...register("displayName")}
+                placeholder="Optional — defaults to store name"
+                className="h-10 text-sm text-[#1A3A5C] bg-[#F7F9FC] border-[#D1DDE8]"
+              />
+            </div>
 
-        <div>
-          <label style={lbl}>Address line 1 *</label>
-          <input {...register("addressLine1")} placeholder="123 Main St" style={inputStyle(!!errors.addressLine1)} />
-          <FieldError msg={errors.addressLine1?.message} />
-        </div>
+            <div>
+              <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
+                Address line 1 *
+              </Label>
+              <Input
+                {...register("addressLine1")}
+                placeholder="123 Main St"
+                className={cn(
+                  "h-10 text-sm text-[#1A3A5C] bg-[#F7F9FC] border-[#D1DDE8]",
+                  errors.addressLine1 && "border-red-300 bg-red-50"
+                )}
+              />
+              <FieldError msg={errors.addressLine1?.message} />
+            </div>
 
-        <div>
-          <label style={lbl}>Address line 2</label>
-          <input {...register("addressLine2")} placeholder="Suite, floor, etc." style={inputStyle()} />
-        </div>
+            <div>
+              <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
+                Address line 2
+              </Label>
+              <Input
+                {...register("addressLine2")}
+                placeholder="Suite, floor, etc."
+                className="h-10 text-sm text-[#1A3A5C] bg-[#F7F9FC] border-[#D1DDE8]"
+              />
+            </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-          <div>
-            <label style={lbl}>Country *</label>
-            <select {...register("countryId")} style={selectStyle(!!errors.countryId)}>
-              <option value="">Select country</option>
-              {countries.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-            <FieldError msg={errors.countryId?.message} />
-          </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
+                  Country *
+                </Label>
+                <Select
+                  value={watch("countryId")}
+                  onValueChange={(val) => setValue("countryId", val, { shouldValidate: true })}
+                >
+                  <SelectTrigger
+                    className={cn(
+                      "h-10 text-sm text-[#1A3A5C] bg-[#F7F9FC] border-[#D1DDE8]",
+                      errors.countryId && "border-red-300 bg-red-50"
+                    )}
+                  >
+                    <SelectValue placeholder="Select country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {countries.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FieldError msg={errors.countryId?.message} />
+              </div>
 
-          <div>
-            <label style={lbl}>State *</label>
-            <select {...register("stateId")} disabled={!states.length} style={selectStyle(!!errors.stateId)}>
-              <option value="">Select state</option>
-              {states.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-            <FieldError msg={errors.stateId?.message} />
-          </div>
+              <div>
+                <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
+                  State *
+                </Label>
+                <Select
+                  value={watch("stateId")}
+                  onValueChange={(val) => setValue("stateId", val, { shouldValidate: true })}
+                  disabled={!states.length}
+                >
+                  <SelectTrigger
+                    className={cn(
+                      "h-10 text-sm text-[#1A3A5C] bg-[#F7F9FC] border-[#D1DDE8]",
+                      errors.stateId && "border-red-300 bg-red-50"
+                    )}
+                  >
+                    <SelectValue placeholder="Select state" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {states.map(s => (
+                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FieldError msg={errors.stateId?.message} />
+              </div>
 
-          <div>
-            <label style={lbl}>City *</label>
-            <select {...register("cityId")} disabled={!cities.length} style={selectStyle(!!errors.cityId)}>
-              <option value="">Select city</option>
-              {cities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-            <FieldError msg={errors.cityId?.message} />
-          </div>
+              <div>
+                <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
+                  City *
+                </Label>
+                <Select
+                  value={watch("cityId")}
+                  onValueChange={(val) => setValue("cityId", val, { shouldValidate: true })}
+                  disabled={!cities.length}
+                >
+                  <SelectTrigger
+                    className={cn(
+                      "h-10 text-sm text-[#1A3A5C] bg-[#F7F9FC] border-[#D1DDE8]",
+                      errors.cityId && "border-red-300 bg-red-50"
+                    )}
+                  >
+                    <SelectValue placeholder="Select city" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cities.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FieldError msg={errors.cityId?.message} />
+              </div>
 
-          <div>
-            <label style={lbl}>Postal code *</label>
-            <select {...register("postalCodeId")} disabled={!postalCodes.length} style={selectStyle(!!errors.postalCodeId)}>
-              <option value="">Select postal code</option>
-              {postalCodes.map(p => <option key={p.id} value={p.id}>{p.code}</option>)}
-            </select>
-            <FieldError msg={errors.postalCodeId?.message} />
-          </div>
-        </div>
+              <div>
+                <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
+                  Postal code *
+                </Label>
+                <Select
+                  value={watch("postalCodeId")}
+                  onValueChange={(val) => setValue("postalCodeId", val, { shouldValidate: true })}
+                  disabled={!postalCodes.length}
+                >
+                  <SelectTrigger
+                    className={cn(
+                      "h-10 text-sm text-[#1A3A5C] bg-[#F7F9FC] border-[#D1DDE8]",
+                      errors.postalCodeId && "border-red-300 bg-red-50"
+                    )}
+                  >
+                    <SelectValue placeholder="Select postal code" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {postalCodes.map(p => (
+                      <SelectItem key={p.id} value={p.id}>{p.code}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FieldError msg={errors.postalCodeId?.message} />
+              </div>
+            </div>
 
-        <div>
-          <label style={lbl}>Currency</label>
-          <select {...register("currency")} style={{ ...selectStyle(), width: 120 }}>
-            <option value="USD">USD</option>
-            <option value="CAD">CAD</option>
-            <option value="GBP">GBP</option>
-            <option value="EUR">EUR</option>
-          </select>
-        </div>
+            <div>
+              <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
+                Currency
+              </Label>
+              <Select
+                value={watch("currency")}
+                onValueChange={(val) => setValue("currency", val as FormData["currency"], { shouldValidate: true })}
+              >
+                <SelectTrigger className="h-10 w-[120px] text-sm text-[#1A3A5C] bg-[#F7F9FC] border-[#D1DDE8]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USD">USD</SelectItem>
+                  <SelectItem value="CAD">CAD</SelectItem>
+                  <SelectItem value="GBP">GBP</SelectItem>
+                  <SelectItem value="EUR">EUR</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", marginTop: 8 }}>
-          <a href="/dashboard/store-owner" style={{ padding: "10px 20px", borderRadius: 8, background: "#E8EFF6", color: ACCENT, fontSize: 14, fontWeight: 600, textDecoration: "none" }}>
-            Cancel
-          </a>
-          <button type="submit" disabled={isSubmitting} style={{ padding: "10px 24px", borderRadius: 8, background: ACCENT, color: "#fff", fontSize: 14, fontWeight: 600, border: "none", cursor: isSubmitting ? "not-allowed" : "pointer", opacity: isSubmitting ? 0.7 : 1 }}>
-            {isSubmitting ? "Creating…" : "Create Location"}
-          </button>
-        </div>
-      </form>
+            <div className="flex gap-3 justify-end mt-2">
+              <Button asChild variant="secondary" className="bg-[#E8EFF6] text-[#1A3A5C] hover:bg-[#d8e4f0]">
+                <a href="/dashboard/store-owner">Cancel</a>
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-[#1A3A5C] text-white hover:bg-[#15304d]"
+              >
+                {isSubmitting ? "Creating…" : "Create Location"}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

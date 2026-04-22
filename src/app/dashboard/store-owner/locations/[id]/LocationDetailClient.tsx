@@ -5,16 +5,13 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-
-const ACCENT = "#1A3A5C";
-
-const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
-  pending:   { bg: "#fef9c3", color: "#854d0e" },
-  approved:  { bg: "#dcfce7", color: "#166534" },
-  denied:    { bg: "#fee2e2", color: "#991b1b" },
-  expired:   { bg: "#f1f5f9", color: "#475569" },
-  cancelled: { bg: "#f1f5f9", color: "#475569" },
-};
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 const editSchema = z.object({
   storeName:    z.string().min(2,  "Store name must be at least 2 characters"),
@@ -38,22 +35,18 @@ type Location = {
   city: { name: string }; state: { code: string }; postalCode: { code: string };
 };
 
-function Badge({ bg, color, label }: { bg: string; color: string; label: string }) {
-  return <span style={{ display: "inline-block", padding: "2px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: bg, color }}>{label}</span>;
-}
+// Map ad status to shadcn Badge variant + explicit color classes
+const STATUS_BADGE: Record<string, { variant: "outline"; className: string }> = {
+  pending:   { variant: "outline", className: "bg-yellow-50 text-yellow-800 border-yellow-200" },
+  approved:  { variant: "outline", className: "bg-green-50 text-green-800 border-green-200" },
+  denied:    { variant: "outline", className: "bg-red-50 text-red-800 border-red-200" },
+  expired:   { variant: "outline", className: "bg-slate-100 text-slate-600 border-slate-200" },
+  cancelled: { variant: "outline", className: "bg-slate-100 text-slate-600 border-slate-200" },
+};
 
 function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null;
-  return <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c" }}>{msg}</p>;
-}
-
-function inputStyle(err?: boolean): React.CSSProperties {
-  return {
-    width: "100%", height: 40, borderRadius: 8, padding: "0 12px",
-    border: `1px solid ${err ? "#fca5a5" : "#D1DDE8"}`,
-    background: err ? "#fff5f5" : "#F7F9FC",
-    color: ACCENT, fontSize: 14, outline: "none", boxSizing: "border-box",
-  };
+  return <p className="mt-1 text-xs text-red-700">{msg}</p>;
 }
 
 export default function LocationDetailClient({
@@ -136,100 +129,158 @@ export default function LocationDetailClient({
   ];
 
   return (
-    <div style={{ maxWidth: 760 }}>
+    <div className="max-w-[760px]">
       {/* Toast */}
       {toast && (
-        <div style={{ position: "fixed", top: 24, right: 24, zIndex: 9999, padding: "12px 20px", borderRadius: 10, background: toast.ok ? "#166534" : "#991b1b", color: "#fff", fontSize: 14, fontWeight: 500, boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}>
+        <div
+          className={cn(
+            "fixed top-6 right-6 z-[9999] px-5 py-3 rounded-[10px] text-sm font-medium text-white shadow-[0_4px_20px_rgba(0,0,0,0.15)]",
+            toast.ok ? "bg-green-800" : "bg-red-800"
+          )}
+        >
           {toast.msg}
         </div>
       )}
 
       {/* Breadcrumb */}
-      <div style={{ marginBottom: 24, fontSize: 13, color: "#6B8FA8" }}>
-        <Link href="/dashboard/store-owner" style={{ color: "#6B8FA8", textDecoration: "none" }}>
+      <div className="mb-6 text-[13px] text-[#6B8FA8]">
+        <Link href="/dashboard/store-owner" className="text-[#6B8FA8] no-underline hover:underline">
           {isAdmin ? "All Locations" : "My Locations"}
         </Link>
         {" › "}
-        <span style={{ color: ACCENT }}>{location.storeName}</span>
+        <span className="text-[#1A3A5C]">{location.storeName}</span>
       </div>
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24, gap: 16, flexWrap: "wrap" }}>
+      <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
         <div>
-          <h1 style={{ fontFamily: "Georgia,serif", fontSize: 24, fontWeight: 700, color: ACCENT, margin: "0 0 4px" }}>{location.storeName}</h1>
-          <div style={{ fontSize: 13, color: "#6B8FA8" }}>{location.addressLine1} · {location.city.name}, {location.state.code} {location.postalCode.code}</div>
-          <div style={{ fontSize: 11, color: "#9DC4E0", marginTop: 4, fontFamily: "monospace" }}>/display/{location.slug}</div>
+          <h1 className="font-serif text-2xl font-bold text-[#1A3A5C] mb-1">{location.storeName}</h1>
+          <div className="text-[13px] text-[#6B8FA8]">
+            {location.addressLine1} · {location.city.name}, {location.state.code} {location.postalCode.code}
+          </div>
+          <div className="text-[11px] text-[#9DC4E0] mt-1 font-mono">/display/{location.slug}</div>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <Link href={`/display/${location.slug}`} target="_blank" style={{ fontSize: 13, color: "#4A90C4", border: "1px solid #4A90C4", padding: "8px 14px", borderRadius: 8, textDecoration: "none" }}>
-            View Display ↗
-          </Link>
-          <button onClick={() => setEditMode(!editMode)} style={{ fontSize: 13, color: "#fff", background: ACCENT, padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer", fontWeight: 600 }}>
+        <div className="flex gap-2">
+          <Button asChild variant="outline" className="text-[13px] text-[#4A90C4] border-[#4A90C4] hover:bg-[#4A90C4]/10">
+            <Link href={`/display/${location.slug}`} target="_blank">
+              View Display ↗
+            </Link>
+          </Button>
+          <Button
+            onClick={() => setEditMode(!editMode)}
+            className="text-[13px] bg-[#1A3A5C] text-white hover:bg-[#15304d] font-semibold"
+          >
             {editMode ? "Cancel Edit" : "Edit Location"}
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Edit form */}
       {editMode && (
-        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: 24, marginBottom: 24 }}>
-          <h2 style={{ fontFamily: "Georgia,serif", fontSize: 17, color: ACCENT, marginBottom: 16 }}>Edit Location Details</h2>
-          <form onSubmit={handleSubmit(onEditSubmit)} noValidate style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {EDIT_FIELDS.map(({ label, field }) => (
-              <div key={field}>
-                <label style={{ display: "block", marginBottom: 6, fontSize: 11, fontWeight: 600, color: "#4A5568", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                  {label}
-                </label>
-                <input {...register(field)} style={inputStyle(!!errors[field])} />
-                <FieldError msg={errors[field]?.message} />
+        <Card className="border-[#D8E4EE] mb-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="font-serif text-[17px] text-[#1A3A5C]">Edit Location Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit(onEditSubmit)} noValidate className="flex flex-col gap-4">
+              {EDIT_FIELDS.map(({ label, field }) => (
+                <div key={field}>
+                  <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
+                    {label}
+                  </Label>
+                  <Input
+                    {...register(field)}
+                    className={cn(
+                      "h-10 text-sm text-[#1A3A5C] bg-[#F7F9FC] border-[#D1DDE8]",
+                      errors[field] && "border-red-300 bg-red-50"
+                    )}
+                  />
+                  <FieldError msg={errors[field]?.message} />
+                </div>
+              ))}
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="bg-green-700 text-white hover:bg-green-800"
+                >
+                  {isSubmitting ? "Saving…" : "Save Changes"}
+                </Button>
               </div>
-            ))}
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                style={{ padding: "10px 24px", borderRadius: 8, background: "#16a34a", color: "#fff", border: "none", fontSize: 14, fontWeight: 600, cursor: isSubmitting ? "not-allowed" : "pointer", opacity: isSubmitting ? 0.7 : 1 }}
-              >
-                {isSubmitting ? "Saving…" : "Save Changes"}
-              </button>
-            </div>
-          </form>
-        </div>
+            </form>
+          </CardContent>
+        </Card>
       )}
 
       {/* Carousel order */}
-      <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", overflow: "hidden", marginBottom: 24 }}>
-        <div style={{ padding: "16px 24px", borderBottom: "1px solid #D8E4EE", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <Card className="border-[#D8E4EE] mb-6 overflow-hidden">
+        <div className="px-6 py-4 flex items-center justify-between border-b border-[#D8E4EE]">
           <div>
-            <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: ACCENT, margin: 0 }}>Carousel Order</h2>
-            <p style={{ fontSize: 12, color: "#6B8FA8", margin: "4px 0 0" }}>
+            <h2 className="font-serif text-[18px] text-[#1A3A5C] m-0">Carousel Order</h2>
+            <p className="text-xs text-[#6B8FA8] mt-1 mb-0">
               {approvedAds.length} approved ad{approvedAds.length !== 1 ? "s" : ""} · Drag ↑↓ to reorder
             </p>
           </div>
           {approvedAds.length > 1 && (
-            <button onClick={saveOrder} disabled={saving} style={{ padding: "8px 18px", borderRadius: 8, background: "#1A3A5C", color: "#fff", border: "none", fontSize: 13, fontWeight: 600, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}>
+            <Button
+              onClick={saveOrder}
+              disabled={saving}
+              className="bg-[#1A3A5C] text-white hover:bg-[#15304d] text-[13px] font-semibold"
+            >
               {saving ? "Saving…" : "Save Order"}
-            </button>
+            </Button>
           )}
         </div>
 
         {approvedAds.length === 0 ? (
-          <div style={{ padding: 32, textAlign: "center", color: "#6B8FA8", fontSize: 14 }}>
+          <div className="p-8 text-center text-[#6B8FA8] text-sm">
             No approved ads at this location yet.
           </div>
         ) : (
           <div>
             {adList.filter(a => a.status === "approved").map((ad, idx, arr) => (
-              <div key={ad.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 24px", borderBottom: idx < arr.length - 1 ? "1px solid #D8E4EE" : "none" }}>
-                <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                  <button onClick={() => moveAd(adList.indexOf(ad), -1)} disabled={idx === 0} style={{ background: "none", border: "1px solid #D8E4EE", borderRadius: 4, width: 24, height: 24, cursor: idx === 0 ? "not-allowed" : "pointer", fontSize: 12, color: idx === 0 ? "#D8E4EE" : ACCENT }}>▲</button>
-                  <button onClick={() => moveAd(adList.indexOf(ad), 1)} disabled={idx === arr.length - 1} style={{ background: "none", border: "1px solid #D8E4EE", borderRadius: 4, width: 24, height: 24, cursor: idx === arr.length - 1 ? "not-allowed" : "pointer", fontSize: 12, color: idx === arr.length - 1 ? "#D8E4EE" : ACCENT }}>▼</button>
+              <div
+                key={ad.id}
+                className={cn(
+                  "flex items-center gap-3.5 px-6 py-3",
+                  idx < arr.length - 1 && "border-b border-[#D8E4EE]"
+                )}
+              >
+                <div className="flex flex-col gap-0.5">
+                  <button
+                    onClick={() => moveAd(adList.indexOf(ad), -1)}
+                    disabled={idx === 0}
+                    className={cn(
+                      "w-6 h-6 rounded border border-[#D8E4EE] bg-transparent text-xs leading-none",
+                      idx === 0
+                        ? "cursor-not-allowed text-[#D8E4EE]"
+                        : "cursor-pointer text-[#1A3A5C] hover:bg-[#F7F9FC]"
+                    )}
+                  >
+                    ▲
+                  </button>
+                  <button
+                    onClick={() => moveAd(adList.indexOf(ad), 1)}
+                    disabled={idx === arr.length - 1}
+                    className={cn(
+                      "w-6 h-6 rounded border border-[#D8E4EE] bg-transparent text-xs leading-none",
+                      idx === arr.length - 1
+                        ? "cursor-not-allowed text-[#D8E4EE]"
+                        : "cursor-pointer text-[#1A3A5C] hover:bg-[#F7F9FC]"
+                    )}
+                  >
+                    ▼
+                  </button>
                 </div>
-                <div style={{ width: 24, textAlign: "center", fontSize: 12, color: "#9DC4E0", fontWeight: 600 }}>{idx + 1}</div>
-                <img src={ad.imageUrl} alt={ad.title} style={{ width: 64, height: 44, objectFit: "cover", borderRadius: 6, flexShrink: 0 }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, fontSize: 14, color: ACCENT }}>{ad.title}</div>
-                  <div style={{ fontSize: 12, color: "#6B8FA8" }}>
+                <div className="w-6 text-center text-xs text-[#9DC4E0] font-semibold">{idx + 1}</div>
+                <img
+                  src={ad.imageUrl}
+                  alt={ad.title}
+                  className="w-16 h-11 object-cover rounded-md shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-sm text-[#1A3A5C]">{ad.title}</div>
+                  <div className="text-xs text-[#6B8FA8]">
                     {new Date(ad.startedAt).toLocaleDateString()} – {new Date(ad.endedAt).toLocaleDateString()} · by {ad.user.name}
                   </div>
                 </div>
@@ -237,33 +288,49 @@ export default function LocationDetailClient({
             ))}
           </div>
         )}
-      </div>
+      </Card>
 
       {/* All ads table */}
-      <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", overflow: "hidden" }}>
-        <div style={{ padding: "16px 24px", borderBottom: "1px solid #D8E4EE" }}>
-          <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: ACCENT, margin: 0 }}>All Ads at This Location</h2>
-          <p style={{ fontSize: 12, color: "#6B8FA8", margin: "4px 0 0" }}>{adList.length} total</p>
+      <Card className="border-[#D8E4EE] overflow-hidden">
+        <div className="px-6 py-4 border-b border-[#D8E4EE]">
+          <h2 className="font-serif text-[18px] text-[#1A3A5C] m-0">All Ads at This Location</h2>
+          <p className="text-xs text-[#6B8FA8] mt-1 mb-0">{adList.length} total</p>
         </div>
         {adList.length === 0 ? (
-          <div style={{ padding: 32, textAlign: "center", color: "#6B8FA8", fontSize: 14 }}>No ads submitted yet.</div>
+          <div className="p-8 text-center text-[#6B8FA8] text-sm">No ads submitted yet.</div>
         ) : (
           adList.map((ad, idx) => {
-            const s = STATUS_STYLE[ad.status] ?? STATUS_STYLE.pending;
+            const badgeProps = STATUS_BADGE[ad.status] ?? STATUS_BADGE.pending;
             return (
-              <div key={ad.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 24px", borderBottom: idx < adList.length - 1 ? "1px solid #D8E4EE" : "none" }}>
-                <img src={ad.imageUrl} alt={ad.title} style={{ width: 60, height: 42, objectFit: "cover", borderRadius: 6, flexShrink: 0 }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: 14, color: ACCENT, marginBottom: 2 }}>{ad.title}</div>
-                  <div style={{ fontSize: 12, color: "#6B8FA8" }}>by {ad.user.name} · {new Date(ad.createdAt).toLocaleDateString()}</div>
+              <div
+                key={ad.id}
+                className={cn(
+                  "flex items-center gap-3.5 px-6 py-3",
+                  idx < adList.length - 1 && "border-b border-[#D8E4EE]"
+                )}
+              >
+                <img
+                  src={ad.imageUrl}
+                  alt={ad.title}
+                  className="w-[60px] h-[42px] object-cover rounded-md shrink-0"
+                />
+                <div className="flex-1">
+                  <div className="font-semibold text-sm text-[#1A3A5C] mb-0.5">{ad.title}</div>
+                  <div className="text-xs text-[#6B8FA8]">
+                    by {ad.user.name} · {new Date(ad.createdAt).toLocaleDateString()}
+                  </div>
                 </div>
-                <Badge bg={s.bg} color={s.color} label={ad.status.charAt(0).toUpperCase() + ad.status.slice(1)} />
-                <Link href={`/dashboard/user/ads/${ad.id}`} style={{ fontSize: 12, color: "#4A90C4", textDecoration: "none" }}>Details</Link>
+                <Badge variant={badgeProps.variant} className={badgeProps.className}>
+                  {ad.status.charAt(0).toUpperCase() + ad.status.slice(1)}
+                </Badge>
+                <Link href={`/dashboard/user/ads/${ad.id}`} className="text-xs text-[#4A90C4] no-underline hover:underline">
+                  Details
+                </Link>
               </div>
             );
           })
         )}
-      </div>
+      </Card>
     </div>
   );
 }

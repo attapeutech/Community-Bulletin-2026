@@ -3,21 +3,19 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AuthLayout } from "@/components/auth/AuthLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 function FormError({ msg }: { msg: string | null }) {
   if (!msg) return null;
   return (
-    <div style={{
-      background: "#FEF2F2", border: "1px solid #fca5a5", borderRadius: 8,
-      padding: "10px 14px", marginBottom: 16,
-      display: "flex", gap: 8, alignItems: "flex-start",
-    }}>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
-        <circle cx="12" cy="12" r="10" stroke="#b91c1c" strokeWidth="1.5"/>
-        <path d="M12 8v4m0 4h.01" stroke="#b91c1c" strokeWidth="1.5" strokeLinecap="round"/>
-      </svg>
-      <span style={{ fontSize: 13, color: "#b91c1c" }}>{msg}</span>
-    </div>
+    <Alert variant="destructive" className="mb-4">
+      <AlertCircle className="h-4 w-4" />
+      <AlertDescription>{msg}</AlertDescription>
+    </Alert>
   );
 }
 
@@ -68,36 +66,29 @@ export default function TwoFactorPage() {
 
   return (
     <AuthLayout>
-      <div style={{ textAlign: "center", marginBottom: 24 }}>
-        <div style={{
-          width: 56, height: 56, borderRadius: "50%", background: "#EEF6FF",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          margin: "0 auto 16px",
-        }}>
+      <div className="text-center mb-6">
+        <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
               stroke="#4A90C4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </div>
-        <h1 style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 21, color: "#1A3A5C", margin: "0 0 8px" }}>
+        <h1 className="font-serif font-bold text-[21px] text-primary m-0 mb-2">
           Check your email
         </h1>
-        <p style={{ fontSize: 13, color: "#6B8FA8", lineHeight: 1.6, margin: 0 }}>
+        <p className="text-[13px] text-muted-foreground leading-relaxed m-0">
           {sent
             ? "We sent a 6-digit verification code to your email address."
             : "Sending your verification code…"}
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
-          <label style={{
-            display: "block", marginBottom: 6, fontSize: 11, fontWeight: 600,
-            color: "#4A5568", textTransform: "uppercase", letterSpacing: "0.04em",
-          }}>
+          <Label className="block mb-1.5 text-[11px] font-semibold text-foreground/70 uppercase tracking-[0.04em]">
             Verification code
-          </label>
-          <input
+          </Label>
+          <Input
             type="text"
             inputMode="numeric"
             maxLength={6}
@@ -106,44 +97,32 @@ export default function TwoFactorPage() {
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
             autoFocus
             autoComplete="one-time-code"
-            style={{
-              width: "100%", height: 52, borderRadius: 8, padding: "0 12px",
-              border: "1px solid #D1DDE8", background: "#F7F9FC", color: "#1A3A5C",
-              fontSize: 26, outline: "none", textAlign: "center",
-              fontFamily: "monospace", letterSpacing: "0.4em", boxSizing: "border-box",
-            }}
+            className="h-[52px] text-[26px] text-center font-mono tracking-[0.4em]"
           />
         </div>
 
         <FormError msg={formError} />
 
-        <button
+        <Button
           type="submit"
           disabled={loading || !sent}
-          style={{
-            width: "100%", height: 44, borderRadius: 8, border: "none",
-            background: "#1A3A5C", color: "#fff", fontSize: 14, fontWeight: 600,
-            opacity: (loading || !sent) ? 0.6 : 1,
-            cursor: (loading || !sent) ? "not-allowed" : "pointer",
-          }}
+          className="w-full h-11"
         >
           {loading ? "Verifying…" : "Verify"}
-        </button>
+        </Button>
       </form>
 
-      <p style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "#6B8FA8" }}>
+      <p className="text-center mt-5 text-[13px] text-muted-foreground">
         Didn&apos;t receive it?{" "}
-        <button
+        <Button
+          type="button"
+          variant="link"
           onClick={sendCode}
           disabled={resending}
-          style={{
-            color: "#4A90C4", fontWeight: 600, background: "none",
-            border: "none", cursor: resending ? "not-allowed" : "pointer",
-            fontSize: 13, opacity: resending ? 0.6 : 1,
-          }}
+          className="text-accent font-semibold text-[13px] p-0 h-auto"
         >
           {resending ? "Sending…" : "Resend code"}
-        </button>
+        </Button>
       </p>
     </AuthLayout>
   );

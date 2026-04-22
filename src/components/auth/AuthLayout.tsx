@@ -1,60 +1,59 @@
 import { Icon } from "@/components/layout/Icon";
 import Link from "next/link";
+import { Card, CardContent } from "@/components/ui/card";
 
 export function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ display: "flex", minHeight: "100vh", fontFamily: "'Inter','Segoe UI',Arial,sans-serif" }}>
+    <div className="flex min-h-screen font-sans">
 
       {/* ── LEFT PANEL ── */}
-      <div style={{
-        width: "42%", minWidth: 340, background: "#1A3A5C",
-        padding: "32px 36px", display: "flex", flexDirection: "column",
-        justifyContent: "space-between", alignItems: "center",
-      }}>
+      <div className="w-[42%] min-w-[340px] bg-primary px-9 py-8 flex flex-col justify-between items-center">
         {/* Logo hero */}
-        <Link href="/" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, flex: 1, justifyContent: "center", textDecoration: "none" }}>
-          <div style={{ background: "#E8EFF6", borderRadius: 22, padding: 16, display: "flex", width: 112, height: 112, alignItems: "center", justifyContent: "center" }}>
+        <Link href="/" className="flex flex-col items-center gap-5 flex-1 justify-center no-underline">
+          <div className="bg-[#E8EFF6] rounded-[22px] p-4 flex w-28 h-28 items-center justify-center">
             <Icon size={80} />
           </div>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 38, color: "#fff", lineHeight: 1.05 }}>Community</div>
-            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 38, color: "#E8563A", lineHeight: 1.05 }}>
-              Bulletin<span style={{ color: "#4A90C4", fontSize: 22, fontFamily: "Arial,sans-serif", fontWeight: 400 }}>.com</span>
+          <div className="text-center">
+            <div className="font-serif font-bold text-[38px] text-white leading-[1.05]">Community</div>
+            <div className="font-serif font-bold text-[38px] text-destructive leading-[1.05]">
+              Bulletin<span className="text-accent text-[22px] font-sans font-normal">.com</span>
             </div>
-            <div style={{ width: 50, height: 3, background: "#E8563A", borderRadius: 2, margin: "12px auto 0" }} />
-            <div style={{ fontSize: 11, color: "#9DC4E0", marginTop: 8, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+            <div className="w-[50px] h-[3px] bg-destructive rounded-sm mx-auto mt-3" />
+            <div className="text-[11px] text-accent/60 mt-2 tracking-[0.1em] uppercase">
               Digital in-store advertising
             </div>
           </div>
         </Link>
 
         {/* Hero copy */}
-        <div style={{ textAlign: "center", paddingBottom: 20 }}>
-          <h2 style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 17, color: "#fff", lineHeight: 1.4, marginBottom: 8 }}>
+        <div className="text-center pb-5">
+          <h2 className="font-serif font-bold text-[17px] text-white leading-snug mb-2">
             Your neighborhood.<br />Your screen. Your community.
           </h2>
-          <p style={{ fontSize: 12, color: "#9DC4E0", lineHeight: 1.65, margin: 0 }}>
+          <p className="text-xs text-accent/60 leading-relaxed m-0">
             Connecting local businesses with their community —<br />
             on digital screens inside the stores people visit every day.
           </p>
         </div>
 
         {/* Stats */}
-        <div style={{ display: "flex", justifyContent: "space-around", width: "100%", paddingTop: 18, borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+        <div className="flex justify-around w-full pt-[18px] border-t border-white/10">
           {[{ num: "500+", lbl: "Locations" }, { num: "2,400+", lbl: "Active ads" }, { num: "48", lbl: "States" }].map(({ num, lbl }) => (
-            <div key={lbl} style={{ textAlign: "center" }}>
-              <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 18, color: "#E8563A" }}>{num}</div>
-              <div style={{ fontSize: 10, color: "#9DC4E0", marginTop: 2 }}>{lbl}</div>
+            <div key={lbl} className="text-center">
+              <div className="font-serif font-bold text-[18px] text-destructive">{num}</div>
+              <div className="text-[10px] text-accent/60 mt-0.5">{lbl}</div>
             </div>
           ))}
         </div>
       </div>
 
       {/* ── RIGHT PANEL ── */}
-      <div style={{ flex: 1, background: "#F4F7FB", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 32px" }}>
-        <div style={{ width: "100%", maxWidth: 400, background: "#fff", borderRadius: 16, padding: "36px 32px", border: "0.5px solid #D8E4EE" }}>
-          {children}
-        </div>
+      <div className="flex-1 bg-secondary flex items-center justify-center px-8 py-10">
+        <Card className="w-full max-w-[400px] border-border/50 shadow-none rounded-2xl">
+          <CardContent className="px-8 py-9">
+            {children}
+          </CardContent>
+        </Card>
       </div>
 
     </div>

@@ -24,13 +24,8 @@ export async function POST() {
   const code = String(randomInt(100000, 999999));
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-  await db
-    .insert(verifications)
-    .values({ identifier: `2fa_code:${userId}`, value: code, expiresAt })
-    .onConflictDoUpdate({
-      target: verifications.identifier,
-      set: { value: code, expiresAt, updatedAt: new Date() },
-    });
+  await db.delete(verifications).where(eq(verifications.identifier, `2fa_code:${userId}`));
+  await db.insert(verifications).values({ identifier: `2fa_code:${userId}`, value: code, expiresAt });
 
   await send2FACodeEmail({ to: user.email, name: user.name, code });
 

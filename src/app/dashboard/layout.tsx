@@ -2,6 +2,7 @@ import { requireAuth } from "@/lib/auth/session";
 import Link from "next/link";
 import { Icon } from "@/components/layout/Icon";
 import { SignOutButton } from "@/components/layout/SignOutButton";
+import { Badge } from "@/components/ui/badge";
 
 export default async function DashboardLayout({
   children,
@@ -22,27 +23,19 @@ export default async function DashboardLayout({
   ].filter((item) => item.roles.includes(role));
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#F4F7FB" }}>
+    <div className="flex min-h-screen bg-[#F4F7FB]">
       {/* Sidebar */}
-      <aside style={{
-        width: 240,
-        background: "#1A3A5C",
-        display: "flex",
-        flexDirection: "column",
-        padding: "24px 16px",
-        gap: 8,
-        flexShrink: 0,
-      }}>
+      <aside className="w-60 bg-[#1A3A5C] flex flex-col shrink-0 px-4 py-6 gap-2">
         {/* Logo */}
-        <Link href="/dashboard/user" style={{ textDecoration: "none" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32, paddingLeft: 8 }}>
-            <div style={{ background: "#E8EFF6", borderRadius: 10, padding: 6 }}>
+        <Link href="/dashboard/user" className="no-underline">
+          <div className="flex items-center gap-2.5 mb-8 pl-2">
+            <div className="bg-[#E8EFF6] rounded-[10px] p-1.5">
               <Icon size={28} />
             </div>
             <div>
-              <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, color: "#fff", fontSize: 13, lineHeight: 1.1 }}>Community</div>
-              <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, color: "#E8563A", fontSize: 13, lineHeight: 1.1 }}>
-                Bulletin<span style={{ color: "#4A90C4", fontSize: 10, fontWeight: 400 }}>.com</span>
+              <div className="font-serif font-bold text-white text-[13px] leading-tight">Community</div>
+              <div className="font-serif font-bold text-[#E8563A] text-[13px] leading-tight">
+                Bulletin<span className="text-[#4A90C4] text-[10px] font-normal">.com</span>
               </div>
             </div>
           </div>
@@ -53,46 +46,27 @@ export default async function DashboardLayout({
           <Link
             key={item.href}
             href={item.href}
-            style={{
-              display: "block",
-              padding: "10px 14px",
-              borderRadius: 8,
-              color: "#9DC4E0",
-              textDecoration: "none",
-              fontSize: 14,
-              fontWeight: 500,
-            }}
+            className="block px-3.5 py-2.5 rounded-lg text-[#9DC4E0] no-underline text-sm font-medium hover:bg-white/10 transition-colors"
           >
             {item.label}
           </Link>
         ))}
 
         {/* Bottom: user info + sign out */}
-        <div style={{ marginTop: "auto", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 16 }}>
-          <div style={{ padding: "8px 14px", marginBottom: 4 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{user.name}</div>
-            <div style={{ fontSize: 11, color: "#9DC4E0", marginTop: 2 }}>{user.email}</div>
-            <div style={{
-              display: "inline-block",
-              marginTop: 6,
-              fontSize: 10,
-              fontWeight: 600,
-              padding: "2px 8px",
-              borderRadius: 4,
-              background: "#E8563A",
-              color: "#fff",
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-            }}>
+        <div className="mt-auto border-t border-white/10 pt-4">
+          <div className="px-3.5 py-2 mb-1">
+            <div className="text-[13px] font-semibold text-white">{user.name}</div>
+            <div className="text-[11px] text-[#9DC4E0] mt-0.5">{user.email}</div>
+            <Badge className="mt-1.5 text-[10px] font-semibold uppercase tracking-wide bg-[#E8563A] text-white border-0 rounded px-2 py-0.5">
               {role.replace("_", " ")}
-            </div>
+            </Badge>
           </div>
           <SignOutButton />
         </div>
       </aside>
 
       {/* Main content */}
-      <main style={{ flex: 1, padding: 32, overflowY: "auto" }}>
+      <main className="flex-1 p-8 overflow-y-auto">
         {children}
       </main>
     </div>

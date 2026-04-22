@@ -2,17 +2,31 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Check, X, RefreshCw } from "lucide-react";
 
-const ACCENT = "#1A3A5C";
-const MUTED = "#6B8FA8";
-const BORDER = "#D8E4EE";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
 
-const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
-  pending:   { bg: "#fef9c3", color: "#854d0e" },
-  approved:  { bg: "#dcfce7", color: "#166534" },
-  denied:    { bg: "#fee2e2", color: "#991b1b" },
-  expired:   { bg: "#f1f5f9", color: "#475569" },
-  cancelled: { bg: "#f1f5f9", color: "#475569" },
+const STATUS_BADGE_CLASS: Record<string, string> = {
+  pending:   "bg-yellow-100 text-yellow-800 border-yellow-200",
+  approved:  "bg-green-100 text-green-800 border-green-200",
+  denied:    "bg-red-100 text-red-800 border-red-200",
+  expired:   "bg-slate-100 text-slate-600 border-slate-200",
+  cancelled: "bg-slate-100 text-slate-600 border-slate-200",
+};
+
+const ROLE_BADGE_CLASS: Record<string, string> = {
+  user:        "bg-slate-100 text-slate-600 border-slate-200",
+  store_owner: "bg-blue-100 text-blue-800 border-blue-200",
+  approver:    "bg-yellow-100 text-yellow-800 border-yellow-200",
+  admin:       "bg-red-100 text-red-800 border-red-200",
 };
 
 const ROLE_LABEL: Record<string, string> = {
@@ -21,21 +35,6 @@ const ROLE_LABEL: Record<string, string> = {
   approver: "Approver",
   admin: "Admin",
 };
-
-const ROLE_COLOR: Record<string, { bg: string; color: string }> = {
-  user:        { bg: "#f1f5f9", color: "#475569" },
-  store_owner: { bg: "#dbeafe", color: "#1e40af" },
-  approver:    { bg: "#fef9c3", color: "#854d0e" },
-  admin:       { bg: "#fee2e2", color: "#991b1b" },
-};
-
-function Badge({ bg, color, label }: { bg: string; color: string; label: string }) {
-  return (
-    <span style={{ display: "inline-block", padding: "2px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: bg, color }}>
-      {label}
-    </span>
-  );
-}
 
 type Stats = {
   totalAds: number;
@@ -71,12 +70,12 @@ type Ad = {
   location: { id: string; storeName: string; slug: string };
 };
 
-function StatCard({ label, value, sub, accent }: { label: string; value: string | number; sub?: string; accent?: string }) {
+function StatCard({ label, value, sub, accentClass }: { label: string; value: string | number; sub?: string; accentClass?: string }) {
   return (
-    <div style={{ background: "#fff", borderRadius: 12, border: `1px solid ${BORDER}`, padding: "20px 24px", flex: "1 1 160px" }}>
-      <div style={{ fontSize: 11, fontWeight: 600, color: MUTED, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>{label}</div>
-      <div style={{ fontSize: 28, fontWeight: 700, color: accent ?? ACCENT, lineHeight: 1 }}>{value}</div>
-      {sub && <div style={{ fontSize: 12, color: MUTED, marginTop: 4 }}>{sub}</div>}
+    <div className="flex-1 basis-40 bg-white rounded-xl border border-[#D8E4EE] px-6 py-5">
+      <div className="text-[11px] font-semibold text-[#6B8FA8] uppercase tracking-[0.05em] mb-2">{label}</div>
+      <div className={cn("text-[28px] font-bold leading-none", accentClass ?? "text-[#1A3A5C]")}>{value}</div>
+      {sub && <div className="text-xs text-[#6B8FA8] mt-1">{sub}</div>}
     </div>
   );
 }
@@ -157,170 +156,191 @@ export default function AdminPanelClient({
 
   const filteredAds = statusFilter === "all" ? ads : ads.filter(a => a.status === statusFilter);
 
-  const TAB_STYLE = (active: boolean): React.CSSProperties => ({
-    padding: "8px 18px",
-    borderRadius: 8,
-    border: "none",
-    background: active ? ACCENT : "transparent",
-    color: active ? "#fff" : MUTED,
-    fontWeight: active ? 600 : 400,
-    fontSize: 13,
-    cursor: "pointer",
-    transition: "all 0.15s",
-  });
-
   return (
-    <div style={{ maxWidth: 920 }}>
+    <div className="max-w-[920px]">
       {/* Toasts */}
       {userToast && (
-        <div style={{ position: "fixed", top: 24, right: 24, zIndex: 9999, padding: "12px 20px", borderRadius: 10, background: userToast.ok ? "#166534" : "#991b1b", color: "#fff", fontSize: 14, fontWeight: 500, boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}>
-          {userToast.msg}
-        </div>
+        <Alert
+          className={cn(
+            "fixed top-6 right-6 z-[9999] w-auto max-w-xs shadow-lg border-0 text-white",
+            userToast.ok ? "bg-green-800" : "bg-red-800"
+          )}
+        >
+          <AlertDescription className="text-white font-medium">{userToast.msg}</AlertDescription>
+        </Alert>
       )}
       {adToast && (
-        <div style={{ position: "fixed", top: 68, right: 24, zIndex: 9999, padding: "12px 20px", borderRadius: 10, background: adToast.ok ? "#166534" : "#991b1b", color: "#fff", fontSize: 14, fontWeight: 500, boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}>
-          {adToast.msg}
-        </div>
+        <Alert
+          className={cn(
+            "fixed top-[68px] right-6 z-[9999] w-auto max-w-xs shadow-lg border-0 text-white",
+            adToast.ok ? "bg-green-800" : "bg-red-800"
+          )}
+        >
+          <AlertDescription className="text-white font-medium">{adToast.msg}</AlertDescription>
+        </Alert>
       )}
 
       {/* Header */}
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontFamily: "Georgia,serif", fontSize: 26, fontWeight: 700, color: ACCENT, margin: "0 0 6px" }}>Admin Panel</h1>
-        <p style={{ color: MUTED, fontSize: 14, margin: 0 }}>Platform-wide oversight — users, ads, and revenue.</p>
+      <div className="mb-7">
+        <h1 className="font-serif text-[26px] font-bold text-[#1A3A5C] mb-1.5">Admin Panel</h1>
+        <p className="text-[#6B8FA8] text-sm">Platform-wide oversight — users, ads, and revenue.</p>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 6, marginBottom: 28, background: "#F0F5FA", borderRadius: 10, padding: 4, width: "fit-content" }}>
-        <button style={TAB_STYLE(activeTab === "overview")} onClick={() => setActiveTab("overview")}>Overview</button>
-        <button style={TAB_STYLE(activeTab === "users")} onClick={() => setActiveTab("users")}>Users ({stats.totalUsers})</button>
-        <button style={TAB_STYLE(activeTab === "ads")} onClick={() => setActiveTab("ads")}>All Ads ({stats.totalAds})</button>
-      </div>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "users" | "ads")}>
+        <TabsList className="mb-7 bg-[#F0F5FA] rounded-[10px] p-1 h-auto gap-1.5">
+          <TabsTrigger
+            value="overview"
+            className="rounded-lg text-[13px] px-[18px] py-2 data-[state=active]:bg-[#1A3A5C] data-[state=active]:text-white data-[state=active]:shadow-none data-[state=inactive]:text-[#6B8FA8] data-[state=inactive]:bg-transparent"
+          >
+            Overview
+          </TabsTrigger>
+          <TabsTrigger
+            value="users"
+            className="rounded-lg text-[13px] px-[18px] py-2 data-[state=active]:bg-[#1A3A5C] data-[state=active]:text-white data-[state=active]:shadow-none data-[state=inactive]:text-[#6B8FA8] data-[state=inactive]:bg-transparent"
+          >
+            Users ({stats.totalUsers})
+          </TabsTrigger>
+          <TabsTrigger
+            value="ads"
+            className="rounded-lg text-[13px] px-[18px] py-2 data-[state=active]:bg-[#1A3A5C] data-[state=active]:text-white data-[state=active]:shadow-none data-[state=inactive]:text-[#6B8FA8] data-[state=inactive]:bg-transparent"
+          >
+            All Ads ({stats.totalAds})
+          </TabsTrigger>
+        </TabsList>
 
-      {/* OVERVIEW TAB */}
-      {activeTab === "overview" && (
-        <div>
+        {/* OVERVIEW TAB */}
+        <TabsContent value="overview" className="mt-0">
           {/* Stat cards */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginBottom: 32 }}>
-            <StatCard label="Total Revenue" value={`$${(stats.totalRevenueCents / 100).toFixed(2)}`} sub="from paid ads" accent="#166534" />
+          <div className="flex flex-wrap gap-4 mb-8">
+            <StatCard label="Total Revenue" value={`$${(stats.totalRevenueCents / 100).toFixed(2)}`} sub="from paid ads" accentClass="text-green-800" />
             <StatCard label="Total Ads" value={stats.totalAds} />
-            <StatCard label="Pending Review" value={stats.pendingAds} accent={stats.pendingAds > 0 ? "#854d0e" : ACCENT} />
-            <StatCard label="Approved" value={stats.approvedAds} accent="#166534" />
-            <StatCard label="Denied" value={stats.deniedAds} accent="#991b1b" />
+            <StatCard label="Pending Review" value={stats.pendingAds} accentClass={stats.pendingAds > 0 ? "text-yellow-800" : "text-[#1A3A5C]"} />
+            <StatCard label="Approved" value={stats.approvedAds} accentClass="text-green-800" />
+            <StatCard label="Denied" value={stats.deniedAds} accentClass="text-red-800" />
             <StatCard label="Users" value={stats.totalUsers} />
             <StatCard label="Locations" value={stats.totalLocations} />
           </div>
 
           {/* Quick links */}
-          <div style={{ background: "#fff", borderRadius: 12, border: `1px solid ${BORDER}`, overflow: "hidden" }}>
-            <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}` }}>
-              <h2 style={{ fontFamily: "Georgia,serif", fontSize: 17, color: ACCENT, margin: 0 }}>Quick Actions</h2>
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, padding: 24 }}>
-              <button onClick={() => setActiveTab("users")} style={{ padding: "10px 20px", borderRadius: 8, background: "#EFF6FF", color: "#1e40af", border: "1px solid #BFDBFE", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+          <Card className="rounded-xl border-[#D8E4EE] overflow-hidden">
+            <CardHeader className="px-6 py-4 border-b border-[#D8E4EE]">
+              <CardTitle className="font-serif text-[17px] text-[#1A3A5C]">Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-3 p-6">
+              <Button
+                variant="outline"
+                className="bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100 text-[13px] font-semibold h-auto px-5 py-2.5"
+                onClick={() => setActiveTab("users")}
+              >
                 Manage Users
-              </button>
-              <button onClick={() => setActiveTab("ads")} style={{ padding: "10px 20px", borderRadius: 8, background: "#F0FDF4", color: "#166534", border: "1px solid #BBF7D0", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+              </Button>
+              <Button
+                variant="outline"
+                className="bg-green-50 text-green-800 border-green-200 hover:bg-green-100 text-[13px] font-semibold h-auto px-5 py-2.5"
+                onClick={() => setActiveTab("ads")}
+              >
                 Review All Ads
-              </button>
-              <Link href="/dashboard/store-owner" style={{ padding: "10px 20px", borderRadius: 8, background: "#F0F5FA", color: ACCENT, border: `1px solid ${BORDER}`, fontSize: 13, fontWeight: 600, textDecoration: "none", display: "inline-block" }}>
-                All Store Locations
-              </Link>
-              <Link href="/dashboard/approver" style={{ padding: "10px 20px", borderRadius: 8, background: "#FFFBEB", color: "#854d0e", border: "1px solid #FDE68A", fontSize: 13, fontWeight: 600, textDecoration: "none", display: "inline-block" }}>
-                Approver Queue
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
+              </Button>
+              <Button variant="outline" className="bg-[#F0F5FA] text-[#1A3A5C] border-[#D8E4EE] hover:bg-[#E8EFF6] text-[13px] font-semibold h-auto px-5 py-2.5" asChild>
+                <Link href="/dashboard/store-owner">All Store Locations</Link>
+              </Button>
+              <Button variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100 text-[13px] font-semibold h-auto px-5 py-2.5" asChild>
+                <Link href="/dashboard/approver">Approver Queue</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      {/* USERS TAB */}
-      {activeTab === "users" && (
-        <div style={{ background: "#fff", borderRadius: 12, border: `1px solid ${BORDER}`, overflow: "hidden" }}>
-          <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}` }}>
-            <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: ACCENT, margin: 0 }}>All Users</h2>
-            <p style={{ fontSize: 12, color: MUTED, margin: "4px 0 0" }}>{users.length} registered accounts</p>
-          </div>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-              <thead>
-                <tr style={{ background: "#F7F9FC" }}>
-                  <th style={{ padding: "10px 16px", textAlign: "left", fontWeight: 600, color: MUTED, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em" }}>Name</th>
-                  <th style={{ padding: "10px 16px", textAlign: "left", fontWeight: 600, color: MUTED, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em" }}>Email</th>
-                  <th style={{ padding: "10px 16px", textAlign: "left", fontWeight: 600, color: MUTED, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em" }}>Role</th>
-                  <th style={{ padding: "10px 16px", textAlign: "left", fontWeight: 600, color: MUTED, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em" }}>Joined</th>
-                  <th style={{ padding: "10px 16px", textAlign: "left", fontWeight: 600, color: MUTED, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em" }}>Change Role</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u, idx) => {
-                  const rc = ROLE_COLOR[u.role] ?? ROLE_COLOR.user;
-                  const isSelf = u.id === currentUserId;
-                  return (
-                    <tr key={u.id} style={{ borderTop: idx > 0 ? `1px solid ${BORDER}` : "none" }}>
-                      <td style={{ padding: "12px 16px", color: ACCENT, fontWeight: 600 }}>
-                        {u.name}
-                        {isSelf && <span style={{ marginLeft: 6, fontSize: 10, color: MUTED }}>(you)</span>}
-                        {u.twoFactorEnabled && <span title="2FA enabled" style={{ marginLeft: 6, fontSize: 10, color: "#166534" }}>2FA</span>}
-                      </td>
-                      <td style={{ padding: "12px 16px", color: MUTED }}>{u.email}</td>
-                      <td style={{ padding: "12px 16px" }}>
-                        <Badge bg={rc.bg} color={rc.color} label={ROLE_LABEL[u.role] ?? u.role} />
-                      </td>
-                      <td style={{ padding: "12px 16px", color: MUTED, fontSize: 12 }}>
-                        {new Date(u.createdAt).toLocaleDateString()}
-                      </td>
-                      <td style={{ padding: "12px 16px" }}>
-                        {isSelf ? (
-                          <span style={{ fontSize: 12, color: MUTED }}>—</span>
-                        ) : (
-                          <select
-                            value={u.role}
-                            disabled={roleChanging === u.id}
-                            onChange={e => changeRole(u.id, e.target.value)}
-                            style={{ height: 32, padding: "0 8px", borderRadius: 6, border: `1px solid ${BORDER}`, background: "#F7F9FC", color: ACCENT, fontSize: 12, cursor: "pointer", opacity: roleChanging === u.id ? 0.6 : 1 }}
-                          >
-                            <option value="user">User</option>
-                            <option value="store_owner">Store Owner</option>
-                            <option value="approver">Approver</option>
-                            <option value="admin">Admin</option>
-                          </select>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            {users.length === 0 && (
-              <div style={{ padding: 32, textAlign: "center", color: MUTED, fontSize: 14 }}>No users found.</div>
-            )}
-          </div>
-        </div>
-      )}
+        {/* USERS TAB */}
+        <TabsContent value="users" className="mt-0">
+          <Card className="rounded-xl border-[#D8E4EE] overflow-hidden">
+            <CardHeader className="px-6 py-4 border-b border-[#D8E4EE]">
+              <CardTitle className="font-serif text-[18px] text-[#1A3A5C]">All Users</CardTitle>
+              <p className="text-xs text-[#6B8FA8] mt-1">{users.length} registered accounts</p>
+            </CardHeader>
+            <CardContent className="p-0 overflow-x-auto">
+              <table className="w-full border-collapse text-[13px]">
+                <thead>
+                  <tr className="bg-[#F7F9FC]">
+                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Name</th>
+                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Email</th>
+                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Role</th>
+                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Joined</th>
+                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Change Role</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((u, idx) => {
+                    const badgeClass = ROLE_BADGE_CLASS[u.role] ?? ROLE_BADGE_CLASS.user;
+                    const isSelf = u.id === currentUserId;
+                    return (
+                      <tr key={u.id} className={idx > 0 ? "border-t border-[#D8E4EE]" : ""}>
+                        <td className="px-4 py-3 text-[#1A3A5C] font-semibold">
+                          {u.name}
+                          {isSelf && <span className="ml-1.5 text-[10px] text-[#6B8FA8]">(you)</span>}
+                          {u.twoFactorEnabled && <span title="2FA enabled" className="ml-1.5 text-[10px] text-green-700">2FA</span>}
+                        </td>
+                        <td className="px-4 py-3 text-[#6B8FA8]">{u.email}</td>
+                        <td className="px-4 py-3">
+                          <Badge variant="outline" className={cn("text-[11px] font-semibold px-2.5 py-0.5 rounded-full", badgeClass)}>
+                            {ROLE_LABEL[u.role] ?? u.role}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 text-[#6B8FA8] text-xs">
+                          {new Date(u.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3">
+                          {isSelf ? (
+                            <span className="text-xs text-[#6B8FA8]">—</span>
+                          ) : (
+                            <Select
+                              value={u.role}
+                              disabled={roleChanging === u.id}
+                              onValueChange={(value) => changeRole(u.id, value)}
+                            >
+                              <SelectTrigger className={cn("h-8 w-36 text-xs text-[#1A3A5C] border-[#D8E4EE] bg-[#F7F9FC]", roleChanging === u.id && "opacity-60")}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="user">User</SelectItem>
+                                <SelectItem value="store_owner">Store Owner</SelectItem>
+                                <SelectItem value="approver">Approver</SelectItem>
+                                <SelectItem value="admin">Admin</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              {users.length === 0 && (
+                <div className="py-8 text-center text-[#6B8FA8] text-sm">No users found.</div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      {/* ADS TAB */}
-      {activeTab === "ads" && (
-        <div>
+        {/* ADS TAB */}
+        <TabsContent value="ads" className="mt-0">
           {/* Filter bar */}
-          <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+          <div className="flex gap-2 mb-4 flex-wrap">
             {["all", "pending", "approved", "denied", "expired", "cancelled"].map(s => (
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
-                style={{
-                  padding: "6px 14px",
-                  borderRadius: 20,
-                  border: `1px solid ${statusFilter === s ? ACCENT : BORDER}`,
-                  background: statusFilter === s ? ACCENT : "#fff",
-                  color: statusFilter === s ? "#fff" : MUTED,
-                  fontSize: 12,
-                  fontWeight: statusFilter === s ? 600 : 400,
-                  cursor: "pointer",
-                }}
+                className={cn(
+                  "px-3.5 py-1.5 rounded-full border text-xs transition-colors",
+                  statusFilter === s
+                    ? "bg-[#1A3A5C] border-[#1A3A5C] text-white font-semibold"
+                    : "bg-white border-[#D8E4EE] text-[#6B8FA8] font-normal hover:border-[#1A3A5C] cursor-pointer"
+                )}
               >
                 {s.charAt(0).toUpperCase() + s.slice(1)}
                 {s !== "all" && (
-                  <span style={{ marginLeft: 5, opacity: 0.75 }}>
+                  <span className="ml-1 opacity-75">
                     ({ads.filter(a => a.status === s).length})
                   </span>
                 )}
@@ -328,57 +348,65 @@ export default function AdminPanelClient({
             ))}
           </div>
 
-          <div style={{ background: "#fff", borderRadius: 12, border: `1px solid ${BORDER}`, overflow: "hidden" }}>
-            <div style={{ padding: "14px 20px", borderBottom: `1px solid ${BORDER}` }}>
-              <span style={{ fontSize: 13, color: MUTED }}>{filteredAds.length} ads</span>
+          <Card className="rounded-xl border-[#D8E4EE] overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-[#D8E4EE]">
+              <span className="text-[13px] text-[#6B8FA8]">{filteredAds.length} ads</span>
             </div>
             {filteredAds.length === 0 ? (
-              <div style={{ padding: 32, textAlign: "center", color: MUTED, fontSize: 14 }}>No ads match this filter.</div>
+              <div className="py-8 text-center text-[#6B8FA8] text-sm">No ads match this filter.</div>
             ) : (
               filteredAds.map((ad, idx) => {
-                const s = STATUS_STYLE[ad.status] ?? STATUS_STYLE.pending;
+                const statusClass = STATUS_BADGE_CLASS[ad.status] ?? STATUS_BADGE_CLASS.pending;
                 return (
-                  <div key={ad.id} style={{ borderTop: idx > 0 ? `1px solid ${BORDER}` : "none", padding: "14px 20px" }}>
-                    <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-                      <img src={ad.imageUrl} alt={ad.title} style={{ width: 72, height: 50, objectFit: "cover", borderRadius: 6, flexShrink: 0 }} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
-                          <span style={{ fontWeight: 600, fontSize: 14, color: ACCENT }}>{ad.title}</span>
-                          <Badge bg={s.bg} color={s.color} label={ad.status.charAt(0).toUpperCase() + ad.status.slice(1)} />
-                          <span style={{ fontSize: 11, color: "#9DC4E0", background: "#EFF6FF", borderRadius: 4, padding: "2px 6px" }}>{ad.paymentStatus}</span>
+                  <div key={ad.id} className={cn(idx > 0 && "border-t border-[#D8E4EE]", "px-5 py-3.5")}>
+                    <div className="flex gap-3.5 items-start">
+                      <img src={ad.imageUrl} alt={ad.title} className="w-[72px] h-[50px] object-cover rounded-md shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <span className="font-semibold text-sm text-[#1A3A5C]">{ad.title}</span>
+                          <Badge variant="outline" className={cn("text-[11px] font-semibold px-2.5 py-0.5 rounded-full", statusClass)}>
+                            {ad.status.charAt(0).toUpperCase() + ad.status.slice(1)}
+                          </Badge>
+                          <span className="text-[11px] text-[#9DC4E0] bg-blue-50 rounded px-1.5 py-0.5">{ad.paymentStatus}</span>
                         </div>
-                        <div style={{ fontSize: 12, color: MUTED, marginBottom: 2 }}>
+                        <div className="text-xs text-[#6B8FA8] mb-0.5">
                           by {ad.user.name} · {ad.location.storeName} · submitted {new Date(ad.createdAt).toLocaleDateString()}
                         </div>
                         {ad.reviewNote && (
-                          <div style={{ fontSize: 12, color: "#854d0e", background: "#fef9c3", borderRadius: 4, padding: "2px 8px", display: "inline-block" }}>
+                          <div className="text-xs text-yellow-800 bg-yellow-50 rounded px-2 py-0.5 inline-block">
                             Note: {ad.reviewNote}
                           </div>
                         )}
                         {/* Override controls */}
-                        <div style={{ marginTop: 10, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                          <input
+                        <div className="mt-2.5 flex gap-2 items-center flex-wrap">
+                          <Input
                             placeholder="Review note (optional)"
                             value={overrideNote[ad.id] ?? ""}
                             onChange={e => setOverrideNote(n => ({ ...n, [ad.id]: e.target.value }))}
-                            style={{ height: 30, borderRadius: 6, padding: "0 10px", border: `1px solid ${BORDER}`, background: "#F7F9FC", color: ACCENT, fontSize: 12, width: 200, outline: "none" }}
+                            className="h-[30px] w-[200px] text-xs text-[#1A3A5C] border-[#D8E4EE] bg-[#F7F9FC]"
                           />
                           {["approved", "denied", "pending", "expired", "cancelled"]
                             .filter(s => s !== ad.status)
                             .map(targetStatus => {
-                              const ts = STATUS_STYLE[targetStatus] ?? STATUS_STYLE.pending;
+                              const tc = STATUS_BADGE_CLASS[targetStatus] ?? STATUS_BADGE_CLASS.pending;
                               return (
-                                <button
+                                <Button
                                   key={targetStatus}
+                                  variant="outline"
+                                  size="sm"
                                   disabled={overriding === ad.id}
                                   onClick={() => overrideAdStatus(ad.id, targetStatus)}
-                                  style={{ padding: "4px 10px", borderRadius: 6, border: `1px solid ${ts.color}`, background: ts.bg, color: ts.color, fontSize: 11, fontWeight: 600, cursor: overriding === ad.id ? "not-allowed" : "pointer", opacity: overriding === ad.id ? 0.6 : 1 }}
+                                  className={cn(
+                                    "px-2.5 py-1 h-auto rounded-md text-[11px] font-semibold border",
+                                    overriding === ad.id && "opacity-60 cursor-not-allowed",
+                                    tc
+                                  )}
                                 >
                                   → {targetStatus}
-                                </button>
+                                </Button>
                               );
                             })}
-                          <Link href={`/dashboard/user/ads/${ad.id}`} style={{ fontSize: 12, color: "#4A90C4", textDecoration: "none", padding: "4px 8px" }}>
+                          <Link href={`/dashboard/user/ads/${ad.id}`} className="text-xs text-[#4A90C4] no-underline px-2 py-1">
                             Details ↗
                           </Link>
                         </div>
@@ -388,9 +416,9 @@ export default function AdminPanelClient({
                 );
               })
             )}
-          </div>
-        </div>
-      )}
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

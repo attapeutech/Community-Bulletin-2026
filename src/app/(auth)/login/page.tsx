@@ -9,6 +9,12 @@ import { z } from "zod";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { signIn, sendVerificationEmail } from "@/lib/auth/client";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 const schema = z.object({
   email: z.string().email("Enter a valid email address"),
@@ -16,54 +22,23 @@ const schema = z.object({
 });
 type FormData = z.infer<typeof schema>;
 
-const s = {
-  label: {
-    display: "block", marginBottom: 6, fontSize: 11, fontWeight: 600,
-    color: "#4A5568", textTransform: "uppercase" as const, letterSpacing: "0.04em",
-  },
-  input: (err?: boolean): React.CSSProperties => ({
-    width: "100%", height: 40, borderRadius: 8, padding: "0 12px",
-    border: `1px solid ${err ? "#fca5a5" : "#D1DDE8"}`,
-    background: err ? "#fff5f5" : "#F7F9FC",
-    color: "#1A3A5C", fontSize: 14, outline: "none", boxSizing: "border-box",
-  }),
-  primaryBtn: {
-    width: "100%", height: 44, borderRadius: 8, border: "none",
-    background: "#1A3A5C", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer",
-  },
-  dividerRow: { display: "flex", alignItems: "center", gap: 12, margin: "16px 0" },
-  dividerLine: { flex: 1, height: 1, background: "#E8EDF2", border: "none" },
-  googleBtn: {
-    width: "100%", height: 40, borderRadius: 8, border: "1px solid #D1DDE8",
-    background: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
-    gap: 8, fontSize: 13, fontWeight: 500, color: "#3D5068", cursor: "pointer",
-  },
-} as const;
-
 function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null;
-  return <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c" }}>{msg}</p>;
+  return <p className="text-xs text-destructive mt-1">{msg}</p>;
 }
 
 function FormError({ msg }: { msg: string | null }) {
   if (!msg) return null;
   return (
-    <div style={{
-      background: "#FEF2F2", border: "1px solid #fca5a5", borderRadius: 8,
-      padding: "10px 14px", marginBottom: 16,
-      display: "flex", gap: 8, alignItems: "flex-start",
-    }}>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
-        <circle cx="12" cy="12" r="10" stroke="#b91c1c" strokeWidth="1.5"/>
-        <path d="M12 8v4m0 4h.01" stroke="#b91c1c" strokeWidth="1.5" strokeLinecap="round"/>
-      </svg>
-      <span style={{ fontSize: 13, color: "#b91c1c" }}>{msg}</span>
-    </div>
+    <Alert variant="destructive" className="mb-4">
+      <AlertCircle className="h-4 w-4" />
+      <AlertDescription>{msg}</AlertDescription>
+    </Alert>
   );
 }
 
 const GoogleIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+  <svg width="16" height="16" viewBox="0 0 24 24" className="shrink-0">
     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
@@ -129,121 +104,121 @@ export default function LoginPage() {
 
   return (
     <AuthLayout>
-      <h1 style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 21, color: "#1A3A5C", margin: "0 0 4px" }}>
+      <h1 className="font-serif font-bold text-[21px] text-primary m-0 mb-1">
         Welcome back
       </h1>
-      <p style={{ fontSize: 13, color: "#6B8FA8", margin: "0 0 20px" }}>
+      <p className="text-[13px] text-muted-foreground mt-0 mb-5">
         Sign in to your CommunityBulletin account
       </p>
 
-      <div style={{
-        display: "flex", alignItems: "center", gap: 8,
-        background: "#EEF6FF", border: "1px solid #BED8F0",
-        borderRadius: 8, padding: "8px 12px", marginBottom: 20,
-        fontSize: 12, color: "#2A6096",
-      }}>
-        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#4A90C4", flexShrink: 0, display: "inline-block" }} />
+      <div className="flex items-center gap-2 bg-accent/10 border border-accent/30 rounded-lg px-3 py-2 mb-5 text-xs text-accent">
+        <span className="w-2 h-2 rounded-full bg-accent shrink-0 inline-block" />
         Two-factor authentication is enabled for your security.
       </div>
 
       {unverifiedEmail && (
-        <div style={{
-          background: "#FFFBEB", border: "1px solid #FCD34D",
-          borderRadius: 8, padding: "12px 14px", marginBottom: 20,
-        }}>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+        <div className="bg-amber-50 border border-amber-200 rounded-lg px-3.5 py-3 mb-5">
+          <div className="flex items-start gap-2.5">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="shrink-0 mt-0.5">
               <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
                 stroke="#D97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            <div style={{ flex: 1 }}>
-              <p style={{ margin: "0 0 6px", fontSize: 13, fontWeight: 600, color: "#92400E" }}>
+            <div className="flex-1">
+              <p className="m-0 mb-1.5 text-[13px] font-semibold text-amber-800">
                 Email not verified
               </p>
-              <p style={{ margin: "0 0 10px", fontSize: 12, color: "#78350F", lineHeight: 1.5 }}>
+              <p className="m-0 mb-2.5 text-xs text-amber-800 leading-relaxed">
                 Please verify your email address before signing in. Check your inbox for a verification link.
               </p>
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <button
+              <div className="flex gap-2 items-center">
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={handleResend}
                   disabled={resending}
-                  style={{
-                    fontSize: 12, fontWeight: 600, color: "#92400E",
-                    background: "none", border: "1px solid #D97706",
-                    borderRadius: 6, padding: "4px 10px", cursor: resending ? "not-allowed" : "pointer",
-                    opacity: resending ? 0.6 : 1,
-                  }}
+                  className="text-xs font-semibold text-amber-800 border-amber-500 bg-transparent hover:bg-amber-100 hover:text-amber-900 h-auto px-2.5 py-1"
                 >
                   {resending ? "Sending…" : "Resend verification email"}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setUnverifiedEmail(null)}
-                  style={{ fontSize: 12, color: "#A8A29E", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                  className="text-xs text-muted-foreground h-auto px-0 py-1 hover:bg-transparent hover:text-foreground"
                 >
                   Dismiss
-                </button>
+                </Button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: "flex", flexDirection: "column" }}>
-        <div style={{ marginBottom: 16 }}>
-          <label style={s.label}>Email address</label>
-          <input
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col">
+        <div className="mb-4">
+          <Label className="block mb-1.5 text-[11px] font-semibold text-foreground/70 uppercase tracking-[0.04em]">
+            Email address
+          </Label>
+          <Input
             type="email"
             placeholder="you@example.com"
             {...register("email")}
-            style={s.input(!!errors.email)}
+            className={errors.email ? "border-destructive bg-destructive/5" : ""}
           />
           <FieldError msg={errors.email?.message} />
         </div>
 
-        <div style={{ marginBottom: 4 }}>
-          <label style={s.label}>Password</label>
-          <input
+        <div className="mb-1">
+          <Label className="block mb-1.5 text-[11px] font-semibold text-foreground/70 uppercase tracking-[0.04em]">
+            Password
+          </Label>
+          <Input
             type="password"
             placeholder="••••••••"
             {...register("password")}
-            style={s.input(!!errors.password)}
+            className={errors.password ? "border-destructive bg-destructive/5" : ""}
           />
           <FieldError msg={errors.password?.message} />
         </div>
 
-        <div style={{ textAlign: "right", marginBottom: 16, marginTop: 8 }}>
-          <Link href="/forgot-password" style={{ fontSize: 12, color: "#4A90C4", textDecoration: "none" }}>
+        <div className="text-right mb-4 mt-2">
+          <Link href="/forgot-password" className="text-xs text-accent no-underline">
             Forgot password?
           </Link>
         </div>
 
         <FormError msg={formError} />
 
-        <button
+        <Button
           type="submit"
           disabled={isSubmitting}
-          style={{ ...s.primaryBtn, opacity: isSubmitting ? 0.6 : 1, cursor: isSubmitting ? "not-allowed" : "pointer" }}
+          className="w-full h-11"
         >
           {isSubmitting ? "Signing in…" : "Sign in"}
-        </button>
+        </Button>
       </form>
 
-      <div style={s.dividerRow}>
-        <hr style={s.dividerLine} />
-        <span style={{ fontSize: 12, color: "#A8BFD0" }}>or</span>
-        <hr style={s.dividerLine} />
+      <div className="flex items-center gap-3 my-4">
+        <Separator className="flex-1" />
+        <span className="text-xs text-muted-foreground">or</span>
+        <Separator className="flex-1" />
       </div>
 
-      <button onClick={() => signIn.social({ provider: "google", callbackURL: "/dashboard" })} style={s.googleBtn}>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => signIn.social({ provider: "google", callbackURL: "/dashboard" })}
+        className="w-full h-10 text-[13px] font-medium"
+      >
         <GoogleIcon />
         Continue with Google
-      </button>
+      </Button>
 
-      <p style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "#6B8FA8" }}>
+      <p className="text-center mt-5 text-[13px] text-muted-foreground">
         Don&apos;t have an account?{" "}
-        <Link href="/register" style={{ color: "#E8563A", fontWeight: 600, textDecoration: "none" }}>
+        <Link href="/register" className="text-destructive font-semibold no-underline">
           Create one free
         </Link>
       </p>

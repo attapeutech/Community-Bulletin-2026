@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { twoFactor } from "better-auth/plugins";
+import { randomUUID } from "node:crypto";
 import { db } from "@/lib/db/client";
 import * as schema from "@/lib/db/schema";
 import { sendVerificationEmail, sendPasswordResetEmail } from "@/lib/email/templates";
@@ -38,7 +39,7 @@ export const auth = betterAuth({
     twoFactor({
       issuer: "AdBoard",
       totpOptions: { period: 30, digits: 6 },
-    }),
+    }) as any,
   ],
 
   user: {
@@ -52,20 +53,18 @@ export const auth = betterAuth({
   },
 
   session: {
-    expiresIn: 60 * 60 * 24 * 7,        // 7 days
-    updateAge: 60 * 60 * 24,             // refresh if older than 1 day
+    expiresIn: 60 * 60 * 24 * 7,
+    updateAge: 60 * 60 * 24,
     cookieCache: {
       enabled: true,
-      maxAge: 60 * 5,                    // cache 5 mins
+      maxAge: 60 * 5,
     },
   },
 
   trustedOrigins: [process.env.NEXT_PUBLIC_APP_URL!],
 
   advanced: {
-    database: {
-      generateId: "uuid",
-    },
+    generateId: () => randomUUID(),
   },
 });
 

@@ -2,7 +2,7 @@ import { auth } from "./index";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
-import { verifications } from "@/lib/db/schema";
+import { users, verifications } from "@/lib/db/schema";
 import { eq, and, gt } from "drizzle-orm";
 import type { User } from "@/lib/db/schema";
 
@@ -19,9 +19,14 @@ export async function requireAuth() {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  const user = session.user as unknown as User;
+  // Query DB directly — session.user does not include custom columns like
+  // twoFactorEnabled unless declared as Better Auth additionalFields.
+  const dbUser = await db.query.users.findFirst({
+    where: eq(users.id, session.user.id as string),
+    columns: { twoFactorEnabled: true },
+  });
 
-  if (user.twoFactorEnabled) {
+  if (dbUser?.twoFactorEnabled) {
     const sessionToken = (session as any).session?.token as string | undefined;
     if (!sessionToken) redirect("/two-factor");
 

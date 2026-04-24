@@ -39,7 +39,7 @@ export const ads = pgTable("ads", {
   reviewedBy: uuid("reviewed_by").references(() => users.id),
   reviewedAt: timestamp("reviewed_at"),
   startedAt: timestamp("started_at").notNull(),    // ad run start date
-  endedAt: timestamp("ended_at").notNull(),        // ad run end date (startedAt + 30 days)
+  endedAt: timestamp("ended_at").notNull(),        // ad run end date (startedAt + 7 days)
   displayOrder: integer("display_order").default(0), // carousel ordering
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

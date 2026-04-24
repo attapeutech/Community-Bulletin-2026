@@ -229,7 +229,7 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
               {mode === "approve" && (
                 <div className="bg-green-50 border border-green-300 rounded-lg p-4">
                   <p className="text-[13px] text-green-800 mb-3">
-                    This ad will go live immediately for 30 days. The advertiser will be notified.
+                    This ad will go live immediately for 1 week. The advertiser will be notified.
                   </p>
                   <div className="flex gap-2">
                     <Button

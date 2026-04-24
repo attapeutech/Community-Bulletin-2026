@@ -68,4 +68,4 @@ export const PAYMENT_STATUS_LABELS: Record<Ad["paymentStatus"], string> = {
 };
 
 export const AD_PRICE_CENTS = 10000; // $100.00
-export const AD_DURATION_DAYS = 30;
+export const AD_DURATION_DAYS = 7;

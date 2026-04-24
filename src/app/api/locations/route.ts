@@ -35,7 +35,18 @@ export async function GET(req: NextRequest) {
     if (countryId) conditions.push(eq(locations.countryId, countryId));
     if (stateId) conditions.push(eq(locations.stateId, stateId));
     if (cityId) conditions.push(eq(locations.cityId, cityId));
-    if (search) conditions.push(ilike(locations.storeName, `%${search}%`));
+    if (search) {
+      const term = `%${search}%`;
+      conditions.push(
+        or(
+          ilike(locations.storeName, term),
+          ilike(locations.addressLine1, term),
+          ilike(cities.name, term),
+          ilike(states.name, term),
+          ilike(states.code, term),
+        ) as ReturnType<typeof eq>
+      );
+    }
 
     const results = await db
       .select({

@@ -1,198 +1,184 @@
 import { sendEmail, APPROVER_EMAIL, ADMIN_EMAIL, APP_URL } from "./index";
 
-// ─── Auth Emails ────────────────────────────────────────────────────────────
+const BRAND_NAME = "CommunityBulletin.com";
+const BRAND_COLOR = "#1A3A5C";
+const ACCENT_COLOR = "#4A90C4";
+const CORAL_COLOR = "#E8563A";
 
-export async function sendVerificationEmail({
-  to,
-  name,
-  url,
-}: {
-  to: string;
-  name: string;
-  url: string;
-}) {
-  return sendEmail({
-    to,
-    subject: "Verify your AdBoard email",
-    html: `
-      <div style="font-family:sans-serif;max-width:560px;margin:0 auto">
-        <h2>Welcome to AdBoard, ${name}!</h2>
-        <p>Please verify your email address to get started.</p>
-        <a href="${url}" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600">
-          Verify Email
-        </a>
-        <p style="color:#6b7280;font-size:14px;margin-top:24px">
-          This link expires in 24 hours. If you did not create an account, you can safely ignore this email.
-        </p>
-      </div>
-    `,
-  });
-}
-
-export async function sendPasswordResetEmail({
-  to,
-  name,
-  url,
-}: {
-  to: string;
-  name: string;
-  url: string;
-}) {
-  return sendEmail({
-    to,
-    subject: "Reset your AdBoard password",
-    html: `
-      <div style="font-family:sans-serif;max-width:560px;margin:0 auto">
-        <h2>Password Reset Request</h2>
-        <p>Hi ${name}, we received a request to reset your password.</p>
-        <a href="${url}" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600">
-          Reset Password
-        </a>
-        <p style="color:#6b7280;font-size:14px;margin-top:24px">
-          This link expires in 1 hour. If you did not request a password reset, please ignore this email.
-        </p>
-      </div>
-    `,
-  });
-}
-
-// ─── Ad Status Emails ────────────────────────────────────────────────────────
-
-export async function send2FACodeEmail({
-  to,
-  name,
-  code,
-}: {
-  to: string;
-  name: string;
-  code: string;
-}) {
-  return sendEmail({
-    to,
-    subject: "Your login verification code",
-    html: `
-      <div style="font-family:sans-serif;max-width:560px;margin:0 auto">
-        <h2>Your verification code</h2>
-        <p>Hi ${name}, use the code below to complete your sign-in.</p>
-        <div style="background:#f1f5f9;border-radius:8px;padding:24px;text-align:center;margin:24px 0">
-          <span style="font-family:monospace;font-size:36px;font-weight:700;letter-spacing:0.3em;color:#1A3A5C">${code}</span>
+function emailWrapper(content: string) {
+  return `
+    <div style="font-family:Georgia,serif;max-width:580px;margin:0 auto;background:#ffffff">
+      <!-- Header -->
+      <div style="background:${BRAND_COLOR};padding:28px 40px;border-radius:10px 10px 0 0">
+        <div style="font-family:Georgia,serif;font-size:22px;font-weight:700;color:#ffffff;line-height:1.1">
+          Community<span style="color:${CORAL_COLOR}">Bulletin</span><span style="color:${ACCENT_COLOR};font-size:13px;font-family:sans-serif;font-weight:400">.com</span>
         </div>
-        <p style="color:#6b7280;font-size:14px">This code expires in 10 minutes. If you did not attempt to sign in, please change your password immediately.</p>
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:4px;font-family:sans-serif;letter-spacing:0.08em;text-transform:uppercase">
+          Digital in-store advertising
+        </div>
       </div>
-    `,
+      <!-- Body -->
+      <div style="padding:36px 40px;border:1px solid #e2eaf2;border-top:none;border-radius:0 0 10px 10px;font-family:sans-serif">
+        ${content}
+      </div>
+      <!-- Footer -->
+      <div style="padding:20px 40px;text-align:center;font-size:11px;color:#9DC4E0;font-family:sans-serif">
+        © ${new Date().getFullYear()} ${BRAND_NAME} · Digital in-store advertising
+      </div>
+    </div>
+  `;
+}
+
+function primaryButton(href: string, label: string, color = BRAND_COLOR) {
+  return `<a href="${href}" style="display:inline-block;background:${color};color:#fff;padding:12px 28px;border-radius:7px;text-decoration:none;font-weight:600;font-size:14px;margin-top:8px">${label}</a>`;
+}
+
+function detailTable(rows: { label: string; value: string }[]) {
+  const trs = rows.map(r => `
+    <tr>
+      <td style="padding:9px 12px;color:#6B8FA8;font-size:13px;border-bottom:1px solid #e2eaf2;white-space:nowrap">${r.label}</td>
+      <td style="padding:9px 12px;color:#1A3A5C;font-size:13px;border-bottom:1px solid #e2eaf2">${r.value}</td>
+    </tr>`).join("");
+  return `<table style="border-collapse:collapse;width:100%;margin:20px 0;border:1px solid #e2eaf2;border-radius:8px;overflow:hidden">${trs}</table>`;
+}
+
+// ─── Auth Emails ─────────────────────────────────────────────────────────────
+
+export async function sendVerificationEmail({ to, name, url }: { to: string; name: string; url: string }) {
+  return sendEmail({
+    to,
+    subject: `Verify your ${BRAND_NAME} email`,
+    html: emailWrapper(`
+      <h2 style="margin:0 0 8px;color:${BRAND_COLOR};font-size:20px">Welcome to ${BRAND_NAME}, ${name}!</h2>
+      <p style="color:#6B8FA8;font-size:14px;margin:0 0 24px">Please verify your email address to activate your account and start advertising in your community.</p>
+      ${primaryButton(url, "Verify Email")}
+      <p style="color:#9DC4E0;font-size:12px;margin-top:24px">This link expires in 24 hours. If you did not create an account, you can safely ignore this email.</p>
+    `),
   });
 }
 
+export async function sendPasswordResetEmail({ to, name, url }: { to: string; name: string; url: string }) {
+  return sendEmail({
+    to,
+    subject: `Reset your ${BRAND_NAME} password`,
+    html: emailWrapper(`
+      <h2 style="margin:0 0 8px;color:${BRAND_COLOR};font-size:20px">Password Reset Request</h2>
+      <p style="color:#6B8FA8;font-size:14px;margin:0 0 24px">Hi ${name}, we received a request to reset your password. Click the button below to choose a new one.</p>
+      ${primaryButton(url, "Reset Password")}
+      <p style="color:#9DC4E0;font-size:12px;margin-top:24px">This link expires in 1 hour. If you did not request a password reset, please ignore this email.</p>
+    `),
+  });
+}
+
+export async function send2FACodeEmail({ to, name, code }: { to: string; name: string; code: string }) {
+  return sendEmail({
+    to,
+    subject: `Your ${BRAND_NAME} verification code`,
+    html: emailWrapper(`
+      <h2 style="margin:0 0 8px;color:${BRAND_COLOR};font-size:20px">Sign-in verification code</h2>
+      <p style="color:#6B8FA8;font-size:14px;margin:0 0 24px">Hi ${name}, use the code below to complete your sign-in.</p>
+      <div style="background:#F4F7FB;border-radius:10px;padding:28px;text-align:center;margin:0 0 24px">
+        <span style="font-family:monospace;font-size:40px;font-weight:700;letter-spacing:0.35em;color:${BRAND_COLOR}">${code}</span>
+      </div>
+      <p style="color:#9DC4E0;font-size:12px">This code expires in 10 minutes. If you did not attempt to sign in, please change your password immediately.</p>
+    `),
+  });
+}
+
+// ─── Ad Emails ───────────────────────────────────────────────────────────────
 
 export async function sendAdSubmittedEmail({
-  to,
-  userName,
-  adTitle,
-  locationName,
-  adId,
+  to, userName, adTitle, locationName, adId,
 }: {
-  to: string;
-  userName: string;
-  adTitle: string;
-  locationName: string;
-  adId: string;
+  to: string; userName: string; adTitle: string; locationName: string; adId: string;
 }) {
   return sendEmail({
     to,
     cc: [APPROVER_EMAIL, ADMIN_EMAIL],
-    subject: `Ad submitted for review – "${adTitle}"`,
-    html: `
-      <div style="font-family:sans-serif;max-width:560px;margin:0 auto">
-        <h2>Your ad has been submitted!</h2>
-        <p>Hi ${userName}, your ad <strong>"${adTitle}"</strong> for <strong>${locationName}</strong> has been submitted and is now <span style="background:#fef9c3;padding:2px 8px;border-radius:4px;font-weight:600">Pending Review</span>.</p>
-        <p>Our team will review it within 1–2 business days. You'll receive an email as soon as a decision is made.</p>
-        <table style="border-collapse:collapse;width:100%;margin:24px 0;font-size:14px">
-          <tr><td style="padding:8px;color:#6b7280;border-bottom:1px solid #e5e7eb">Ad title</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${adTitle}</td></tr>
-          <tr><td style="padding:8px;color:#6b7280;border-bottom:1px solid #e5e7eb">Location</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${locationName}</td></tr>
-          <tr><td style="padding:8px;color:#6b7280">Status</td><td style="padding:8px">Pending</td></tr>
-        </table>
-        <a href="${APP_URL}/dashboard/user/ads/${adId}" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600">
-          View Your Ad
-        </a>
-      </div>
-    `,
+    subject: `Ad submitted for review — "${adTitle}"`,
+    html: emailWrapper(`
+      <h2 style="margin:0 0 8px;color:${BRAND_COLOR};font-size:20px">Your ad has been submitted!</h2>
+      <p style="color:#6B8FA8;font-size:14px;margin:0 0 20px">Hi ${userName}, your ad has been received and is now pending review. Our team will review it within 1–2 business days.</p>
+      ${detailTable([
+        { label: "Ad title", value: `<strong>${adTitle}</strong>` },
+        { label: "Location", value: locationName },
+        { label: "Status", value: '<span style="background:#fef9c3;color:#854d0e;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600">Pending Review</span>' },
+      ])}
+      <p style="color:#6B8FA8;font-size:13px">You'll receive an email as soon as a decision is made.</p>
+      ${primaryButton(`${APP_URL}/dashboard/user/ads/${adId}`, "View Your Ad")}
+    `),
+  });
+}
+
+export async function sendPaymentReceiptEmail({
+  to, userName, adTitle, locationName, amountFormatted, provider, adId,
+}: {
+  to: string; userName: string; adTitle: string; locationName: string; amountFormatted: string; provider: string; adId: string;
+}) {
+  return sendEmail({
+    to,
+    subject: `Payment confirmed — "${adTitle}"`,
+    html: emailWrapper(`
+      <h2 style="margin:0 0 8px;color:#16a34a;font-size:20px">Payment confirmed ✓</h2>
+      <p style="color:#6B8FA8;font-size:14px;margin:0 0 20px">Hi ${userName}, your payment has been received. Your ad has been submitted for review.</p>
+      ${detailTable([
+        { label: "Ad title", value: `<strong>${adTitle}</strong>` },
+        { label: "Location", value: locationName },
+        { label: "Amount paid", value: `<strong style="color:${CORAL_COLOR}">${amountFormatted}</strong>` },
+        { label: "Payment method", value: provider.charAt(0).toUpperCase() + provider.slice(1) },
+        { label: "Duration", value: "1 week" },
+      ])}
+      ${primaryButton(`${APP_URL}/dashboard/user/ads/${adId}`, "View Ad Details")}
+    `),
   });
 }
 
 export async function sendAdApprovedEmail({
-  to,
-  userName,
-  adTitle,
-  locationName,
-  locationSlug,
-  adId,
-  startedAt,
-  endedAt,
+  to, userName, adTitle, locationName, locationSlug, adId, startedAt, endedAt,
 }: {
-  to: string;
-  userName: string;
-  adTitle: string;
-  locationName: string;
-  locationSlug: string;
-  adId: string;
-  startedAt: string;
-  endedAt: string;
+  to: string; userName: string; adTitle: string; locationName: string;
+  locationSlug: string; adId: string; startedAt: string; endedAt: string;
 }) {
   const displayUrl = `${APP_URL}/display/${locationSlug}`;
   return sendEmail({
     to,
-    subject: `Your ad has been approved – "${adTitle}"`,
-    html: `
-      <div style="font-family:sans-serif;max-width:560px;margin:0 auto">
-        <h2 style="color:#16a34a">Your ad is approved!</h2>
-        <p>Hi ${userName}, great news! Your ad <strong>"${adTitle}"</strong> has been <span style="background:#dcfce7;padding:2px 8px;border-radius:4px;font-weight:600;color:#16a34a">Approved</span> and is now live.</p>
-        <p>Thank you for advertising with AdBoard. Your ad will display at <strong>${locationName}</strong> for the full 1-week period.</p>
-        <table style="border-collapse:collapse;width:100%;margin:24px 0;font-size:14px">
-          <tr><td style="padding:8px;color:#6b7280;border-bottom:1px solid #e5e7eb">Ad title</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${adTitle}</td></tr>
-          <tr><td style="padding:8px;color:#6b7280;border-bottom:1px solid #e5e7eb">Location</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${locationName}</td></tr>
-          <tr><td style="padding:8px;color:#6b7280;border-bottom:1px solid #e5e7eb">Starts</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${startedAt}</td></tr>
-          <tr><td style="padding:8px;color:#6b7280">Ends</td><td style="padding:8px">${endedAt}</td></tr>
-        </table>
-        <a href="${displayUrl}" style="display:inline-block;background:#16a34a;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;margin-right:12px">
-          View Live Display
-        </a>
-        <a href="${APP_URL}/dashboard/user/ads/${adId}" style="display:inline-block;background:#e5e7eb;color:#111;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600">
-          View Ad Details
-        </a>
+    subject: `Your ad is approved and live — "${adTitle}"`,
+    html: emailWrapper(`
+      <h2 style="margin:0 0 8px;color:#16a34a;font-size:20px">Your ad is approved! 🎉</h2>
+      <p style="color:#6B8FA8;font-size:14px;margin:0 0 20px">Hi ${userName}, great news! Your ad is now live on the in-store display screen at <strong>${locationName}</strong>.</p>
+      ${detailTable([
+        { label: "Ad title", value: `<strong>${adTitle}</strong>` },
+        { label: "Location", value: locationName },
+        { label: "Starts", value: startedAt },
+        { label: "Ends", value: endedAt },
+        { label: "Status", value: '<span style="background:#dcfce7;color:#16a34a;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600">Approved & Live</span>' },
+      ])}
+      <div style="display:flex;gap:12px;margin-top:8px">
+        ${primaryButton(displayUrl, "View Live Display", "#16a34a")}
+        &nbsp;&nbsp;
+        ${primaryButton(`${APP_URL}/dashboard/user/ads/${adId}`, "View Ad Details", BRAND_COLOR)}
       </div>
-    `,
+    `),
   });
 }
 
 export async function sendAdDeniedEmail({
-  to,
-  userName,
-  adTitle,
-  reviewNote,
-  adId,
+  to, userName, adTitle, reviewNote, adId,
 }: {
-  to: string;
-  userName: string;
-  adTitle: string;
-  reviewNote: string;
-  adId: string;
+  to: string; userName: string; adTitle: string; reviewNote: string; adId: string;
 }) {
   return sendEmail({
     to,
-    subject: `Ad update – "${adTitle}"`,
-    html: `
-      <div style="font-family:sans-serif;max-width:560px;margin:0 auto">
-        <h2>Ad review update</h2>
-        <p>Hi ${userName}, after review your ad <strong>"${adTitle}"</strong> was not approved at this time.</p>
-        <div style="background:#fef2f2;border-left:4px solid #ef4444;padding:12px 16px;margin:20px 0;border-radius:0 6px 6px 0">
-          <p style="margin:0;font-size:14px;color:#b91c1c"><strong>Reviewer note:</strong> ${reviewNote}</p>
-        </div>
-        <p>A full refund of <strong>$100.00</strong> has been initiated to your original payment method and should appear within 5–10 business days.</p>
-        <p>You are welcome to submit a revised ad at any time.</p>
-        <a href="${APP_URL}/ads/new" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600">
-          Submit a New Ad
-        </a>
+    subject: `Ad review update — "${adTitle}"`,
+    html: emailWrapper(`
+      <h2 style="margin:0 0 8px;color:${BRAND_COLOR};font-size:20px">Ad review update</h2>
+      <p style="color:#6B8FA8;font-size:14px;margin:0 0 20px">Hi ${userName}, after review your ad <strong>"${adTitle}"</strong> was not approved at this time.</p>
+      <div style="background:#fef2f2;border-left:4px solid #ef4444;padding:14px 18px;margin:0 0 20px;border-radius:0 8px 8px 0">
+        <p style="margin:0;font-size:13px;color:#b91c1c"><strong>Reviewer note:</strong> ${reviewNote}</p>
       </div>
-    `,
+      <p style="color:#6B8FA8;font-size:13px">A full refund of <strong>$100.00</strong> has been initiated to your original payment method and should appear within 5–10 business days.</p>
+      <p style="color:#6B8FA8;font-size:13px">You are welcome to submit a revised ad at any time.</p>
+      ${primaryButton(`${APP_URL}/ads/new`, "Submit a New Ad")}
+    `),
   });
 }

@@ -3,7 +3,9 @@ import Stripe from "stripe";
 import { db } from "@/lib/db/client";
 import { ads, payments, users, locations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { sendAdSubmittedEmail } from "@/lib/email/templates";
+import { sendAdSubmittedEmail, sendPaymentReceiptEmail } from "@/lib/email/templates";
+
+export const dynamic = "force-dynamic";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-12-18.acacia" as any });
@@ -11,19 +13,26 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-12
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 // POST /api/payments/stripe/webhook
-// Next.js App Router exposes the raw body via req.arrayBuffer() — no special config needed.
 export async function POST(req: NextRequest) {
-  const rawBody = await req.arrayBuffer();
-  const buf = Buffer.from(rawBody);
+  let rawBody: string;
+  try {
+    rawBody = await req.text();
+  } catch (err) {
+    console.error("[Stripe webhook] failed to read body:", err);
+    return NextResponse.json({ error: "Could not read body" }, { status: 400 });
+  }
+
   const sig = req.headers.get("stripe-signature") ?? "";
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(buf, sig, webhookSecret);
+    event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
   } catch (err: any) {
     console.error("[Stripe webhook] signature verification failed:", err.message);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
+
+  console.log("[Stripe webhook] received event:", event.type);
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
@@ -67,6 +76,16 @@ export async function POST(req: NextRequest) {
       .limit(1);
 
     if (row) {
+      const amount = `$${((session.amount_total ?? 10000) / 100).toFixed(2)}`;
+      sendPaymentReceiptEmail({
+        to: row.user.email,
+        userName: row.user.name,
+        adTitle: row.ad.title,
+        locationName: row.location.storeName,
+        amountFormatted: amount,
+        provider: "stripe",
+        adId,
+      }).catch(console.error);
       sendAdSubmittedEmail({
         to: row.user.email,
         userName: row.user.name,

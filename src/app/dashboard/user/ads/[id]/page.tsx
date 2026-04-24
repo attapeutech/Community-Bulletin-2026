@@ -1,9 +1,10 @@
 import { requireAuth } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
-import { ads, locations, users, payments } from "@/lib/db/schema";
+import { ads, locations, users, payments, cities } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
+import AdImagePreview from "./AdImagePreview";
 
 const STATUS_COLORS: Record<string, { bg: string; color: string; label: string }> = {
   pending:   { bg: "#fef9c3", color: "#854d0e", label: "Pending Review" },
@@ -57,11 +58,13 @@ export default async function AdDetailPage({
         storeName: locations.storeName,
         slug: locations.slug,
         addressLine1: locations.addressLine1,
+        cityName: cities.name,
       },
     })
     .from(ads)
     .innerJoin(users, eq(ads.userId, users.id))
     .innerJoin(locations, eq(ads.locationId, locations.id))
+    .innerJoin(cities, eq(locations.cityId, cities.id))
     .where(eq(ads.id, id))
     .limit(1);
 
@@ -145,14 +148,15 @@ export default async function AdDetailPage({
         )}
       </div>
 
-      {/* Ad image */}
-      <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", overflow: "hidden", marginBottom: 24 }}>
-        <img
-          src={ad.imageUrl}
-          alt={ad.title}
-          style={{ width: "100%", maxHeight: 320, objectFit: "cover", display: "block" }}
-        />
-      </div>
+      {/* Ad image — display screen style with preview modal */}
+      <AdImagePreview
+        imageUrl={ad.imageUrl}
+        title={ad.title}
+        storeName={location.storeName}
+        cityName={location.cityName}
+        addressLine1={location.addressLine1}
+        adId={ad.id}
+      />
 
       {/* Details */}
       <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "0 24px", marginBottom: 24 }}>

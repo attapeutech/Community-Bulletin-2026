@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { ads, locations, cities, states } from "@/lib/db/schema";
-import { eq, and, lte, gte, asc } from "drizzle-orm";
+import { eq, and, or, lte, gte, asc } from "drizzle-orm";
 
 // GET /api/display/[slug] — public: approved, currently-running ads for a location
 export async function GET(
@@ -11,6 +11,15 @@ export async function GET(
   try {
     const { slug } = await params;
     const now = new Date();
+
+    // Accept both slug ("store-name-abc123") and raw UUID (for direct TV links)
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+    const locationWhere = and(
+      isUuid
+        ? or(eq(locations.slug, slug), eq(locations.id, slug))
+        : eq(locations.slug, slug),
+      eq(locations.isActive, true)
+    );
 
     const [location] = await db
       .select({
@@ -23,7 +32,7 @@ export async function GET(
       })
       .from(locations)
       .innerJoin(cities, eq(locations.cityId, cities.id))
-      .where(and(eq(locations.slug, slug), eq(locations.isActive, true)))
+      .where(locationWhere)
       .limit(1);
 
     if (!location) {

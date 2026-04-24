@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useDashboardSocket } from "@/lib/socket/client";
 import { Check, X } from "lucide-react";
 
@@ -29,6 +29,15 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
   const [reviewNote, setReviewNote] = useState("");
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+  const [previewAd, setPreviewAd] = useState<Ad | null>(null);
+
+  // Close preview on Escape
+  useEffect(() => {
+    if (!previewAd) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setPreviewAd(null); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [previewAd]);
 
   const showToast = (msg: string, ok: boolean) => {
     setToast({ msg, ok });
@@ -173,11 +182,21 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
           {selected && (
             <div className="bg-white rounded-xl border border-[#D8E4EE] p-6 sticky top-6">
               {/* Ad preview */}
-              <img
-                src={selected.imageUrl}
-                alt={selected.title}
-                className="w-full max-h-[220px] object-cover rounded-lg mb-4"
-              />
+              <div
+                className="relative cursor-pointer group mb-4"
+                onClick={() => setPreviewAd(selected)}
+              >
+                <img
+                  src={selected.imageUrl}
+                  alt={selected.title}
+                  className="w-full max-h-[220px] object-cover rounded-lg"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 rounded-lg transition-colors flex items-center justify-center">
+                  <span className="opacity-0 group-hover:opacity-100 text-white text-sm font-semibold bg-black/60 px-3 py-1.5 rounded-full transition-opacity">
+                    ⛶ Preview on display screen
+                  </span>
+                </div>
+              </div>
 
               <h3 className="font-serif text-[18px] text-[#1A3A5C] mb-1">{selected.title}</h3>
               {selected.description && (
@@ -283,6 +302,69 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Display screen preview modal */}
+      {previewAd && (
+        <div
+          onClick={() => setPreviewAd(null)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 1000,
+            background: "rgba(0,0,0,0.85)",
+            display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center",
+          }}
+        >
+          {/* TV frame */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "min(90vw, 1100px)",
+              maxHeight: "80vh",
+              background: "#0A1A2E",
+              borderRadius: 12,
+              overflow: "hidden",
+              position: "relative",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 0 0 8px #1a1a1a, 0 0 0 12px #333, 0 24px 48px rgba(0,0,0,0.8)",
+            }}
+          >
+            <img
+              src={previewAd.imageUrl}
+              alt={previewAd.title}
+              style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", maxHeight: "80vh" }}
+            />
+            <div style={{
+              position: "absolute", inset: 0,
+              background: "linear-gradient(to top, rgba(10,26,46,0.75) 0%, transparent 18%)",
+            }} />
+            <div style={{
+              position: "absolute", bottom: 0, left: 0, right: 0,
+              padding: "16px 32px",
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+            }}>
+              <span style={{
+                fontSize: "clamp(11px, 1.4vw, 18px)",
+                color: "rgba(255,255,255,0.9)",
+                fontWeight: 500, letterSpacing: "0.01em",
+              }}>
+                Store Location: {previewAd.location.storeName} ({previewAd.location.addressLine1})
+              </span>
+              <span style={{
+                fontSize: "clamp(10px, 1.2vw, 15px)",
+                color: "rgba(255,255,255,0.6)",
+                whiteSpace: "nowrap", marginLeft: 24,
+              }}>
+                Ad #{previewAd.id.slice(-6).toUpperCase()}
+              </span>
+            </div>
+          </div>
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, marginTop: 20 }}>
+            This is how the ad will appear on the display screen · Click anywhere or press Esc to close
+          </p>
         </div>
       )}
     </div>

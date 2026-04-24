@@ -6,7 +6,7 @@ import { requireAuth } from "@/lib/auth/session";
 import { eq, and } from "drizzle-orm";
 import { capturePayPalOrder } from "@/lib/paypal";
 import { AD_PRICE_CENTS } from "@/types";
-import { sendAdSubmittedEmail } from "@/lib/email/templates";
+import { sendAdSubmittedEmail, sendPaymentReceiptEmail } from "@/lib/email/templates";
 import { users, locations } from "@/lib/db/schema";
 
 const schema = z.object({
@@ -74,7 +74,18 @@ export async function POST(req: NextRequest) {
       .set({ paymentStatus: "paid", updatedAt: now })
       .where(eq(ads.id, adId));
 
-    // Send submission email (non-blocking)
+    const amount = `$${(AD_PRICE_CENTS / 100).toFixed(2)}`;
+
+    // Send emails (non-blocking)
+    sendPaymentReceiptEmail({
+      to: row.user.email,
+      userName: row.user.name,
+      adTitle: row.ad.title,
+      locationName: row.location.storeName,
+      amountFormatted: amount,
+      provider: "paypal",
+      adId,
+    }).catch(console.error);
     sendAdSubmittedEmail({
       to: row.user.email,
       userName: row.user.name,

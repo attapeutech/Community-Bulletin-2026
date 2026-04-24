@@ -208,31 +208,16 @@ export default function NewAdPage() {
     setUploading(true);
     setError("");
     try {
-      // Get presigned URL
-      const presignRes = await fetch("/api/upload/presign", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fileName: imageFile.name,
-          contentType: imageFile.type,
-          folder: "ads",
-        }),
-      });
-      const presignJson = await presignRes.json();
-      if (!presignJson.success) throw new Error(presignJson.error);
+      const formData = new FormData();
+      formData.append("file", imageFile);
+      formData.append("folder", "ads");
 
-      const { uploadUrl, key, publicUrl } = presignJson.data;
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
 
-      // Upload directly to R2
-      const uploadRes = await fetch(uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": imageFile.type },
-        body: imageFile,
-      });
-      if (!uploadRes.ok) throw new Error("Upload to storage failed");
-
-      setUploadedImageUrl(publicUrl);
-      setUploadedImageKey(key);
+      setUploadedImageUrl(json.data.publicUrl);
+      setUploadedImageKey(json.data.key);
     } catch (e: any) {
       setError(e.message || "Image upload failed");
     } finally {

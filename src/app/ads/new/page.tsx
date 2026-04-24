@@ -153,6 +153,7 @@ export default function NewAdPage() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [locSearch, setLocSearch] = useState("");
   const [locLoading, setLocLoading] = useState(false);
+  const [locSearched, setLocSearched] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
 
   const [title, setTitle] = useState("");
@@ -170,15 +171,17 @@ export default function NewAdPage() {
   const handleLocSearch = (val: string) => {
     setLocSearch(val);
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    if (val.trim().length < 2) { setLocations([]); setLocSearched(false); return; }
     searchTimeout.current = setTimeout(async () => {
-      if (val.trim().length < 2) { setLocations([]); return; }
       setLocLoading(true);
+      setLocSearched(false);
       try {
-        const res = await fetch(`/api/locations?search=${encodeURIComponent(val)}`);
+        const res = await fetch(`/api/locations?search=${encodeURIComponent(val.trim())}`);
         const json = await res.json();
         if (json.success) setLocations(json.data);
       } catch { /* ignore */ } finally {
         setLocLoading(false);
+        setLocSearched(true);
       }
     }, 350);
   };
@@ -293,30 +296,39 @@ export default function NewAdPage() {
               <h2 style={{ fontFamily: "Georgia,serif", fontSize: 20, color: ACCENT, marginBottom: 4 }}>Choose a location</h2>
               <p style={{ fontSize: 13, color: "#6B8FA8", marginBottom: 24 }}>Search for a store where your ad will be displayed.</p>
 
-              <div style={{ marginBottom: 16 }}>
+              <div style={{ marginBottom: 8 }}>
                 <Label>Search locations</Label>
                 <Input
-                  placeholder="Type store name, city…"
+                  placeholder="Store name, city, or state…"
                   value={locSearch}
                   onChange={(e) => handleLocSearch(e.target.value)}
+                  autoComplete="off"
                 />
               </div>
 
-              {locLoading && <p style={{ fontSize: 13, color: "#6B8FA8" }}>Searching…</p>}
+              {locLoading && (
+                <p style={{ fontSize: 13, color: "#6B8FA8", margin: "8px 0" }}>Searching…</p>
+              )}
+
+              {!locLoading && locSearched && locations.length === 0 && (
+                <div style={{ fontSize: 13, color: "#6B8FA8", background: "#F4F7FB", border: "1px solid #D8E4EE", borderRadius: 8, padding: "12px 16px", margin: "8px 0" }}>
+                  No locations found for &ldquo;{locSearch}&rdquo;. Try a different store name or city.
+                </div>
+              )}
 
               {locations.length > 0 && (
-                <div style={{ border: "1px solid #D8E4EE", borderRadius: 8, overflow: "hidden" }}>
-                  {locations.map((loc) => (
+                <div style={{ border: "1px solid #D8E4EE", borderRadius: 8, overflow: "hidden", margin: "8px 0" }}>
+                  {locations.map((loc, i) => (
                     <button
                       key={loc.id}
-                      onClick={() => { setSelectedLocation(loc); setLocations([]); setLocSearch(""); }}
+                      onClick={() => { setSelectedLocation(loc); setLocations([]); setLocSearch(""); setLocSearched(false); }}
                       style={{
                         width: "100%",
                         padding: "12px 16px",
                         textAlign: "left",
                         background: "#fff",
                         border: "none",
-                        borderBottom: "1px solid #D8E4EE",
+                        borderBottom: i < locations.length - 1 ? "1px solid #D8E4EE" : "none",
                         cursor: "pointer",
                         fontSize: 14,
                       }}

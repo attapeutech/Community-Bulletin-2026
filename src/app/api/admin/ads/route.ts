@@ -4,6 +4,10 @@ import { db } from "@/lib/db/client";
 import { ads, users, locations } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/auth/session";
 import { eq, desc, and } from "drizzle-orm";
+import { addDays } from "date-fns";
+import { AD_DURATION_DAYS } from "@/types";
+import { pushDisplayRefresh, pushDashboardUpdate } from "@/lib/socket/notify";
+import { sendAdApprovedEmail, sendAdDeniedEmail } from "@/lib/email/templates";
 
 // GET /api/admin/ads — all ads with optional status filter
 export async function GET(req: NextRequest) {
@@ -58,14 +62,61 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json();
     const { adId, status, reviewNote } = overrideSchema.parse(body);
 
+    // Fetch ad + location + user before updating (needed for emails + socket)
+    const [row] = await db
+      .select({
+        ad: ads,
+        user: { id: users.id, name: users.name, email: users.email },
+        location: { id: locations.id, storeName: locations.storeName, slug: locations.slug },
+      })
+      .from(ads)
+      .innerJoin(users, eq(ads.userId, users.id))
+      .innerJoin(locations, eq(ads.locationId, locations.id))
+      .where(eq(ads.id, adId))
+      .limit(1);
+
+    if (!row) return NextResponse.json({ success: false, error: "Ad not found" }, { status: 404 });
+
     const now = new Date();
+    const isApproving = status === "approved";
+    const endedAt = isApproving ? addDays(now, AD_DURATION_DAYS) : row.ad.endedAt;
+
     const [updated] = await db
       .update(ads)
-      .set({ status, reviewNote: reviewNote ?? null, updatedAt: now })
+      .set({
+        status,
+        reviewNote: reviewNote || null,
+        updatedAt: now,
+        ...(isApproving && { startedAt: now, endedAt }),
+      })
       .where(eq(ads.id, adId))
       .returning();
 
-    if (!updated) return NextResponse.json({ success: false, error: "Ad not found" }, { status: 404 });
+    // Push real-time updates
+    pushDisplayRefresh(row.location.slug).catch(console.error);
+    pushDashboardUpdate({ adId, status, locationSlug: row.location.slug }).catch(console.error);
+
+    // Send emails (non-blocking)
+    if (isApproving) {
+      sendAdApprovedEmail({
+        to: row.user.email,
+        userName: row.user.name,
+        adTitle: row.ad.title,
+        locationName: row.location.storeName,
+        locationSlug: row.location.slug,
+        adId,
+        startedAt: now.toLocaleDateString("en-US", { dateStyle: "long" }),
+        endedAt: endedAt.toLocaleDateString("en-US", { dateStyle: "long" }),
+      }).catch(console.error);
+    } else if (status === "denied" && reviewNote) {
+      sendAdDeniedEmail({
+        to: row.user.email,
+        userName: row.user.name,
+        adTitle: row.ad.title,
+        reviewNote,
+        adId,
+      }).catch(console.error);
+    }
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error: any) {

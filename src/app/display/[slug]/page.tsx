@@ -160,15 +160,15 @@ export default function DisplayPage() {
                 flexDirection: "column",
               }}
             >
-              {/* Full-bleed image */}
-              <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+              {/* Full image — dark background, no crop */}
+              <div style={{ flex: 1, position: "relative", overflow: "hidden", background: "#0A1A2E", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <img
                   src={ad.imageUrl}
                   alt={ad.title}
                   style={{
                     width: "100%",
                     height: "100%",
-                    objectFit: "cover",
+                    objectFit: "contain",
                     display: "block",
                   }}
                 />

@@ -518,19 +518,22 @@ export default function NewAdPage() {
             onClick={(e) => e.stopPropagation()}
             style={{
               width: "min(90vw, 1100px)",
-              aspectRatio: "16/9",
+              maxHeight: "80vh",
               background: "#0A1A2E",
               borderRadius: 12,
               overflow: "hidden",
               position: "relative",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               boxShadow: "0 0 0 8px #1a1a1a, 0 0 0 12px #333, 0 24px 48px rgba(0,0,0,0.8)",
             }}
           >
-            {/* Full-bleed image */}
+            {/* Full image — no crop */}
             <img
               src={uploadedImageUrl}
               alt={title}
-              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+              style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", maxHeight: "80vh" }}
             />
 
             {/* Subtle bottom gradient for the info bar */}

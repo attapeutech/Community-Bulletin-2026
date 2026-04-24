@@ -331,7 +331,7 @@ function FooterBar() {
       <p style={{ fontSize: 12, color: "#2A4A6C" }}>
         Advertise at this location — <span style={{ color: "#4A90C4" }}>communitybulletin.com</span>
       </p>
-      <p style={{ fontSize: 11, color: "#1A2A3C" }}>$100 · 30 days · No contracts</p>
+      <p style={{ fontSize: 11, color: "#1A2A3C" }}>$100 · 1 week · No contracts</p>
     </div>
   );
 }

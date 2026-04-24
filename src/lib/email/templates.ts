@@ -146,7 +146,7 @@ export async function sendAdApprovedEmail({
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto">
         <h2 style="color:#16a34a">Your ad is approved!</h2>
         <p>Hi ${userName}, great news! Your ad <strong>"${adTitle}"</strong> has been <span style="background:#dcfce7;padding:2px 8px;border-radius:4px;font-weight:600;color:#16a34a">Approved</span> and is now live.</p>
-        <p>Thank you for advertising with AdBoard. Your ad will display at <strong>${locationName}</strong> for the full 30-day period.</p>
+        <p>Thank you for advertising with AdBoard. Your ad will display at <strong>${locationName}</strong> for the full 1-week period.</p>
         <table style="border-collapse:collapse;width:100%;margin:24px 0;font-size:14px">
           <tr><td style="padding:8px;color:#6b7280;border-bottom:1px solid #e5e7eb">Ad title</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${adTitle}</td></tr>
           <tr><td style="padding:8px;color:#6b7280;border-bottom:1px solid #e5e7eb">Location</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${locationName}</td></tr>

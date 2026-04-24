@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
             unit_amount: AD_PRICE_CENTS,
             product_data: {
               name: `Community Bulletin Ad — ${row.ad.title}`,
-              description: `30-day display at ${row.location.storeName}`,
+              description: `1-week display at ${row.location.storeName}`,
             },
           },
           quantity: 1,

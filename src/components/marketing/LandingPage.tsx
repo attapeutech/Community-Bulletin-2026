@@ -40,7 +40,7 @@ const FEATURES = [
   {
     icon: "💳",
     title: "Simple flat pricing",
-    desc: "One simple price — $100 for 30 days. No hidden fees. Full refund if your ad is not approved.",
+    desc: "One simple price — $100 for 1 week. No hidden fees. Full refund if your ad is not approved.",
   },
 ];
 
@@ -55,7 +55,7 @@ const STATS = [
   { value: "500+", label: "Store locations" },
   { value: "2,400+", label: "Ads displayed" },
   { value: "48", label: "States covered" },
-  { value: "30 days", label: "Per campaign" },
+  { value: "1 week", label: "Per campaign" },
 ];
 
 export default function LandingPage() {
@@ -327,11 +327,11 @@ export default function LandingPage() {
                 MOST POPULAR
               </div>
               <div style={{ fontFamily: "Georgia,serif", fontSize: 48, fontWeight: 700, color: "#1A3A5C" }}>$100</div>
-              <div style={{ fontSize: 14, color: "#6B8FA8", marginBottom: 24 }}>per location / 30 days</div>
+              <div style={{ fontSize: 14, color: "#6B8FA8", marginBottom: 24 }}>per location / 1 week</div>
               <ul style={{ listStyle: "none", padding: 0, margin: "0 0 32px", textAlign: "left" }}>
                 {[
                   "1 store location",
-                  "30-day display period",
+                  "1-week display period",
                   "Full carousel rotation",
                   "Real-time approval status",
                   "Email notifications",

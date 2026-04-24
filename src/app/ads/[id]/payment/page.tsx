@@ -204,7 +204,7 @@ export default function PaymentPage() {
             />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 700, fontSize: 15, color: ACCENT, marginBottom: 2 }}>{ad.title}</div>
-              <div style={{ fontSize: 12, color: "#6B8FA8" }}>{ad.location.storeName} · 30-day display</div>
+              <div style={{ fontSize: 12, color: "#6B8FA8" }}>{ad.location.storeName} · 1-week display</div>
             </div>
             <div style={{ fontWeight: 700, fontSize: 20, color: "#E8563A", flexShrink: 0 }}>$100</div>
           </div>

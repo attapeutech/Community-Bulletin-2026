@@ -275,7 +275,7 @@ export default function NewAdPage() {
           Post a New Ad
         </h1>
         <p style={{ color: "#6B8FA8", fontSize: 14, marginBottom: 32 }}>
-          $100 / 30 days · Displayed on in-store screens at your chosen location.
+          $100 / 1 week · Displayed on in-store screens at your chosen location.
         </p>
 
         <StepBar current={step} />
@@ -466,7 +466,7 @@ export default function NewAdPage() {
                   <div><span style={{ color: "#6B8FA8" }}>Location:</span> <strong>{selectedLocation?.storeName}</strong></div>
                   <div><span style={{ color: "#6B8FA8" }}>Title:</span> <strong>{title}</strong></div>
                   {description && <div><span style={{ color: "#6B8FA8" }}>Description:</span> {description}</div>}
-                  <div><span style={{ color: "#6B8FA8" }}>Duration:</span> 30 days</div>
+                  <div><span style={{ color: "#6B8FA8" }}>Duration:</span> 1 week</div>
                   <div><span style={{ color: "#6B8FA8" }}>Price:</span> <strong style={{ color: RED }}>$100.00</strong></div>
                 </div>
               </div>

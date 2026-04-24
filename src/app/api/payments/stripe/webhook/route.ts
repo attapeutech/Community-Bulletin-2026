@@ -3,7 +3,7 @@ import Stripe from "stripe";
 import { db } from "@/lib/db/client";
 import { ads, payments, users, locations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { sendAdSubmittedEmail } from "@/lib/email/templates";
+import { sendAdSubmittedEmail, sendPaymentReceiptEmail } from "@/lib/email/templates";
 
 export const dynamic = "force-dynamic";
 
@@ -76,6 +76,16 @@ export async function POST(req: NextRequest) {
       .limit(1);
 
     if (row) {
+      const amount = `$${((session.amount_total ?? 10000) / 100).toFixed(2)}`;
+      sendPaymentReceiptEmail({
+        to: row.user.email,
+        userName: row.user.name,
+        adTitle: row.ad.title,
+        locationName: row.location.storeName,
+        amountFormatted: amount,
+        provider: "stripe",
+        adId,
+      }).catch(console.error);
       sendAdSubmittedEmail({
         to: row.user.email,
         userName: row.user.name,

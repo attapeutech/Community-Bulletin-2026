@@ -1,6 +1,6 @@
 import { requireAuth } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
-import { ads, locations, users, payments } from "@/lib/db/schema";
+import { ads, locations, users, payments, cities } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
@@ -57,11 +57,13 @@ export default async function AdDetailPage({
         storeName: locations.storeName,
         slug: locations.slug,
         addressLine1: locations.addressLine1,
+        cityName: cities.name,
       },
     })
     .from(ads)
     .innerJoin(users, eq(ads.userId, users.id))
     .innerJoin(locations, eq(ads.locationId, locations.id))
+    .innerJoin(cities, eq(locations.cityId, cities.id))
     .where(eq(ads.id, id))
     .limit(1);
 
@@ -145,13 +147,30 @@ export default async function AdDetailPage({
         )}
       </div>
 
-      {/* Ad image */}
-      <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", overflow: "hidden", marginBottom: 24 }}>
+      {/* Ad image — display screen style */}
+      <div style={{ background: "#0A1A2E", borderRadius: 12, overflow: "hidden", marginBottom: 24, position: "relative" }}>
         <img
           src={ad.imageUrl}
           alt={ad.title}
-          style={{ width: "100%", maxHeight: 320, objectFit: "cover", display: "block" }}
+          style={{ width: "100%", maxHeight: 380, objectFit: "contain", display: "block" }}
         />
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "linear-gradient(to top, rgba(10,26,46,0.75) 0%, transparent 25%)",
+          pointerEvents: "none",
+        }} />
+        <div style={{
+          position: "absolute", bottom: 0, left: 0, right: 0,
+          padding: "12px 20px",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.9)", fontWeight: 500 }}>
+            Store Location: {location.storeName} — {location.cityName} ({location.addressLine1})
+          </span>
+          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", whiteSpace: "nowrap", marginLeft: 12 }}>
+            Ad #{ad.id.slice(-6).toUpperCase()}
+          </span>
+        </div>
       </div>
 
       {/* Details */}

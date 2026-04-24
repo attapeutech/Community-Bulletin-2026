@@ -466,12 +466,37 @@ export default function NewAdPage() {
               {/* Summary */}
               <div style={{ background: "#F4F7FB", borderRadius: 12, padding: 20, marginBottom: 24 }}>
                 {uploadedImageUrl && (
-                  <div style={{ position: "relative", marginBottom: 16 }}>
-                    <img src={uploadedImageUrl} alt={title} style={{ width: "100%", maxHeight: 200, objectFit: "cover", borderRadius: 8, display: "block" }} />
+                  <div style={{ position: "relative", marginBottom: 16, background: "#0A1A2E", borderRadius: 8, overflow: "hidden" }}>
+                    {/* Full image — no crop */}
+                    <img
+                      src={uploadedImageUrl}
+                      alt={title}
+                      style={{ width: "100%", maxHeight: 280, objectFit: "contain", display: "block" }}
+                    />
+                    {/* Bottom gradient */}
+                    <div style={{
+                      position: "absolute", inset: 0,
+                      background: "linear-gradient(to top, rgba(10,26,46,0.75) 0%, transparent 30%)",
+                      pointerEvents: "none",
+                    }} />
+                    {/* Location info bar */}
+                    <div style={{
+                      position: "absolute", bottom: 0, left: 0, right: 0,
+                      padding: "10px 14px",
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                    }}>
+                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.9)", fontWeight: 500 }}>
+                        Store Location: {selectedLocation?.storeName} — {selectedLocation?.city.name} ({selectedLocation?.addressLine1})
+                      </span>
+                      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", whiteSpace: "nowrap", marginLeft: 12 }}>
+                        Ad #Preview
+                      </span>
+                    </div>
+                    {/* Preview button */}
                     <button
                       onClick={() => setShowPreview(true)}
                       style={{
-                        position: "absolute", bottom: 10, right: 10,
+                        position: "absolute", top: 10, right: 10,
                         background: "rgba(10,26,46,0.75)", color: "#fff",
                         border: "none", borderRadius: 6, padding: "6px 12px",
                         fontSize: 12, fontWeight: 600, cursor: "pointer",

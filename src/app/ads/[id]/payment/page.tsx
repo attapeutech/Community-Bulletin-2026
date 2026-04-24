@@ -36,6 +36,7 @@ export default function PaymentPage() {
 
   const success = searchParams.get("success") === "true";
   const cancelled = searchParams.get("cancelled") === "true";
+  const sessionId = searchParams.get("session_id");
 
   const [ad, setAd] = useState<AdSummary | null>(null);
   const [adLoading, setAdLoading] = useState(true);
@@ -56,6 +57,16 @@ export default function PaymentPage() {
       .catch(() => setError("Failed to load ad"))
       .finally(() => setAdLoading(false));
   }, [adId]);
+
+  // Confirm Stripe payment on success redirect (fallback if webhook was delayed)
+  useEffect(() => {
+    if (!success || !sessionId || !adId) return;
+    fetch("/api/payments/stripe/confirm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId, adId }),
+    }).catch(console.error);
+  }, [success, sessionId, adId]);
 
   // Load PayPal script when we have an unpaid ad
   useEffect(() => {

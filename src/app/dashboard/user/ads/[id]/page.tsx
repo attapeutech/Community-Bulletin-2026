@@ -4,6 +4,7 @@ import { ads, locations, users, payments, cities } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
+import AdImagePreview from "./AdImagePreview";
 
 const STATUS_COLORS: Record<string, { bg: string; color: string; label: string }> = {
   pending:   { bg: "#fef9c3", color: "#854d0e", label: "Pending Review" },
@@ -147,31 +148,15 @@ export default async function AdDetailPage({
         )}
       </div>
 
-      {/* Ad image — display screen style */}
-      <div style={{ background: "#0A1A2E", borderRadius: 12, overflow: "hidden", marginBottom: 24, position: "relative" }}>
-        <img
-          src={ad.imageUrl}
-          alt={ad.title}
-          style={{ width: "100%", maxHeight: 380, objectFit: "contain", display: "block" }}
-        />
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(to top, rgba(10,26,46,0.75) 0%, transparent 25%)",
-          pointerEvents: "none",
-        }} />
-        <div style={{
-          position: "absolute", bottom: 0, left: 0, right: 0,
-          padding: "12px 20px",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-        }}>
-          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.9)", fontWeight: 500 }}>
-            Store Location: {location.storeName} — {location.cityName} ({location.addressLine1})
-          </span>
-          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", whiteSpace: "nowrap", marginLeft: 12 }}>
-            Ad #{ad.id.slice(-6).toUpperCase()}
-          </span>
-        </div>
-      </div>
+      {/* Ad image — display screen style with preview modal */}
+      <AdImagePreview
+        imageUrl={ad.imageUrl}
+        title={ad.title}
+        storeName={location.storeName}
+        cityName={location.cityName}
+        addressLine1={location.addressLine1}
+        adId={ad.id}
+      />
 
       {/* Details */}
       <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "0 24px", marginBottom: 24 }}>

@@ -15,8 +15,8 @@ export const r2 = new S3Client({
     secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY!,
   },
   // Disable automatic checksums — they break CORS preflight on R2
-  requestChecksumCalculation: "when_required",
-  responseChecksumValidation: "when_required",
+  requestChecksumCalculation: "WHEN_REQUIRED",
+  responseChecksumValidation: "WHEN_REQUIRED",
 });
 
 const BUCKET = process.env.CLOUDFLARE_R2_BUCKET_NAME!;

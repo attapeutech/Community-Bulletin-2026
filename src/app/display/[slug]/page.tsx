@@ -17,6 +17,9 @@ type Ad = {
 type LocationInfo = {
   slug: string;
   name: string;
+  storeName: string;
+  address: string;
+  city: string;
 };
 
 function Clock() {
@@ -169,41 +172,36 @@ export default function DisplayPage() {
                     display: "block",
                   }}
                 />
-                {/* Gradient overlay for text legibility */}
+                {/* Subtle bottom gradient for the info bar */}
                 <div style={{
                   position: "absolute",
                   inset: 0,
-                  background: "linear-gradient(to top, rgba(10,26,46,0.85) 0%, rgba(10,26,46,0.1) 60%, transparent 100%)",
+                  background: "linear-gradient(to top, rgba(10,26,46,0.75) 0%, transparent 18%)",
                 }} />
 
-                {/* Ad text */}
+                {/* Location info bar */}
                 <div style={{
                   position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  padding: "32px 48px",
+                  bottom: 0, left: 0, right: 0,
+                  padding: "16px 32px",
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
                 }}>
-                  <h2 style={{
-                    fontFamily: "Georgia,serif",
-                    fontSize: "clamp(28px, 4vw, 56px)",
-                    fontWeight: 700,
-                    color: "#fff",
-                    marginBottom: 8,
-                    textShadow: "0 2px 12px rgba(0,0,0,0.4)",
+                  <span style={{
+                    fontSize: "clamp(11px, 1.4vw, 18px)",
+                    color: "rgba(255,255,255,0.9)",
+                    fontWeight: 500,
+                    letterSpacing: "0.01em",
                   }}>
-                    {ad.title}
-                  </h2>
-                  {ad.description && (
-                    <p style={{
-                      fontSize: "clamp(14px, 2vw, 22px)",
-                      color: "rgba(255,255,255,0.85)",
-                      maxWidth: 700,
-                      lineHeight: 1.4,
-                    }}>
-                      {ad.description}
-                    </p>
-                  )}
+                    Store Location: {location?.storeName} — {location?.city} ({location?.address})
+                  </span>
+                  <span style={{
+                    fontSize: "clamp(10px, 1.2vw, 15px)",
+                    color: "rgba(255,255,255,0.6)",
+                    whiteSpace: "nowrap",
+                    marginLeft: 24,
+                  }}>
+                    Ad #{ad.id.slice(-6).toUpperCase()}
+                  </span>
                 </div>
               </div>
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
-import { ads, locations } from "@/lib/db/schema";
+import { ads, locations, cities, states } from "@/lib/db/schema";
 import { eq, and, lte, gte, asc } from "drizzle-orm";
 
 // GET /api/display/[slug] — public: approved, currently-running ads for a location
@@ -13,8 +13,16 @@ export async function GET(
     const now = new Date();
 
     const [location] = await db
-      .select({ id: locations.id, slug: locations.slug, storeName: locations.storeName, displayName: locations.displayName })
+      .select({
+        id: locations.id,
+        slug: locations.slug,
+        storeName: locations.storeName,
+        displayName: locations.displayName,
+        addressLine1: locations.addressLine1,
+        cityName: cities.name,
+      })
       .from(locations)
+      .innerJoin(cities, eq(locations.cityId, cities.id))
       .where(and(eq(locations.slug, slug), eq(locations.isActive, true)))
       .limit(1);
 
@@ -53,6 +61,9 @@ export async function GET(
         location: {
           slug: location.slug,
           name: location.displayName || location.storeName,
+          storeName: location.storeName,
+          address: location.addressLine1,
+          city: location.cityName,
         },
         ads: activeAds,
       },

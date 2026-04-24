@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDropzone } from "react-dropzone";
 
@@ -148,6 +148,15 @@ export default function NewAdPage() {
   const [step, setStep] = useState<Step>(1);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+
+  // Close preview on Escape
+  useEffect(() => {
+    if (!showPreview) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setShowPreview(false); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [showPreview]);
 
   // Form state
   const [locations, setLocations] = useState<Location[]>([]);
@@ -208,31 +217,16 @@ export default function NewAdPage() {
     setUploading(true);
     setError("");
     try {
-      // Get presigned URL
-      const presignRes = await fetch("/api/upload/presign", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fileName: imageFile.name,
-          contentType: imageFile.type,
-          folder: "ads",
-        }),
-      });
-      const presignJson = await presignRes.json();
-      if (!presignJson.success) throw new Error(presignJson.error);
+      const formData = new FormData();
+      formData.append("file", imageFile);
+      formData.append("folder", "ads");
 
-      const { uploadUrl, key, publicUrl } = presignJson.data;
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
 
-      // Upload directly to R2
-      const uploadRes = await fetch(uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": imageFile.type },
-        body: imageFile,
-      });
-      if (!uploadRes.ok) throw new Error("Upload to storage failed");
-
-      setUploadedImageUrl(publicUrl);
-      setUploadedImageKey(key);
+      setUploadedImageUrl(json.data.publicUrl);
+      setUploadedImageKey(json.data.key);
     } catch (e: any) {
       setError(e.message || "Image upload failed");
     } finally {
@@ -472,7 +466,21 @@ export default function NewAdPage() {
               {/* Summary */}
               <div style={{ background: "#F4F7FB", borderRadius: 12, padding: 20, marginBottom: 24 }}>
                 {uploadedImageUrl && (
-                  <img src={uploadedImageUrl} alt={title} style={{ width: "100%", maxHeight: 200, objectFit: "cover", borderRadius: 8, marginBottom: 16 }} />
+                  <div style={{ position: "relative", marginBottom: 16 }}>
+                    <img src={uploadedImageUrl} alt={title} style={{ width: "100%", maxHeight: 200, objectFit: "cover", borderRadius: 8, display: "block" }} />
+                    <button
+                      onClick={() => setShowPreview(true)}
+                      style={{
+                        position: "absolute", bottom: 10, right: 10,
+                        background: "rgba(10,26,46,0.75)", color: "#fff",
+                        border: "none", borderRadius: 6, padding: "6px 12px",
+                        fontSize: 12, fontWeight: 600, cursor: "pointer",
+                        backdropFilter: "blur(4px)", display: "flex", alignItems: "center", gap: 6,
+                      }}
+                    >
+                      <span>⛶</span> Preview on display screen
+                    </button>
+                  </div>
                 )}
                 <div style={{ display: "grid", gap: 10, fontSize: 14 }}>
                   <div><span style={{ color: "#6B8FA8" }}>Location:</span> <strong>{selectedLocation?.storeName}</strong></div>
@@ -493,6 +501,76 @@ export default function NewAdPage() {
           )}
         </div>
       </div>
+
+      {/* ── Display screen preview modal ── */}
+      {showPreview && uploadedImageUrl && (
+        <div
+          onClick={() => setShowPreview(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 1000,
+            background: "rgba(0,0,0,0.85)",
+            display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center",
+          }}
+        >
+          {/* TV frame */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "min(90vw, 1100px)",
+              maxHeight: "80vh",
+              background: "#0A1A2E",
+              borderRadius: 12,
+              overflow: "hidden",
+              position: "relative",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 0 0 8px #1a1a1a, 0 0 0 12px #333, 0 24px 48px rgba(0,0,0,0.8)",
+            }}
+          >
+            {/* Full image — no crop */}
+            <img
+              src={uploadedImageUrl}
+              alt={title}
+              style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", maxHeight: "80vh" }}
+            />
+
+            {/* Subtle bottom gradient for the info bar */}
+            <div style={{
+              position: "absolute", inset: 0,
+              background: "linear-gradient(to top, rgba(10,26,46,0.75) 0%, transparent 18%)",
+            }} />
+
+            {/* Location info bar */}
+            <div style={{
+              position: "absolute", bottom: 0, left: 0, right: 0,
+              padding: "16px 32px",
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+            }}>
+              <span style={{
+                fontSize: "clamp(11px, 1.4vw, 18px)",
+                color: "rgba(255,255,255,0.9)",
+                fontWeight: 500, letterSpacing: "0.01em",
+              }}>
+                Store Location: {selectedLocation?.storeName} — {selectedLocation?.city.name} ({selectedLocation?.addressLine1})
+              </span>
+              <span style={{
+                fontSize: "clamp(10px, 1.2vw, 15px)",
+                color: "rgba(255,255,255,0.6)",
+                whiteSpace: "nowrap", marginLeft: 24,
+              }}>
+                Ad #Preview
+              </span>
+            </div>
+          </div>
+
+          {/* Caption */}
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, marginTop: 20 }}>
+            This is how your ad will appear on the in-store display screen · Click anywhere or press Esc to close
+          </p>
+        </div>
+      )}
     </div>
   );
 }

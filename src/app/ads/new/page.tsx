@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDropzone } from "react-dropzone";
 
@@ -148,6 +148,15 @@ export default function NewAdPage() {
   const [step, setStep] = useState<Step>(1);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+
+  // Close preview on Escape
+  useEffect(() => {
+    if (!showPreview) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setShowPreview(false); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [showPreview]);
 
   // Form state
   const [locations, setLocations] = useState<Location[]>([]);
@@ -457,7 +466,21 @@ export default function NewAdPage() {
               {/* Summary */}
               <div style={{ background: "#F4F7FB", borderRadius: 12, padding: 20, marginBottom: 24 }}>
                 {uploadedImageUrl && (
-                  <img src={uploadedImageUrl} alt={title} style={{ width: "100%", maxHeight: 200, objectFit: "cover", borderRadius: 8, marginBottom: 16 }} />
+                  <div style={{ position: "relative", marginBottom: 16 }}>
+                    <img src={uploadedImageUrl} alt={title} style={{ width: "100%", maxHeight: 200, objectFit: "cover", borderRadius: 8, display: "block" }} />
+                    <button
+                      onClick={() => setShowPreview(true)}
+                      style={{
+                        position: "absolute", bottom: 10, right: 10,
+                        background: "rgba(10,26,46,0.75)", color: "#fff",
+                        border: "none", borderRadius: 6, padding: "6px 12px",
+                        fontSize: 12, fontWeight: 600, cursor: "pointer",
+                        backdropFilter: "blur(4px)", display: "flex", alignItems: "center", gap: 6,
+                      }}
+                    >
+                      <span>⛶</span> Preview on display screen
+                    </button>
+                  </div>
                 )}
                 <div style={{ display: "grid", gap: 10, fontSize: 14 }}>
                   <div><span style={{ color: "#6B8FA8" }}>Location:</span> <strong>{selectedLocation?.storeName}</strong></div>
@@ -478,6 +501,82 @@ export default function NewAdPage() {
           )}
         </div>
       </div>
+
+      {/* ── Display screen preview modal ── */}
+      {showPreview && uploadedImageUrl && (
+        <div
+          onClick={() => setShowPreview(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 1000,
+            background: "rgba(0,0,0,0.85)",
+            display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center",
+          }}
+        >
+          {/* TV frame */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "min(90vw, 1100px)",
+              aspectRatio: "16/9",
+              background: "#0A1A2E",
+              borderRadius: 12,
+              overflow: "hidden",
+              position: "relative",
+              boxShadow: "0 0 0 8px #1a1a1a, 0 0 0 12px #333, 0 24px 48px rgba(0,0,0,0.8)",
+            }}
+          >
+            {/* Full-bleed image */}
+            <img
+              src={uploadedImageUrl}
+              alt={title}
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            />
+
+            {/* Gradient overlay */}
+            <div style={{
+              position: "absolute", inset: 0,
+              background: "linear-gradient(to top, rgba(10,26,46,0.85) 0%, rgba(10,26,46,0.1) 60%, transparent 100%)",
+            }} />
+
+            {/* Ad text */}
+            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "32px 48px" }}>
+              <h2 style={{
+                fontFamily: "Georgia,serif",
+                fontSize: "clamp(20px, 3.5vw, 48px)",
+                fontWeight: 700, color: "#fff", marginBottom: 8,
+                textShadow: "0 2px 12px rgba(0,0,0,0.4)",
+              }}>
+                {title}
+              </h2>
+              {description && (
+                <p style={{
+                  fontSize: "clamp(12px, 1.8vw, 20px)",
+                  color: "rgba(255,255,255,0.85)",
+                  maxWidth: 700, lineHeight: 1.4, margin: 0,
+                }}>
+                  {description}
+                </p>
+              )}
+            </div>
+
+            {/* Store label */}
+            <div style={{
+              position: "absolute", top: 16, left: 20,
+              background: "rgba(10,26,46,0.6)", color: "rgba(255,255,255,0.8)",
+              fontSize: "clamp(10px, 1.2vw, 14px)", padding: "4px 12px",
+              borderRadius: 20, backdropFilter: "blur(4px)",
+            }}>
+              {selectedLocation?.storeName}
+            </div>
+          </div>
+
+          {/* Caption */}
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, marginTop: 20 }}>
+            This is how your ad will appear on the in-store display screen · Click anywhere or press Esc to close
+          </p>
+        </div>
+      )}
     </div>
   );
 }

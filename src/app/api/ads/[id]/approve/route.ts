@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
-import { ads, locations, users } from "@/lib/db/schema";
+import { ads, locations, users, cities, states, postalCodes } from "@/lib/db/schema";
 import { requireApproverOrAdmin } from "@/lib/auth/session";
 import { eq } from "drizzle-orm";
 import { addDays } from "date-fns";
@@ -27,11 +27,18 @@ export async function PATCH(
           id: locations.id,
           storeName: locations.storeName,
           slug: locations.slug,
+          addressLine1: locations.addressLine1,
+          cityName: cities.name,
+          stateCode: states.code,
+          postalCode: postalCodes.code,
         },
       })
       .from(ads)
       .innerJoin(users, eq(ads.userId, users.id))
       .innerJoin(locations, eq(ads.locationId, locations.id))
+      .innerJoin(cities, eq(locations.cityId, cities.id))
+      .innerJoin(states, eq(locations.stateId, states.id))
+      .innerJoin(postalCodes, eq(locations.postalCodeId, postalCodes.id))
       .where(eq(ads.id, id))
       .limit(1);
 
@@ -66,11 +73,13 @@ export async function PATCH(
       .returning();
 
     // Send approval email (non-blocking)
+    const { storeName, addressLine1, cityName, stateCode, postalCode } = row.location;
+    const locationName = `${storeName} — ${addressLine1}, ${cityName}, ${stateCode} ${postalCode}`;
     sendAdApprovedEmail({
       to: row.user.email,
       userName: row.user.name,
       adTitle: row.ad.title,
-      locationName: row.location.storeName,
+      locationName,
       locationSlug: row.location.slug,
       adId: id,
       startedAt: now.toLocaleDateString("en-US", { dateStyle: "long" }),

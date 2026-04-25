@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { db } from "@/lib/db/client";
-import { ads, payments, users, locations } from "@/lib/db/schema";
+import { ads, payments, users, locations, cities, states, postalCodes } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { requireAuth } from "@/lib/auth/session";
-import { sendAdSubmittedEmail, sendPaymentReceiptEmail } from "@/lib/email/templates";
+import { sendAdSubmittedEmail, sendPaymentReceiptEmail, sendAdReviewNotificationEmail } from "@/lib/email/templates";
 
 export const dynamic = "force-dynamic";
 
@@ -70,21 +70,32 @@ export async function POST(req: NextRequest) {
       .select({
         ad: ads,
         user: { id: users.id, name: users.name, email: users.email },
-        location: { storeName: locations.storeName },
+        location: {
+          storeName: locations.storeName,
+          addressLine1: locations.addressLine1,
+          cityName: cities.name,
+          stateCode: states.code,
+          postalCode: postalCodes.code,
+        },
       })
       .from(ads)
       .innerJoin(users, eq(ads.userId, users.id))
       .innerJoin(locations, eq(ads.locationId, locations.id))
+      .innerJoin(cities, eq(locations.cityId, cities.id))
+      .innerJoin(states, eq(locations.stateId, states.id))
+      .innerJoin(postalCodes, eq(locations.postalCodeId, postalCodes.id))
       .where(eq(ads.id, adId))
       .limit(1);
 
     if (row) {
+      const { storeName, addressLine1, cityName, stateCode, postalCode } = row.location;
+      const locationName = `${storeName} — ${addressLine1}, ${cityName}, ${stateCode} ${postalCode}`;
       const amount = `$${((checkoutSession.amount_total ?? 10000) / 100).toFixed(2)}`;
       sendPaymentReceiptEmail({
         to: row.user.email,
         userName: row.user.name,
         adTitle: row.ad.title,
-        locationName: row.location.storeName,
+        locationName,
         amountFormatted: amount,
         provider: "stripe",
         adId,
@@ -93,7 +104,13 @@ export async function POST(req: NextRequest) {
         to: row.user.email,
         userName: row.user.name,
         adTitle: row.ad.title,
-        locationName: row.location.storeName,
+        locationName,
+        adId,
+      }).catch(console.error);
+      sendAdReviewNotificationEmail({
+        adTitle: row.ad.title,
+        locationName,
+        userName: row.user.name,
         adId,
       }).catch(console.error);
     }

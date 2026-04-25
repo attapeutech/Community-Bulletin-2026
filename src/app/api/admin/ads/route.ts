@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db/client";
-import { ads, users, locations } from "@/lib/db/schema";
+import { ads, users, locations, cities, states, postalCodes } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/auth/session";
 import { eq, desc, and } from "drizzle-orm";
 import { addDays } from "date-fns";
@@ -67,11 +67,22 @@ export async function PATCH(req: NextRequest) {
       .select({
         ad: ads,
         user: { id: users.id, name: users.name, email: users.email },
-        location: { id: locations.id, storeName: locations.storeName, slug: locations.slug },
+        location: {
+          id: locations.id,
+          storeName: locations.storeName,
+          slug: locations.slug,
+          addressLine1: locations.addressLine1,
+          cityName: cities.name,
+          stateCode: states.code,
+          postalCode: postalCodes.code,
+        },
       })
       .from(ads)
       .innerJoin(users, eq(ads.userId, users.id))
       .innerJoin(locations, eq(ads.locationId, locations.id))
+      .innerJoin(cities, eq(locations.cityId, cities.id))
+      .innerJoin(states, eq(locations.stateId, states.id))
+      .innerJoin(postalCodes, eq(locations.postalCodeId, postalCodes.id))
       .where(eq(ads.id, adId))
       .limit(1);
 
@@ -97,12 +108,14 @@ export async function PATCH(req: NextRequest) {
     pushDashboardUpdate({ adId, status, locationSlug: row.location.slug }).catch(console.error);
 
     // Send emails (non-blocking)
+    const { storeName, addressLine1, cityName, stateCode, postalCode } = row.location;
+    const locationName = `${storeName} — ${addressLine1}, ${cityName}, ${stateCode} ${postalCode}`;
     if (isApproving) {
       sendAdApprovedEmail({
         to: row.user.email,
         userName: row.user.name,
         adTitle: row.ad.title,
-        locationName: row.location.storeName,
+        locationName,
         locationSlug: row.location.slug,
         adId,
         startedAt: now.toLocaleDateString("en-US", { dateStyle: "long" }),

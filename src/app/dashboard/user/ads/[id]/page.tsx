@@ -1,6 +1,6 @@
 import { requireAuth } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
-import { ads, locations, users, payments, cities } from "@/lib/db/schema";
+import { ads, locations, users, payments, cities, states, postalCodes } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
@@ -58,13 +58,18 @@ export default async function AdDetailPage({
         storeName: locations.storeName,
         slug: locations.slug,
         addressLine1: locations.addressLine1,
+        addressLine2: locations.addressLine2,
         cityName: cities.name,
+        stateCode: states.code,
+        postalCode: postalCodes.code,
       },
     })
     .from(ads)
     .innerJoin(users, eq(ads.userId, users.id))
     .innerJoin(locations, eq(ads.locationId, locations.id))
     .innerJoin(cities, eq(locations.cityId, cities.id))
+    .innerJoin(states, eq(locations.stateId, states.id))
+    .innerJoin(postalCodes, eq(locations.postalCodeId, postalCodes.id))
     .where(eq(ads.id, id))
     .limit(1);
 
@@ -153,14 +158,17 @@ export default async function AdDetailPage({
         imageUrl={ad.imageUrl}
         title={ad.title}
         storeName={location.storeName}
-        cityName={location.cityName}
         addressLine1={location.addressLine1}
+        addressLine2={location.addressLine2}
+        cityName={location.cityName}
+        stateCode={location.stateCode}
+        postalCode={location.postalCode}
         adId={ad.id}
       />
 
       {/* Details */}
       <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "0 24px", marginBottom: 24 }}>
-        <Row label="Location" value={<>{location.storeName}<br /><span style={{ fontSize: 12, color: "#6B8FA8" }}>{location.addressLine1}</span></>} />
+        <Row label="Location" value={<>{location.storeName}<br /><span style={{ fontSize: 12, color: "#6B8FA8" }}>{location.addressLine1}{location.addressLine2 ? `, ${location.addressLine2}` : ""}, {location.cityName}, {location.stateCode} {location.postalCode}</span></>} />
         <Row label="Title" value={ad.title} />
         {ad.description && <Row label="Description" value={ad.description} />}
         <Row label="Status" value={<Badge {...adStatus} />} />

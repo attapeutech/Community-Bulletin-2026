@@ -77,9 +77,9 @@ export async function PATCH(
       refundResult = { status: result.status as typeof refundResult.status, amountCents: result.amountCents };
     }
 
-    // Send denial + refund email (non-blocking)
+    // Send denial + refund email
     const amountFormatted = `$${(refundResult.amountCents / 100).toFixed(2)}`;
-    sendAdDeniedEmail({
+    const emailResult = await sendAdDeniedEmail({
       to: row.user.email,
       userName: row.user.name,
       adTitle: row.ad.title,
@@ -87,7 +87,10 @@ export async function PATCH(
       adId: id,
       amountFormatted,
       refundStatus: (refundResult.status === "refunded" ? "refunded" : "refund_pending") as "refunded" | "refund_pending",
-    }).catch(console.error);
+    });
+    if (!emailResult.success) {
+      console.error("[deny] Failed to send denial email to", row.user.email, emailResult.error);
+    }
 
     // Notify dashboard (non-blocking)
     pushDashboardUpdate({

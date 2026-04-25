@@ -7,7 +7,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen font-sans">
 
       {/* ── LEFT PANEL ── */}
-      <div className="w-[42%] min-w-[340px] bg-primary px-9 py-8 flex flex-col justify-between items-center">
+      <div className="hidden lg:flex lg:w-[42%] lg:min-w-[340px] bg-primary px-9 py-8 flex-col justify-between items-center">
         {/* Logo hero */}
         <Link href="/" className="flex flex-col items-center gap-5 flex-1 justify-center no-underline">
           <div className="bg-[#E8EFF6] rounded-[22px] p-4 flex w-28 h-28 items-center justify-center">
@@ -48,9 +48,9 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* ── RIGHT PANEL ── */}
-      <div className="flex-1 bg-secondary flex items-center justify-center px-8 py-10">
+      <div className="flex-1 bg-secondary flex items-center justify-center px-4 sm:px-8 py-10">
         <Card className="w-full max-w-[400px] border-border/50 shadow-none rounded-2xl">
-          <CardContent className="px-8 py-9">
+          <CardContent className="px-5 sm:px-8 py-7 sm:py-9">
             {children}
           </CardContent>
         </Card>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Icon } from "@/components/layout/Icon";
 import { useState } from "react";
+import { Menu, X } from "lucide-react";
 
 const NAV_LINKS = [
   { label: "How it works", href: "#how-it-works" },
@@ -12,36 +13,12 @@ const NAV_LINKS = [
 ];
 
 const FEATURES = [
-  {
-    icon: "📍",
-    title: "Location-targeted ads",
-    desc: "Choose exactly which store locations display your ad. Target by city, state, or specific address.",
-  },
-  {
-    icon: "📺",
-    title: "Beautiful display screens",
-    desc: "Your ad displays on modern digital screens inside stores — responsive from mobile to large TV.",
-  },
-  {
-    icon: "⚡",
-    title: "Goes live instantly",
-    desc: "Once approved, your ad pushes live to the display screen in real-time via Socket.io — no delays.",
-  },
-  {
-    icon: "🔄",
-    title: "Carousel slideshow",
-    desc: "Multiple approved ads rotate in a smooth carousel so every advertiser gets equal screen time.",
-  },
-  {
-    icon: "✅",
-    title: "Human review process",
-    desc: "Every ad is reviewed by our team before going live, keeping the platform trusted and high quality.",
-  },
-  {
-    icon: "💳",
-    title: "Simple flat pricing",
-    desc: "One simple price — $100 for 1 week. No hidden fees. Full refund if your ad is not approved.",
-  },
+  { icon: "📍", title: "Location-targeted ads", desc: "Choose exactly which store locations display your ad. Target by city, state, or specific address." },
+  { icon: "📺", title: "Beautiful display screens", desc: "Your ad displays on modern digital screens inside stores — responsive from mobile to large TV." },
+  { icon: "⚡", title: "Goes live instantly", desc: "Once approved, your ad pushes live to the display screen in real-time via Socket.io — no delays." },
+  { icon: "🔄", title: "Carousel slideshow", desc: "Multiple approved ads rotate in a smooth carousel so every advertiser gets equal screen time." },
+  { icon: "✅", title: "Human review process", desc: "Every ad is reviewed by our team before going live, keeping the platform trusted and high quality." },
+  { icon: "💳", title: "Simple flat pricing", desc: "One simple price — $100 for 1 week. No hidden fees. Full refund if your ad is not approved." },
 ];
 
 const HOW_IT_WORKS = [
@@ -62,210 +39,154 @@ export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div style={{ fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif", color: "#1A3A5C", overflowX: "hidden" }}>
+    <div className="font-sans text-[#1A3A5C] overflow-x-hidden">
 
       {/* ── NAVBAR ── */}
-      <nav style={{
-        position: "sticky", top: 0, zIndex: 100,
-        background: "rgba(255,255,255,0.95)",
-        backdropFilter: "blur(8px)",
-        borderBottom: "0.5px solid #D8E4EE",
-        padding: "0 32px",
-        height: 64,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-      }}>
+      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-[#D8E4EE] h-16 flex items-center justify-between px-4 sm:px-8">
         {/* Logo */}
-        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ background: "#E8EFF6", borderRadius: 10, padding: 7, display: "flex" }}>
+        <Link href="/" className="no-underline flex items-center gap-2.5">
+          <div className="bg-[#E8EFF6] rounded-[10px] p-1.5 flex">
             <Icon size={32} />
           </div>
           <div>
-            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, color: "#1A3A5C", lineHeight: 1.1 }}>Community</div>
-            <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 15, lineHeight: 1.1 }}>
-              <span style={{ color: "#E8563A" }}>Bulletin</span>
-              <span style={{ color: "#4A90C4", fontSize: 11, fontWeight: 400 }}>.com</span>
+            <div className="font-serif font-bold text-[15px] text-[#1A3A5C] leading-tight">Community</div>
+            <div className="font-serif font-bold text-[15px] leading-tight">
+              <span className="text-[#E8563A]">Bulletin</span>
+              <span className="text-[#4A90C4] text-[11px] font-normal">.com</span>
             </div>
           </div>
         </Link>
 
-        {/* Desktop nav */}
-        <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
+        {/* Desktop nav links */}
+        <div className="hidden md:flex items-center gap-8">
           {NAV_LINKS.map((l) => (
-            <a key={l.href} href={l.href} style={{ textDecoration: "none", fontSize: 14, color: "#4A7FA5", fontWeight: 500 }}>
+            <a key={l.href} href={l.href} className="no-underline text-sm text-[#4A7FA5] font-medium hover:text-[#1A3A5C] transition-colors">
               {l.label}
             </a>
           ))}
         </div>
 
-        {/* CTA buttons */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Link href="/login" style={{
-            textDecoration: "none", fontSize: 14, fontWeight: 600, color: "#1A3A5C",
-            padding: "8px 18px", borderRadius: 8, border: "1px solid #D1DDE8",
-          }}>
+        {/* Desktop CTA */}
+        <div className="hidden md:flex items-center gap-3">
+          <Link href="/login" className="no-underline text-sm font-semibold text-[#1A3A5C] px-4 py-2 rounded-lg border border-[#D1DDE8] hover:bg-[#F4F7FB] transition-colors">
             Sign in
           </Link>
-          <Link href="/register" style={{
-            textDecoration: "none", fontSize: 14, fontWeight: 600, color: "#fff",
-            padding: "8px 18px", borderRadius: 8, background: "#1A3A5C",
-          }}>
+          <Link href="/register" className="no-underline text-sm font-semibold text-white px-4 py-2 rounded-lg bg-[#1A3A5C] hover:bg-[#0F2540] transition-colors">
             Get started free
           </Link>
         </div>
+
+        {/* Mobile hamburger */}
+        <button
+          className="md:hidden p-2 rounded-lg text-[#1A3A5C] hover:bg-[#F4F7FB] transition-colors"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Toggle menu"
+        >
+          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
       </nav>
 
-      {/* ── HERO ── */}
-      <section style={{
-        background: "linear-gradient(160deg, #1A3A5C 0%, #0F2540 60%, #1A3A5C 100%)",
-        padding: "100px 32px 80px",
-        textAlign: "center",
-        position: "relative",
-        overflow: "hidden",
-      }}>
-        {/* Background decoration */}
-        <div style={{
-          position: "absolute", top: -100, right: -100,
-          width: 400, height: 400, borderRadius: "50%",
-          background: "rgba(74,144,196,0.08)",
-          pointerEvents: "none",
-        }} />
-        <div style={{
-          position: "absolute", bottom: -80, left: -80,
-          width: 300, height: 300, borderRadius: "50%",
-          background: "rgba(232,86,58,0.06)",
-          pointerEvents: "none",
-        }} />
+      {/* Mobile menu dropdown */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed top-16 left-0 right-0 z-40 bg-white border-b border-[#D8E4EE] shadow-lg px-4 py-4 flex flex-col gap-3">
+          {NAV_LINKS.map((l) => (
+            <a key={l.href} href={l.href} className="no-underline text-sm text-[#4A7FA5] font-medium py-2 border-b border-[#F0F5FA]" onClick={() => setMobileMenuOpen(false)}>
+              {l.label}
+            </a>
+          ))}
+          <div className="flex flex-col gap-2 pt-2">
+            <Link href="/login" className="no-underline text-sm font-semibold text-[#1A3A5C] px-4 py-2.5 rounded-lg border border-[#D1DDE8] text-center">Sign in</Link>
+            <Link href="/register" className="no-underline text-sm font-semibold text-white px-4 py-2.5 rounded-lg bg-[#1A3A5C] text-center">Get started free</Link>
+          </div>
+        </div>
+      )}
 
-        <div style={{ maxWidth: 760, margin: "0 auto", position: "relative" }}>
+      {/* ── HERO ── */}
+      <section className="relative bg-gradient-to-br from-[#1A3A5C] via-[#0F2540] to-[#1A3A5C] px-4 sm:px-8 pt-20 sm:pt-24 pb-16 sm:pb-20 text-center overflow-hidden">
+        <div className="absolute top-[-100px] right-[-100px] w-80 h-80 rounded-full bg-[#4A90C4]/[0.08] pointer-events-none" />
+        <div className="absolute bottom-[-80px] left-[-80px] w-64 h-64 rounded-full bg-[#E8563A]/[0.06] pointer-events-none" />
+
+        <div className="max-w-3xl mx-auto relative">
           {/* Badge */}
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            background: "rgba(232,86,58,0.15)", border: "1px solid rgba(232,86,58,0.3)",
-            borderRadius: 20, padding: "5px 14px", marginBottom: 28,
-          }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#E8563A", display: "inline-block" }} />
-            <span style={{ fontSize: 12, fontWeight: 600, color: "#E8563A", letterSpacing: "0.05em" }}>
-              NOW LIVE IN 48 STATES
-            </span>
+          <div className="inline-flex items-center gap-1.5 bg-[#E8563A]/15 border border-[#E8563A]/30 rounded-full px-3.5 py-1.5 mb-7">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#E8563A] inline-block" />
+            <span className="text-xs font-semibold text-[#E8563A] tracking-wide uppercase">Now live in 48 states</span>
           </div>
 
-          <h1 style={{
-            fontFamily: "Georgia,serif", fontSize: "clamp(36px, 6vw, 64px)",
-            fontWeight: 700, color: "#fff", lineHeight: 1.15,
-            marginBottom: 24, letterSpacing: "-0.5px",
-          }}>
+          <h1 className="font-serif text-[clamp(32px,6vw,64px)] font-bold text-white leading-[1.15] mb-6 tracking-tight">
             Your ad, inside the stores<br />
-            <span style={{ color: "#E8563A" }}>your customers shop at</span>
+            <span className="text-[#E8563A]">your customers shop at</span>
           </h1>
 
-          <p style={{
-            fontSize: "clamp(16px, 2vw, 20px)", color: "#9DC4E0",
-            lineHeight: 1.7, marginBottom: 40, maxWidth: 580, margin: "0 auto 40px",
-          }}>
+          <p className="text-[clamp(15px,2vw,20px)] text-[#9DC4E0] leading-relaxed mb-10 max-w-xl mx-auto">
             CommunityBulletin puts your digital ad on screens inside local stores —
             visible through the window and to every customer who walks in.
           </p>
 
-          <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/register" style={{
-              textDecoration: "none", background: "#E8563A", color: "#fff",
-              padding: "14px 32px", borderRadius: 10, fontSize: 16, fontWeight: 700,
-              letterSpacing: "0.02em",
-            }}>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link href="/register" className="no-underline bg-[#E8563A] text-white px-8 py-3.5 rounded-xl text-base font-bold tracking-wide hover:bg-[#D14A30] transition-colors">
               Post your first ad — $100
             </Link>
-            <Link href="#how-it-works" style={{
-              textDecoration: "none", background: "rgba(255,255,255,0.1)",
-              border: "1px solid rgba(255,255,255,0.2)",
-              color: "#fff", padding: "14px 32px", borderRadius: 10, fontSize: 16, fontWeight: 600,
-            }}>
+            <a href="#how-it-works" className="no-underline bg-white/10 border border-white/20 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-white/20 transition-colors">
               See how it works
-            </Link>
+            </a>
           </div>
 
           {/* Screen mockup */}
-          <div style={{
-            marginTop: 64,
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 16, padding: 24,
-            maxWidth: 600, margin: "64px auto 0",
-          }}>
-            {/* TV bezel */}
-            <div style={{ background: "#0D1B2A", borderRadius: 12, padding: 4, marginBottom: 8 }}>
-              <div style={{
-                background: "#0F3557", borderRadius: 8, padding: "24px 28px",
-                display: "flex", flexDirection: "column", gap: 10,
-              }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ background: "#4A90C4", borderRadius: 4, height: 10, width: "45%", opacity: 0.9 }} />
-                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#E8563A" }} />
+          <div className="mt-16 bg-white/5 border border-white/10 rounded-2xl p-5 sm:p-6 max-w-lg mx-auto">
+            <div className="bg-[#0D1B2A] rounded-xl p-1 mb-2">
+              <div className="bg-[#0F3557] rounded-lg px-6 py-5 flex flex-col gap-2.5">
+                <div className="flex justify-between items-center">
+                  <div className="bg-[#4A90C4] rounded h-2.5 w-[45%] opacity-90" />
+                  <div className="w-2 h-2 rounded-full bg-[#E8563A]" />
                 </div>
-                <div style={{ background: "#7DB8DC", borderRadius: 3, height: 7, width: "70%", opacity: 0.6 }} />
-                <div style={{ background: "#7DB8DC", borderRadius: 3, height: 7, width: "55%", opacity: 0.45 }} />
-                <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-                  <div style={{ background: "#E8563A", borderRadius: 4, height: 28, width: 80, opacity: 0.9, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ color: "#fff", fontSize: 9, fontWeight: 700 }}>LEARN MORE</span>
+                <div className="bg-[#7DB8DC] rounded h-1.5 w-[70%] opacity-60" />
+                <div className="bg-[#7DB8DC] rounded h-1.5 w-[55%] opacity-45" />
+                <div className="flex gap-2 mt-1">
+                  <div className="bg-[#E8563A] rounded w-20 h-7 opacity-90 flex items-center justify-center">
+                    <span className="text-white text-[9px] font-bold">LEARN MORE</span>
                   </div>
                 </div>
               </div>
             </div>
-            {/* TV stand */}
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <div style={{ width: 60, height: 6, background: "rgba(255,255,255,0.1)", borderRadius: 3 }} />
+            <div className="flex justify-center">
+              <div className="w-14 h-1.5 bg-white/10 rounded" />
             </div>
-            <p style={{ color: "#9DC4E0", fontSize: 12, marginTop: 10, textAlign: "center" }}>
-              Your ad displays like this on screens inside stores
-            </p>
+            <p className="text-[#9DC4E0] text-xs mt-2.5 text-center">Your ad displays like this on screens inside stores</p>
           </div>
         </div>
       </section>
 
       {/* ── STATS BAR ── */}
-      <section style={{ background: "#fff", borderBottom: "0.5px solid #D8E4EE" }}>
-        <div style={{
-          maxWidth: 900, margin: "0 auto",
-          display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
-          padding: "32px 32px",
-        }}>
+      <section className="bg-white border-b border-[#D8E4EE]">
+        <div className="max-w-4xl mx-auto px-4 sm:px-8 py-8 grid grid-cols-2 sm:grid-cols-4 gap-6">
           {STATS.map(({ value, label }) => (
-            <div key={label} style={{ textAlign: "center", padding: "0 16px" }}>
-              <div style={{ fontFamily: "Georgia,serif", fontSize: 32, fontWeight: 700, color: "#E8563A" }}>{value}</div>
-              <div style={{ fontSize: 13, color: "#6B8FA8", marginTop: 4 }}>{label}</div>
+            <div key={label} className="text-center px-4">
+              <div className="font-serif text-3xl sm:text-4xl font-bold text-[#E8563A]">{value}</div>
+              <div className="text-xs sm:text-sm text-[#6B8FA8] mt-1">{label}</div>
             </div>
           ))}
         </div>
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section id="how-it-works" style={{ padding: "80px 32px", background: "#F4F7FB" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 56 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#E8563A", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>
-              How it works
-            </div>
-            <h2 style={{ fontFamily: "Georgia,serif", fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, color: "#1A3A5C", marginBottom: 16 }}>
+      <section id="how-it-works" className="px-4 sm:px-8 py-16 sm:py-20 bg-[#F4F7FB]">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12 sm:mb-14">
+            <div className="text-xs font-bold text-[#E8563A] tracking-widest uppercase mb-3">How it works</div>
+            <h2 className="font-serif text-[clamp(26px,4vw,40px)] font-bold text-[#1A3A5C] mb-4">
               From idea to live screen in minutes
             </h2>
-            <p style={{ fontSize: 16, color: "#6B8FA8", maxWidth: 500, margin: "0 auto" }}>
+            <p className="text-base text-[#6B8FA8] max-w-md mx-auto">
               No design skills needed. No long contracts. Just pick a location, upload your ad, and go.
             </p>
           </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 24 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {HOW_IT_WORKS.map(({ step, title, desc }) => (
-              <div key={step} style={{
-                background: "#fff", borderRadius: 14, padding: "28px 24px",
-                border: "0.5px solid #D8E4EE", position: "relative",
-              }}>
-                <div style={{
-                  fontFamily: "Georgia,serif", fontSize: 42, fontWeight: 700,
-                  color: "#E8EFF6", lineHeight: 1, marginBottom: 16,
-                }}>{step}</div>
-                <h3 style={{ fontSize: 16, fontWeight: 700, color: "#1A3A5C", marginBottom: 8 }}>{title}</h3>
-                <p style={{ fontSize: 14, color: "#6B8FA8", lineHeight: 1.6 }}>{desc}</p>
+              <div key={step} className="bg-white rounded-2xl p-6 border border-[#D8E4EE]">
+                <div className="font-serif text-5xl font-bold text-[#E8EFF6] leading-none mb-4">{step}</div>
+                <h3 className="text-base font-bold text-[#1A3A5C] mb-2">{title}</h3>
+                <p className="text-sm text-[#6B8FA8] leading-relaxed">{desc}</p>
               </div>
             ))}
           </div>
@@ -273,26 +194,20 @@ export default function LandingPage() {
       </section>
 
       {/* ── FEATURES ── */}
-      <section id="features" style={{ padding: "80px 32px", background: "#fff" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 56 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#E8563A", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>
-              Features
-            </div>
-            <h2 style={{ fontFamily: "Georgia,serif", fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, color: "#1A3A5C" }}>
+      <section id="features" className="px-4 sm:px-8 py-16 sm:py-20 bg-white">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12 sm:mb-14">
+            <div className="text-xs font-bold text-[#E8563A] tracking-widest uppercase mb-3">Features</div>
+            <h2 className="font-serif text-[clamp(26px,4vw,40px)] font-bold text-[#1A3A5C]">
               Everything you need to advertise locally
             </h2>
           </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {FEATURES.map(({ icon, title, desc }) => (
-              <div key={title} style={{
-                background: "#F4F7FB", borderRadius: 14, padding: "28px 24px",
-                border: "0.5px solid #D8E4EE",
-              }}>
-                <div style={{ fontSize: 28, marginBottom: 14 }}>{icon}</div>
-                <h3 style={{ fontSize: 16, fontWeight: 700, color: "#1A3A5C", marginBottom: 8 }}>{title}</h3>
-                <p style={{ fontSize: 14, color: "#6B8FA8", lineHeight: 1.6 }}>{desc}</p>
+              <div key={title} className="bg-[#F4F7FB] rounded-2xl p-6 border border-[#D8E4EE]">
+                <div className="text-3xl mb-3">{icon}</div>
+                <h3 className="text-base font-bold text-[#1A3A5C] mb-2">{title}</h3>
+                <p className="text-sm text-[#6B8FA8] leading-relaxed">{desc}</p>
               </div>
             ))}
           </div>
@@ -300,53 +215,29 @@ export default function LandingPage() {
       </section>
 
       {/* ── PRICING ── */}
-      <section id="pricing" style={{ padding: "80px 32px", background: "#F4F7FB" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#E8563A", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>
-            Pricing
-          </div>
-          <h2 style={{ fontFamily: "Georgia,serif", fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, color: "#1A3A5C", marginBottom: 16 }}>
+      <section id="pricing" className="px-4 sm:px-8 py-16 sm:py-20 bg-[#F4F7FB]">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="text-xs font-bold text-[#E8563A] tracking-widest uppercase mb-3">Pricing</div>
+          <h2 className="font-serif text-[clamp(26px,4vw,40px)] font-bold text-[#1A3A5C] mb-4">
             Simple, transparent pricing
           </h2>
-          <p style={{ fontSize: 16, color: "#6B8FA8", marginBottom: 48 }}>
-            No subscriptions. No hidden fees. Pay only when you post.
-          </p>
+          <p className="text-base text-[#6B8FA8] mb-12">No subscriptions. No hidden fees. Pay only when you post.</p>
 
-          <div style={{ display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap" }}>
-            {/* Single ad card */}
-            <div style={{
-              background: "#fff", borderRadius: 16, padding: "40px 36px",
-              border: "2px solid #1A3A5C", maxWidth: 320, flex: "1 1 280px",
-              position: "relative",
-            }}>
-              <div style={{
-                position: "absolute", top: -13, left: "50%", transform: "translateX(-50%)",
-                background: "#E8563A", color: "#fff", fontSize: 11, fontWeight: 700,
-                padding: "4px 16px", borderRadius: 20, letterSpacing: "0.05em",
-              }}>
-                MOST POPULAR
+          <div className="flex justify-center">
+            <div className="relative bg-white rounded-2xl border-2 border-[#1A3A5C] p-8 sm:p-10 max-w-sm w-full">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#E8563A] text-white text-[11px] font-bold px-4 py-1 rounded-full tracking-wide uppercase">
+                Most Popular
               </div>
-              <div style={{ fontFamily: "Georgia,serif", fontSize: 48, fontWeight: 700, color: "#1A3A5C" }}>$100</div>
-              <div style={{ fontSize: 14, color: "#6B8FA8", marginBottom: 24 }}>per location / 1 week</div>
-              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 32px", textAlign: "left" }}>
-                {[
-                  "1 store location",
-                  "1-week display period",
-                  "Full carousel rotation",
-                  "Real-time approval status",
-                  "Email notifications",
-                  "Full refund if denied",
-                ].map((item) => (
-                  <li key={item} style={{ fontSize: 14, color: "#4A5568", padding: "6px 0", display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ color: "#1D9E75", fontWeight: 700 }}>✓</span> {item}
+              <div className="font-serif text-5xl font-bold text-[#1A3A5C]">$100</div>
+              <div className="text-sm text-[#6B8FA8] mb-6">per location / 1 week</div>
+              <ul className="text-left mb-8 space-y-2">
+                {["1 store location", "1-week display period", "Full carousel rotation", "Real-time approval status", "Email notifications", "Full refund if denied"].map((item) => (
+                  <li key={item} className="text-sm text-[#4A5568] flex items-center gap-2">
+                    <span className="text-[#1D9E75] font-bold">✓</span> {item}
                   </li>
                 ))}
               </ul>
-              <Link href="/register" style={{
-                display: "block", textAlign: "center", textDecoration: "none",
-                background: "#1A3A5C", color: "#fff",
-                padding: "12px 24px", borderRadius: 8, fontSize: 15, fontWeight: 700,
-              }}>
+              <Link href="/register" className="block text-center no-underline bg-[#1A3A5C] text-white px-6 py-3 rounded-lg text-base font-bold hover:bg-[#0F2540] transition-colors">
                 Get started
               </Link>
             </div>
@@ -355,66 +246,44 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOR STORE OWNERS ── */}
-      <section id="stores" style={{ padding: "80px 32px", background: "#1A3A5C" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
+      <section id="stores" className="px-4 sm:px-8 py-16 sm:py-20 bg-[#1A3A5C]">
+        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 items-center">
           <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#E8563A", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>
-              For store owners
-            </div>
-            <h2 style={{ fontFamily: "Georgia,serif", fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 700, color: "#fff", marginBottom: 16, lineHeight: 1.3 }}>
+            <div className="text-xs font-bold text-[#E8563A] tracking-widest uppercase mb-3">For store owners</div>
+            <h2 className="font-serif text-[clamp(22px,3vw,36px)] font-bold text-white mb-4 leading-snug">
               Turn your store window into a revenue stream
             </h2>
-            <p style={{ fontSize: 15, color: "#9DC4E0", lineHeight: 1.7, marginBottom: 28 }}>
+            <p className="text-[15px] text-[#9DC4E0] leading-relaxed mb-7">
               Install a digital screen in your store, register your location on CommunityBulletin,
               and start earning passive income from local advertisers.
             </p>
-            <ul style={{ listStyle: "none", padding: 0, margin: "0 0 32px" }}>
-              {[
-                "Free to list your location",
-                "You control which ads display",
-                "Automatic carousel management",
-                "Real-time display via Socket.io",
-              ].map((item) => (
-                <li key={item} style={{ fontSize: 14, color: "#9DC4E0", padding: "6px 0", display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ color: "#E8563A", fontWeight: 700 }}>✓</span> {item}
+            <ul className="space-y-2 mb-8">
+              {["Free to list your location", "You control which ads display", "Automatic carousel management", "Real-time display via Socket.io"].map((item) => (
+                <li key={item} className="text-sm text-[#9DC4E0] flex items-center gap-2">
+                  <span className="text-[#E8563A] font-bold">✓</span> {item}
                 </li>
               ))}
             </ul>
-            <Link href="/register" style={{
-              display: "inline-block", textDecoration: "none",
-              background: "#E8563A", color: "#fff",
-              padding: "12px 28px", borderRadius: 8, fontSize: 15, fontWeight: 700,
-            }}>
+            <Link href="/register" className="inline-block no-underline bg-[#E8563A] text-white px-7 py-3 rounded-lg text-[15px] font-bold hover:bg-[#D14A30] transition-colors">
               Register your store
             </Link>
           </div>
-          <div style={{
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 16, padding: 32,
-          }}>
-            <div style={{ background: "#0D1B2A", borderRadius: 10, padding: 4, marginBottom: 16 }}>
-              <div style={{ background: "#0F3557", borderRadius: 7, padding: "20px 22px", display: "flex", flexDirection: "column", gap: 8 }}>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <div style={{ background: "#4A90C4", height: 8, width: "50%", borderRadius: 3, opacity: 0.9 }} />
-                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#E8563A" }} />
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8">
+            <div className="bg-[#0D1B2A] rounded-xl p-1 mb-4">
+              <div className="bg-[#0F3557] rounded-lg px-5 py-5 flex flex-col gap-2">
+                <div className="flex justify-between items-center">
+                  <div className="bg-[#4A90C4] h-2 w-1/2 rounded opacity-90" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#E8563A]" />
                 </div>
-                <div style={{ background: "#7DB8DC", height: 6, width: "70%", borderRadius: 3, opacity: 0.6 }} />
-                <div style={{ background: "#7DB8DC", height: 6, width: "55%", borderRadius: 3, opacity: 0.4 }} />
+                <div className="bg-[#7DB8DC] h-1.5 w-[70%] rounded opacity-60" />
+                <div className="bg-[#7DB8DC] h-1.5 w-[55%] rounded opacity-40" />
               </div>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div className="flex flex-col gap-2.5">
               {["Local Coffee Shop ad", "Yoga Studio promo", "Pizza Place special"].map((ad, i) => (
-                <div key={ad} style={{
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
-                  background: "rgba(255,255,255,0.06)", borderRadius: 8, padding: "10px 14px",
-                }}>
-                  <span style={{ fontSize: 13, color: "#9DC4E0" }}>{ad}</span>
-                  <span style={{
-                    fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4,
-                    background: i === 0 ? "rgba(29,158,117,0.2)" : "rgba(74,144,196,0.2)",
-                    color: i === 0 ? "#1D9E75" : "#4A90C4",
-                  }}>
+                <div key={ad} className="flex items-center justify-between bg-white/[0.06] rounded-lg px-3.5 py-2.5">
+                  <span className="text-sm text-[#9DC4E0]">{ad}</span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${i === 0 ? "bg-[#1D9E75]/20 text-[#1D9E75]" : "bg-[#4A90C4]/20 text-[#4A90C4]"}`}>
                     {i === 0 ? "LIVE" : "QUEUED"}
                   </span>
                 </div>
@@ -425,27 +294,20 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA BANNER ── */}
-      <section style={{ padding: "80px 32px", background: "#fff", textAlign: "center" }}>
-        <div style={{ maxWidth: 600, margin: "0 auto" }}>
-          <h2 style={{ fontFamily: "Georgia,serif", fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 700, color: "#1A3A5C", marginBottom: 16 }}>
+      <section className="px-4 sm:px-8 py-16 sm:py-20 bg-white text-center">
+        <div className="max-w-xl mx-auto">
+          <h2 className="font-serif text-[clamp(26px,4vw,42px)] font-bold text-[#1A3A5C] mb-4">
             Ready to reach your community?
           </h2>
-          <p style={{ fontSize: 16, color: "#6B8FA8", marginBottom: 36, lineHeight: 1.7 }}>
+          <p className="text-base text-[#6B8FA8] mb-9 leading-relaxed">
             Join hundreds of local businesses already advertising on CommunityBulletin.
             Your first ad is just a few clicks away.
           </p>
-          <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/register" style={{
-              textDecoration: "none", background: "#1A3A5C", color: "#fff",
-              padding: "14px 32px", borderRadius: 10, fontSize: 16, fontWeight: 700,
-            }}>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link href="/register" className="no-underline bg-[#1A3A5C] text-white px-8 py-3.5 rounded-xl text-base font-bold hover:bg-[#0F2540] transition-colors">
               Create free account
             </Link>
-            <Link href="/login" style={{
-              textDecoration: "none", background: "#fff", color: "#1A3A5C",
-              padding: "14px 32px", borderRadius: 10, fontSize: 16, fontWeight: 600,
-              border: "1px solid #D1DDE8",
-            }}>
+            <Link href="/login" className="no-underline bg-white text-[#1A3A5C] px-8 py-3.5 rounded-xl text-base font-semibold border border-[#D1DDE8] hover:bg-[#F4F7FB] transition-colors">
               Sign in
             </Link>
           </div>
@@ -453,23 +315,20 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer style={{
-        background: "#0F2540", padding: "40px 32px 24px",
-        borderTop: "0.5px solid rgba(255,255,255,0.08)",
-      }}>
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 32, marginBottom: 40 }}>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                <div style={{ background: "#E8EFF6", borderRadius: 8, padding: 6, display: "flex" }}>
+      <footer className="bg-[#0F2540] px-4 sm:px-8 pt-10 pb-6 border-t border-white/[0.08]">
+        <div className="max-w-4xl mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 mb-10">
+            <div className="col-span-2 sm:col-span-1">
+              <div className="flex items-center gap-2.5 mb-3.5">
+                <div className="bg-[#E8EFF6] rounded-lg p-1.5 flex">
                   <Icon size={24} />
                 </div>
                 <div>
-                  <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, color: "#fff", fontSize: 13, lineHeight: 1.1 }}>Community</div>
-                  <div style={{ fontFamily: "Georgia,serif", fontWeight: 700, color: "#E8563A", fontSize: 13, lineHeight: 1.1 }}>Bulletin<span style={{ color: "#4A90C4", fontSize: 10, fontWeight: 400 }}>.com</span></div>
+                  <div className="font-serif font-bold text-white text-[13px] leading-tight">Community</div>
+                  <div className="font-serif font-bold text-[#E8563A] text-[13px] leading-tight">Bulletin<span className="text-[#4A90C4] text-[10px] font-normal">.com</span></div>
                 </div>
               </div>
-              <p style={{ fontSize: 13, color: "#6B8FA8", lineHeight: 1.6, maxWidth: 220 }}>
+              <p className="text-sm text-[#6B8FA8] leading-relaxed max-w-[220px]">
                 Digital in-store advertising for local communities.
               </p>
             </div>
@@ -479,20 +338,20 @@ export default function LandingPage() {
               { title: "Company", links: ["About us", "Contact", "Privacy policy", "Terms of service"] },
             ].map(({ title, links }) => (
               <div key={title}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", marginBottom: 14, letterSpacing: "0.05em", textTransform: "uppercase" }}>{title}</div>
-                <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+                <div className="text-xs font-bold text-white mb-3.5 tracking-wider uppercase">{title}</div>
+                <ul className="space-y-2">
                   {links.map((link) => (
                     <li key={link}>
-                      <a href="#" style={{ fontSize: 13, color: "#6B8FA8", textDecoration: "none" }}>{link}</a>
+                      <a href="#" className="text-sm text-[#6B8FA8] no-underline hover:text-white transition-colors">{link}</a>
                     </li>
                   ))}
                 </ul>
               </div>
             ))}
           </div>
-          <div style={{ borderTop: "0.5px solid rgba(255,255,255,0.08)", paddingTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <p style={{ fontSize: 12, color: "#4A7FA5" }}>© 2026 CommunityBulletin.com. All rights reserved.</p>
-            <p style={{ fontSize: 12, color: "#4A7FA5" }}>Made with ❤️ for local communities</p>
+          <div className="border-t border-white/[0.08] pt-5 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <p className="text-xs text-[#4A7FA5]">© 2026 CommunityBulletin.com. All rights reserved.</p>
+            <p className="text-xs text-[#4A7FA5]">Made with ❤️ for local communities</p>
           </div>
         </div>
       </footer>

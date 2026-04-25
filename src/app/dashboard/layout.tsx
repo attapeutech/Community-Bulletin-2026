@@ -2,6 +2,7 @@ import { requireAuth } from "@/lib/auth/session";
 import Link from "next/link";
 import { Icon } from "@/components/layout/Icon";
 import { SignOutButton } from "@/components/layout/SignOutButton";
+import { MobileNav } from "@/components/layout/MobileNav";
 import { Badge } from "@/components/ui/badge";
 
 export default async function DashboardLayout({
@@ -24,8 +25,8 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-[#F4F7FB]">
-      {/* Sidebar */}
-      <aside className="w-60 bg-[#1A3A5C] flex flex-col shrink-0 px-4 py-6 gap-2">
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex w-60 bg-[#1A3A5C] flex-col shrink-0 px-4 py-6 gap-2">
         {/* Logo */}
         <Link href="/dashboard/user" className="no-underline">
           <div className="flex items-center gap-2.5 mb-8 pl-2">
@@ -65,8 +66,27 @@ export default async function DashboardLayout({
         </div>
       </aside>
 
+      {/* Mobile header bar */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-white border-b border-[#D8E4EE] flex items-center justify-between px-4 shadow-sm">
+        <MobileNav
+          navItems={navItems}
+          userName={user.name}
+          userEmail={user.email}
+          role={role}
+        />
+        <Link href="/dashboard/user" className="no-underline flex items-center gap-2">
+          <div className="bg-[#E8EFF6] rounded-lg p-1">
+            <Icon size={22} />
+          </div>
+          <div className="font-serif font-bold text-[13px] text-[#1A3A5C] leading-tight">
+            Community<span className="text-[#E8563A]">Bulletin</span>
+          </div>
+        </Link>
+        <div className="w-8" /> {/* spacer to center logo */}
+      </div>
+
       {/* Main content */}
-      <main className="flex-1 p-8 overflow-y-auto">
+      <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto mt-14 md:mt-0">
         {children}
       </main>
     </div>

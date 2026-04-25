@@ -161,7 +161,7 @@ export default function AdminPanelClient({
   const filteredAds = statusFilter === "all" ? ads : ads.filter(a => a.status === statusFilter);
 
   return (
-    <div className="max-w-[920px]">
+    <div className="max-w-[920px] w-full">
       {/* Toasts */}
       {userToast && (
         <Alert
@@ -263,7 +263,8 @@ export default function AdminPanelClient({
               <CardTitle className="font-serif text-[18px] text-[#1A3A5C]">All Users</CardTitle>
               <p className="text-xs text-[#6B8FA8] mt-1">{users.length} registered accounts</p>
             </CardHeader>
-            <CardContent className="p-0 overflow-x-auto">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
               <table className="w-full border-collapse text-[13px]">
                 <thead>
                   <tr className="bg-[#F7F9FC]">
@@ -323,6 +324,7 @@ export default function AdminPanelClient({
               {users.length === 0 && (
                 <div className="py-8 text-center text-[#6B8FA8] text-sm">No users found.</div>
               )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -382,12 +384,12 @@ export default function AdminPanelClient({
                           </div>
                         )}
                         {/* Override controls */}
-                        <div className="mt-2.5 flex gap-2 items-center flex-wrap">
+                        <div className="mt-2.5 flex gap-2 items-start flex-wrap">
                           <Input
                             placeholder="Review note (required to deny/cancel)"
                             value={overrideNote[ad.id] ?? ""}
                             onChange={e => setOverrideNote(n => ({ ...n, [ad.id]: e.target.value }))}
-                            className="h-[30px] w-[220px] text-xs text-[#1A3A5C] border-[#D8E4EE] bg-[#F7F9FC]"
+                            className="h-[30px] w-full sm:w-[220px] text-xs text-[#1A3A5C] border-[#D8E4EE] bg-[#F7F9FC]"
                           />
                           {["approved", "denied", "pending", "expired", "cancelled"]
                             .filter(s => s !== ad.status)

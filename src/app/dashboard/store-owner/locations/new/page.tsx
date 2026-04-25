@@ -108,7 +108,7 @@ export default function NewLocationPage() {
   }
 
   return (
-    <div className="max-w-[640px]">
+    <div className="max-w-[640px] w-full">
       <a
         href="/dashboard/store-owner"
         className="inline-block mb-6 text-[13px] text-[#6B8FA8] no-underline hover:underline"
@@ -182,7 +182,7 @@ export default function NewLocationPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
                   Country *

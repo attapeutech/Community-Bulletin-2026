@@ -17,7 +17,7 @@ export interface SendEmailOptions {
 
 export async function sendEmail(options: SendEmailOptions) {
   try {
-    const result = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: options.to,
       cc: options.cc,
@@ -25,7 +25,11 @@ export async function sendEmail(options: SendEmailOptions) {
       html: options.html,
       text: options.text,
     });
-    return { success: true, id: result.data?.id };
+    if (error) {
+      console.error("[EMAIL ERROR]", error);
+      return { success: false, error };
+    }
+    return { success: true, id: data?.id };
   } catch (error) {
     console.error("[EMAIL ERROR]", error);
     return { success: false, error };

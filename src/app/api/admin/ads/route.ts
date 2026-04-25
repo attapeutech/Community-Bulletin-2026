@@ -129,9 +129,9 @@ export async function PATCH(req: NextRequest) {
         const result = await processAdRefund(adId);
         refundResult = { status: result.status as typeof refundResult.status, amountCents: result.amountCents };
       }
+      const amountFormatted = `$${(refundResult.amountCents / 100).toFixed(2)}`;
       if (reviewNote) {
-        const amountFormatted = `$${(refundResult.amountCents / 100).toFixed(2)}`;
-        sendAdDeniedEmail({
+        const emailResult = await sendAdDeniedEmail({
           to: row.user.email,
           userName: row.user.name,
           adTitle: row.ad.title,
@@ -139,7 +139,10 @@ export async function PATCH(req: NextRequest) {
           adId,
           amountFormatted,
           refundStatus: (refundResult.status === "refunded" ? "refunded" : "refund_pending") as "refunded" | "refund_pending",
-        }).catch(console.error);
+        });
+        if (!emailResult.success) {
+          console.error("[admin/ads] Failed to send denial email to", row.user.email, emailResult.error);
+        }
       }
     }
 

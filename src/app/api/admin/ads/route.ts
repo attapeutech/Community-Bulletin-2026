@@ -130,19 +130,18 @@ export async function PATCH(req: NextRequest) {
         refundResult = { status: result.status as typeof refundResult.status, amountCents: result.amountCents };
       }
       const amountFormatted = `$${(refundResult.amountCents / 100).toFixed(2)}`;
-      if (reviewNote) {
-        const emailResult = await sendAdDeniedEmail({
-          to: row.user.email,
-          userName: row.user.name,
-          adTitle: row.ad.title,
-          reviewNote,
-          adId,
-          amountFormatted,
-          refundStatus: (refundResult.status === "refunded" ? "refunded" : "refund_pending") as "refunded" | "refund_pending",
-        });
-        if (!emailResult.success) {
-          console.error("[admin/ads] Failed to send denial email to", row.user.email, emailResult.error);
-        }
+      const noteToSend = reviewNote || "Your ad did not meet our content guidelines at this time.";
+      const emailResult = await sendAdDeniedEmail({
+        to: row.user.email,
+        userName: row.user.name,
+        adTitle: row.ad.title,
+        reviewNote: noteToSend,
+        adId,
+        amountFormatted,
+        refundStatus: (refundResult.status === "refunded" ? "refunded" : "refund_pending") as "refunded" | "refund_pending",
+      });
+      if (!emailResult.success) {
+        console.error("[admin/ads] Failed to send denial email to", row.user.email, emailResult.error);
       }
     }
 

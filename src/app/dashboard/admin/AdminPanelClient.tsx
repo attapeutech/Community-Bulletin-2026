@@ -136,6 +136,10 @@ export default function AdminPanelClient({
   }
 
   async function overrideAdStatus(adId: string, status: string) {
+    if (status === "denied" && !(overrideNote[adId] ?? "").trim()) {
+      showAdToast("A review note is required when denying an ad.", false);
+      return;
+    }
     setOverriding(adId);
     try {
       const res = await fetch("/api/admin/ads", {
@@ -380,10 +384,10 @@ export default function AdminPanelClient({
                         {/* Override controls */}
                         <div className="mt-2.5 flex gap-2 items-center flex-wrap">
                           <Input
-                            placeholder="Review note (optional)"
+                            placeholder="Review note (required to deny)"
                             value={overrideNote[ad.id] ?? ""}
                             onChange={e => setOverrideNote(n => ({ ...n, [ad.id]: e.target.value }))}
-                            className="h-[30px] w-[200px] text-xs text-[#1A3A5C] border-[#D8E4EE] bg-[#F7F9FC]"
+                            className="h-[30px] w-[220px] text-xs text-[#1A3A5C] border-[#D8E4EE] bg-[#F7F9FC]"
                           />
                           {["approved", "denied", "pending", "expired", "cancelled"]
                             .filter(s => s !== ad.status)

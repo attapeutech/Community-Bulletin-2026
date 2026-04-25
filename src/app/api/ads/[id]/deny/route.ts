@@ -1,19 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db/client";
-import { ads, locations, users, payments } from "@/lib/db/schema";
+import { ads, locations, users } from "@/lib/db/schema";
 import { requireApproverOrAdmin } from "@/lib/auth/session";
 import { eq } from "drizzle-orm";
 import { sendAdDeniedEmail } from "@/lib/email/templates";
 import { pushDashboardUpdate } from "@/lib/socket/notify";
-import Stripe from "stripe";
+import { processAdRefund } from "@/lib/refund";
 
 const denySchema = z.object({
   reviewNote: z.string().min(10).max(500),
 });
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-12-18.acacia" as any });
 
 // PATCH /api/ads/[id]/deny
 export async function PATCH(
@@ -73,58 +70,23 @@ export async function PATCH(
       .where(eq(ads.id, id))
       .returning();
 
-    // Attempt Stripe refund if payment exists
+    // Process refund if ad was paid
+    let refundResult: { status: "refunded" | "refund_pending" | "no_payment"; amountCents: number } = { status: "no_payment", amountCents: 0 };
     if (row.ad.paymentStatus === "paid") {
-      const [payment] = await db
-        .select()
-        .from(payments)
-        .where(eq(payments.adId, id))
-        .limit(1);
-
-      if (payment?.provider === "stripe" && payment.providerTxId) {
-        try {
-          const refund = await stripe.refunds.create({
-            payment_intent: payment.providerTxId,
-          });
-          await db
-            .update(payments)
-            .set({
-              status: "refunded",
-              providerRefundId: refund.id,
-              refundedAt: now,
-              updatedAt: now,
-            })
-            .where(eq(payments.id, payment.id));
-          await db
-            .update(ads)
-            .set({ paymentStatus: "refunded", updatedAt: now })
-            .where(eq(ads.id, id));
-        } catch (err) {
-          console.error("[Stripe refund error]", err);
-          // Mark as refund_pending so admin can retry
-          await db
-            .update(ads)
-            .set({ paymentStatus: "refund_pending", updatedAt: now })
-            .where(eq(ads.id, id));
-        }
-      }
-
-      // PayPal refunds require capturing then voiding — mark for manual handling
-      if (payment?.provider === "paypal") {
-        await db
-          .update(ads)
-          .set({ paymentStatus: "refund_pending", updatedAt: now })
-          .where(eq(ads.id, id));
-      }
+      const result = await processAdRefund(id);
+      refundResult = { status: result.status as typeof refundResult.status, amountCents: result.amountCents };
     }
 
-    // Send denial email (non-blocking)
+    // Send denial + refund email (non-blocking)
+    const amountFormatted = `$${(refundResult.amountCents / 100).toFixed(2)}`;
     sendAdDeniedEmail({
       to: row.user.email,
       userName: row.user.name,
       adTitle: row.ad.title,
       reviewNote,
       adId: id,
+      amountFormatted,
+      refundStatus: (refundResult.status === "refunded" ? "refunded" : "refund_pending") as "refunded" | "refund_pending",
     }).catch(console.error);
 
     // Notify dashboard (non-blocking)

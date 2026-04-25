@@ -8,6 +8,7 @@ import { addDays } from "date-fns";
 import { AD_DURATION_DAYS } from "@/types";
 import { pushDisplayRefresh, pushDashboardUpdate } from "@/lib/socket/notify";
 import { sendAdApprovedEmail, sendAdDeniedEmail } from "@/lib/email/templates";
+import { processAdRefund } from "@/lib/refund";
 
 // GET /api/admin/ads — all ads with optional status filter
 export async function GET(req: NextRequest) {
@@ -121,14 +122,25 @@ export async function PATCH(req: NextRequest) {
         startedAt: now.toLocaleDateString("en-US", { dateStyle: "long" }),
         endedAt: endedAt.toLocaleDateString("en-US", { dateStyle: "long" }),
       }).catch(console.error);
-    } else if (status === "denied" && reviewNote) {
-      sendAdDeniedEmail({
-        to: row.user.email,
-        userName: row.user.name,
-        adTitle: row.ad.title,
-        reviewNote,
-        adId,
-      }).catch(console.error);
+    } else if (status === "denied") {
+      // Process refund if ad was paid
+      let refundResult: { status: "refunded" | "refund_pending" | "no_payment"; amountCents: number } = { status: "no_payment", amountCents: 0 };
+      if (row.ad.paymentStatus === "paid") {
+        const result = await processAdRefund(adId);
+        refundResult = { status: result.status as typeof refundResult.status, amountCents: result.amountCents };
+      }
+      if (reviewNote) {
+        const amountFormatted = `$${(refundResult.amountCents / 100).toFixed(2)}`;
+        sendAdDeniedEmail({
+          to: row.user.email,
+          userName: row.user.name,
+          adTitle: row.ad.title,
+          reviewNote,
+          adId,
+          amountFormatted,
+          refundStatus: (refundResult.status === "refunded" ? "refunded" : "refund_pending") as "refunded" | "refund_pending",
+        }).catch(console.error);
+      }
     }
 
     return NextResponse.json({ success: true, data: updated });

@@ -185,10 +185,15 @@ export async function sendAdApprovedEmail({
 }
 
 export async function sendAdDeniedEmail({
-  to, userName, adTitle, reviewNote, adId,
+  to, userName, adTitle, reviewNote, adId, amountFormatted, refundStatus,
 }: {
   to: string; userName: string; adTitle: string; reviewNote: string; adId: string;
+  amountFormatted: string; refundStatus: "refunded" | "refund_pending";
 }) {
+  const refundNote = refundStatus === "refunded"
+    ? `A full refund of <strong>${amountFormatted}</strong> has been initiated to your original payment method and should appear within 5–10 business days.`
+    : `A full refund of <strong>${amountFormatted}</strong> is being processed. Our team will ensure it reaches you shortly.`;
+
   return sendEmail({
     to,
     subject: `Ad review update — "${adTitle}"`,
@@ -198,7 +203,7 @@ export async function sendAdDeniedEmail({
       <div style="background:#fef2f2;border-left:4px solid #ef4444;padding:14px 18px;margin:0 0 20px;border-radius:0 8px 8px 0">
         <p style="margin:0;font-size:13px;color:#b91c1c"><strong>Reviewer note:</strong> ${reviewNote}</p>
       </div>
-      <p style="color:#6B8FA8;font-size:13px">A full refund of <strong>$100.00</strong> has been initiated to your original payment method and should appear within 5–10 business days.</p>
+      <p style="color:#6B8FA8;font-size:13px">${refundNote}</p>
       <p style="color:#6B8FA8;font-size:13px">You are welcome to submit a revised ad at any time.</p>
       ${primaryButton(`${APP_URL}/ads/new`, "Submit a New Ad")}
     `),

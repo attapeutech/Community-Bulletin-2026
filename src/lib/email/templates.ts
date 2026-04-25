@@ -94,7 +94,6 @@ export async function sendAdSubmittedEmail({
 }) {
   return sendEmail({
     to,
-    cc: [APPROVER_EMAIL, ADMIN_EMAIL],
     subject: `Ad submitted for review — "${adTitle}"`,
     html: emailWrapper(`
       <h2 style="margin:0 0 8px;color:${BRAND_COLOR};font-size:20px">Your ad has been submitted!</h2>
@@ -106,6 +105,29 @@ export async function sendAdSubmittedEmail({
       ])}
       <p style="color:#6B8FA8;font-size:13px">You'll receive an email as soon as a decision is made.</p>
       ${primaryButton(`${APP_URL}/dashboard/user/ads/${adId}`, "View Your Ad")}
+    `),
+  });
+}
+
+export async function sendAdReviewNotificationEmail({
+  adTitle, locationName, userName, adId,
+}: {
+  adTitle: string; locationName: string; userName: string; adId: string;
+}) {
+  return sendEmail({
+    to: APPROVER_EMAIL,
+    cc: ADMIN_EMAIL !== APPROVER_EMAIL ? ADMIN_EMAIL : undefined,
+    subject: `New ad pending review — "${adTitle}"`,
+    html: emailWrapper(`
+      <h2 style="margin:0 0 8px;color:${BRAND_COLOR};font-size:20px">New ad submitted for review</h2>
+      <p style="color:#6B8FA8;font-size:14px;margin:0 0 20px">A new ad has been submitted and is awaiting your review and approval.</p>
+      ${detailTable([
+        { label: "Ad title", value: `<strong>${adTitle}</strong>` },
+        { label: "Submitted by", value: userName },
+        { label: "Location", value: locationName },
+        { label: "Status", value: '<span style="background:#fef9c3;color:#854d0e;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600">Pending Review</span>' },
+      ])}
+      ${primaryButton(`${APP_URL}/dashboard/approver`, "Review Ad & Approve", "#16a34a")}
     `),
   });
 }

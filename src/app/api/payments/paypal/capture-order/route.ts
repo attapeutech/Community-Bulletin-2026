@@ -6,7 +6,7 @@ import { requireAuth } from "@/lib/auth/session";
 import { eq, and } from "drizzle-orm";
 import { capturePayPalOrder } from "@/lib/paypal";
 import { AD_PRICE_CENTS } from "@/types";
-import { sendAdSubmittedEmail, sendPaymentReceiptEmail } from "@/lib/email/templates";
+import { sendAdSubmittedEmail, sendPaymentReceiptEmail, sendAdReviewNotificationEmail } from "@/lib/email/templates";
 
 const schema = z.object({
   adId: z.string().uuid(),
@@ -101,6 +101,12 @@ export async function POST(req: NextRequest) {
       userName: row.user.name,
       adTitle: row.ad.title,
       locationName,
+      adId,
+    }).catch(console.error);
+    sendAdReviewNotificationEmail({
+      adTitle: row.ad.title,
+      locationName,
+      userName: row.user.name,
       adId,
     }).catch(console.error);
 

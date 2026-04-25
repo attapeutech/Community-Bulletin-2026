@@ -4,7 +4,7 @@ import { db } from "@/lib/db/client";
 import { ads, payments, users, locations, cities, states, postalCodes } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { requireAuth } from "@/lib/auth/session";
-import { sendAdSubmittedEmail, sendPaymentReceiptEmail } from "@/lib/email/templates";
+import { sendAdSubmittedEmail, sendPaymentReceiptEmail, sendAdReviewNotificationEmail } from "@/lib/email/templates";
 
 export const dynamic = "force-dynamic";
 
@@ -105,6 +105,12 @@ export async function POST(req: NextRequest) {
         userName: row.user.name,
         adTitle: row.ad.title,
         locationName,
+        adId,
+      }).catch(console.error);
+      sendAdReviewNotificationEmail({
+        adTitle: row.ad.title,
+        locationName,
+        userName: row.user.name,
         adId,
       }).catch(console.error);
     }

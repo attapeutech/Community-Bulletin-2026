@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db/client";
-import { ads, payments } from "@/lib/db/schema";
+import { ads, payments, users, locations, cities, states, postalCodes } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth/session";
 import { eq, and } from "drizzle-orm";
 import { capturePayPalOrder } from "@/lib/paypal";
 import { AD_PRICE_CENTS } from "@/types";
 import { sendAdSubmittedEmail, sendPaymentReceiptEmail } from "@/lib/email/templates";
-import { users, locations } from "@/lib/db/schema";
 
 const schema = z.object({
   adId: z.string().uuid(),
@@ -27,11 +26,20 @@ export async function POST(req: NextRequest) {
       .select({
         ad: ads,
         user: { id: users.id, name: users.name, email: users.email },
-        location: { storeName: locations.storeName },
+        location: {
+          storeName: locations.storeName,
+          addressLine1: locations.addressLine1,
+          cityName: cities.name,
+          stateCode: states.code,
+          postalCode: postalCodes.code,
+        },
       })
       .from(ads)
       .innerJoin(users, eq(ads.userId, users.id))
       .innerJoin(locations, eq(ads.locationId, locations.id))
+      .innerJoin(cities, eq(locations.cityId, cities.id))
+      .innerJoin(states, eq(locations.stateId, states.id))
+      .innerJoin(postalCodes, eq(locations.postalCodeId, postalCodes.id))
       .where(and(eq(ads.id, adId), eq(ads.userId, userId)))
       .limit(1);
 
@@ -74,6 +82,8 @@ export async function POST(req: NextRequest) {
       .set({ paymentStatus: "paid", updatedAt: now })
       .where(eq(ads.id, adId));
 
+    const { storeName, addressLine1, cityName, stateCode, postalCode } = row.location;
+    const locationName = `${storeName} — ${addressLine1}, ${cityName}, ${stateCode} ${postalCode}`;
     const amount = `$${(AD_PRICE_CENTS / 100).toFixed(2)}`;
 
     // Send emails (non-blocking)
@@ -81,7 +91,7 @@ export async function POST(req: NextRequest) {
       to: row.user.email,
       userName: row.user.name,
       adTitle: row.ad.title,
-      locationName: row.location.storeName,
+      locationName,
       amountFormatted: amount,
       provider: "paypal",
       adId,
@@ -90,7 +100,7 @@ export async function POST(req: NextRequest) {
       to: row.user.email,
       userName: row.user.name,
       adTitle: row.ad.title,
-      locationName: row.location.storeName,
+      locationName,
       adId,
     }).catch(console.error);
 

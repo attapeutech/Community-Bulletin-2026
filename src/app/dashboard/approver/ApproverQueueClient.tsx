@@ -19,7 +19,7 @@ type Ad = {
   paymentStatus: string;
   createdAt: string;
   user: { id: string; name: string; email: string };
-  location: { id: string; storeName: string; slug: string; addressLine1: string };
+  location: { id: string; storeName: string; slug: string; addressLine1: string; addressLine2: string | null; cityName: string; stateCode: string; postalCode: string };
 };
 
 export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }) {
@@ -207,7 +207,7 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
 
               <div className="grid gap-1.5 text-xs mb-5">
                 <div><span className="text-[#9DC4E0]">Location: </span>{selected.location.storeName}</div>
-                <div><span className="text-[#9DC4E0]">Address: </span>{selected.location.addressLine1}</div>
+                <div><span className="text-[#9DC4E0]">Address: </span>{selected.location.addressLine1}{selected.location.addressLine2 ? `, ${selected.location.addressLine2}` : ""}, {selected.location.cityName}, {selected.location.stateCode} {selected.location.postalCode}</div>
                 <div><span className="text-[#9DC4E0]">Submitted by: </span>{selected.user.name} ({selected.user.email})</div>
                 <div>
                   <span className="text-[#9DC4E0]">Submitted: </span>
@@ -351,7 +351,7 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
                 color: "rgba(255,255,255,0.9)",
                 fontWeight: 500, letterSpacing: "0.01em",
               }}>
-                Store Location: {previewAd.location.storeName} ({previewAd.location.addressLine1})
+                {previewAd.location.storeName} — {previewAd.location.addressLine1}{previewAd.location.addressLine2 ? `, ${previewAd.location.addressLine2}` : ""}, {previewAd.location.cityName}, {previewAd.location.stateCode} {previewAd.location.postalCode}
               </span>
               <span style={{
                 fontSize: "clamp(10px, 1.2vw, 15px)",

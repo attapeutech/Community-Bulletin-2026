@@ -10,8 +10,10 @@ type Location = {
   storeName: string;
   slug: string;
   addressLine1: string;
+  addressLine2?: string | null;
   city: { name: string };
   state: { code: string };
+  postalCode: { code: string };
 };
 
 type Step = 1 | 2 | 3 | 4;
@@ -329,7 +331,7 @@ export default function NewAdPage() {
                     >
                       <div style={{ fontWeight: 600, color: ACCENT }}>{loc.storeName}</div>
                       <div style={{ fontSize: 12, color: "#6B8FA8" }}>
-                        {loc.addressLine1} · {loc.city.name}, {loc.state.code}
+                        {loc.addressLine1}, {loc.city.name}, {loc.state.code} {loc.postalCode?.code}
                       </div>
                     </button>
                   ))}
@@ -340,7 +342,7 @@ export default function NewAdPage() {
                 <div style={{ background: "#F0F7FF", border: "1px solid #4A90C4", borderRadius: 8, padding: "12px 16px", marginTop: 16 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: "#1A3A5C" }}>Selected: {selectedLocation.storeName}</div>
                   <div style={{ fontSize: 12, color: "#6B8FA8" }}>
-                    {selectedLocation.addressLine1} · {selectedLocation.city.name}, {selectedLocation.state.code}
+                    {selectedLocation.addressLine1}, {selectedLocation.city.name}, {selectedLocation.state.code} {selectedLocation.postalCode?.code}
                   </div>
                 </div>
               )}
@@ -486,7 +488,7 @@ export default function NewAdPage() {
                       display: "flex", alignItems: "center", justifyContent: "space-between",
                     }}>
                       <span style={{ fontSize: 11, color: "rgba(255,255,255,0.9)", fontWeight: 500 }}>
-                        Store Location: {selectedLocation?.storeName} — {selectedLocation?.city.name} ({selectedLocation?.addressLine1})
+                        {selectedLocation?.storeName} — {selectedLocation?.addressLine1}, {selectedLocation?.city.name}, {selectedLocation?.state.code} {selectedLocation?.postalCode?.code}
                       </span>
                       <span style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", whiteSpace: "nowrap", marginLeft: 12 }}>
                         Ad #Preview

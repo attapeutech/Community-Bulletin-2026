@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
-import { ads, locations } from "@/lib/db/schema";
+import { ads, locations, cities, states, postalCodes } from "@/lib/db/schema";
 import { eq, and, desc, gte } from "drizzle-orm";
 import Link from "next/link";
 
@@ -57,10 +57,17 @@ export default async function UserDashboard() {
       location: {
         storeName: locations.storeName,
         slug: locations.slug,
+        addressLine1: locations.addressLine1,
+        cityName: cities.name,
+        stateCode: states.code,
+        postalCode: postalCodes.code,
       },
     })
     .from(ads)
     .innerJoin(locations, eq(ads.locationId, locations.id))
+    .innerJoin(cities, eq(locations.cityId, cities.id))
+    .innerJoin(states, eq(locations.stateId, states.id))
+    .innerJoin(postalCodes, eq(locations.postalCodeId, postalCodes.id))
     .where(eq(ads.userId, userId))
     .orderBy(desc(ads.createdAt))
     .limit(50);
@@ -182,7 +189,7 @@ export default async function UserDashboard() {
                       <Badge {...payStatus} />
                     </div>
                     <div style={{ fontSize: 12, color: "#6B8FA8" }}>
-                      {ad.location.storeName}
+                      {ad.location.storeName} · {ad.location.addressLine1}, {ad.location.cityName}, {ad.location.stateCode} {ad.location.postalCode}
                       {ad.status === "approved" && (
                         <span> · {new Date(ad.startedAt).toLocaleDateString()} – {new Date(ad.endedAt).toLocaleDateString()}</span>
                       )}

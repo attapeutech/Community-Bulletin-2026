@@ -19,7 +19,10 @@ type LocationInfo = {
   name: string;
   storeName: string;
   address: string;
+  address2: string | null;
   city: string;
+  stateCode: string;
+  postalCode: string;
 };
 
 function Clock() {
@@ -192,7 +195,7 @@ export default function DisplayPage() {
                     fontWeight: 500,
                     letterSpacing: "0.01em",
                   }}>
-                    Store Location: {location?.storeName} — {location?.city} ({location?.address})
+                    {location?.storeName} — {location?.address}{location?.address2 ? `, ${location.address2}` : ""}, {location?.city}, {location?.stateCode} {location?.postalCode}
                   </span>
                   <span style={{
                     fontSize: "clamp(10px, 1.2vw, 15px)",

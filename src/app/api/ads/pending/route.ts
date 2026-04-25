@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
-import { ads, locations, users, payments } from "@/lib/db/schema";
+import { ads, locations, users, payments, cities, states, postalCodes } from "@/lib/db/schema";
 import { requireApproverOrAdmin } from "@/lib/auth/session";
 import { eq, and, desc } from "drizzle-orm";
 
@@ -28,11 +28,18 @@ export async function GET() {
           storeName: locations.storeName,
           slug: locations.slug,
           addressLine1: locations.addressLine1,
+          addressLine2: locations.addressLine2,
+          cityName: cities.name,
+          stateCode: states.code,
+          postalCode: postalCodes.code,
         },
       })
       .from(ads)
       .innerJoin(users, eq(ads.userId, users.id))
       .innerJoin(locations, eq(ads.locationId, locations.id))
+      .innerJoin(cities, eq(locations.cityId, cities.id))
+      .innerJoin(states, eq(locations.stateId, states.id))
+      .innerJoin(postalCodes, eq(locations.postalCodeId, postalCodes.id))
       .where(
         and(
           eq(ads.status, "pending"),

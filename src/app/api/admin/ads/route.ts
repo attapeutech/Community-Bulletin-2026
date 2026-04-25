@@ -7,7 +7,7 @@ import { eq, desc, and } from "drizzle-orm";
 import { addDays } from "date-fns";
 import { AD_DURATION_DAYS } from "@/types";
 import { pushDisplayRefresh, pushDashboardUpdate } from "@/lib/socket/notify";
-import { sendAdApprovedEmail, sendAdDeniedEmail } from "@/lib/email/templates";
+import { sendAdApprovedEmail, sendAdDeniedEmail, sendAdCancelledEmail } from "@/lib/email/templates";
 import { processAdRefund } from "@/lib/refund";
 
 // GET /api/admin/ads — all ads with optional status filter
@@ -112,7 +112,7 @@ export async function PATCH(req: NextRequest) {
     const { storeName, addressLine1, cityName, stateCode, postalCode } = row.location;
     const locationName = `${storeName} — ${addressLine1}, ${cityName}, ${stateCode} ${postalCode}`;
     if (isApproving) {
-      sendAdApprovedEmail({
+      const emailResult = await sendAdApprovedEmail({
         to: row.user.email,
         userName: row.user.name,
         adTitle: row.ad.title,
@@ -121,28 +121,49 @@ export async function PATCH(req: NextRequest) {
         adId,
         startedAt: now.toLocaleDateString("en-US", { dateStyle: "long" }),
         endedAt: endedAt.toLocaleDateString("en-US", { dateStyle: "long" }),
-      }).catch(console.error);
+      });
+      if (!emailResult.success) {
+        console.error("[admin/ads] Failed to send approval email to", row.user.email, emailResult.error);
+      }
     } else if (status === "denied") {
-      // Process refund if ad was paid
       let refundResult: { status: "refunded" | "refund_pending" | "no_payment"; amountCents: number } = { status: "no_payment", amountCents: 0 };
       if (row.ad.paymentStatus === "paid") {
         const result = await processAdRefund(adId);
         refundResult = { status: result.status as typeof refundResult.status, amountCents: result.amountCents };
       }
       const amountFormatted = `$${(refundResult.amountCents / 100).toFixed(2)}`;
-      if (reviewNote) {
-        const emailResult = await sendAdDeniedEmail({
-          to: row.user.email,
-          userName: row.user.name,
-          adTitle: row.ad.title,
-          reviewNote,
-          adId,
-          amountFormatted,
-          refundStatus: (refundResult.status === "refunded" ? "refunded" : "refund_pending") as "refunded" | "refund_pending",
-        });
-        if (!emailResult.success) {
-          console.error("[admin/ads] Failed to send denial email to", row.user.email, emailResult.error);
-        }
+      const noteToSend = reviewNote || "Your ad did not meet our content guidelines at this time.";
+      const emailResult = await sendAdDeniedEmail({
+        to: row.user.email,
+        userName: row.user.name,
+        adTitle: row.ad.title,
+        reviewNote: noteToSend,
+        adId,
+        amountFormatted,
+        refundStatus: (refundResult.status === "refunded" ? "refunded" : "refund_pending") as "refunded" | "refund_pending",
+      });
+      if (!emailResult.success) {
+        console.error("[admin/ads] Failed to send denial email to", row.user.email, emailResult.error);
+      }
+    } else if (status === "cancelled") {
+      let refundResult: { status: "refunded" | "refund_pending" | "no_payment"; amountCents: number } = { status: "no_payment", amountCents: 0 };
+      if (row.ad.paymentStatus === "paid") {
+        const result = await processAdRefund(adId);
+        refundResult = { status: result.status as typeof refundResult.status, amountCents: result.amountCents };
+      }
+      const amountFormatted = `$${(refundResult.amountCents / 100).toFixed(2)}`;
+      const cancelNote = reviewNote || "Your ad has been cancelled by our team.";
+      const emailResult = await sendAdCancelledEmail({
+        to: row.user.email,
+        userName: row.user.name,
+        adTitle: row.ad.title,
+        cancelNote,
+        adId,
+        amountFormatted,
+        refundStatus: refundResult.status,
+      });
+      if (!emailResult.success) {
+        console.error("[admin/ads] Failed to send cancellation email to", row.user.email, emailResult.error);
       }
     }
 

@@ -184,6 +184,34 @@ export async function sendAdApprovedEmail({
   });
 }
 
+export async function sendAdCancelledEmail({
+  to, userName, adTitle, cancelNote, adId, amountFormatted, refundStatus,
+}: {
+  to: string; userName: string; adTitle: string; cancelNote: string; adId: string;
+  amountFormatted: string; refundStatus: "refunded" | "refund_pending" | "no_payment";
+}) {
+  const refundNote = refundStatus === "no_payment"
+    ? ""
+    : refundStatus === "refunded"
+      ? `<p style="color:#6B8FA8;font-size:13px">A full refund of <strong>${amountFormatted}</strong> has been initiated to your original payment method and should appear within 5–10 business days.</p>`
+      : `<p style="color:#6B8FA8;font-size:13px">A full refund of <strong>${amountFormatted}</strong> is being processed. Our team will ensure it reaches you shortly.</p>`;
+
+  return sendEmail({
+    to,
+    subject: `Ad cancelled — "${adTitle}"`,
+    html: emailWrapper(`
+      <h2 style="margin:0 0 8px;color:${BRAND_COLOR};font-size:20px">Ad cancelled</h2>
+      <p style="color:#6B8FA8;font-size:14px;margin:0 0 20px">Hi ${userName}, your ad <strong>"${adTitle}"</strong> has been cancelled by our team.</p>
+      <div style="background:#fff7ed;border-left:4px solid #f97316;padding:14px 18px;margin:0 0 20px;border-radius:0 8px 8px 0">
+        <p style="margin:0;font-size:13px;color:#9a3412"><strong>Reason:</strong> ${cancelNote}</p>
+      </div>
+      ${refundNote}
+      <p style="color:#6B8FA8;font-size:13px">You are welcome to submit a new ad at any time.</p>
+      ${primaryButton(`${APP_URL}/ads/new`, "Submit a New Ad")}
+    `),
+  });
+}
+
 export async function sendAdDeniedEmail({
   to, userName, adTitle, reviewNote, adId, amountFormatted, refundStatus,
 }: {

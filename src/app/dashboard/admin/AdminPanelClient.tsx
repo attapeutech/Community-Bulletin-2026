@@ -67,7 +67,7 @@ type Ad = {
   endedAt: string;
   createdAt: string;
   user: { id: string; name: string; email: string };
-  location: { id: string; storeName: string; slug: string };
+  location: { id: string; storeName: string; slug: string; addressLine1: string; cityName: string; stateCode: string; postalCode: string };
 };
 
 function StatCard({ label, value, sub, accentClass }: { label: string; value: string | number; sub?: string; accentClass?: string }) {
@@ -374,7 +374,13 @@ export default function AdminPanelClient({
                           <span className="text-[11px] text-[#9DC4E0] bg-blue-50 rounded px-1.5 py-0.5">{ad.paymentStatus}</span>
                         </div>
                         <div className="text-xs text-[#6B8FA8] mb-0.5">
-                          by {ad.user.name} · {ad.location.storeName} · submitted {new Date(ad.createdAt).toLocaleDateString()}
+                          by {ad.user.name} · {ad.location.storeName} · {ad.location.addressLine1}, {ad.location.cityName}, {ad.location.stateCode} {ad.location.postalCode}
+                          {ad.status === "approved" && ad.startedAt && ad.endedAt && (
+                            <span> · {new Date(ad.startedAt).toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "numeric" })} – {new Date(ad.endedAt).toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "numeric" })}</span>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-[#9DC4E0]">
+                          submitted {new Date(ad.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                         </div>
                         {ad.reviewNote && (
                           <div className="text-xs text-yellow-800 bg-yellow-50 rounded px-2 py-0.5 inline-block">
@@ -387,7 +393,7 @@ export default function AdminPanelClient({
                             placeholder="Review note (required to deny/cancel)"
                             value={overrideNote[ad.id] ?? ""}
                             onChange={e => setOverrideNote(n => ({ ...n, [ad.id]: e.target.value }))}
-                            className="h-[30px] w-[220px] text-xs text-[#1A3A5C] border-[#D8E4EE] bg-[#F7F9FC]"
+                            className="h-[30px] w-full sm:w-[220px] text-xs text-[#1A3A5C] border-[#D8E4EE] bg-[#F7F9FC]"
                           />
                           {["approved", "denied", "pending", "expired", "cancelled"]
                             .filter(s => s !== ad.status)

@@ -37,6 +37,7 @@ const SheetContent = React.forwardRef<
       )}
       {...props}
     >
+      <DialogPrimitive.Title className="sr-only">Navigation menu</DialogPrimitive.Title>
       {children}
     </DialogPrimitive.Content>
   </SheetPortal>

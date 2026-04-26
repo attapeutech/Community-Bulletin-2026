@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Icon } from "@/components/layout/Icon";
 import { Menu, X } from "lucide-react";
+import { useState } from "react";
 import { Sheet, SheetTrigger, SheetClose, SheetContent } from "@/components/ui/sheet";
 
 const NAV_LINKS = [
@@ -60,6 +61,15 @@ const STATS = [
 ];
 
 export default function LandingPage() {
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  function scrollTo(href: string) {
+    setSheetOpen(false);
+    setTimeout(() => {
+      document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
+    }, 300);
+  }
+
   return (
     <div className="font-sans text-[#1A3A5C] overflow-x-hidden">
 
@@ -99,7 +109,7 @@ export default function LandingPage() {
         </div>
 
         {/* Mobile hamburger + Sheet */}
-        <Sheet>
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
             <button className="md:hidden p-1.5 ml-2 text-[#1A3A5C]" aria-label="Open menu">
               <Menu className="w-6 h-6" />
@@ -115,23 +125,24 @@ export default function LandingPage() {
                     Bulletin<span className="text-[#4A90C4] text-[10px] font-normal">.com</span>
                   </div>
                 </div>
-                <SheetClose asChild>
-                  <button className="text-white/60 hover:text-white p-1" aria-label="Close menu">
-                    <X className="w-5 h-5" />
-                  </button>
-                </SheetClose>
+                <button
+                  onClick={() => setSheetOpen(false)}
+                  className="text-white/60 hover:text-white p-1"
+                  aria-label="Close menu"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              {/* Nav links */}
+              {/* Nav links — close sheet first, then scroll after animation */}
               {NAV_LINKS.map((l) => (
-                <SheetClose key={l.href} asChild>
-                  <a
-                    href={l.href}
-                    className="block px-3.5 py-2.5 rounded-lg text-[#9DC4E0] no-underline text-sm font-medium hover:bg-white/10 transition-colors"
-                  >
-                    {l.label}
-                  </a>
-                </SheetClose>
+                <button
+                  key={l.href}
+                  onClick={() => scrollTo(l.href)}
+                  className="block w-full text-left px-3.5 py-2.5 rounded-lg text-[#9DC4E0] text-sm font-medium hover:bg-white/10 transition-colors"
+                >
+                  {l.label}
+                </button>
               ))}
 
               {/* CTA buttons */}

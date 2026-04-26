@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
-import { ads, users, locations, payments } from "@/lib/db/schema";
+import { ads, users, locations, payments, cities, states, postalCodes } from "@/lib/db/schema";
 import { eq, desc, count, sum } from "drizzle-orm";
 import AdminPanelClient from "./AdminPanelClient";
 
@@ -64,11 +64,22 @@ export default async function AdminDashboard() {
       endedAt: ads.endedAt,
       createdAt: ads.createdAt,
       user: { id: users.id, name: users.name, email: users.email },
-      location: { id: locations.id, storeName: locations.storeName, slug: locations.slug },
+      location: {
+        id: locations.id,
+        storeName: locations.storeName,
+        slug: locations.slug,
+        addressLine1: locations.addressLine1,
+        cityName: cities.name,
+        stateCode: states.code,
+        postalCode: postalCodes.code,
+      },
     })
     .from(ads)
     .innerJoin(users, eq(ads.userId, users.id))
     .innerJoin(locations, eq(ads.locationId, locations.id))
+    .innerJoin(cities, eq(locations.cityId, cities.id))
+    .innerJoin(states, eq(locations.stateId, states.id))
+    .innerJoin(postalCodes, eq(locations.postalCodeId, postalCodes.id))
     .orderBy(desc(ads.createdAt))
     .limit(300);
 

@@ -169,9 +169,11 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
                 />
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-sm text-[#1A3A5C] mb-0.5">{ad.title}</div>
-                  <div className="text-xs text-[#6B8FA8]">{ad.location.storeName}</div>
+                  <div className="text-xs text-[#6B8FA8]">
+                    {ad.location.storeName} · {ad.location.addressLine1}, {ad.location.cityName}, {ad.location.stateCode} {ad.location.postalCode}
+                  </div>
                   <div className="text-[11px] text-[#9DC4E0] mt-1">
-                    By {ad.user.name} · {new Date(ad.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    By {ad.user.name} · {new Date(ad.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                   </div>
                 </div>
               </button>

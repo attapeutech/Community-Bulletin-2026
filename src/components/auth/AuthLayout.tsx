@@ -48,7 +48,21 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* ── RIGHT PANEL ── */}
-      <div className="flex-1 bg-secondary flex items-center justify-center px-8 py-10">
+      <div className="flex-1 bg-secondary flex flex-col items-center justify-center px-6 sm:px-8 py-10">
+        {/* Mobile logo — only shown below lg where the left panel is hidden */}
+        <Link href="/" className="lg:hidden flex items-center gap-3 mb-8 no-underline">
+          <div className="bg-[#E8EFF6] rounded-[14px] p-2.5 flex">
+            <Icon size={40} />
+          </div>
+          <div>
+            <div className="font-serif font-bold text-[22px] text-[#1A3A5C] leading-[1.05]">Community</div>
+            <div className="font-serif font-bold text-[22px] leading-[1.05]">
+              <span className="text-[#E8563A]">Bulletin</span>
+              <span className="text-[#4A90C4] text-[14px] font-sans font-normal">.com</span>
+            </div>
+          </div>
+        </Link>
+
         <Card className="w-full max-w-[400px] border-border/50 shadow-none rounded-2xl">
           <CardContent className="px-8 py-9">
             {children}

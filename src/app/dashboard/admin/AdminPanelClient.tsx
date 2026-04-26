@@ -387,7 +387,7 @@ export default function AdminPanelClient({
                             placeholder="Review note (required to deny/cancel)"
                             value={overrideNote[ad.id] ?? ""}
                             onChange={e => setOverrideNote(n => ({ ...n, [ad.id]: e.target.value }))}
-                            className="h-[30px] w-[220px] text-xs text-[#1A3A5C] border-[#D8E4EE] bg-[#F7F9FC]"
+                            className="h-[30px] w-full sm:w-[220px] text-xs text-[#1A3A5C] border-[#D8E4EE] bg-[#F7F9FC]"
                           />
                           {["approved", "denied", "pending", "expired", "cancelled"]
                             .filter(s => s !== ad.status)

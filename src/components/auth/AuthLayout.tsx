@@ -7,7 +7,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen font-sans">
 
       {/* ── LEFT PANEL ── */}
-      <div className="w-[42%] min-w-[340px] bg-primary px-9 py-8 flex flex-col justify-between items-center">
+      <div className="hidden lg:flex w-[42%] min-w-[340px] bg-primary px-9 py-8 flex-col justify-between items-center">
         {/* Logo hero */}
         <Link href="/" className="flex flex-col items-center gap-5 flex-1 justify-center no-underline">
           <div className="bg-[#E8EFF6] rounded-[22px] p-4 flex w-28 h-28 items-center justify-center">

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Icon } from "@/components/layout/Icon";
 import { SignOutButton } from "@/components/layout/SignOutButton";
 import { Badge } from "@/components/ui/badge";
+import { MobileNav } from "@/components/layout/MobileNav";
 
 export default async function DashboardLayout({
   children,
@@ -24,8 +25,16 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-[#F4F7FB]">
-      {/* Sidebar */}
-      <aside className="w-60 bg-[#1A3A5C] flex flex-col shrink-0 px-4 py-6 gap-2">
+      {/* Mobile header */}
+      <MobileNav
+        navItems={navItems}
+        userName={user.name}
+        userEmail={user.email}
+        role={role}
+      />
+
+      {/* Sidebar — hidden on mobile, visible md+ */}
+      <aside className="hidden md:flex w-60 bg-[#1A3A5C] flex-col shrink-0 px-4 py-6 gap-2">
         {/* Logo */}
         <Link href="/dashboard/user" className="no-underline">
           <div className="flex items-center gap-2.5 mb-8 pl-2">
@@ -65,8 +74,8 @@ export default async function DashboardLayout({
         </div>
       </aside>
 
-      {/* Main content */}
-      <main className="flex-1 p-8 overflow-y-auto">
+      {/* Main content — pt accounts for fixed mobile header */}
+      <main className="flex-1 p-4 pt-[72px] md:p-8 overflow-y-auto">
         {children}
       </main>
     </div>

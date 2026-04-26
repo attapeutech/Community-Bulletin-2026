@@ -148,7 +148,7 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
           </CardContent>
         </Card>
       ) : (
-        <div className={cn("grid gap-6", selected ? "grid-cols-2" : "grid-cols-1")}>
+        <div className={cn("grid gap-6", selected ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1")}>
           {/* Queue list */}
           <div className="flex flex-col gap-3">
             {queue.map((ad) => (

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { Icon } from "@/components/layout/Icon";
-import { useState } from "react";
+import { Menu, X } from "lucide-react";
+import { Sheet, SheetTrigger, SheetClose, SheetContent } from "@/components/ui/sheet";
 
 const NAV_LINKS = [
   { label: "How it works", href: "#how-it-works" },
@@ -59,8 +60,6 @@ const STATS = [
 ];
 
 export default function LandingPage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   return (
     <div className="font-sans text-[#1A3A5C] overflow-x-hidden">
 
@@ -99,41 +98,59 @@ export default function LandingPage() {
           </Link>
         </div>
 
-        {/* Mobile hamburger */}
-        <button
-          className="md:hidden flex flex-col justify-center gap-[5px] p-1.5 ml-2"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label="Toggle menu"
-        >
-          <span className={`block w-5 h-0.5 bg-[#1A3A5C] transition-all duration-200 ${mobileMenuOpen ? "rotate-45 translate-y-[7px]" : ""}`} />
-          <span className={`block w-5 h-0.5 bg-[#1A3A5C] transition-all duration-200 ${mobileMenuOpen ? "opacity-0" : ""}`} />
-          <span className={`block w-5 h-0.5 bg-[#1A3A5C] transition-all duration-200 ${mobileMenuOpen ? "-rotate-45 -translate-y-[7px]" : ""}`} />
-        </button>
-      </nav>
+        {/* Mobile hamburger + Sheet */}
+        <Sheet>
+          <SheetTrigger asChild>
+            <button className="md:hidden p-1.5 ml-2 text-[#1A3A5C]" aria-label="Open menu">
+              <Menu className="w-6 h-6" />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-0 bg-[#1A3A5C] w-64 max-w-[80vw]">
+            <div className="flex flex-col h-full px-4 py-6 gap-2">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-4 pl-2">
+                <div>
+                  <div className="font-serif font-bold text-white text-[13px] leading-tight">Community</div>
+                  <div className="font-serif font-bold text-[#E8563A] text-[13px] leading-tight">
+                    Bulletin<span className="text-[#4A90C4] text-[10px] font-normal">.com</span>
+                  </div>
+                </div>
+                <SheetClose asChild>
+                  <button className="text-white/60 hover:text-white p-1" aria-label="Close menu">
+                    <X className="w-5 h-5" />
+                  </button>
+                </SheetClose>
+              </div>
 
-      {/* Mobile dropdown menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden sticky top-16 z-[99] bg-white border-b border-[#D8E4EE] px-6 py-4 flex flex-col gap-1 shadow-md">
-          {NAV_LINKS.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className="no-underline text-sm text-[#4A7FA5] font-medium py-2.5 border-b border-[#F0F5FA] last:border-0"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              {l.label}
-            </a>
-          ))}
-          <div className="pt-3 mt-1 flex flex-col gap-2">
-            <Link href="/login" className="no-underline text-sm font-semibold text-[#1A3A5C] px-4 py-2.5 rounded-lg border border-[#D1DDE8] text-center">
-              Sign in
-            </Link>
-            <Link href="/register" className="no-underline text-sm font-semibold text-white px-4 py-2.5 rounded-lg bg-[#1A3A5C] text-center">
-              Get started free
-            </Link>
-          </div>
-        </div>
-      )}
+              {/* Nav links */}
+              {NAV_LINKS.map((l) => (
+                <SheetClose key={l.href} asChild>
+                  <a
+                    href={l.href}
+                    className="block px-3.5 py-2.5 rounded-lg text-[#9DC4E0] no-underline text-sm font-medium hover:bg-white/10 transition-colors"
+                  >
+                    {l.label}
+                  </a>
+                </SheetClose>
+              ))}
+
+              {/* CTA buttons */}
+              <div className="mt-auto border-t border-white/10 pt-4 flex flex-col gap-2">
+                <SheetClose asChild>
+                  <Link href="/login" className="no-underline block text-center px-4 py-2.5 rounded-lg border border-white/20 text-[#9DC4E0] text-sm font-semibold hover:bg-white/10 transition-colors">
+                    Sign in
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link href="/register" className="no-underline block text-center px-4 py-2.5 rounded-lg bg-[#E8563A] text-white text-sm font-bold hover:bg-[#d44e34] transition-colors">
+                    Get started free
+                  </Link>
+                </SheetClose>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+      </nav>
 
       {/* ── HERO ── */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#1A3A5C] via-[#0F2540] to-[#1A3A5C] px-4 sm:px-8 py-20 sm:py-[100px] text-center">

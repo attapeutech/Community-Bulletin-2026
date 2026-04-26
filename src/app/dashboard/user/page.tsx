@@ -2,40 +2,26 @@ import { getSession } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
 import { ads, locations, cities, states, postalCodes } from "@/lib/db/schema";
-import { eq, and, desc, gte } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
-const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }> = {
-  pending:   { bg: "#fef9c3", color: "#854d0e", label: "Pending Review" },
-  approved:  { bg: "#dcfce7", color: "#166534", label: "Approved" },
-  denied:    { bg: "#fee2e2", color: "#991b1b", label: "Denied" },
-  expired:   { bg: "#f1f5f9", color: "#475569", label: "Expired" },
-  cancelled: { bg: "#f1f5f9", color: "#475569", label: "Cancelled" },
+const STATUS: Record<string, { className: string; label: string }> = {
+  pending:   { className: "bg-yellow-50 text-yellow-800 border-yellow-200", label: "Pending Review" },
+  approved:  { className: "bg-green-50 text-green-800 border-green-200",   label: "Approved" },
+  denied:    { className: "bg-red-50 text-red-800 border-red-200",         label: "Denied" },
+  expired:   { className: "bg-slate-100 text-slate-600 border-slate-200",  label: "Expired" },
+  cancelled: { className: "bg-slate-100 text-slate-600 border-slate-200",  label: "Cancelled" },
 };
 
-const PAY_STYLES: Record<string, { bg: string; color: string; label: string }> = {
-  unpaid:        { bg: "#fff7ed", color: "#c2410c", label: "Unpaid" },
-  paid:          { bg: "#dcfce7", color: "#166534", label: "Paid" },
-  refunded:      { bg: "#e0e7ff", color: "#3730a3", label: "Refunded" },
-  refund_pending:{ bg: "#fef9c3", color: "#854d0e", label: "Refund Pending" },
-  failed:        { bg: "#fee2e2", color: "#991b1b", label: "Failed" },
+const PAY: Record<string, { className: string; label: string }> = {
+  unpaid:         { className: "bg-orange-50 text-orange-800 border-orange-200",  label: "Unpaid" },
+  paid:           { className: "bg-green-50 text-green-800 border-green-200",    label: "Paid" },
+  refunded:       { className: "bg-indigo-50 text-indigo-800 border-indigo-200", label: "Refunded" },
+  refund_pending: { className: "bg-yellow-50 text-yellow-800 border-yellow-200", label: "Refund Pending" },
+  failed:         { className: "bg-red-50 text-red-800 border-red-200",          label: "Failed" },
 };
-
-function Badge({ bg, color, label }: { bg: string; color: string; label: string }) {
-  return (
-    <span style={{
-      display: "inline-block",
-      padding: "2px 10px",
-      borderRadius: 20,
-      fontSize: 11,
-      fontWeight: 600,
-      background: bg,
-      color,
-    }}>
-      {label}
-    </span>
-  );
-}
 
 export default async function UserDashboard() {
   const session = await getSession();
@@ -43,7 +29,6 @@ export default async function UserDashboard() {
   const user = session.user as any;
   const userId = user.id as string;
 
-  // Fetch user's ads with location
   const userAds = await db
     .select({
       id: ads.id,
@@ -73,146 +58,112 @@ export default async function UserDashboard() {
     .limit(50);
 
   const now = new Date();
-  const totalAds = userAds.length;
-  const activeAds = userAds.filter(
-    (a) => a.status === "approved" && a.endedAt >= now
-  ).length;
+  const totalAds   = userAds.length;
+  const activeAds  = userAds.filter((a) => a.status === "approved" && a.endedAt >= now).length;
   const pendingAds = userAds.filter((a) => a.status === "pending").length;
-  const paidAds = userAds.filter((a) => a.paymentStatus === "paid").length;
+  const paidAds    = userAds.filter((a) => a.paymentStatus === "paid").length;
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
-        <h1 style={{ fontFamily: "Georgia,serif", fontSize: 26, fontWeight: 700, color: "#1A3A5C" }}>
+      {/* Header */}
+      <div className="flex items-start justify-between mb-2 gap-3 flex-wrap">
+        <h1 className="font-serif text-[26px] font-bold text-[#1A3A5C]">
           Welcome back, {user.name.split(" ")[0]}!
         </h1>
         <Link
           href="/ads/new"
-          style={{
-            display: "inline-block",
-            background: "#E8563A",
-            color: "#fff",
-            padding: "10px 20px",
-            borderRadius: 8,
-            textDecoration: "none",
-            fontSize: 14,
-            fontWeight: 600,
-            flexShrink: 0,
-          }}
+          className="no-underline shrink-0 bg-[#E8563A] text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#d44e34] transition-colors"
         >
           + Post New Ad
         </Link>
       </div>
-      <p style={{ color: "#6B8FA8", fontSize: 14, marginBottom: 32 }}>
-        Manage your ads and track their status.
-      </p>
+      <p className="text-[#6B8FA8] text-sm mb-8">Manage your ads and track their status.</p>
 
       {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16, marginBottom: 32 }}>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         {[
-          { label: "Total Ads", value: totalAds },
-          { label: "Active", value: activeAds },
+          { label: "Total Ads",      value: totalAds },
+          { label: "Active",         value: activeAds },
           { label: "Pending Review", value: pendingAds },
-          { label: "Paid", value: paidAds },
+          { label: "Paid",           value: paidAds },
         ].map(({ label, value }) => (
-          <div key={label} style={{ background: "#fff", borderRadius: 12, padding: "20px 24px", border: "0.5px solid #D8E4EE" }}>
-            <div style={{ fontSize: 12, color: "#6B8FA8", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: "#1A3A5C", fontFamily: "Georgia,serif" }}>{value}</div>
+          <div key={label} className="bg-white rounded-xl border border-[#D8E4EE] px-5 py-4">
+            <div className="text-[11px] font-semibold text-[#6B8FA8] uppercase tracking-[0.05em] mb-1">{label}</div>
+            <div className="font-serif text-[28px] font-bold text-[#1A3A5C]">{value}</div>
           </div>
         ))}
       </div>
 
       {/* Ads list */}
       {userAds.length === 0 ? (
-        <div style={{ background: "#fff", borderRadius: 12, border: "0.5px solid #D8E4EE", padding: 48, textAlign: "center" }}>
-          <div style={{ fontSize: 40, marginBottom: 16 }}>📋</div>
-          <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: "#1A3A5C", marginBottom: 8 }}>No ads yet</h2>
-          <p style={{ color: "#6B8FA8", fontSize: 14, marginBottom: 24 }}>
+        <div className="bg-white rounded-xl border border-[#D8E4EE] p-12 text-center">
+          <div className="text-[40px] mb-4">📋</div>
+          <h2 className="font-serif text-lg text-[#1A3A5C] mb-2">No ads yet</h2>
+          <p className="text-[#6B8FA8] text-sm mb-6">
             Post your first ad and reach customers at local store locations.
           </p>
           <Link
             href="/ads/new"
-            style={{
-              display: "inline-block",
-              background: "#1A3A5C",
-              color: "#fff",
-              padding: "10px 24px",
-              borderRadius: 8,
-              textDecoration: "none",
-              fontSize: 14,
-              fontWeight: 600,
-            }}
+            className="no-underline inline-block bg-[#1A3A5C] text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#15304d] transition-colors"
           >
             Post your first ad
           </Link>
         </div>
       ) : (
-        <div style={{ background: "#fff", borderRadius: 12, border: "0.5px solid #D8E4EE", overflow: "hidden" }}>
-          <div style={{ padding: "16px 24px", borderBottom: "1px solid #D8E4EE", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: "#1A3A5C" }}>Your Ads</h2>
+        <div className="bg-white rounded-xl border border-[#D8E4EE] overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#D8E4EE] flex items-center justify-between">
+            <h2 className="font-serif text-lg text-[#1A3A5C]">Your Ads</h2>
+            <span className="text-xs text-[#9DC4E0]">{totalAds} total</span>
           </div>
 
-          <div>
-            {userAds.map((ad, idx) => {
-              const adStatus = STATUS_STYLES[ad.status] ?? STATUS_STYLES.pending;
-              const payStatus = PAY_STYLES[ad.paymentStatus] ?? PAY_STYLES.unpaid;
+          <div className="divide-y divide-[#D8E4EE]">
+            {userAds.map((ad) => {
+              const adStatus  = STATUS[ad.status]      ?? STATUS.pending;
+              const payStatus = PAY[ad.paymentStatus]  ?? PAY.unpaid;
               const needsPayment = ad.paymentStatus === "unpaid";
 
               return (
-                <div
-                  key={ad.id}
-                  style={{
-                    display: "flex",
-                    gap: 16,
-                    alignItems: "flex-start",
-                    padding: "16px 24px",
-                    borderBottom: idx < userAds.length - 1 ? "1px solid #D8E4EE" : "none",
-                  }}
-                >
+                <div key={ad.id} className="flex flex-col sm:flex-row gap-4 p-4 sm:p-5">
                   {/* Thumbnail */}
                   <img
                     src={ad.imageUrl}
                     alt={ad.title}
-                    style={{ width: 72, height: 52, objectFit: "cover", borderRadius: 6, flexShrink: 0 }}
+                    className="w-full sm:w-[88px] h-[160px] sm:h-[62px] object-cover rounded-lg shrink-0"
                   />
 
                   {/* Info */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
                       <Link
                         href={`/dashboard/user/ads/${ad.id}`}
-                        style={{ fontWeight: 600, fontSize: 15, color: "#1A3A5C", textDecoration: "none" }}
+                        className="font-semibold text-[15px] text-[#1A3A5C] no-underline hover:underline"
                       >
                         {ad.title}
                       </Link>
-                      <Badge {...adStatus} />
-                      <Badge {...payStatus} />
+                      <Badge variant="outline" className={cn("text-[11px] font-semibold", adStatus.className)}>
+                        {adStatus.label}
+                      </Badge>
+                      <Badge variant="outline" className={cn("text-[11px] font-semibold", payStatus.className)}>
+                        {payStatus.label}
+                      </Badge>
                     </div>
-                    <div style={{ fontSize: 12, color: "#6B8FA8" }}>
+                    <div className="text-xs text-[#6B8FA8]">
                       {ad.location.storeName} · {ad.location.addressLine1}, {ad.location.cityName}, {ad.location.stateCode} {ad.location.postalCode}
                       {ad.status === "approved" && (
-                        <span> · {new Date(ad.startedAt).toLocaleDateString()} – {new Date(ad.endedAt).toLocaleDateString()}</span>
+                        <span> · {new Date(ad.startedAt).toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "numeric" })} – {new Date(ad.endedAt).toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "numeric" })}</span>
                       )}
                     </div>
-                    <div style={{ fontSize: 11, color: "#9DC4E0", marginTop: 2 }}>
+                    <div className="text-[11px] text-[#9DC4E0] mt-1">
                       Submitted {new Date(ad.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                     </div>
                   </div>
 
                   {/* Actions */}
-                  <div style={{ flexShrink: 0, display: "flex", gap: 8, alignItems: "center" }}>
+                  <div className="flex gap-2 flex-wrap items-start shrink-0">
                     {needsPayment && (
                       <Link
                         href={`/ads/${ad.id}/payment`}
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 600,
-                          background: "#E8563A",
-                          color: "#fff",
-                          padding: "6px 14px",
-                          borderRadius: 6,
-                          textDecoration: "none",
-                        }}
+                        className="no-underline text-xs font-semibold bg-[#E8563A] text-white px-3.5 py-1.5 rounded-lg hover:bg-[#d44e34] transition-colors"
                       >
                         Pay Now
                       </Link>
@@ -221,21 +172,14 @@ export default async function UserDashboard() {
                       <Link
                         href={`/display/${ad.location.slug}`}
                         target="_blank"
-                        style={{
-                          fontSize: 12,
-                          color: "#4A90C4",
-                          textDecoration: "none",
-                          border: "1px solid #4A90C4",
-                          padding: "5px 12px",
-                          borderRadius: 6,
-                        }}
+                        className="no-underline text-xs font-semibold text-[#4A90C4] border border-[#4A90C4] px-3 py-1.5 rounded-lg hover:bg-[#4A90C4]/10 transition-colors"
                       >
                         View Live ↗
                       </Link>
                     )}
                     <Link
                       href={`/dashboard/user/ads/${ad.id}`}
-                      style={{ fontSize: 12, color: "#6B8FA8", textDecoration: "none" }}
+                      className="no-underline text-xs text-[#6B8FA8] border border-[#D8E4EE] px-3 py-1.5 rounded-lg hover:bg-[#F4F7FB] transition-colors"
                     >
                       Details
                     </Link>

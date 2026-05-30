@@ -5,6 +5,7 @@ import { Icon } from "@/components/layout/Icon";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { useSession } from "@/lib/auth/client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const NAV_LINKS = [
   { label: "How it works", href: "#how-it-works" },
@@ -78,7 +79,13 @@ export default function LandingPage() {
         {/* Desktop CTA */}
         <div className="hidden md:flex items-center gap-3">
           {session ? (
-            <Link href="/dashboard" className="no-underline text-sm font-semibold text-white px-4 py-2 rounded-lg bg-[#1A3A5C] hover:bg-[#0F2540] transition-colors">
+            <Link href="/dashboard" className="no-underline flex items-center gap-2.5 text-sm font-semibold text-white pl-1 pr-4 py-1 rounded-full bg-[#1A3A5C] hover:bg-[#0F2540] transition-colors">
+              <Avatar className="w-7 h-7 shrink-0">
+                <AvatarImage src={session.user.image ?? ""} alt={session.user.name ?? ""} className="object-cover" />
+                <AvatarFallback className="bg-[#4A90C4] text-white text-[11px] font-bold">
+                  {(session.user.name ?? "?").split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2)}
+                </AvatarFallback>
+              </Avatar>
               Go to Dashboard
             </Link>
           ) : (
@@ -113,7 +120,15 @@ export default function LandingPage() {
           ))}
           <div className="flex flex-col gap-2 pt-2">
             {session ? (
-              <Link href="/dashboard" className="no-underline text-sm font-semibold text-white px-4 py-2.5 rounded-lg bg-[#1A3A5C] text-center">Go to Dashboard</Link>
+              <Link href="/dashboard" className="no-underline flex items-center justify-center gap-2.5 text-sm font-semibold text-white pl-2 pr-4 py-1.5 rounded-full bg-[#1A3A5C]">
+                <Avatar className="w-7 h-7 shrink-0">
+                  <AvatarImage src={session.user.image ?? ""} alt={session.user.name ?? ""} className="object-cover" />
+                  <AvatarFallback className="bg-[#4A90C4] text-white text-[11px] font-bold">
+                    {(session.user.name ?? "?").split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
+                Go to Dashboard
+              </Link>
             ) : (
               <>
                 <Link href="/login" className="no-underline text-sm font-semibold text-[#1A3A5C] px-4 py-2.5 rounded-lg border border-[#D1DDE8] text-center">Sign in</Link>

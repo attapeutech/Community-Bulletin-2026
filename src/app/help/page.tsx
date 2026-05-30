@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useSession } from "@/lib/auth/client";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import Link from "next/link";
 import {
   HelpCircle, BookOpen, CreditCard, Store,
   Wrench, ChevronDown, CheckCircle2, ArrowRight, MessageSquare,
@@ -19,7 +20,7 @@ const FAQ_CATEGORIES = [
     label: "Getting Started",
     color: "#4A90C4",
     faqs: [
-      { q: "How do I create an account?", a: "Click 'Get started free' on the home page, fill in your name, email and password, then verify your email. You'll be ready to post ads within minutes." },
+      { q: "How do I create an account?", a: <>Click <Link href="/register" className="text-[#4A90C4] font-medium hover:underline">Get started free</Link> on the home page, fill in your name, email and password, then verify your email. You'll be ready to post ads within minutes.</> },
       { q: "How do I post my first ad?", a: "After logging in, go to 'My Ads' in your dashboard and click 'Post a New Ad'. Upload your image, choose a store location, select your run dates, and complete the $100 payment. Your ad will be reviewed within 24 hours." },
       { q: "What image formats are accepted?", a: "We accept JPEG, PNG, WebP, and GIF files up to 10 MB. For best display quality we recommend a 1920×1080 (16:9) or 1080×1920 (9:16) image at 72–150 DPI." },
       { q: "How long does a campaign run?", a: "Each campaign runs for 1 week (7 days) from the approved start date. You can post multiple campaigns to extend your reach." },
@@ -82,7 +83,7 @@ const SUBJECTS = [
 ];
 
 // ─── Accordion item ────────────────────────────────────────────────────────────
-function FaqItem({ q, a }: { q: string; a: string }) {
+function FaqItem({ q, a }: { q: string; a: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="border-b border-[#E8EFF6] last:border-0">

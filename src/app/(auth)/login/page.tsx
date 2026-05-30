@@ -80,10 +80,7 @@ export default function LoginPage() {
         setFormError(msg || "Incorrect password. Please try again.");
         return;
       }
-      // Check if this user has 2FA enabled; if so send OTP and redirect
-      const twoFaRes = await fetch("/api/auth/2fa/send", { method: "POST" });
-      const twoFaJson = await twoFaRes.json();
-      router.push(twoFaJson.required ? "/two-factor" : "/dashboard");
+      router.push("/dashboard");
     } catch {
       setFormError("Something went wrong. Please try again.");
     }
@@ -110,11 +107,6 @@ export default function LoginPage() {
       <p className="text-[13px] text-muted-foreground mt-0 mb-5">
         Sign in to your CommunityBulletin account
       </p>
-
-      <div className="flex items-center gap-2 bg-accent/10 border border-accent/30 rounded-lg px-3 py-2 mb-5 text-xs text-accent">
-        <span className="w-2 h-2 rounded-full bg-accent shrink-0 inline-block" />
-        Two-factor authentication is enabled for your security.
-      </div>
 
       {unverifiedEmail && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg px-3.5 py-3 mb-5">

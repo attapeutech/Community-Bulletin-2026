@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Icon } from "@/components/layout/Icon";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 
 const NAV_LINKS = [
@@ -37,12 +37,19 @@ const STATS = [
 
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <div className="font-sans text-[#1A3A5C] overflow-x-hidden">
 
       {/* ── NAVBAR ── */}
-      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-[#D8E4EE] h-16 flex items-center justify-between px-4 sm:px-8">
+      <nav className={`sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-[#D8E4EE] h-16 flex items-center justify-between px-4 sm:px-8 transition-shadow duration-200 ${scrolled ? "shadow-md" : "shadow-none"}`}>
         {/* Logo */}
         <Link href="/" className="no-underline flex items-center gap-2.5">
           <div className="bg-[#E8EFF6] rounded-[10px] p-1.5 flex">

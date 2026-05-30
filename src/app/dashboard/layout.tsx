@@ -29,7 +29,7 @@ export default async function DashboardLayout({
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-60 bg-[#1A3A5C] flex-col shrink-0 px-4 py-6 gap-2">
         {/* Logo */}
-        <Link href="/dashboard/user" className="no-underline">
+        <Link href="/" className="no-underline">
           <div className="flex items-center gap-2.5 mb-8 pl-2">
             <div className="bg-[#E8EFF6] rounded-[10px] p-1.5">
               <Icon size={28} />
@@ -75,7 +75,7 @@ export default async function DashboardLayout({
           userEmail={user.email}
           role={role}
         />
-        <Link href="/dashboard/user" className="no-underline flex items-center gap-2">
+        <Link href="/" className="no-underline flex items-center gap-2">
           <div className="bg-[#E8EFF6] rounded-lg p-1">
             <Icon size={22} />
           </div>

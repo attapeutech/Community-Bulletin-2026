@@ -13,6 +13,7 @@ const PUBLIC_ROUTES = [
   "/help",
   "/privacy",
   "/terms",
+  "/contact",
 ];
 
 export async function middleware(request: NextRequest) {

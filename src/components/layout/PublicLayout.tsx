@@ -17,7 +17,7 @@ const NAV_LINKS = [
 const FOOTER_LINKS = [
   { title: "Advertise",  links: [{ label: "Post an ad", href: "/register" }, { label: "How it works", href: "/#how-it-works" }, { label: "Pricing", href: "/#pricing" }] },
   { title: "For Stores", links: [{ label: "List your store", href: "/register" }, { label: "Store dashboard", href: "/dashboard/store-owner" }] },
-  { title: "Company",    links: [{ label: "Help & Support", href: "/help" }, { label: "Privacy policy", href: "/privacy" }, { label: "Terms of service", href: "/terms" }] },
+  { title: "Company",    links: [{ label: "Help & Support", href: "/help" }, { label: "Contact Us", href: "/contact" }, { label: "Privacy policy", href: "/privacy" }, { label: "Terms of service", href: "/terms" }] },
 ];
 
 export function PublicLayout({ children }: { children: React.ReactNode }) {

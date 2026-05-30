@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
-  HelpCircle, Mail, BookOpen, CreditCard, Store,
+  HelpCircle, BookOpen, CreditCard, Store,
   Wrench, ChevronDown, CheckCircle2, ArrowRight, MessageSquare,
 } from "lucide-react";
 
@@ -221,10 +221,9 @@ export default function HelpPage() {
               Dashboard
             </Link>
           ) : (
-            <>
-              <Link href="/login" className="no-underline text-sm font-semibold text-[#1A3A5C] px-4 py-2 rounded-lg border border-[#D1DDE8] hover:bg-[#F4F7FB] transition-colors">Sign in</Link>
-              <Link href="/register" className="no-underline text-sm font-semibold text-white px-4 py-2 rounded-lg bg-[#1A3A5C] hover:bg-[#0F2540] transition-colors">Get started</Link>
-            </>
+            <Link href="/" className="no-underline text-sm font-semibold text-[#1A3A5C] px-4 py-2 rounded-lg border border-[#D1DDE8] hover:bg-[#F4F7FB] transition-colors">
+              ← Back to Home
+            </Link>
           )}
         </div>
       </nav>

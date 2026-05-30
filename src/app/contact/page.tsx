@@ -1,11 +1,15 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import { useCallback, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { GoogleReCaptchaProvider, useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { useSession } from "@/lib/auth/client";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { MessageSquare, CheckCircle2, ArrowRight, Mail, Clock } from "lucide-react";
@@ -20,34 +24,40 @@ const SUBJECTS = [
   "Other",
 ];
 
+const schema = z.object({
+  name:    z.string().min(2,  "Name must be at least 2 characters"),
+  email:   z.string().email("Enter a valid email address"),
+  subject: z.string().min(1,  "Please select a subject"),
+  message: z.string().min(10, "Message must be at least 10 characters"),
+});
+type FormData = z.infer<typeof schema>;
+
+function FieldError({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return <p className="text-xs text-red-500 mt-1">{msg}</p>;
+}
+
 function ContactForm({ defaultEmail }: { defaultEmail?: string }) {
-  const [form, setForm] = useState({ name: "", email: defaultEmail ?? "", subject: "", message: "" });
-  const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const { executeRecaptcha } = useGoogleReCaptcha();
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: { name: "", email: defaultEmail ?? "", subject: "", message: "" },
+  });
 
-  function set(field: string, val: string) { setForm(f => ({ ...f, [field]: val })); }
-
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.name.trim() || !form.email.trim() || !form.subject || !form.message.trim()) {
-      toast.error("Please fill in all fields.");
-      return;
-    }
+  const onSubmit = useCallback(async (data: FormData) => {
     if (!executeRecaptcha) {
       toast.error("reCAPTCHA not ready. Please try again.");
       return;
     }
-    setSending(true);
     try {
       const recaptchaToken = await executeRecaptcha("contact_form");
-      const res  = await fetch("/api/support", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, recaptchaToken }) });
+      const res  = await fetch("/api/support", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...data, recaptchaToken }) });
       const json = await res.json();
       if (!json.success) { toast.error(json.error ?? "Failed to send. Please try again."); return; }
       setSent(true);
     } catch { toast.error("Something went wrong. Please try again."); }
-    finally { setSending(false); }
-  }, [form, executeRecaptcha]);
+  }, [executeRecaptcha]);
 
   if (sent) {
     return (
@@ -57,7 +67,7 @@ function ContactForm({ defaultEmail }: { defaultEmail?: string }) {
         </div>
         <h3 className="text-xl font-bold text-[#1A3A5C] mb-2">Message sent!</h3>
         <p className="text-sm text-[#6B8FA8] max-w-sm">We'll get back to you within 1–2 business days. Check your inbox for a confirmation email.</p>
-        <Button variant="ghost" onClick={() => { setSent(false); setForm({ name: "", email: defaultEmail ?? "", subject: "", message: "" }); }} className="mt-6 text-[#4A90C4]">
+        <Button variant="ghost" onClick={() => { setSent(false); reset({ email: defaultEmail ?? "" }); }} className="mt-6 text-[#4A90C4]">
           Send another message
         </Button>
       </div>
@@ -65,41 +75,43 @@ function ContactForm({ defaultEmail }: { defaultEmail?: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em] mb-1.5">Your name *</label>
-          <Input value={form.name} onChange={e => set("name", e.target.value)} placeholder="Jane Smith" className="h-10 bg-[#F7F9FC] border-[#D1DDE8] text-sm" />
+          <Label className="block text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em] mb-1.5">Your name *</Label>
+          <Input {...register("name")} placeholder="Jane Smith" className={`h-10 bg-[#F7F9FC] border-[#D1DDE8] text-sm ${errors.name ? "border-red-400 bg-red-50" : ""}`} />
+          <FieldError msg={errors.name?.message} />
         </div>
         <div>
-          <label className="block text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em] mb-1.5">Email address *</label>
-          <Input type="email" value={form.email} onChange={e => set("email", e.target.value)} placeholder="you@example.com" className="h-10 bg-[#F7F9FC] border-[#D1DDE8] text-sm" />
+          <Label className="block text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em] mb-1.5">Email address *</Label>
+          <Input type="email" {...register("email")} placeholder="you@example.com" className={`h-10 bg-[#F7F9FC] border-[#D1DDE8] text-sm ${errors.email ? "border-red-400 bg-red-50" : ""}`} />
+          <FieldError msg={errors.email?.message} />
         </div>
       </div>
       <div>
-        <label className="block text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em] mb-1.5">Subject *</label>
+        <Label className="block text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em] mb-1.5">Subject *</Label>
         <select
-          value={form.subject}
-          onChange={e => set("subject", e.target.value)}
-          className="w-full h-10 rounded-md border border-[#D1DDE8] bg-[#F7F9FC] px-3 text-sm text-[#1A3A5C] focus:outline-none focus:ring-2 focus:ring-[#1A3A5C]/20"
+          {...register("subject")}
+          className={`w-full h-10 rounded-md border px-3 text-sm text-[#1A3A5C] focus:outline-none focus:ring-2 focus:ring-[#1A3A5C]/20 ${errors.subject ? "border-red-400 bg-red-50" : "border-[#D1DDE8] bg-[#F7F9FC]"}`}
         >
           <option value="">Select a subject…</option>
           {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
+        <FieldError msg={errors.subject?.message} />
       </div>
       <div>
-        <label className="block text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em] mb-1.5">Message *</label>
+        <Label className="block text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em] mb-1.5">Message *</Label>
         <Textarea
-          value={form.message}
-          onChange={e => set("message", e.target.value)}
+          {...register("message")}
           placeholder="Describe your issue or question in detail…"
           rows={6}
-          className="bg-[#F7F9FC] border-[#D1DDE8] text-sm resize-none"
+          className={`text-sm resize-none ${errors.message ? "border-red-400 bg-red-50" : "bg-[#F7F9FC] border-[#D1DDE8]"}`}
         />
+        <FieldError msg={errors.message?.message} />
       </div>
-      <Button type="submit" disabled={sending} className="w-full h-11 bg-[#1A3A5C] hover:bg-[#0F2540] text-white">
-        {sending ? "Sending…" : "Send message"}
-        {!sending && <ArrowRight size={16} className="ml-2" />}
+      <Button type="submit" disabled={isSubmitting} className="w-full h-11 bg-[#1A3A5C] hover:bg-[#0F2540] text-white">
+        {isSubmitting ? "Sending…" : "Send message"}
+        {!isSubmitting && <ArrowRight size={16} className="ml-2" />}
       </Button>
     </form>
   );

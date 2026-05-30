@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { Icon } from "@/components/layout/Icon";
 import { useSession } from "@/lib/auth/client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PublicLayout } from "@/components/layout/PublicLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -192,44 +190,11 @@ export default function HelpPage() {
   const { data: session } = useSession();
   const [activeCategory, setActiveCategory] = useState(0);
 
-  const user = session?.user;
-  const initials = user?.name ? user.name.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2) : "?";
-
   return (
-    <div className="min-h-screen bg-[#F4F7FB] font-sans text-[#1A3A5C]">
-
-      {/* ── Navbar ── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-[#D8E4EE] h-16 flex items-center justify-between px-4 sm:px-8 shadow-sm">
-        <Link href="/" className="no-underline flex items-center gap-2.5">
-          <div className="bg-[#E8EFF6] rounded-[10px] p-1.5 flex"><Icon size={28} /></div>
-          <div>
-            <div className="font-serif font-bold text-[14px] text-[#1A3A5C] leading-tight">Community</div>
-            <div className="font-serif font-bold text-[14px] leading-tight">
-              <span className="text-[#E8563A]">Bulletin</span>
-              <span className="text-[#4A90C4] text-[11px] font-normal">.com</span>
-            </div>
-          </div>
-        </Link>
-
-        <div className="flex items-center gap-3">
-          {user ? (
-            <Link href="/dashboard" className="no-underline flex items-center gap-2 text-sm font-semibold text-white pl-1 pr-4 py-1 rounded-full bg-[#1A3A5C] hover:bg-[#0F2540] transition-colors">
-              <Avatar className="w-7 h-7 shrink-0">
-                <AvatarImage src={user.image ?? ""} alt={user.name ?? ""} className="object-cover" />
-                <AvatarFallback className="bg-[#4A90C4] text-white text-[11px] font-bold">{initials}</AvatarFallback>
-              </Avatar>
-              Dashboard
-            </Link>
-          ) : (
-            <Link href="/" className="no-underline text-sm font-semibold text-[#1A3A5C] px-4 py-2 rounded-lg border border-[#D1DDE8] hover:bg-[#F4F7FB] transition-colors">
-              ← Back to Home
-            </Link>
-          )}
-        </div>
-      </nav>
+    <PublicLayout>
 
       {/* ── Hero ── */}
-      <section className="pt-28 pb-14 px-4 sm:px-8 bg-gradient-to-br from-[#1A3A5C] via-[#0F2540] to-[#1A3A5C] text-center">
+      <section className="pt-14 pb-14 px-4 sm:px-8 bg-gradient-to-br from-[#1A3A5C] via-[#0F2540] to-[#1A3A5C] text-center">
         <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 mb-5">
           <HelpCircle size={14} className="text-[#9DC4E0]" />
           <span className="text-xs font-semibold text-[#9DC4E0] uppercase tracking-wide">Help & Support</span>
@@ -289,27 +254,11 @@ export default function HelpPage() {
             </div>
           </div>
           <div className="px-6 py-6">
-            <ContactForm defaultEmail={user?.email} />
+            <ContactForm defaultEmail={session?.user?.email} />
           </div>
         </div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="bg-[#0F2540] px-4 sm:px-8 py-8 border-t border-white/[0.08]">
-        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
-          <div className="flex items-center gap-2">
-            <div className="bg-[#E8EFF6] rounded-lg p-1.5 flex"><Icon size={20} /></div>
-            <span className="font-serif font-bold text-white text-[13px]">CommunityBulletin<span className="text-[#4A90C4] font-normal text-[11px]">.com</span></span>
-          </div>
-          <div className="flex items-center gap-5">
-            <Link href="/" className="text-xs text-[#6B8FA8] hover:text-white no-underline transition-colors">Home</Link>
-            <Link href="/help" className="text-xs text-[#6B8FA8] hover:text-white no-underline transition-colors">Help</Link>
-            <Link href="/privacy" className="text-xs text-[#6B8FA8] hover:text-white no-underline transition-colors">Privacy</Link>
-            <Link href="/terms" className="text-xs text-[#6B8FA8] hover:text-white no-underline transition-colors">Terms</Link>
-          </div>
-          <p className="text-xs text-[#4A7FA5]">© 2026 CommunityBulletin.com</p>
-        </div>
-      </footer>
-    </div>
+    </PublicLayout>
   );
 }

@@ -10,14 +10,18 @@ const PUBLIC_ROUTES = [
   "/verify-email",
   "/two-factor",
   "/display",
+  "/help",
+  "/privacy",
+  "/terms",
 ];
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (
     PUBLIC_ROUTES.some((r) => pathname === r || pathname.startsWith(r + "/")) ||
     pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/support") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
     pathname.startsWith("/public")

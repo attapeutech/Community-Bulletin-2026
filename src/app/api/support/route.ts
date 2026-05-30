@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { sendEmail, ADMIN_EMAIL, FROM_EMAIL } from "@/lib/email";
+import { verifyRecaptcha } from "@/lib/recaptcha";
 
 const schema = z.object({
-  name:    z.string().min(2,  "Name must be at least 2 characters"),
-  email:   z.string().email("Enter a valid email address"),
-  subject: z.string().min(1,  "Please select a subject"),
-  message: z.string().min(10, "Message must be at least 10 characters"),
+  name:            z.string().min(2,  "Name must be at least 2 characters"),
+  email:           z.string().email("Enter a valid email address"),
+  subject:         z.string().min(1,  "Please select a subject"),
+  message:         z.string().min(10, "Message must be at least 10 characters"),
+  recaptchaToken:  z.string().min(1,  "reCAPTCHA verification required"),
 });
 
 export async function POST(req: NextRequest) {
@@ -17,7 +19,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: parsed.error.issues[0].message }, { status: 422 });
     }
 
-    const { name, email, subject, message } = parsed.data;
+    const { name, email, subject, message, recaptchaToken } = parsed.data;
+
+    const captchaOk = await verifyRecaptcha(recaptchaToken);
+    if (!captchaOk) {
+      return NextResponse.json({ success: false, error: "reCAPTCHA verification failed. Please try again." }, { status: 422 });
+    }
 
     await sendEmail({
       to: ADMIN_EMAIL,

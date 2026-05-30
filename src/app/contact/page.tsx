@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
+import ReCAPTCHA from "react-google-recaptcha";
 import { useSession } from "@/lib/auth/client";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ function ContactForm({ defaultEmail }: { defaultEmail?: string }) {
   const [form, setForm] = useState({ name: "", email: defaultEmail ?? "", subject: "", message: "" });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   function set(field: string, val: string) { setForm(f => ({ ...f, [field]: val })); }
 
@@ -32,14 +34,22 @@ function ContactForm({ defaultEmail }: { defaultEmail?: string }) {
       toast.error("Please fill in all fields.");
       return;
     }
+    const recaptchaToken = recaptchaRef.current?.getValue();
+    if (!recaptchaToken) {
+      toast.error("Please complete the reCAPTCHA.");
+      return;
+    }
     setSending(true);
     try {
-      const res  = await fetch("/api/support", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+      const res  = await fetch("/api/support", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, recaptchaToken }) });
       const json = await res.json();
       if (!json.success) { toast.error(json.error ?? "Failed to send. Please try again."); return; }
       setSent(true);
     } catch { toast.error("Something went wrong. Please try again."); }
-    finally { setSending(false); }
+    finally {
+      setSending(false);
+      recaptchaRef.current?.reset();
+    }
   }
 
   if (sent) {
@@ -88,6 +98,12 @@ function ContactForm({ defaultEmail }: { defaultEmail?: string }) {
           placeholder="Describe your issue or question in detail…"
           rows={6}
           className="bg-[#F7F9FC] border-[#D1DDE8] text-sm resize-none"
+        />
+      </div>
+      <div>
+        <ReCAPTCHA
+          ref={recaptchaRef}
+          sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
         />
       </div>
       <Button type="submit" disabled={sending} className="w-full h-11 bg-[#1A3A5C] hover:bg-[#0F2540] text-white">

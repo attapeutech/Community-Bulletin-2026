@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import ReCAPTCHA from "react-google-recaptcha";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { signIn, signUp, useSession } from "@/lib/auth/client";
 import { toast } from "sonner";
@@ -67,6 +68,7 @@ export default function RegisterPage() {
   if (session) { router.replace("/dashboard"); return null; }
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
@@ -74,7 +76,26 @@ export default function RegisterPage() {
   async function onSubmit(data: FormData) {
     setFormError(null);
     setFormSuccess(null);
+
+    const recaptchaToken = recaptchaRef.current?.getValue();
+    if (!recaptchaToken) {
+      setFormError("Please complete the reCAPTCHA verification.");
+      return;
+    }
+
     try {
+      const captchaRes = await fetch("/api/auth/verify-recaptcha", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: recaptchaToken }),
+      });
+      const { success: captchaOk } = await captchaRes.json();
+      if (!captchaOk) {
+        setFormError("reCAPTCHA verification failed. Please try again.");
+        recaptchaRef.current?.reset();
+        return;
+      }
+
       const check = await fetch("/api/auth/check-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -83,6 +104,7 @@ export default function RegisterPage() {
       const { exists } = await check.json();
       if (exists) {
         setFormError("An account with this email already exists. Please sign in instead.");
+        recaptchaRef.current?.reset();
         return;
       }
 
@@ -94,12 +116,14 @@ export default function RegisterPage() {
       });
       if (result.error) {
         setFormError(result.error.message ?? "Registration failed. Please try again.");
+        recaptchaRef.current?.reset();
         return;
       }
       setFormSuccess("Account created! Please check your email to verify your account.");
       toast.success("Account created! Please check your email to verify your account.");
     } catch {
       setFormError("Something went wrong. Please try again.");
+      recaptchaRef.current?.reset();
     }
   }
 
@@ -143,6 +167,13 @@ export default function RegisterPage() {
           </Label>
           <Input type="password" placeholder="Re-enter password" {...register("confirm")} className={errors.confirm ? "border-destructive bg-destructive/5" : ""} />
           <FieldError msg={errors.confirm?.message} />
+        </div>
+
+        <div className="mb-4">
+          <ReCAPTCHA
+            ref={recaptchaRef}
+            sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+          />
         </div>
 
         <p className="text-[11px] text-muted-foreground mt-0 mb-4">

@@ -8,8 +8,11 @@ export function SignOutButton() {
   const router = useRouter();
 
   async function handleSignOut() {
-    await signOut();
-    router.push("/login");
+    await signOut({
+      fetchOptions: {
+        onSuccess: () => router.push("/"),
+      },
+    });
   }
 
   return (

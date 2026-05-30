@@ -20,6 +20,7 @@ export default async function DashboardLayout({
     { href: "/dashboard/store-owner", label: role === "admin" ? "All Locations" : "My Locations", roles: ["store_owner", "admin"] },
     { href: "/dashboard/approver",    label: "Review Ads",    roles: ["approver", "admin"] },
     { href: "/dashboard/admin",       label: "Admin Panel",   roles: ["admin"] },
+    { href: "/dashboard/admin/geo",   label: "Geography",     roles: ["admin"] },
     { href: "/dashboard/profile",     label: "Account",       roles: ["user", "store_owner", "approver", "admin"] },
   ].filter((item) => item.roles.includes(role));
 

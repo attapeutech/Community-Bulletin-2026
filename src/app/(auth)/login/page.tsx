@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AuthLayout } from "@/components/auth/AuthLayout";
-import { signIn, sendVerificationEmail } from "@/lib/auth/client";
+import { signIn, sendVerificationEmail, useSession } from "@/lib/auth/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +48,8 @@ const GoogleIcon = () => (
 
 export default function LoginPage() {
   const router = useRouter();
+  const { data: session } = useSession();
+  if (session) { router.replace("/dashboard"); return null; }
   const [formError, setFormError] = useState<string | null>(null);
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const [resending, setResending] = useState(false);

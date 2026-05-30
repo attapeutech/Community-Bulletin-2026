@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { MessageSquare, CheckCircle2, ArrowRight, Mail, Clock } from "lucide-react";
+import { MessageSquare, CheckCircle2, ArrowRight } from "lucide-react";
 
 const SUBJECTS = [
   "General Question",
@@ -134,29 +134,6 @@ function ContactPageContent() {
         </p>
       </section>
 
-      {/* ── Info cards ── */}
-      <section className="max-w-3xl mx-auto px-4 sm:px-8 -mt-6 mb-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-white rounded-xl border border-[#E2EAF2] shadow-sm p-5 flex items-start gap-4">
-            <div className="w-10 h-10 rounded-full bg-[#4A90C4]/10 flex items-center justify-center shrink-0">
-              <Mail size={18} className="text-[#4A90C4]" />
-            </div>
-            <div>
-              <div className="text-sm font-semibold text-[#1A3A5C] mb-0.5">Email us directly</div>
-              <div className="text-[13px] text-[#6B8FA8]">support@communitybulletin.com</div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl border border-[#E2EAF2] shadow-sm p-5 flex items-start gap-4">
-            <div className="w-10 h-10 rounded-full bg-[#10B981]/10 flex items-center justify-center shrink-0">
-              <Clock size={18} className="text-[#10B981]" />
-            </div>
-            <div>
-              <div className="text-sm font-semibold text-[#1A3A5C] mb-0.5">Response time</div>
-              <div className="text-[13px] text-[#6B8FA8]">Within 1–2 business days</div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* ── Contact form ── */}
       <section className="max-w-2xl mx-auto px-4 sm:px-8 mb-20">

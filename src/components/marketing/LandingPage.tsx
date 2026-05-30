@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Icon } from "@/components/layout/Icon";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
+import { useSession } from "@/lib/auth/client";
 
 const NAV_LINKS = [
   { label: "How it works", href: "#how-it-works" },
@@ -38,6 +39,7 @@ const STATS = [
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { data: session } = useSession();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -75,12 +77,20 @@ export default function LandingPage() {
 
         {/* Desktop CTA */}
         <div className="hidden md:flex items-center gap-3">
-          <Link href="/login" className="no-underline text-sm font-semibold text-[#1A3A5C] px-4 py-2 rounded-lg border border-[#D1DDE8] hover:bg-[#F4F7FB] transition-colors">
-            Sign in
-          </Link>
-          <Link href="/register" className="no-underline text-sm font-semibold text-white px-4 py-2 rounded-lg bg-[#1A3A5C] hover:bg-[#0F2540] transition-colors">
-            Get started free
-          </Link>
+          {session ? (
+            <Link href="/dashboard" className="no-underline text-sm font-semibold text-white px-4 py-2 rounded-lg bg-[#1A3A5C] hover:bg-[#0F2540] transition-colors">
+              Go to Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link href="/login" className="no-underline text-sm font-semibold text-[#1A3A5C] px-4 py-2 rounded-lg border border-[#D1DDE8] hover:bg-[#F4F7FB] transition-colors">
+                Sign in
+              </Link>
+              <Link href="/register" className="no-underline text-sm font-semibold text-white px-4 py-2 rounded-lg bg-[#1A3A5C] hover:bg-[#0F2540] transition-colors">
+                Get started free
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile hamburger */}
@@ -102,8 +112,14 @@ export default function LandingPage() {
             </a>
           ))}
           <div className="flex flex-col gap-2 pt-2">
-            <Link href="/login" className="no-underline text-sm font-semibold text-[#1A3A5C] px-4 py-2.5 rounded-lg border border-[#D1DDE8] text-center">Sign in</Link>
-            <Link href="/register" className="no-underline text-sm font-semibold text-white px-4 py-2.5 rounded-lg bg-[#1A3A5C] text-center">Get started free</Link>
+            {session ? (
+              <Link href="/dashboard" className="no-underline text-sm font-semibold text-white px-4 py-2.5 rounded-lg bg-[#1A3A5C] text-center">Go to Dashboard</Link>
+            ) : (
+              <>
+                <Link href="/login" className="no-underline text-sm font-semibold text-[#1A3A5C] px-4 py-2.5 rounded-lg border border-[#D1DDE8] text-center">Sign in</Link>
+                <Link href="/register" className="no-underline text-sm font-semibold text-white px-4 py-2.5 rounded-lg bg-[#1A3A5C] text-center">Get started free</Link>
+              </>
+            )}
           </div>
         </div>
       )}

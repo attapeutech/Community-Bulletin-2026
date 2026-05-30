@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useRef, useState } from "react";
-import ReCAPTCHA from "react-google-recaptcha";
+import React, { useCallback, useState } from "react";
+import { GoogleReCaptchaProvider, useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { useSession } from "@/lib/auth/client";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { Button } from "@/components/ui/button";
@@ -24,33 +24,30 @@ function ContactForm({ defaultEmail }: { defaultEmail?: string }) {
   const [form, setForm] = useState({ name: "", email: defaultEmail ?? "", subject: "", message: "" });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
   function set(field: string, val: string) { setForm(f => ({ ...f, [field]: val })); }
 
-  async function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim() || !form.subject || !form.message.trim()) {
       toast.error("Please fill in all fields.");
       return;
     }
-    const recaptchaToken = recaptchaRef.current?.getValue();
-    if (!recaptchaToken) {
-      toast.error("Please complete the reCAPTCHA.");
+    if (!executeRecaptcha) {
+      toast.error("reCAPTCHA not ready. Please try again.");
       return;
     }
     setSending(true);
     try {
+      const recaptchaToken = await executeRecaptcha("contact_form");
       const res  = await fetch("/api/support", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, recaptchaToken }) });
       const json = await res.json();
       if (!json.success) { toast.error(json.error ?? "Failed to send. Please try again."); return; }
       setSent(true);
     } catch { toast.error("Something went wrong. Please try again."); }
-    finally {
-      setSending(false);
-      recaptchaRef.current?.reset();
-    }
-  }
+    finally { setSending(false); }
+  }, [form, executeRecaptcha]);
 
   if (sent) {
     return (
@@ -100,12 +97,6 @@ function ContactForm({ defaultEmail }: { defaultEmail?: string }) {
           className="bg-[#F7F9FC] border-[#D1DDE8] text-sm resize-none"
         />
       </div>
-      <div>
-        <ReCAPTCHA
-          ref={recaptchaRef}
-          sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
-        />
-      </div>
       <Button type="submit" disabled={sending} className="w-full h-11 bg-[#1A3A5C] hover:bg-[#0F2540] text-white">
         {sending ? "Sending…" : "Send message"}
         {!sending && <ArrowRight size={16} className="ml-2" />}
@@ -114,9 +105,8 @@ function ContactForm({ defaultEmail }: { defaultEmail?: string }) {
   );
 }
 
-export default function ContactPage() {
+function ContactPageContent() {
   const { data: session } = useSession();
-
   return (
     <PublicLayout>
 
@@ -173,5 +163,13 @@ export default function ContactPage() {
       </section>
 
     </PublicLayout>
+  );
+}
+
+export default function ContactPage() {
+  return (
+    <GoogleReCaptchaProvider reCaptchaKey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}>
+      <ContactPageContent />
+    </GoogleReCaptchaProvider>
   );
 }

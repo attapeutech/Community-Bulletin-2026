@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 
 export default function PrivacyPage() {
@@ -36,16 +37,23 @@ export default function PrivacyPage() {
             title: "Your Rights",
             body: "You have the right to access, correct, or delete your personal information at any time. To exercise these rights, contact us at the address below or use the account settings in your dashboard.",
           },
-          {
-            title: "Contact Us",
-            body: "If you have questions about this Privacy Policy, please contact us via the Help & Support page or email us at support@communitybulletin.com.",
-          },
         ].map(({ title, body }) => (
           <section key={title} className="mb-8">
             <h2 className="font-serif font-bold text-lg text-[#1A3A5C] mb-2">{title}</h2>
             <p className="text-[14px] text-[#4A5568] leading-relaxed">{body}</p>
           </section>
         ))}
+
+        <section className="mb-8">
+          <h2 className="font-serif font-bold text-lg text-[#1A3A5C] mb-2">Contact Us</h2>
+          <p className="text-[14px] text-[#4A5568] leading-relaxed mb-4">If you have questions about this Privacy Policy, we're happy to help.</p>
+          <Link
+            href="/contact"
+            className="inline-flex items-center px-5 py-2.5 rounded-lg bg-[#1A3A5C] hover:bg-[#0F2540] text-white text-sm font-semibold no-underline transition-colors"
+          >
+            Contact Us
+          </Link>
+        </section>
       </div>
     </PublicLayout>
   );

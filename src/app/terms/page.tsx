@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 
 export default function TermsPage() {
@@ -48,16 +49,23 @@ export default function TermsPage() {
             title: "Changes to Terms",
             body: "We may update these Terms of Service from time to time. We will notify you of material changes by email or by posting a notice on our website. Continued use of the service after changes take effect constitutes acceptance of the revised terms.",
           },
-          {
-            title: "Contact Us",
-            body: "If you have questions about these Terms of Service, please contact us via the Help & Support page or email us at support@communitybulletin.com.",
-          },
         ].map(({ title, body }) => (
           <section key={title} className="mb-8">
             <h2 className="font-serif font-bold text-lg text-[#1A3A5C] mb-2">{title}</h2>
             <p className="text-[14px] text-[#4A5568] leading-relaxed">{body}</p>
           </section>
         ))}
+
+        <section className="mb-8">
+          <h2 className="font-serif font-bold text-lg text-[#1A3A5C] mb-2">Contact Us</h2>
+          <p className="text-[14px] text-[#4A5568] leading-relaxed mb-4">If you have questions about these Terms of Service, we're happy to help.</p>
+          <Link
+            href="/contact"
+            className="inline-flex items-center px-5 py-2.5 rounded-lg bg-[#1A3A5C] hover:bg-[#0F2540] text-white text-sm font-semibold no-underline transition-colors"
+          >
+            Contact Us
+          </Link>
+        </section>
       </div>
     </PublicLayout>
   );

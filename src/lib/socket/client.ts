@@ -8,7 +8,7 @@ let socketInstance: Socket | null = null;
 function getSocket(): Socket {
   if (!socketInstance) {
     socketInstance = io({
-      transports: ["websocket", "polling"],
+      transports: ["polling", "websocket"],
       autoConnect: true,
     });
   }

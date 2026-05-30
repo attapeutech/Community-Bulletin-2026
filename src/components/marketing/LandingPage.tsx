@@ -162,7 +162,7 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/register" className="no-underline bg-[#E8563A] text-white px-8 py-3.5 rounded-xl text-base font-bold tracking-wide hover:bg-[#D14A30] transition-colors">
+            <Link href={session ? "/dashboard/user" : "/register"} className="no-underline bg-[#E8563A] text-white px-8 py-3.5 rounded-xl text-base font-bold tracking-wide hover:bg-[#D14A30] transition-colors">
               Post your first ad — $100
             </Link>
             <a href="#how-it-works" className="no-underline bg-white/10 border border-white/20 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-white/20 transition-colors">
@@ -275,8 +275,8 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <Link href="/register" className="block text-center no-underline bg-[#1A3A5C] text-white px-6 py-3 rounded-lg text-base font-bold hover:bg-[#0F2540] transition-colors">
-                Get started
+              <Link href={session ? "/dashboard/user" : "/register"} className="block text-center no-underline bg-[#1A3A5C] text-white px-6 py-3 rounded-lg text-base font-bold hover:bg-[#0F2540] transition-colors">
+                {session ? "Post an ad" : "Get started"}
               </Link>
             </div>
           </div>

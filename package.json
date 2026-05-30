@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "start:all": "concurrently \"next start\" \"tsx src/lib/socket/server.ts\"",
+    "start": "tsx server.ts",
+    "start:all": "tsx server.ts",
     "lint": "next lint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",

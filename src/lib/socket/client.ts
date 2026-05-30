@@ -7,7 +7,7 @@ let socketInstance: Socket | null = null;
 
 function getSocket(): Socket {
   if (!socketInstance) {
-    socketInstance = io(process.env.NEXT_PUBLIC_SOCKET_URL!, {
+    socketInstance = io({
       transports: ["websocket", "polling"],
       autoConnect: true,
     });
@@ -15,10 +15,6 @@ function getSocket(): Socket {
   return socketInstance;
 }
 
-/**
- * useDisplaySocket — used by the display screen page.
- * Joins the location's room and fires onRefresh when new ads are pushed.
- */
 export function useDisplaySocket(slug: string, onRefresh: () => void) {
   const socketRef = useRef<Socket | null>(null);
 
@@ -35,10 +31,6 @@ export function useDisplaySocket(slug: string, onRefresh: () => void) {
   }, [slug, onRefresh]);
 }
 
-/**
- * useDashboardSocket — used by admin/approver dashboards.
- * Fires onAdStatusChanged when any ad status updates.
- */
 export function useDashboardSocket(
   onAdStatusChanged: (payload: {
     adId: string;

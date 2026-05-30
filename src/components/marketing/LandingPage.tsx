@@ -381,7 +381,7 @@ export default function LandingPage() {
                   {links.map((link) => (
                     <li key={link}>
                       <a
-                        href={link === "Help & Support" ? "/help" : link === "Privacy policy" ? "/privacy" : link === "Terms of service" ? "/terms" : link === "Contact us" ? "/contact" : "#"}
+                        href={link === "Help & Support" ? "/help" : link === "Privacy policy" ? "/privacy" : link === "Terms of service" ? "/terms" : link === "Contact us" ? "/contact" : link === "Post an ad" ? (session ? "/dashboard/user" : "/register") : "#"}
                         className="text-sm text-[#6B8FA8] no-underline hover:text-white transition-colors"
                       >{link}</a>
                     </li>

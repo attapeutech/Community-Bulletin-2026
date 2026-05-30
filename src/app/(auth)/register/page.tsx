@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 const schema = z.object({
@@ -42,6 +42,16 @@ function FormError({ msg }: { msg: string | null }) {
   );
 }
 
+function FormSuccess({ msg }: { msg: string | null }) {
+  if (!msg) return null;
+  return (
+    <Alert className="mb-4 border-green-500 bg-green-50 text-green-800 [&>svg]:text-green-600">
+      <CheckCircle2 className="h-4 w-4" />
+      <AlertDescription>{msg}</AlertDescription>
+    </Alert>
+  );
+}
+
 const GoogleIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" className="shrink-0">
     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -54,12 +64,14 @@ const GoogleIcon = () => (
 export default function RegisterPage() {
   const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
+  const [formSuccess, setFormSuccess] = useState<string | null>(null);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
   async function onSubmit(data: FormData) {
     setFormError(null);
+    setFormSuccess(null);
     try {
       const check = await fetch("/api/auth/check-email", {
         method: "POST",
@@ -82,8 +94,8 @@ export default function RegisterPage() {
         setFormError(result.error.message ?? "Registration failed. Please try again.");
         return;
       }
+      setFormSuccess("Account created! Please check your email to verify your account.");
       toast.success("Account created! Please check your email to verify your account.");
-      router.push("/login");
     } catch {
       setFormError("Something went wrong. Please try again.");
     }
@@ -138,6 +150,7 @@ export default function RegisterPage() {
           <Link href="/privacy" className="text-accent no-underline">Privacy Policy</Link>.
         </p>
 
+        <FormSuccess msg={formSuccess} />
         <FormError msg={formError} />
 
         <Button

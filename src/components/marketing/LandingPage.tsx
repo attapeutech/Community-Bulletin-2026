@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Icon } from "@/components/layout/Icon";
 import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ArrowUp } from "lucide-react";
 
 const NAV_LINKS = [
   { label: "How it works", href: "#how-it-works" },
@@ -44,6 +44,8 @@ export default function LandingPage() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
     <div className="font-sans text-[#1A3A5C] overflow-x-hidden">
@@ -362,6 +364,15 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Scroll to top button */}
+      <button
+        onClick={scrollToTop}
+        aria-label="Scroll to top"
+        className={`fixed bottom-8 right-6 z-50 bg-[#1A3A5C] text-white w-11 h-11 rounded-full flex items-center justify-center shadow-lg hover:bg-[#E8563A] transition-all duration-300 ${scrolled ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}
+      >
+        <ArrowUp size={20} />
+      </button>
 
     </div>
   );

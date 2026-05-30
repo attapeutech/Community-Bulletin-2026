@@ -182,7 +182,7 @@ export default function LandingPage() {
 
           <p className="text-[clamp(15px,2vw,20px)] text-[#9DC4E0] leading-[1.7] max-w-[580px] mx-auto mb-10">
             CommunityBulletin puts your digital ad on screens inside local stores —
-            visible through the window and to every customer who walks in.
+            visible through the customers who walk in.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3.5 justify-center items-stretch sm:items-center">
@@ -324,7 +324,7 @@ export default function LandingPage() {
           <div>
             <div className="text-xs font-bold text-[#E8563A] tracking-[0.1em] uppercase mb-3">For store owners</div>
             <h2 className="font-serif text-[clamp(22px,3vw,36px)] font-bold text-white mb-4 leading-[1.3]">
-              Turn your store window into a revenue stream
+              Turn your store ad display spot into a revenue stream
             </h2>
             <p className="text-[15px] text-[#9DC4E0] leading-[1.7] mb-7">
               Install a digital screen in your store, register your location on CommunityBulletin,

@@ -211,31 +211,18 @@ function AvatarSection({ name, email, image }: { name: string; email: string; im
     setUploading(true);
 
     try {
-      // 1. Get presigned upload URL
-      const presignRes = await fetch("/api/upload/presign", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileName: file.name, contentType: file.type, folder: "avatars" }),
-      });
-      const presignJson = await presignRes.json();
-      if (!presignJson.success) throw new Error(presignJson.error ?? "Failed to get upload URL");
+      // 1. Upload to R2 via server (avoids browser CORS on R2)
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "avatars");
+      const uploadRes  = await fetch("/api/upload", { method: "POST", body: formData });
+      const uploadJson = await uploadRes.json();
+      if (!uploadJson.success) throw new Error(uploadJson.error ?? "Upload failed");
 
-      const { uploadUrl, publicUrl } = presignJson.data;
+      const { publicUrl } = uploadJson.data;
 
-      // 2. Upload directly to R2
-      const uploadRes = await fetch(uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
-      if (!uploadRes.ok) throw new Error("Upload to storage failed");
-
-      // 3. Save URL to user profile
-      const saveRes = await fetch("/api/user/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: publicUrl }),
-      });
+      // 2. Save URL to user profile
+      const saveRes  = await fetch("/api/user/profile", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ image: publicUrl }) });
       const saveJson = await saveRes.json();
       if (!saveRes.ok) throw new Error(saveJson.error ?? "Failed to save photo");
 

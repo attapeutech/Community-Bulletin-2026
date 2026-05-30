@@ -373,14 +373,17 @@ export default function LandingPage() {
             {[
               { title: "Advertise", links: ["Post an ad", "Browse locations", "How it works", "Pricing"] },
               { title: "For Stores", links: ["List your store", "Store dashboard", "Display setup"] },
-              { title: "Company", links: ["About us", "Contact", "Privacy policy", "Terms of service"] },
+              { title: "Company", links: ["About us", "Contact", "Help & Support", "Privacy policy", "Terms of service"] },
             ].map(({ title, links }) => (
               <div key={title}>
                 <div className="text-xs font-bold text-white mb-3.5 tracking-wider uppercase">{title}</div>
                 <ul className="space-y-2">
                   {links.map((link) => (
                     <li key={link}>
-                      <a href="#" className="text-sm text-[#6B8FA8] no-underline hover:text-white transition-colors">{link}</a>
+                      <a
+                        href={link === "Help & Support" ? "/help" : link === "Privacy policy" ? "/privacy" : link === "Terms of service" ? "/terms" : "#"}
+                        className="text-sm text-[#6B8FA8] no-underline hover:text-white transition-colors"
+                      >{link}</a>
                     </li>
                   ))}
                 </ul>

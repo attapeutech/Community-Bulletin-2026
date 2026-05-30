@@ -22,6 +22,7 @@ export default async function DashboardLayout({
     { href: "/dashboard/admin",       label: "Admin Panel",   roles: ["admin"] },
     { href: "/dashboard/admin/geo",   label: "Geography",     roles: ["admin"] },
     { href: "/dashboard/profile",     label: "Account",       roles: ["user", "store_owner", "approver", "admin"] },
+    { href: "/help",                   label: "Help & Support", roles: ["user", "store_owner", "approver", "admin"] },
   ].filter((item) => item.roles.includes(role));
 
   return (

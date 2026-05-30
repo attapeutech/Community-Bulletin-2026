@@ -53,7 +53,11 @@ export const auth = betterAuth({
     },
   },
 
-  trustedOrigins: [process.env.NEXT_PUBLIC_APP_URL!],
+  trustedOrigins: [
+    process.env.NEXT_PUBLIC_APP_URL!,
+    "https://communitybulletin.com",
+    "https://www.communitybulletin.com",
+  ],
 
   advanced: {
     generateId: () => randomUUID(),

@@ -9,6 +9,7 @@ import { AlertCircle, CheckCircle2, Upload } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -138,8 +139,7 @@ function PasswordSection() {
             <label className="block mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
               Current password
             </label>
-            <Input
-              type="password"
+            <PasswordInput
               placeholder="••••••••"
               {...register("currentPassword")}
               className={errors.currentPassword ? "border-red-300 bg-red-50" : "border-[#D1DDE8] bg-[#F7F9FC]"}
@@ -150,8 +150,7 @@ function PasswordSection() {
             <label className="block mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
               New password
             </label>
-            <Input
-              type="password"
+            <PasswordInput
               placeholder="Min. 8 characters"
               {...register("newPassword")}
               className={errors.newPassword ? "border-red-300 bg-red-50" : "border-[#D1DDE8] bg-[#F7F9FC]"}
@@ -162,8 +161,7 @@ function PasswordSection() {
             <label className="block mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
               Confirm new password
             </label>
-            <Input
-              type="password"
+            <PasswordInput
               placeholder="Re-enter new password"
               {...register("confirm")}
               className={errors.confirm ? "border-red-300 bg-red-50" : "border-[#D1DDE8] bg-[#F7F9FC]"}

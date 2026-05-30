@@ -11,6 +11,7 @@ import { signIn, sendVerificationEmail, useSession } from "@/lib/auth/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -168,8 +169,7 @@ export default function LoginPage() {
           <Label className="block mb-1.5 text-[11px] font-semibold text-foreground/70 uppercase tracking-[0.04em]">
             Password
           </Label>
-          <Input
-            type="password"
+          <PasswordInput
             placeholder="••••••••"
             {...register("password")}
             className={errors.password ? "border-destructive bg-destructive/5" : ""}

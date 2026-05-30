@@ -12,6 +12,7 @@ import { signIn, signUp, useSession } from "@/lib/auth/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
@@ -154,7 +155,7 @@ function RegisterForm() {
           <Label className="block mb-1.5 text-[11px] font-semibold text-foreground/70 uppercase tracking-[0.04em]">
             Password
           </Label>
-          <Input type="password" placeholder="Min. 8 characters" {...register("password")} className={errors.password ? "border-destructive bg-destructive/5" : ""} />
+          <PasswordInput placeholder="Min. 8 characters" {...register("password")} className={errors.password ? "border-destructive bg-destructive/5" : ""} />
           <FieldError msg={errors.password?.message} />
         </div>
 
@@ -162,7 +163,7 @@ function RegisterForm() {
           <Label className="block mb-1.5 text-[11px] font-semibold text-foreground/70 uppercase tracking-[0.04em]">
             Confirm password
           </Label>
-          <Input type="password" placeholder="Re-enter password" {...register("confirm")} className={errors.confirm ? "border-destructive bg-destructive/5" : ""} />
+          <PasswordInput placeholder="Re-enter password" {...register("confirm")} className={errors.confirm ? "border-destructive bg-destructive/5" : ""} />
           <FieldError msg={errors.confirm?.message} />
         </div>
 

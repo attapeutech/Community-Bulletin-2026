@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 /* ── Field-level validation error ──────────────────────────── */
@@ -181,9 +181,91 @@ function PasswordSection() {
   );
 }
 
-/* ── Avatar placeholder ───────────────────────────────────── */
-function AvatarSection({ name, email }: { name: string; email: string }) {
+/* ── Avatar upload ────────────────────────────────────────── */
+const ALLOWED = ["image/jpeg", "image/png", "image/webp"];
+const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+
+function AvatarSection({ name, email, image }: { name: string; email: string; image: string | null }) {
+  const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [preview, setPreview] = useState<string | null>(image);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const initials = name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!fileRef.current) return;
+    fileRef.current.value = "";
+    if (!file) return;
+
+    setError(null); setSuccess(null);
+
+    if (!ALLOWED.includes(file.type)) { setError("JPEG, PNG or WebP only."); return; }
+    if (file.size > MAX_BYTES) { setError("File must be under 5 MB."); return; }
+
+    // Local preview immediately
+    const objectUrl = URL.createObjectURL(file);
+    setPreview(objectUrl);
+    setUploading(true);
+
+    try {
+      // 1. Get presigned upload URL
+      const presignRes = await fetch("/api/upload/presign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileName: file.name, contentType: file.type, folder: "avatars" }),
+      });
+      const presignJson = await presignRes.json();
+      if (!presignJson.success) throw new Error(presignJson.error ?? "Failed to get upload URL");
+
+      const { uploadUrl, publicUrl } = presignJson.data;
+
+      // 2. Upload directly to R2
+      const uploadRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!uploadRes.ok) throw new Error("Upload to storage failed");
+
+      // 3. Save URL to user profile
+      const saveRes = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: publicUrl }),
+      });
+      const saveJson = await saveRes.json();
+      if (!saveRes.ok) throw new Error(saveJson.error ?? "Failed to save photo");
+
+      setPreview(publicUrl);
+      setSuccess("Profile photo updated.");
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message ?? "Upload failed. Please try again.");
+      setPreview(image); // revert preview on error
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleRemove() {
+    setError(null); setSuccess(null); setUploading(true);
+    try {
+      const res  = await fetch("/api/user/profile", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ image: null }) });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Failed to remove photo");
+      setPreview(null);
+      setSuccess("Profile photo removed.");
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message ?? "Failed to remove. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
     <Card className="mb-6 rounded-xl border-[#E2EAF2]">
       <CardHeader className="pb-1">
@@ -192,20 +274,75 @@ function AvatarSection({ name, email }: { name: string; email: string }) {
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-5">
-          <Avatar className="w-[72px] h-[72px] shrink-0">
-            <AvatarFallback className="bg-[#1A3A5C] text-white text-2xl font-bold">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <div className="text-sm font-semibold text-[#1A3A5C] mb-0.5">{name}</div>
-            <div className="text-xs text-[#6B8FA8] mb-2.5">{email}</div>
-            <div className="inline-flex items-center gap-1.5 text-xs text-[#6B8FA8] bg-[#F4F7FB] border border-dashed border-[#D1DDE8] rounded-lg px-3.5 py-1.5">
-              <Upload className="w-3.5 h-3.5 text-[#9DC4E0]" />
-              Photo upload coming soon — Cloudflare R2 integration pending
+          {/* Avatar with click-to-upload */}
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="relative shrink-0 group rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A3A5C]"
+            title="Click to upload photo"
+          >
+            <Avatar className="w-[72px] h-[72px]">
+              {preview && <AvatarImage src={preview} alt={name} className="object-cover" />}
+              <AvatarFallback className="bg-[#1A3A5C] text-white text-2xl font-bold">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            {/* Hover overlay */}
+            <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              {uploading
+                ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                : <Upload className="w-5 h-5 text-white" />
+              }
             </div>
+          </button>
+
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={handleFile}
+          />
+
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold text-[#1A3A5C] mb-0.5 truncate">{name}</div>
+            <div className="text-xs text-[#6B8FA8] mb-3">{email}</div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={uploading}
+                onClick={() => fileRef.current?.click()}
+                className="h-8 text-xs border-[#D1DDE8] text-[#1A3A5C]"
+              >
+                <Upload className="w-3.5 h-3.5 mr-1.5" />
+                {uploading ? "Uploading…" : preview ? "Change photo" : "Upload photo"}
+              </Button>
+              {preview && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  disabled={uploading}
+                  onClick={handleRemove}
+                  className="h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  Remove
+                </Button>
+              )}
+            </div>
+            <p className="text-[11px] text-[#6B8FA8] mt-2">JPEG, PNG or WebP · max 5 MB</p>
           </div>
         </div>
+
+        {(error || success) && (
+          <div className="mt-4">
+            <InlineError msg={error} />
+            <InlineSuccess msg={success} />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -274,10 +411,12 @@ function TwoFactorSection({ enabled }: { enabled: boolean }) {
 export function ProfileClient({
   name,
   email,
+  image,
   twoFactorEnabled,
 }: {
   name: string;
   email: string;
+  image: string | null;
   twoFactorEnabled: boolean;
 }) {
   return (
@@ -289,7 +428,7 @@ export function ProfileClient({
         Manage your profile and security preferences.
       </p>
 
-      <AvatarSection name={name} email={email} />
+      <AvatarSection name={name} email={email} image={image} />
       <NameSection initialName={name} />
       <PasswordSection />
       <TwoFactorSection enabled={twoFactorEnabled} />

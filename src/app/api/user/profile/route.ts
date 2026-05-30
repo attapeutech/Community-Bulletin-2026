@@ -8,6 +8,7 @@ import { z } from "zod";
 const schema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").optional(),
   twoFactorEnabled: z.boolean().optional(),
+  image: z.string().url().nullable().optional(),
 });
 
 export async function PATCH(req: NextRequest) {
@@ -23,7 +24,8 @@ export async function PATCH(req: NextRequest) {
   const userId = session.user.id as string;
   const updates: Record<string, unknown> = { updatedAt: new Date() };
 
-  if (parsed.data.name !== undefined) updates.name = parsed.data.name;
+  if (parsed.data.name  !== undefined) updates.name  = parsed.data.name;
+  if (parsed.data.image !== undefined) updates.image = parsed.data.image;
   if (parsed.data.twoFactorEnabled !== undefined) {
     updates.twoFactorEnabled = parsed.data.twoFactorEnabled;
     // When disabling 2FA, clear all verified sessions for this user

@@ -16,7 +16,7 @@ const FAQ_CATEGORIES = [
     color: "#4A90C4",
     faqs: [
       { q: "How do I create an account?", a: <>Click <Link href="/register" className="text-[#4A90C4] font-medium hover:underline">Get started free</Link> on the home page, fill in your name, email and password, then verify your email. You'll be ready to post ads within minutes.</> },
-      { q: "How do I post my first ad?", a: "After logging in, go to 'My Ads' in your dashboard and click 'Post a New Ad'. Upload your image, choose a store location, select your run dates, and complete the $100 payment. Your ad will be reviewed within 24 hours." },
+      { q: "How do I post my first ad?", a: <>After logging in, go to <Link href="https://communitybulletin.com/dashboard/user" className="text-[#4A90C4] font-medium hover:underline">My Ads</Link> in your dashboard and click 'Post a New Ad'. Upload your image, choose a store location, select your run dates, and complete the $100 payment. Your ad will be reviewed within 24 hours.</> },
       { q: "What image formats are accepted?", a: "We accept JPEG, PNG, WebP, and GIF files up to 10 MB. For best display quality we recommend a 1920×1080 (16:9) or 1080×1920 (9:16) image at 72–150 DPI." },
       { q: "How long does a campaign run?", a: "Each campaign runs for 1 week (7 days) from the approved start date. You can post multiple campaigns to extend your reach." },
     ],

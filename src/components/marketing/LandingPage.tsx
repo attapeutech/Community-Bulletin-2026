@@ -49,7 +49,7 @@ export default function LandingPage() {
     <div className="font-sans text-[#1A3A5C] overflow-x-hidden">
 
       {/* ── NAVBAR ── */}
-      <nav className={`sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-[#D8E4EE] h-16 flex items-center justify-between px-4 sm:px-8 transition-shadow duration-200 ${scrolled ? "shadow-md" : "shadow-none"}`}>
+      <nav className={`fixed top-0 left-0 right-0 w-full z-50 bg-white/95 backdrop-blur-sm border-b border-[#D8E4EE] h-16 flex items-center justify-between px-4 sm:px-8 transition-shadow duration-200 ${scrolled ? "shadow-md" : "shadow-none"}`}>
         {/* Logo */}
         <Link href="/" className="no-underline flex items-center gap-2.5">
           <div className="bg-[#E8EFF6] rounded-[10px] p-1.5 flex">
@@ -109,7 +109,7 @@ export default function LandingPage() {
       )}
 
       {/* ── HERO ── */}
-      <section className="relative bg-gradient-to-br from-[#1A3A5C] via-[#0F2540] to-[#1A3A5C] px-4 sm:px-8 pt-20 sm:pt-24 pb-16 sm:pb-20 text-center overflow-hidden">
+      <section className="relative bg-gradient-to-br from-[#1A3A5C] via-[#0F2540] to-[#1A3A5C] px-4 sm:px-8 pt-36 sm:pt-40 pb-16 sm:pb-20 text-center overflow-hidden">
         <div className="absolute top-[-100px] right-[-100px] w-80 h-80 rounded-full bg-[#4A90C4]/[0.08] pointer-events-none" />
         <div className="absolute bottom-[-80px] left-[-80px] w-64 h-64 rounded-full bg-[#E8563A]/[0.06] pointer-events-none" />
 

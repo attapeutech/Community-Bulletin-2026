@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, X, RefreshCw } from "lucide-react";
+import { Check, X, RefreshCw, Trash2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -105,6 +105,8 @@ export default function AdminPanelClient({
   const [overriding, setOverriding] = useState<string | null>(null);
   const [adToast, setAdToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [overrideNote, setOverrideNote] = useState<Record<string, string>>({});
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   function showUserToast(msg: string, ok: boolean) {
     setUserToast({ msg, ok });
@@ -155,6 +157,22 @@ export default function AdminPanelClient({
       showAdToast(e.message || "Override failed", false);
     } finally {
       setOverriding(null);
+    }
+  }
+
+  async function deleteAd(adId: string) {
+    setDeleting(adId);
+    try {
+      const res = await fetch(`/api/ads/${adId}`, { method: "DELETE" });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      setAds(prev => prev.filter(a => a.id !== adId));
+      showAdToast("Ad deleted", true);
+    } catch (e: any) {
+      showAdToast(e.message || "Failed to delete ad", false);
+    } finally {
+      setDeleting(null);
+      setConfirmDelete(null);
     }
   }
 
@@ -415,6 +433,40 @@ export default function AdminPanelClient({
                           <Link href={`/dashboard/user/ads/${ad.id}`} className="text-xs text-[#4A90C4] no-underline px-2 py-1">
                             Details ↗
                           </Link>
+                          {/* Delete — two-step inline confirmation */}
+                          {confirmDelete === ad.id ? (
+                            <span className="flex items-center gap-1 ml-1">
+                              <span className="text-[11px] text-red-700 font-semibold">Delete?</span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={deleting === ad.id}
+                                onClick={() => deleteAd(ad.id)}
+                                className="px-2 py-0.5 h-auto rounded text-[11px] font-semibold border-red-300 text-red-700 bg-red-50 hover:bg-red-100"
+                              >
+                                {deleting === ad.id ? "…" : "Yes"}
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={deleting === ad.id}
+                                onClick={() => setConfirmDelete(null)}
+                                className="px-2 py-0.5 h-auto rounded text-[11px] font-semibold border-[#D8E4EE] text-[#6B8FA8] bg-white hover:bg-[#F0F5FA]"
+                              >
+                                No
+                              </Button>
+                            </span>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setConfirmDelete(ad.id)}
+                              className="ml-1 px-1.5 py-0.5 h-auto text-[#9DC4E0] hover:text-red-600 hover:bg-red-50"
+                              title="Delete ad"
+                            >
+                              <Trash2 size={13} />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>

@@ -82,6 +82,7 @@ export default function DisplayPage() {
         setError(json.error || "Location not found");
         return;
       }
+      setError(""); // clear any prior error on success
       setLocation(json.data.location);
       setAds(json.data.ads);
     } catch {
@@ -95,10 +96,19 @@ export default function DisplayPage() {
     fetchAds();
   }, [fetchAds]);
 
-  // Polling fallback — refreshes every 30 seconds regardless of Socket.io
+  // Polling fallback — refreshes every 10 seconds regardless of Socket.io
   useEffect(() => {
-    const id = setInterval(fetchAds, 30_000);
+    const id = setInterval(fetchAds, 10_000);
     return () => clearInterval(id);
+  }, [fetchAds]);
+
+  // Refresh when tab/screen becomes visible (TV kiosks throttle hidden tabs)
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") fetchAds();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
   }, [fetchAds]);
 
   // Reinitialise Embla after ads change

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, X, RefreshCw, Trash2 } from "lucide-react";
+import { Check, X, RefreshCw, Trash2, MonitorPlay } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -108,6 +108,10 @@ export default function AdminPanelClient({
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
 
+  // Force-refresh display screens
+  const [refreshingSlug, setRefreshingSlug] = useState<string | null>(null);
+  const uniqueLocations = [...new Map(ads.map(a => [a.location.slug, a.location])).values()];
+
   function showUserToast(msg: string, ok: boolean) {
     setUserToast({ msg, ok });
     setTimeout(() => setUserToast(null), 3500);
@@ -173,6 +177,24 @@ export default function AdminPanelClient({
     } finally {
       setDeleting(null);
       setConfirmDelete(null);
+    }
+  }
+
+  async function forceRefresh(slug: string) {
+    setRefreshingSlug(slug);
+    try {
+      const res = await fetch("/api/admin/display/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      showAdToast(`Refresh sent to display:${slug}`, true);
+    } catch (e: any) {
+      showAdToast(e.message || "Failed to send refresh", false);
+    } finally {
+      setRefreshingSlug(null);
     }
   }
 
@@ -272,6 +294,44 @@ export default function AdminPanelClient({
               </Button>
             </CardContent>
           </Card>
+
+          {/* Display screen force-refresh */}
+          {uniqueLocations.length > 0 && (
+            <Card className="rounded-xl border-[#D8E4EE] overflow-hidden mt-5">
+              <CardHeader className="px-6 py-4 border-b border-[#D8E4EE]">
+                <CardTitle className="font-serif text-[17px] text-[#1A3A5C] flex items-center gap-2">
+                  <MonitorPlay size={17} className="text-[#4A90C4]" />
+                  Display Screens
+                </CardTitle>
+                <p className="text-xs text-[#6B8FA8] mt-1">Force-push a refresh to all display screens at a location.</p>
+              </CardHeader>
+              <CardContent className="p-5 flex flex-wrap gap-3">
+                {uniqueLocations.map(loc => (
+                  <div key={loc.slug} className="flex items-center gap-2 bg-[#F7F9FC] border border-[#D8E4EE] rounded-lg px-4 py-2.5">
+                    <span className="text-[13px] font-semibold text-[#1A3A5C]">{loc.storeName}</span>
+                    <span className="text-[11px] text-[#6B8FA8]">{loc.slug}</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={refreshingSlug === loc.slug}
+                      onClick={() => forceRefresh(loc.slug)}
+                      className="ml-2 h-auto px-3 py-1 text-[11px] font-semibold border-[#4A90C4] text-[#4A90C4] bg-blue-50 hover:bg-blue-100"
+                    >
+                      <RefreshCw size={11} className={cn("mr-1", refreshingSlug === loc.slug && "animate-spin")} />
+                      {refreshingSlug === loc.slug ? "Sending…" : "Force Refresh"}
+                    </Button>
+                    <Link
+                      href={`/display/${loc.slug}`}
+                      target="_blank"
+                      className="text-[11px] text-[#4A90C4] no-underline hover:underline"
+                    >
+                      Preview ↗
+                    </Link>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* USERS TAB */}

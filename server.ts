@@ -31,8 +31,8 @@ app.prepare().then(() => {
     socket.on("join:display", (slug: string) => {
       socket.join(`display:${slug}`);
       console.log(`[Socket] ${socket.id} joined display:${slug}`);
-      // If a refresh was emitted in the last 60 seconds, replay it immediately
-      if (lastRefresh[slug] && Date.now() - lastRefresh[slug] < 60_000) {
+      // If a refresh was emitted in the last 5 minutes, replay it so recovering screens catch up
+      if (lastRefresh[slug] && Date.now() - lastRefresh[slug] < 300_000) {
         socket.emit("ads:refresh", { slug });
       }
     });

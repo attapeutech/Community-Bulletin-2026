@@ -22,10 +22,17 @@ export function useDisplaySocket(slug: string, onRefresh: () => void) {
     const socket = getSocket();
     socketRef.current = socket;
 
-    socket.emit("join:display", slug);
+    function joinRoom() {
+      socket.emit("join:display", slug);
+    }
+
+    // Re-join on every connect/reconnect so we're always in the room
+    if (socket.connected) joinRoom();
+    socket.on("connect", joinRoom);
     socket.on("ads:refresh", onRefresh);
 
     return () => {
+      socket.off("connect", joinRoom);
       socket.off("ads:refresh", onRefresh);
     };
   }, [slug, onRefresh]);
@@ -40,10 +47,17 @@ export function useDashboardSocket(
 ) {
   useEffect(() => {
     const socket = getSocket();
-    socket.emit("join:dashboard");
+
+    function joinRoom() {
+      socket.emit("join:dashboard");
+    }
+
+    if (socket.connected) joinRoom();
+    socket.on("connect", joinRoom);
     socket.on("ad:status_changed", onAdStatusChanged);
 
     return () => {
+      socket.off("connect", joinRoom);
       socket.off("ad:status_changed", onAdStatusChanged);
     };
   }, [onAdStatusChanged]);

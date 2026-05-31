@@ -24,6 +24,9 @@ export function useDisplaySocket(slug: string, onRefresh: () => void) {
 
     function joinRoom() {
       socket.emit("join:display", slug);
+      // Fetch latest ads immediately on every (re)connect — don't rely on
+      // socket event delivery which can be lost during polling reconnects
+      onRefresh();
     }
 
     // Re-join on every connect/reconnect so we're always in the room

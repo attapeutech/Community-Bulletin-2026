@@ -10,6 +10,9 @@ export function notifyDisplayScreen(slug: string) {
   const io = getIO();
   if (io) {
     console.log(`[Socket] Emitting ads:refresh to display:${slug}`);
+    // Record refresh time so late-joining clients get an immediate replay
+    const lastRefresh = (global as any).__lastRefresh as Record<string, number> | undefined;
+    if (lastRefresh) lastRefresh[slug] = Date.now();
     io.to(`display:${slug}`).emit("ads:refresh", { slug });
   }
 }

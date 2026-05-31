@@ -22,12 +22,19 @@ app.prepare().then(() => {
     transports: ["polling", "websocket"],
   });
 
+  // Track last refresh time per location slug so late-joining clients get an immediate refresh
+  const lastRefresh: Record<string, number> = {};
+
   io.on("connection", (socket) => {
     console.log(`[Socket] Client connected: ${socket.id}`);
 
     socket.on("join:display", (slug: string) => {
       socket.join(`display:${slug}`);
       console.log(`[Socket] ${socket.id} joined display:${slug}`);
+      // If a refresh was emitted in the last 60 seconds, replay it immediately
+      if (lastRefresh[slug] && Date.now() - lastRefresh[slug] < 60_000) {
+        socket.emit("ads:refresh", { slug });
+      }
     });
 
     socket.on("join:dashboard", () => {
@@ -39,6 +46,8 @@ app.prepare().then(() => {
       console.log(`[Socket] Client disconnected: ${socket.id}`);
     });
   });
+
+  (global as any).__lastRefresh = lastRefresh;
 
   // Make io available to API routes via global
   (global as any).__io = io;

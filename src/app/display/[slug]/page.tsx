@@ -95,6 +95,12 @@ export default function DisplayPage() {
     fetchAds();
   }, [fetchAds]);
 
+  // Polling fallback — refreshes every 30 seconds regardless of Socket.io
+  useEffect(() => {
+    const id = setInterval(fetchAds, 30_000);
+    return () => clearInterval(id);
+  }, [fetchAds]);
+
   // Reinitialise Embla after ads change
   useEffect(() => {
     emblaApi?.reInit();

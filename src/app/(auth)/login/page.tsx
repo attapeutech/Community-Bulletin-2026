@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -50,8 +50,11 @@ const GoogleIcon = () => (
 export default function LoginPage() {
   const router = useRouter();
   const { data: session } = useSession();
-  if (session) { router.replace("/dashboard"); return null; }
   const [formError, setFormError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (session) router.replace("/dashboard");
+  }, [session, router]);
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
@@ -78,7 +81,7 @@ export default function LoginPage() {
         password: data.password,
         fetchOptions: {
           onSuccess: () => {
-            router.push("/dashboard");
+            window.location.href = "/dashboard";
           },
           onError: (ctx) => {
             const msg = ctx.error?.message ?? "";

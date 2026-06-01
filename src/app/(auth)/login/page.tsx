@@ -73,7 +73,7 @@ export default function LoginPage() {
         return;
       }
 
-      const result = await signIn.email({ email: data.email, password: data.password, callbackURL: "/dashboard" });
+      const result = await signIn.email({ email: data.email, password: data.password });
       if (result.error) {
         const msg = result.error.message ?? "";
         if (msg.toLowerCase().includes("email not verified") || msg.toLowerCase().includes("email_not_verified")) {

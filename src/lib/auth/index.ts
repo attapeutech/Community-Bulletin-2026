@@ -1,9 +1,10 @@
 import { betterAuth } from "better-auth";
+import { createAuthMiddleware } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { randomUUID } from "node:crypto";
 import { db } from "@/lib/db/client";
 import * as schema from "@/lib/db/schema";
-import { users } from "@/lib/db/schema";
+import { users, sessions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { sendVerificationEmail, sendPasswordResetEmail } from "@/lib/email/templates";
 
@@ -65,6 +66,33 @@ export const auth = betterAuth({
     generateId: () => randomUUID(),
   },
 
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === "/sign-out") {
+        try {
+          const sessionToken = ctx.headers?.get("cookie")
+            ?.split(";")
+            .find((c: string) => c.trim().startsWith("better-auth.session_token="))
+            ?.split("=")[1]
+            ?.trim();
+          if (sessionToken) {
+            const token = decodeURIComponent(sessionToken).split(".")[0];
+            const [session] = await db
+              .select({ userId: sessions.userId })
+              .from(sessions)
+              .where(eq(sessions.token, token))
+              .limit(1);
+            if (session?.userId) {
+              await db.update(users)
+                .set({ lastLogoutAt: new Date() })
+                .where(eq(users.id, session.userId));
+            }
+          }
+        } catch { /* non-blocking */ }
+      }
+    }),
+  },
+
   databaseHooks: {
     session: {
       create: {
@@ -84,15 +112,6 @@ export const auth = betterAuth({
             .set({ lastLoginAt: new Date() })
             .where(eq(users.id, session.userId as string))
             .catch(console.error);
-        },
-      },
-      delete: {
-        before: async (session: any) => {
-          await db.update(users)
-            .set({ lastLogoutAt: new Date() })
-            .where(eq(users.id, session.userId as string))
-            .catch(console.error);
-          return { data: session };
         },
       },
     },

@@ -57,6 +57,8 @@ type User = {
   createdAt: string;
   lastLoginAt: string | null;
   lastLogoutAt: string | null;
+  banned: boolean;
+  banReason: string | null;
 };
 
 type Ad = {
@@ -101,6 +103,9 @@ export default function AdminPanelClient({
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [roleChanging, setRoleChanging] = useState<string | null>(null);
   const [userToast, setUserToast] = useState<{ msg: string; ok: boolean } | null>(null);
+  const [banning, setBanning] = useState<string | null>(null);
+  const [banReasonInput, setBanReasonInput] = useState<Record<string, string>>({});
+  const [confirmBan, setConfirmBan] = useState<string | null>(null);
 
   // Ads state
   const [ads, setAds] = useState<Ad[]>(initialAds);
@@ -141,6 +146,30 @@ export default function AdminPanelClient({
       showUserToast(e.message || "Failed to update role", false);
     } finally {
       setRoleChanging(null);
+    }
+  }
+
+  async function banUser(userId: string, banned: boolean) {
+    setBanning(userId);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/ban`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ banned, banReason: banReasonInput[userId] ?? "" }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      setUsers(prev => prev.map(u => u.id === userId
+        ? { ...u, banned, banReason: banned ? (banReasonInput[userId] ?? null) : null }
+        : u
+      ));
+      showUserToast(banned ? "User banned" : "User unbanned", true);
+    } catch (e: any) {
+      showUserToast(e.message || "Failed to update ban status", false);
+    } finally {
+      setBanning(null);
+      setConfirmBan(null);
+      setBanReasonInput(r => { const n = { ...r }; delete n[userId]; return n; });
     }
   }
 
@@ -380,6 +409,7 @@ export default function AdminPanelClient({
                     <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Last Login</th>
                     <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Last Logout</th>
                     <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Change Role</th>
+                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Ban</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -392,6 +422,7 @@ export default function AdminPanelClient({
                           {u.name}
                           {isSelf && <span className="ml-1.5 text-[10px] text-[#6B8FA8]">(you)</span>}
                           {u.twoFactorEnabled && <span title="2FA enabled" className="ml-1.5 text-[10px] text-green-700">2FA</span>}
+                          {u.banned && <span className="ml-1.5 text-[10px] font-semibold text-white bg-red-500 rounded px-1.5 py-0.5">Banned</span>}
                         </td>
                         <td className="px-4 py-3 text-[#6B8FA8]">{u.email}</td>
                         <td className="px-4 py-3">
@@ -427,6 +458,61 @@ export default function AdminPanelClient({
                                 <SelectItem value="admin">Admin</SelectItem>
                               </SelectContent>
                             </Select>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 min-w-[160px]">
+                          {isSelf ? (
+                            <span className="text-xs text-[#6B8FA8]">—</span>
+                          ) : u.banned ? (
+                            <div className="flex flex-col gap-1">
+                              {u.banReason && <span className="text-[11px] text-red-600 italic">"{u.banReason}"</span>}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={banning === u.id}
+                                onClick={() => banUser(u.id, false)}
+                                className="h-auto px-3 py-1 text-[11px] font-semibold border-green-300 text-green-700 bg-green-50 hover:bg-green-100"
+                              >
+                                {banning === u.id ? "…" : "Unban"}
+                              </Button>
+                            </div>
+                          ) : confirmBan === u.id ? (
+                            <div className="flex flex-col gap-1.5">
+                              <Input
+                                placeholder="Reason (optional)"
+                                value={banReasonInput[u.id] ?? ""}
+                                onChange={e => setBanReasonInput(r => ({ ...r, [u.id]: e.target.value }))}
+                                className="h-7 text-xs border-[#D8E4EE] bg-[#F7F9FC] w-36"
+                              />
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={banning === u.id}
+                                  onClick={() => banUser(u.id, true)}
+                                  className="h-auto px-2.5 py-1 text-[11px] font-semibold border-red-300 text-red-700 bg-red-50 hover:bg-red-100"
+                                >
+                                  {banning === u.id ? "…" : "Confirm"}
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setConfirmBan(null)}
+                                  className="h-auto px-2.5 py-1 text-[11px] font-semibold border-[#D8E4EE] text-[#6B8FA8] bg-white"
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setConfirmBan(u.id)}
+                              className="h-auto px-3 py-1 text-[11px] font-semibold border-red-200 text-red-600 bg-red-50 hover:bg-red-100"
+                            >
+                              Ban
+                            </Button>
                           )}
                         </td>
                       </tr>

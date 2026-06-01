@@ -49,6 +49,8 @@ export default async function AdminDashboard() {
       createdAt: users.createdAt,
       lastLoginAt: users.lastLoginAt,
       lastLogoutAt: users.lastLogoutAt,
+      banned: users.banned,
+      banReason: users.banReason,
     })
     .from(users)
     .orderBy(desc(users.createdAt));

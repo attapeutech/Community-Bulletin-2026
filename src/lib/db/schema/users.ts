@@ -26,6 +26,8 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   lastLoginAt: timestamp("last_login_at"),
   lastLogoutAt: timestamp("last_logout_at"),
+  banned: boolean("banned").default(false).notNull(),
+  banReason: text("ban_reason"),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({

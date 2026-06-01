@@ -68,6 +68,17 @@ export const auth = betterAuth({
   databaseHooks: {
     session: {
       create: {
+        before: async (session) => {
+          const [user] = await db
+            .select({ banned: users.banned, banReason: users.banReason })
+            .from(users)
+            .where(eq(users.id, session.userId as string))
+            .limit(1);
+          if (user?.banned) {
+            throw new Error(user.banReason || "Your account has been suspended. Please contact support.");
+          }
+          return { data: session };
+        },
         after: async (session) => {
           await db.update(users)
             .set({ lastLoginAt: new Date() })

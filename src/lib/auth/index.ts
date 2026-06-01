@@ -1,5 +1,5 @@
 import { betterAuth } from "better-auth";
-import { createAuthMiddleware } from "better-auth/api";
+import { createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { randomUUID } from "node:crypto";
 import { db } from "@/lib/db/client";
@@ -70,23 +70,12 @@ export const auth = betterAuth({
     before: createAuthMiddleware(async (ctx) => {
       if (ctx.path === "/sign-out") {
         try {
-          const sessionToken = ctx.headers?.get("cookie")
-            ?.split(";")
-            .find((c: string) => c.trim().startsWith("better-auth.session_token="))
-            ?.split("=")[1]
-            ?.trim();
-          if (sessionToken) {
-            const token = decodeURIComponent(sessionToken).split(".")[0];
-            const [session] = await db
-              .select({ userId: sessions.userId })
-              .from(sessions)
-              .where(eq(sessions.token, token))
-              .limit(1);
-            if (session?.userId) {
-              await db.update(users)
-                .set({ lastLogoutAt: new Date() })
-                .where(eq(users.id, session.userId));
-            }
+          const session = await getSessionFromCtx(ctx);
+          const userId = session?.session?.userId;
+          if (userId) {
+            await db.update(users)
+              .set({ lastLogoutAt: new Date() })
+              .where(eq(users.id, userId));
           }
         } catch { /* non-blocking */ }
       }

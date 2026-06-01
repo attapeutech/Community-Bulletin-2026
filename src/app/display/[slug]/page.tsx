@@ -306,16 +306,18 @@ function HeaderBar({ locationName }: { locationName: string }) {
     }}>
       {/* Logo */}
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{
-          fontFamily: "Georgia,serif",
-          fontSize: 16,
-          fontWeight: 700,
-          color: "#fff",
-          letterSpacing: "0.02em",
-        }}>
-          Community <span style={{ color: "#E8563A" }}>Bulletin</span>
-          <span style={{ color: "#4A90C4", fontSize: 12 }}>.com</span>
-        </div>
+        <a href="/" style={{ textDecoration: "none" }}>
+          <div style={{
+            fontFamily: "Georgia,serif",
+            fontSize: 16,
+            fontWeight: 700,
+            color: "#fff",
+            letterSpacing: "0.02em",
+          }}>
+            Community <span style={{ color: "#E8563A" }}>Bulletin</span>
+            <span style={{ color: "#4A90C4", fontSize: 12 }}>.com</span>
+          </div>
+        </a>
         <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.15)" }} />
         <div style={{ fontSize: 13, color: "#9DC4E0" }}>{locationName}</div>
       </div>

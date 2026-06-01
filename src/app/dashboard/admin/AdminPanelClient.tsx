@@ -55,6 +55,8 @@ type User = {
   emailVerified: boolean;
   twoFactorEnabled: boolean;
   createdAt: string;
+  lastLoginAt: string | null;
+  lastLogoutAt: string | null;
 };
 
 type Ad = {
@@ -375,6 +377,8 @@ export default function AdminPanelClient({
                     <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Email</th>
                     <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Role</th>
                     <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Joined</th>
+                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Last Login</th>
+                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Last Logout</th>
                     <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Change Role</th>
                   </tr>
                 </thead>
@@ -397,6 +401,12 @@ export default function AdminPanelClient({
                         </td>
                         <td className="px-4 py-3 text-[#6B8FA8] text-xs">
                           {new Date(u.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3 text-[#6B8FA8] text-xs whitespace-nowrap">
+                          {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : <span className="text-[#CBD5E0]">—</span>}
+                        </td>
+                        <td className="px-4 py-3 text-[#6B8FA8] text-xs whitespace-nowrap">
+                          {u.lastLogoutAt ? new Date(u.lastLogoutAt).toLocaleString() : <span className="text-[#CBD5E0]">—</span>}
                         </td>
                         <td className="px-4 py-3">
                           {isSelf ? (

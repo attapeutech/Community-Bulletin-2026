@@ -3,6 +3,8 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { randomUUID } from "node:crypto";
 import { db } from "@/lib/db/client";
 import * as schema from "@/lib/db/schema";
+import { users } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { sendVerificationEmail, sendPasswordResetEmail } from "@/lib/email/templates";
 
 export const auth = betterAuth({
@@ -61,6 +63,28 @@ export const auth = betterAuth({
 
   advanced: {
     generateId: () => randomUUID(),
+  },
+
+  databaseHooks: {
+    session: {
+      create: {
+        after: async (session) => {
+          await db.update(users)
+            .set({ lastLoginAt: new Date() })
+            .where(eq(users.id, session.userId as string))
+            .catch(console.error);
+        },
+      },
+      delete: {
+        before: async (session: any) => {
+          await db.update(users)
+            .set({ lastLogoutAt: new Date() })
+            .where(eq(users.id, session.userId as string))
+            .catch(console.error);
+          return { data: session };
+        },
+      },
+    },
   },
 });
 

@@ -47,6 +47,8 @@ export default async function AdminDashboard() {
       emailVerified: users.emailVerified,
       twoFactorEnabled: users.twoFactorEnabled,
       createdAt: users.createdAt,
+      lastLoginAt: users.lastLoginAt,
+      lastLogoutAt: users.lastLogoutAt,
     })
     .from(users)
     .orderBy(desc(users.createdAt));
@@ -76,6 +78,8 @@ export default async function AdminDashboard() {
   const serializedUsers = allUsers.map(u => ({
     ...u,
     createdAt: u.createdAt.toISOString(),
+    lastLoginAt: u.lastLoginAt?.toISOString() ?? null,
+    lastLogoutAt: u.lastLogoutAt?.toISOString() ?? null,
   }));
 
   const serializedAds = allAds.map(a => ({

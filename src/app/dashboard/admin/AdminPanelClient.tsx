@@ -326,7 +326,7 @@ export default function AdminPanelClient({
             <StatCard label="Approved" value={stats.approvedAds} accentClass="text-green-800" onClick={() => { setStatusFilter("approved"); setActiveTab("ads"); }} />
             <StatCard label="Denied" value={stats.deniedAds} accentClass="text-red-800" onClick={() => { setStatusFilter("denied"); setActiveTab("ads"); }} />
             <StatCard label="Users" value={stats.totalUsers} onClick={() => setActiveTab("users")} />
-            <StatCard label="Locations" value={stats.totalLocations} />
+            <StatCard label="Locations" value={stats.totalLocations} onClick={() => { window.location.href = "/dashboard/store-owner"; }} />
           </div>
 
           {/* Quick links */}

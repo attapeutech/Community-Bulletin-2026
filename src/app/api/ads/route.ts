@@ -6,6 +6,7 @@ import { requireAuth } from "@/lib/auth/session";
 import { eq, and } from "drizzle-orm";
 import { AD_DURATION_DAYS } from "@/types";
 import { addDays } from "date-fns";
+import { pushDashboardUpdate } from "@/lib/socket/notify";
 
 const createAdSchema = z.object({
   locationId: z.string().uuid(),
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     // Verify location exists and is active
     const [location] = await db
-      .select({ id: locations.id })
+      .select({ id: locations.id, slug: locations.slug })
       .from(locations)
       .where(and(eq(locations.id, data.locationId), eq(locations.isActive, true)))
       .limit(1);
@@ -55,6 +56,9 @@ export async function POST(req: NextRequest) {
         displayOrder: 0,
       })
       .returning();
+
+    // Notify dashboard so admin sees new submission instantly (when socket is up)
+    pushDashboardUpdate({ adId: ad.id, status: "pending", locationSlug: location.slug }).catch(console.error);
 
     return NextResponse.json({ success: true, data: ad }, { status: 201 });
   } catch (error: any) {

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useDashboardSocket } from "@/lib/socket/client";
 import { Check, X, RefreshCw, Trash2, MonitorPlay } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -179,6 +180,30 @@ export default function AdminPanelClient({
       setConfirmDelete(null);
     }
   }
+
+  const fetchAllAds = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/ads");
+      const json = await res.json();
+      if (json.success) setAds(json.data);
+    } catch { }
+  }, []);
+
+  // Auto-poll every 30s when the Ads tab is open
+  useEffect(() => {
+    if (activeTab !== "ads") return;
+    const id = setInterval(fetchAllAds, 30_000);
+    return () => clearInterval(id);
+  }, [activeTab, fetchAllAds]);
+
+  // Socket: when a new ad arrives (unknown adId) refresh the full list
+  useDashboardSocket(useCallback(({ adId }: { adId: string; status: string; locationSlug: string }) => {
+    setAds(prev => {
+      if (prev.some(a => a.id === adId)) return prev; // existing ad — status change handled elsewhere
+      fetchAllAds(); // new submission — reload list
+      return prev;
+    });
+  }, [fetchAllAds]));
 
   async function forceRefresh(slug: string) {
     setRefreshingSlug(slug);
@@ -410,7 +435,7 @@ export default function AdminPanelClient({
         {/* ADS TAB */}
         <TabsContent value="ads" className="mt-0">
           {/* Filter bar */}
-          <div className="flex gap-2 mb-4 flex-wrap">
+          <div className="flex gap-2 mb-4 flex-wrap items-center">
             {["all", "pending", "approved", "denied", "expired", "cancelled"].map(s => (
               <button
                 key={s}
@@ -430,6 +455,13 @@ export default function AdminPanelClient({
                 )}
               </button>
             ))}
+            <button
+              onClick={fetchAllAds}
+              className="ml-auto px-3.5 py-1.5 rounded-full border text-xs bg-white border-[#D8E4EE] text-[#6B8FA8] hover:border-[#1A3A5C] hover:text-[#1A3A5C] flex items-center gap-1.5 cursor-pointer"
+            >
+              <RefreshCw size={11} />
+              Refresh
+            </button>
           </div>
 
           <Card className="rounded-xl border-[#D8E4EE] overflow-hidden">

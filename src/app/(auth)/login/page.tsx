@@ -73,17 +73,23 @@ export default function LoginPage() {
         return;
       }
 
-      const result = await signIn.email({ email: data.email, password: data.password });
-      if (result.error) {
-        const msg = result.error.message ?? "";
-        if (msg.toLowerCase().includes("email not verified") || msg.toLowerCase().includes("email_not_verified")) {
-          setUnverifiedEmail(data.email);
-          return;
-        }
-        setFormError(msg || "Incorrect password. Please try again.");
-        return;
-      }
-      router.push("/dashboard");
+      await signIn.email({
+        email: data.email,
+        password: data.password,
+        fetchOptions: {
+          onSuccess: () => {
+            router.push("/dashboard");
+          },
+          onError: (ctx) => {
+            const msg = ctx.error?.message ?? "";
+            if (msg.toLowerCase().includes("email not verified") || msg.toLowerCase().includes("email_not_verified")) {
+              setUnverifiedEmail(data.email);
+            } else {
+              setFormError(msg || "Incorrect password. Please try again.");
+            }
+          },
+        },
+      });
     } catch {
       setFormError("Something went wrong. Please try again.");
     }

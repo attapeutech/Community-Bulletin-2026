@@ -75,12 +75,19 @@ type Ad = {
   location: { id: string; storeName: string; slug: string };
 };
 
-function StatCard({ label, value, sub, accentClass }: { label: string; value: string | number; sub?: string; accentClass?: string }) {
+function StatCard({ label, value, sub, accentClass, onClick }: { label: string; value: string | number; sub?: string; accentClass?: string; onClick?: () => void }) {
   return (
-    <div className="flex-1 basis-40 bg-white rounded-xl border border-[#D8E4EE] px-6 py-5">
+    <div
+      onClick={onClick}
+      className={cn(
+        "flex-1 basis-40 bg-white rounded-xl border border-[#D8E4EE] px-6 py-5 transition-colors",
+        onClick && "cursor-pointer hover:border-[#4A90C4] hover:bg-[#F7FAFD]"
+      )}
+    >
       <div className="text-[11px] font-semibold text-[#6B8FA8] uppercase tracking-[0.05em] mb-2">{label}</div>
       <div className={cn("text-[28px] font-bold leading-none", accentClass ?? "text-[#1A3A5C]")}>{value}</div>
       {sub && <div className="text-xs text-[#6B8FA8] mt-1">{sub}</div>}
+      {onClick && <div className="text-[10px] text-[#9DC4E0] mt-2">Click to view →</div>}
     </div>
   );
 }
@@ -314,11 +321,11 @@ export default function AdminPanelClient({
           {/* Stat cards */}
           <div className="flex flex-wrap gap-4 mb-8">
             <StatCard label="Total Revenue" value={`$${(stats.totalRevenueCents / 100).toFixed(2)}`} sub="from paid ads" accentClass="text-green-800" />
-            <StatCard label="Total Ads" value={stats.totalAds} />
-            <StatCard label="Pending Review" value={stats.pendingAds} accentClass={stats.pendingAds > 0 ? "text-yellow-800" : "text-[#1A3A5C]"} />
-            <StatCard label="Approved" value={stats.approvedAds} accentClass="text-green-800" />
-            <StatCard label="Denied" value={stats.deniedAds} accentClass="text-red-800" />
-            <StatCard label="Users" value={stats.totalUsers} />
+            <StatCard label="Total Ads" value={stats.totalAds} onClick={() => { setStatusFilter("all"); setActiveTab("ads"); }} />
+            <StatCard label="Pending Review" value={stats.pendingAds} accentClass={stats.pendingAds > 0 ? "text-yellow-800" : "text-[#1A3A5C]"} onClick={() => { setStatusFilter("pending"); setActiveTab("ads"); }} />
+            <StatCard label="Approved" value={stats.approvedAds} accentClass="text-green-800" onClick={() => { setStatusFilter("approved"); setActiveTab("ads"); }} />
+            <StatCard label="Denied" value={stats.deniedAds} accentClass="text-red-800" onClick={() => { setStatusFilter("denied"); setActiveTab("ads"); }} />
+            <StatCard label="Users" value={stats.totalUsers} onClick={() => setActiveTab("users")} />
             <StatCard label="Locations" value={stats.totalLocations} />
           </div>
 

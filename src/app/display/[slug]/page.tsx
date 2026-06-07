@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
@@ -68,6 +68,32 @@ export default function DisplayPage() {
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Fullscreen
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showControls, setShowControls] = useState(false);
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    document.documentElement.requestFullscreen().catch(() => {});
+    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
+
+  function handleMouseMove() {
+    setShowControls(true);
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    hideTimerRef.current = setTimeout(() => setShowControls(false), 3000);
+  }
+
+  function toggleFullscreen() {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+  }
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { loop: true, duration: 40 },
@@ -146,7 +172,8 @@ export default function DisplayPage() {
   // ── No ads ───────────────────────────────────────────────────────────────────
   if (ads.length === 0) {
     return (
-      <div style={fullscreen("#0A1A2E")}>
+      <div style={fullscreen("#0A1A2E")} onMouseMove={handleMouseMove}>
+        <FullscreenOverlay show={showControls} isFullscreen={isFullscreen} onToggle={toggleFullscreen} />
         {/* Header bar */}
         <HeaderBar locationName={location?.name ?? slug} />
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
@@ -161,7 +188,8 @@ export default function DisplayPage() {
 
   // ── Carousel ─────────────────────────────────────────────────────────────────
   return (
-    <div style={fullscreen("#0A1A2E")}>
+    <div style={fullscreen("#0A1A2E")} onMouseMove={handleMouseMove}>
+      <FullscreenOverlay show={showControls} isFullscreen={isFullscreen} onToggle={toggleFullscreen} />
       <HeaderBar locationName={location?.name ?? slug} />
 
       {/* Carousel */}
@@ -330,6 +358,92 @@ function HeaderBar({ locationName }: { locationName: string }) {
         <div style={{ fontSize: 11, color: "#4A90C4" }}>
           <DateDisplay />
         </div>
+      </div>
+    </div>
+  );
+}
+
+function FullscreenOverlay({ show, isFullscreen, onToggle }: { show: boolean; isFullscreen: boolean; onToggle: () => void }) {
+  return (
+    <div style={{
+      position: "absolute",
+      top: 0, left: 0, right: 0, bottom: 0,
+      zIndex: 100,
+      pointerEvents: "none",
+    }}>
+      <div style={{
+        position: "absolute",
+        top: 16,
+        right: 16,
+        display: "flex",
+        gap: 8,
+        opacity: show ? 1 : 0,
+        transition: "opacity 0.3s ease",
+        pointerEvents: show ? "auto" : "none",
+      }}>
+        {/* Home */}
+        <a
+          href="/"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "7px 14px",
+            borderRadius: 8,
+            background: "rgba(10,26,46,0.85)",
+            border: "1px solid rgba(74,144,196,0.4)",
+            backdropFilter: "blur(8px)",
+            color: "#9DC4E0",
+            textDecoration: "none",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: "pointer",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          Home
+        </a>
+
+        {/* Fullscreen toggle */}
+        <button
+          onClick={onToggle}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "7px 14px",
+            borderRadius: 8,
+            background: "rgba(10,26,46,0.85)",
+            border: "1px solid rgba(232,86,58,0.4)",
+            backdropFilter: "blur(8px)",
+            color: "#E8A09D",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: "pointer",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {isFullscreen ? (
+            <>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+              Exit Fullscreen
+            </>
+          ) : (
+            <>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
+                <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+              </svg>
+              Enter Fullscreen
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

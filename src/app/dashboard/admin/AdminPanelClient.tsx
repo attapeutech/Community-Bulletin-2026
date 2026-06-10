@@ -448,6 +448,7 @@ export default function AdminPanelClient({
                     <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Joined</th>
                     <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Last Login</th>
                     <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Last Logout</th>
+                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Ads</th>
                     <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Change Role</th>
                     <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Ban</th>
                   </tr>
@@ -478,6 +479,21 @@ export default function AdminPanelClient({
                         </td>
                         <td className="px-4 py-3 text-[#6B8FA8] text-xs whitespace-nowrap">
                           {u.lastLogoutAt ? new Date(u.lastLogoutAt).toLocaleString() : <span className="text-[#CBD5E0]">—</span>}
+                        </td>
+                        <td className="px-4 py-3">
+                          {(() => {
+                            const count = ads.filter(a => a.user.id === u.id).length;
+                            return count > 0 ? (
+                              <button
+                                onClick={() => { setUserSearch(u.name); setStatusFilter("all"); setActiveTab("ads"); }}
+                                className="inline-flex items-center justify-center min-w-[28px] h-6 px-2 rounded-full bg-blue-100 text-blue-800 text-[11px] font-bold hover:bg-blue-200 cursor-pointer border-0"
+                              >
+                                {count}
+                              </button>
+                            ) : (
+                              <span className="text-xs text-[#CBD5E0]">0</span>
+                            );
+                          })()}
                         </td>
                         <td className="px-4 py-3">
                           {isSelf ? (

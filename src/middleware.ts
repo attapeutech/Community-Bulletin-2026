@@ -22,6 +22,7 @@ export async function middleware(request: NextRequest) {
   if (
     PUBLIC_ROUTES.some((r) => pathname === r || pathname.startsWith(r + "/")) ||
     pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/cron") ||
     pathname.startsWith("/api/support") ||
     pathname.startsWith("/api/auth/verify-recaptcha") ||
     pathname.startsWith("/_next") ||

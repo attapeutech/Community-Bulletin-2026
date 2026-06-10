@@ -117,6 +117,7 @@ export default function AdminPanelClient({
   // Ads state
   const [ads, setAds] = useState<Ad[]>(initialAds);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [userSearch, setUserSearch] = useState<string>("");
   const [overriding, setOverriding] = useState<string | null>(null);
   const [adToast, setAdToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [overrideNote, setOverrideNote] = useState<Record<string, string>>({});
@@ -288,7 +289,12 @@ export default function AdminPanelClient({
     }
   }
 
-  const filteredAds = statusFilter === "all" ? ads : ads.filter(a => a.status === statusFilter);
+  const filteredAds = ads.filter(a => {
+    const matchStatus = statusFilter === "all" || a.status === statusFilter;
+    const q = userSearch.trim().toLowerCase();
+    const matchUser = !q || a.user.name.toLowerCase().includes(q) || a.user.email.toLowerCase().includes(q);
+    return matchStatus && matchUser;
+  });
 
   return (
     <div className="max-w-[920px] w-full">
@@ -348,10 +354,10 @@ export default function AdminPanelClient({
           {/* Stat cards */}
           <div className="flex flex-wrap gap-4 mb-8">
             <StatCard label="Total Revenue" value={`$${(stats.totalRevenueCents / 100).toFixed(2)}`} sub="from paid ads" accentClass="text-green-800" />
-            <StatCard label="Total Ads" value={stats.totalAds} onClick={() => { setStatusFilter("all"); setActiveTab("ads"); }} />
-            <StatCard label="Pending Review" value={stats.pendingAds} accentClass={stats.pendingAds > 0 ? "text-yellow-800" : "text-[#1A3A5C]"} onClick={() => { setStatusFilter("pending"); setActiveTab("ads"); }} />
-            <StatCard label="Approved" value={stats.approvedAds} accentClass="text-green-800" onClick={() => { setStatusFilter("approved"); setActiveTab("ads"); }} />
-            <StatCard label="Denied" value={stats.deniedAds} accentClass="text-red-800" onClick={() => { setStatusFilter("denied"); setActiveTab("ads"); }} />
+            <StatCard label="Total Ads" value={stats.totalAds} onClick={() => { setStatusFilter("all"); setUserSearch(""); setActiveTab("ads"); }} />
+            <StatCard label="Pending Review" value={stats.pendingAds} accentClass={stats.pendingAds > 0 ? "text-yellow-800" : "text-[#1A3A5C]"} onClick={() => { setStatusFilter("pending"); setUserSearch(""); setActiveTab("ads"); }} />
+            <StatCard label="Approved" value={stats.approvedAds} accentClass="text-green-800" onClick={() => { setStatusFilter("approved"); setUserSearch(""); setActiveTab("ads"); }} />
+            <StatCard label="Denied" value={stats.deniedAds} accentClass="text-red-800" onClick={() => { setStatusFilter("denied"); setUserSearch(""); setActiveTab("ads"); }} />
             <StatCard label="Users" value={stats.totalUsers} onClick={() => setActiveTab("users")} />
             <StatCard label="Locations" value={stats.totalLocations} onClick={() => { window.location.href = "/dashboard/store-owner"; }} />
           </div>
@@ -585,6 +591,22 @@ export default function AdminPanelClient({
                 )}
               </button>
             ))}
+            <div className="relative">
+              <Input
+                placeholder="Filter by user…"
+                value={userSearch}
+                onChange={e => setUserSearch(e.target.value)}
+                className="h-[30px] w-40 text-xs border-[#D8E4EE] bg-white pl-3 pr-7"
+              />
+              {userSearch && (
+                <button
+                  onClick={() => setUserSearch("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[#6B8FA8] hover:text-[#1A3A5C] text-xs leading-none"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
             <button
               onClick={fetchAllAds}
               className="ml-auto px-3.5 py-1.5 rounded-full border text-xs bg-white border-[#D8E4EE] text-[#6B8FA8] hover:border-[#1A3A5C] hover:text-[#1A3A5C] flex items-center gap-1.5 cursor-pointer"
@@ -615,8 +637,15 @@ export default function AdminPanelClient({
                           </Badge>
                           <span className="text-[11px] text-[#9DC4E0] bg-blue-50 rounded px-1.5 py-0.5">{ad.paymentStatus}</span>
                         </div>
-                        <div className="text-xs text-[#6B8FA8] mb-0.5">
-                          by {ad.user.name} · {ad.location.storeName} · submitted {new Date(ad.createdAt).toLocaleDateString()}
+                        <div className="text-xs text-[#6B8FA8] mb-0.5 flex items-center gap-1 flex-wrap">
+                          <button
+                            onClick={() => setUserSearch(ad.user.name)}
+                            className="font-semibold text-[#4A90C4] hover:underline cursor-pointer bg-transparent border-0 p-0 text-xs"
+                            title={ad.user.email}
+                          >
+                            {ad.user.name}
+                          </button>
+                          <span>· {ad.location.storeName} · submitted {new Date(ad.createdAt).toLocaleDateString()}</span>
                         </div>
                         {ad.reviewNote && (
                           <div className="text-xs text-yellow-800 bg-yellow-50 rounded px-2 py-0.5 inline-block">

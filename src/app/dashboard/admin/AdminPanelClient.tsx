@@ -217,7 +217,6 @@ export default function AdminPanelClient({
 
   async function renewAd(adId: string) {
     try {
-      const now = new Date();
       const res = await fetch(`/api/ads/${adId}/renew`, { method: "PATCH" });
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
@@ -225,7 +224,7 @@ export default function AdminPanelClient({
         ? { ...a, status: "pending", paymentStatus: "unpaid", reviewNote: null }
         : a
       ));
-      showAdToast("Ad renewed — pending review & payment", true);
+      showAdToast("Ad renewed — owner must complete payment to go live", true);
     } catch (e: any) {
       showAdToast(e.message || "Failed to renew ad", false);
     }

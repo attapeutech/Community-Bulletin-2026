@@ -32,7 +32,11 @@ export default function AdActions({
       const res = await fetch(`/api/ads/${adId}/${endpoint}`, { method: "PATCH" });
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
-      router.refresh();
+      if (endpoint === "renew") {
+        router.push(`/ads/${adId}/payment`);
+      } else {
+        router.refresh();
+      }
     } catch (e: any) {
       setError(e.message || "Something went wrong");
     } finally {

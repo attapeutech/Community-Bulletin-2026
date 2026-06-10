@@ -7,6 +7,7 @@ import { getSession } from "@/lib/auth/session";
 
 const updateSchema = z.object({
   storeName: z.string().min(2).max(120).optional(),
+  storeNumber: z.string().max(50).nullable().optional(),
   addressLine1: z.string().min(5).max(200).optional(),
   addressLine2: z.string().max(100).nullable().optional(),
   displayName: z.string().max(120).nullable().optional(),

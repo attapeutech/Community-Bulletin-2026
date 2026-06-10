@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 
 const editSchema = z.object({
   storeName:    z.string().min(2,  "Store name must be at least 2 characters"),
+  storeNumber:  z.string().max(50).optional(),
   displayName:  z.string().optional(),
   addressLine1: z.string().min(5,  "Enter a full street address"),
   addressLine2: z.string().optional(),
@@ -29,8 +30,8 @@ type Ad = {
 };
 
 type Location = {
-  id: string; storeName: string; addressLine1: string;
-  addressLine2: string | null; displayName: string | null;
+  id: string; storeName: string; storeNumber: string | null;
+  addressLine1: string; addressLine2: string | null; displayName: string | null;
   slug: string; currency: string; isActive: boolean;
   city: { name: string }; state: { code: string }; postalCode: { code: string };
 };
@@ -65,6 +66,7 @@ export default function LocationDetailClient({
     resolver: zodResolver(editSchema),
     defaultValues: {
       storeName:    location.storeName,
+      storeNumber:  location.storeNumber ?? "",
       displayName:  location.displayName ?? "",
       addressLine1: location.addressLine1,
       addressLine2: location.addressLine2 ?? "",
@@ -123,6 +125,7 @@ export default function LocationDetailClient({
 
   const EDIT_FIELDS: { label: string; field: keyof EditFormData }[] = [
     { label: "Store name",               field: "storeName" },
+    { label: "Store number",             field: "storeNumber" },
     { label: "Display name (on screen)", field: "displayName" },
     { label: "Address line 1",           field: "addressLine1" },
     { label: "Address line 2",           field: "addressLine2" },

@@ -21,6 +21,7 @@ export default async function LocationDetailPage({
     .select({
       id: locations.id,
       storeName: locations.storeName,
+      storeNumber: locations.storeNumber,
       addressLine1: locations.addressLine1,
       addressLine2: locations.addressLine2,
       displayName: locations.displayName,

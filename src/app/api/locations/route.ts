@@ -84,6 +84,7 @@ export async function GET(req: NextRequest) {
 // ─── POST /api/locations ──────────────────────────────────────────────────────
 const createSchema = z.object({
   storeName: z.string().min(2).max(120),
+  storeNumber: z.string().max(50).optional(),
   addressLine1: z.string().min(5).max(200),
   addressLine2: z.string().max(100).optional(),
   displayName: z.string().max(120).optional(),
@@ -114,6 +115,7 @@ export async function POST(req: NextRequest) {
     const [location] = await db.insert(locations).values({
       storeOwnerId: userId,
       storeName: data.storeName,
+      storeNumber: data.storeNumber ?? null,
       addressLine1: data.addressLine1,
       addressLine2: data.addressLine2 ?? null,
       displayName: data.displayName ?? null,

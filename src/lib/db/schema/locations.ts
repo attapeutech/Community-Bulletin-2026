@@ -25,6 +25,7 @@ export const locations = pgTable("locations", {
     .notNull()
     .references(() => postalCodes.id, { onDelete: "restrict" }),
   storeName: text("store_name").notNull(),
+  storeNumber: text("store_number"),               // e.g. "Store #42", "Unit 5B"
   addressLine1: text("address_line1").notNull(),
   addressLine2: text("address_line2"),
   slug: text("slug").notNull().unique(),         // e.g. "whole-foods-seattle-98101"

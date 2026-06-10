@@ -21,6 +21,7 @@ import {
 
 const schema = z.object({
   storeName:    z.string().min(2,  "Store name must be at least 2 characters"),
+  storeNumber:  z.string().max(50).optional(),
   displayName:  z.string().optional(),
   addressLine1: z.string().min(5,  "Enter a full street address"),
   addressLine2: z.string().optional(),
@@ -145,15 +146,27 @@ export default function NewLocationPage() {
               <FieldError msg={errors.storeName?.message} />
             </div>
 
-            <div>
-              <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
-                Display name (shown on screen)
-              </Label>
-              <Input
-                {...register("displayName")}
-                placeholder="Optional — defaults to store name"
-                className="h-10 text-sm text-[#1A3A5C] bg-[#F7F9FC] border-[#D1DDE8]"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
+                  Store number
+                </Label>
+                <Input
+                  {...register("storeNumber")}
+                  placeholder="e.g. Store #42, Unit 5B"
+                  className="h-10 text-sm text-[#1A3A5C] bg-[#F7F9FC] border-[#D1DDE8]"
+                />
+              </div>
+              <div>
+                <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
+                  Display name (shown on screen)
+                </Label>
+                <Input
+                  {...register("displayName")}
+                  placeholder="Optional — defaults to store name"
+                  className="h-10 text-sm text-[#1A3A5C] bg-[#F7F9FC] border-[#D1DDE8]"
+                />
+              </div>
             </div>
 
             <div>

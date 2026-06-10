@@ -18,6 +18,7 @@ type LocationInfo = {
   slug: string;
   name: string;
   storeName: string;
+  storeNumber: string | null;
   address: string;
   address2: string | null;
   city: string;
@@ -175,7 +176,7 @@ export default function DisplayPage() {
       <div style={fullscreen("#0A1A2E")} onMouseMove={handleMouseMove}>
         <FullscreenOverlay show={showControls} isFullscreen={isFullscreen} onToggle={toggleFullscreen} />
         {/* Header bar */}
-        <HeaderBar locationName={location?.name ?? slug} />
+        <HeaderBar locationName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} />
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
           <div style={{ fontSize: 64 }}>📋</div>
           <p style={{ fontSize: 22, color: "#4A90C4", letterSpacing: "0.05em" }}>No active ads at this time</p>
@@ -190,7 +191,7 @@ export default function DisplayPage() {
   return (
     <div style={fullscreen("#0A1A2E")} onMouseMove={handleMouseMove}>
       <FullscreenOverlay show={showControls} isFullscreen={isFullscreen} onToggle={toggleFullscreen} />
-      <HeaderBar locationName={location?.name ?? slug} />
+      <HeaderBar locationName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} />
 
       {/* Carousel */}
       <div style={{ flex: 1, overflow: "hidden", position: "relative" }} ref={emblaRef}>
@@ -320,7 +321,7 @@ function fullscreen(bg: string): React.CSSProperties {
   };
 }
 
-function HeaderBar({ locationName }: { locationName: string }) {
+function HeaderBar({ locationName, storeNumber }: { locationName: string; storeNumber: string | null }) {
   return (
     <div style={{
       display: "flex",
@@ -347,7 +348,15 @@ function HeaderBar({ locationName }: { locationName: string }) {
           </div>
         </a>
         <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.15)" }} />
-        <div style={{ fontSize: 13, color: "#9DC4E0" }}>{locationName}</div>
+        <div style={{ fontSize: 13, color: "#9DC4E0", display: "flex", alignItems: "center", gap: 6 }}>
+          {locationName}
+          {storeNumber && (
+            <>
+              <span style={{ color: "#E8563A", fontWeight: 700 }}>#</span>
+              <span style={{ color: "#E8563A", fontWeight: 700 }}>{storeNumber}</span>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Clock */}

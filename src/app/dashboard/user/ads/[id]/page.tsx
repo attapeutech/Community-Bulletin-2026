@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import AdImagePreview from "./AdImagePreview";
+import AdActions from "./AdActions";
 
 const STATUS_COLORS: Record<string, { bg: string; color: string; label: string }> = {
   pending:   { bg: "#fef9c3", color: "#854d0e", label: "Pending Review" },
@@ -151,6 +152,12 @@ export default async function AdDetailPage({
             View Live Display ↗
           </Link>
         )}
+        <AdActions
+          adId={ad.id}
+          status={ad.status}
+          isOwner={isOwner}
+          isAdmin={role === "admin"}
+        />
       </div>
 
       {/* Ad image — display screen style with preview modal */}

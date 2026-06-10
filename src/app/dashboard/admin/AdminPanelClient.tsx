@@ -203,6 +203,34 @@ export default function AdminPanelClient({
     }
   }
 
+  async function endAd(adId: string) {
+    try {
+      const res = await fetch(`/api/ads/${adId}/end`, { method: "PATCH" });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      setAds(prev => prev.map(a => a.id === adId ? { ...a, status: "cancelled" } : a));
+      showAdToast("Ad ended", true);
+    } catch (e: any) {
+      showAdToast(e.message || "Failed to end ad", false);
+    }
+  }
+
+  async function renewAd(adId: string) {
+    try {
+      const now = new Date();
+      const res = await fetch(`/api/ads/${adId}/renew`, { method: "PATCH" });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      setAds(prev => prev.map(a => a.id === adId
+        ? { ...a, status: "pending", paymentStatus: "unpaid", reviewNote: null }
+        : a
+      ));
+      showAdToast("Ad renewed — pending review & payment", true);
+    } catch (e: any) {
+      showAdToast(e.message || "Failed to renew ad", false);
+    }
+  }
+
   async function deleteAd(adId: string) {
     setDeleting(adId);
     try {
@@ -598,6 +626,27 @@ export default function AdminPanelClient({
                         )}
                         {/* Override controls */}
                         <div className="mt-2.5 flex gap-2 items-start flex-wrap">
+                          {/* End / Renew quick actions */}
+                          {ad.status === "approved" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => endAd(ad.id)}
+                              className="px-2.5 py-1 h-auto rounded-md text-[11px] font-semibold border-red-200 text-red-700 bg-red-50 hover:bg-red-100"
+                            >
+                              End Ad
+                            </Button>
+                          )}
+                          {(ad.status === "expired" || ad.status === "cancelled") && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => renewAd(ad.id)}
+                              className="px-2.5 py-1 h-auto rounded-md text-[11px] font-semibold border-green-200 text-green-700 bg-green-50 hover:bg-green-100"
+                            >
+                              Renew
+                            </Button>
+                          )}
                           <Input
                             placeholder="Review note (required to deny/cancel)"
                             value={overrideNote[ad.id] ?? ""}

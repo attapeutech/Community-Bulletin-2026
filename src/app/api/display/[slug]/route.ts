@@ -57,6 +57,12 @@ export async function GET(
         displayOrder: ads.displayOrder,
         startedAt: ads.startedAt,
         endedAt: ads.endedAt,
+        contactPhone:   ads.contactPhone,
+        contactAddress: ads.contactAddress,
+        contactWebsite: ads.contactWebsite,
+        showPhone:   ads.showPhone,
+        showAddress: ads.showAddress,
+        showWebsite: ads.showWebsite,
       })
       .from(ads)
       .where(

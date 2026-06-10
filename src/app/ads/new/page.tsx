@@ -50,6 +50,28 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   );
 }
 
+function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <div onClick={() => onChange(!checked)} style={{ display: "inline-flex", alignItems: "center", gap: 7, cursor: "pointer", userSelect: "none" }}>
+      <div style={{
+        width: 36, height: 20, borderRadius: 10,
+        background: checked ? ACCENT : "#D8E4EE",
+        position: "relative", transition: "background 0.2s", flexShrink: 0,
+      }}>
+        <div style={{
+          position: "absolute", top: 2, left: checked ? 16 : 2,
+          width: 16, height: 16, borderRadius: "50%",
+          background: "#fff", transition: "left 0.2s",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+        }} />
+      </div>
+      <span style={{ fontSize: 12, color: checked ? ACCENT : "#6B8FA8", fontWeight: checked ? 600 : 400 }}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
 function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <textarea
@@ -170,6 +192,28 @@ export default function NewAdPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
+  // Contact info
+  const [contactPhone,   setContactPhone]   = useState("");
+  const [contactAddress, setContactAddress] = useState("");
+  const [contactWebsite, setContactWebsite] = useState("");
+  const [showPhone,   setShowPhone]   = useState(false);
+  const [showAddress, setShowAddress] = useState(false);
+  const [showWebsite, setShowWebsite] = useState(false);
+
+  // Pre-fill contact info from user profile
+  useEffect(() => {
+    fetch("/api/users/me")
+      .then(r => r.json())
+      .then(j => {
+        if (j.success) {
+          if (j.data.phone)   setContactPhone(j.data.phone);
+          if (j.data.address) setContactAddress(j.data.address);
+          if (j.data.website) setContactWebsite(j.data.website);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
@@ -251,6 +295,12 @@ export default function NewAdPage() {
           description: description || undefined,
           imageUrl: uploadedImageUrl,
           imageKey: uploadedImageKey,
+          contactPhone:   contactPhone   || undefined,
+          contactAddress: contactAddress || undefined,
+          contactWebsite: contactWebsite || undefined,
+          showPhone,
+          showAddress,
+          showWebsite,
         }),
       });
       const json = await res.json();
@@ -381,6 +431,36 @@ export default function NewAdPage() {
                   maxLength={500}
                 />
                 <div style={{ fontSize: 11, color: "#6B8FA8", marginTop: 4, textAlign: "right" }}>{description.length}/500</div>
+              </div>
+
+              {/* Contact info */}
+              <div style={{ borderTop: "1px solid #D8E4EE", paddingTop: 20, marginBottom: 20 }}>
+                <div style={{ fontFamily: "Georgia,serif", fontSize: 15, fontWeight: 700, color: ACCENT, marginBottom: 4 }}>
+                  Contact Information
+                </div>
+                <p style={{ fontSize: 12, color: "#6B8FA8", marginBottom: 16 }}>
+                  Optional — toggle each field to show it on the display screen with your ad. Great if you don't have a designed flyer.
+                </p>
+                {[
+                  { label: "Phone", value: contactPhone, set: setContactPhone, show: showPhone, setShow: setShowPhone, placeholder: "(555) 123-4567", icon: "📞" },
+                  { label: "Address", value: contactAddress, set: setContactAddress, show: showAddress, setShow: setShowAddress, placeholder: "123 Main St, Seattle, WA", icon: "📍" },
+                  { label: "Website URL", value: contactWebsite, set: setContactWebsite, show: showWebsite, setShow: setShowWebsite, placeholder: "https://yourwebsite.com", icon: "🌐" },
+                ].map(({ label, value, set, show, setShow, placeholder, icon }) => (
+                  <div key={label} style={{ marginBottom: 14, background: "#F7F9FC", borderRadius: 10, padding: "12px 14px", border: "1px solid #D8E4EE" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                      <Label>{icon} {label}</Label>
+                      <Toggle checked={show} onChange={setShow} label="Show on display" />
+                    </div>
+                    <Input
+                      placeholder={placeholder}
+                      value={value}
+                      onChange={(e) => set(e.target.value)}
+                    />
+                  </div>
+                ))}
+                <p style={{ fontSize: 11, color: "#9DC4E0", marginTop: 4 }}>
+                  Contact info is saved to your profile and pre-filled on future ads.
+                </p>
               </div>
 
               <div style={{ display: "flex", gap: 12, justifyContent: "space-between" }}>
@@ -515,6 +595,14 @@ export default function NewAdPage() {
                   {description && <div><span style={{ color: "#6B8FA8" }}>Description:</span> {description}</div>}
                   <div><span style={{ color: "#6B8FA8" }}>Duration:</span> 1 week</div>
                   <div><span style={{ color: "#6B8FA8" }}>Price:</span> <strong style={{ color: RED }}>$100.00</strong></div>
+                  {(showPhone || showAddress || showWebsite) && (
+                    <div style={{ marginTop: 8, borderTop: "1px solid #D8E4EE", paddingTop: 8 }}>
+                      <div style={{ fontSize: 12, color: "#6B8FA8", marginBottom: 4, fontWeight: 600 }}>Shown on display:</div>
+                      {showPhone   && contactPhone   && <div style={{ fontSize: 13 }}>📞 {contactPhone}</div>}
+                      {showAddress && contactAddress && <div style={{ fontSize: 13 }}>📍 {contactAddress}</div>}
+                      {showWebsite && contactWebsite && <div style={{ fontSize: 13 }}>🌐 {contactWebsite}</div>}
+                    </div>
+                  )}
                 </div>
               </div>
 

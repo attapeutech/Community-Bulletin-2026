@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, timestamp, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, integer, timestamp, pgEnum, boolean } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { users } from "./users";
 import { locations } from "./locations";
@@ -41,6 +41,13 @@ export const ads = pgTable("ads", {
   startedAt: timestamp("started_at").notNull(),    // ad run start date
   endedAt: timestamp("ended_at").notNull(),        // ad run end date (startedAt + 7 days)
   displayOrder: integer("display_order").default(0), // carousel ordering
+  // Advertiser contact info (optional — shown on display screen)
+  contactPhone:   text("contact_phone"),
+  contactAddress: text("contact_address"),
+  contactWebsite: text("contact_website"),
+  showPhone:      boolean("show_phone").default(false).notNull(),
+  showAddress:    boolean("show_address").default(false).notNull(),
+  showWebsite:    boolean("show_website").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

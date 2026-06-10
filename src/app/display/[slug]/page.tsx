@@ -12,6 +12,12 @@ type Ad = {
   description: string | null;
   imageUrl: string;
   displayOrder: number;
+  contactPhone:   string | null;
+  contactAddress: string | null;
+  contactWebsite: string | null;
+  showPhone:   boolean;
+  showAddress: boolean;
+  showWebsite: boolean;
 };
 
 type LocationInfo = {
@@ -224,14 +230,40 @@ export default function DisplayPage() {
                 <div style={{
                   position: "absolute",
                   inset: 0,
-                  background: "linear-gradient(to top, rgba(10,26,46,0.75) 0%, transparent 18%)",
+                  background: "linear-gradient(to top, rgba(10,26,46,0.85) 0%, transparent 22%)",
                 }} />
+
+                {/* Contact info bar — shown only when fields are toggled on */}
+                {(ad.showPhone || ad.showAddress || ad.showWebsite) && (
+                  <div style={{
+                    position: "absolute",
+                    bottom: 48, left: 0, right: 0,
+                    padding: "10px 32px",
+                    display: "flex", alignItems: "center", gap: 28, flexWrap: "wrap",
+                  }}>
+                    {ad.showPhone && ad.contactPhone && (
+                      <span style={{ display: "flex", alignItems: "center", gap: 7, fontSize: "clamp(12px, 1.5vw, 20px)", color: "#fff", fontWeight: 600 }}>
+                        <span style={{ fontSize: "clamp(14px, 1.6vw, 22px)" }}>📞</span> {ad.contactPhone}
+                      </span>
+                    )}
+                    {ad.showAddress && ad.contactAddress && (
+                      <span style={{ display: "flex", alignItems: "center", gap: 7, fontSize: "clamp(12px, 1.5vw, 20px)", color: "#fff", fontWeight: 600 }}>
+                        <span style={{ fontSize: "clamp(14px, 1.6vw, 22px)" }}>📍</span> {ad.contactAddress}
+                      </span>
+                    )}
+                    {ad.showWebsite && ad.contactWebsite && (
+                      <span style={{ display: "flex", alignItems: "center", gap: 7, fontSize: "clamp(12px, 1.5vw, 20px)", color: "#4A90C4", fontWeight: 600 }}>
+                        <span style={{ fontSize: "clamp(14px, 1.6vw, 22px)" }}>🌐</span> {ad.contactWebsite}
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {/* Location info bar */}
                 <div style={{
                   position: "absolute",
                   bottom: 0, left: 0, right: 0,
-                  padding: "16px 32px",
+                  padding: "10px 32px",
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                 }}>
                   <span style={{

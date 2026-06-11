@@ -24,6 +24,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/cron") ||
     pathname.startsWith("/api/display") ||
+    pathname.startsWith("/api/ads/live") ||
     pathname.startsWith("/api/support") ||
     pathname.startsWith("/api/auth/verify-recaptcha") ||
     pathname.startsWith("/_next") ||

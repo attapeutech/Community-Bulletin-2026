@@ -6,8 +6,10 @@ import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { useSession } from "@/lib/auth/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import LiveAdsSection from "./LiveAdsSection";
 
 const NAV_LINKS = [
+  { label: "Live Ads", href: "#live-ads" },
   { label: "How it works", href: "#how-it-works" },
   { label: "Features", href: "#features" },
   { label: "Pricing", href: "#pricing" },
@@ -206,6 +208,9 @@ export default function LandingPage() {
           ))}
         </div>
       </section>
+
+      {/* ── LIVE ADS ── */}
+      <LiveAdsSection />
 
       {/* ── HOW IT WORKS ── */}
       <section id="how-it-works" className="px-4 sm:px-8 py-16 sm:py-20 bg-[#F4F7FB]">

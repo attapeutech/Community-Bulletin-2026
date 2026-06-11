@@ -264,21 +264,12 @@ export default function DisplayPage() {
                   position: "absolute",
                   bottom: 0, left: 0, right: 0,
                   padding: "10px 32px",
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  display: "flex", alignItems: "center", justifyContent: "flex-end",
                 }}>
-                  <span style={{
-                    fontSize: "clamp(11px, 1.4vw, 18px)",
-                    color: "rgba(255,255,255,0.9)",
-                    fontWeight: 500,
-                    letterSpacing: "0.01em",
-                  }}>
-                    {location?.storeName} — {location?.address}{location?.address2 ? `, ${location.address2}` : ""}, {location?.city}, {location?.stateCode} {location?.postalCode}
-                  </span>
                   <span style={{
                     fontSize: "clamp(10px, 1.2vw, 15px)",
                     color: "rgba(255,255,255,0.6)",
                     whiteSpace: "nowrap",
-                    marginLeft: 24,
                   }}>
                     Ad #{ad.id.slice(-6).toUpperCase()}
                   </span>

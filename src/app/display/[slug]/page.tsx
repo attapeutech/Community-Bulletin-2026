@@ -202,96 +202,38 @@ export default function DisplayPage() {
       {/* Carousel */}
       <div style={{ flex: 1, overflow: "hidden", position: "relative" }} ref={emblaRef}>
         <div style={{ display: "flex", height: "100%" }}>
-          {ads.map((ad, idx) => (
-            <div
-              key={ad.id}
-              style={{
-                flex: "0 0 100%",
-                minWidth: 0,
-                height: "100%",
-                position: "relative",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              {/* Full image — dark background, no crop */}
-              <div style={{ flex: 1, position: "relative", overflow: "hidden", background: "#0A1A2E", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <img
-                  src={ad.imageUrl}
-                  alt={ad.title}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "contain",
-                    display: "block",
-                  }}
-                />
-                {/* Subtle bottom gradient for the info bar */}
-                <div style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: "linear-gradient(to top, rgba(10,26,46,0.85) 0%, transparent 22%)",
-                }} />
-
-                {/* Contact info bar — shown only when fields are toggled on */}
-                {(ad.showPhone || ad.showAddress || ad.showWebsite) && (
-                  <div style={{
-                    position: "absolute",
-                    bottom: 48, left: 0, right: 0,
-                    padding: "10px 32px",
-                    display: "flex", alignItems: "center", gap: 28, flexWrap: "wrap",
-                  }}>
-                    {ad.showPhone && ad.contactPhone && (
-                      <span style={{ display: "flex", alignItems: "center", gap: 7, fontSize: "clamp(12px, 1.5vw, 20px)", color: "#fff", fontWeight: 600 }}>
-                        <span style={{ fontSize: "clamp(14px, 1.6vw, 22px)" }}>📞</span> {ad.contactPhone}
+          {ads.map((ad, idx) => {
+            const hasSplit = !!(ad.contactPhone || ad.contactAddress || ad.contactWebsite);
+            return (
+              <div
+                key={ad.id}
+                style={{ flex: "0 0 100%", minWidth: 0, height: "100%", position: "relative", display: "flex", flexDirection: "column" }}
+              >
+                {hasSplit ? (
+                  <SplitAdSlide ad={ad} idx={idx} total={ads.length} />
+                ) : (
+                  /* Full-screen image layout */
+                  <div style={{ flex: 1, position: "relative", overflow: "hidden", background: "#0A1A2E", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <img
+                      src={ad.imageUrl}
+                      alt={ad.title}
+                      style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+                    />
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,26,46,0.7) 0%, transparent 18%)" }} />
+                    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "10px 32px", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                      <span style={{ fontSize: "clamp(10px, 1.2vw, 15px)", color: "rgba(255,255,255,0.6)", whiteSpace: "nowrap" }}>
+                        Ad #{ad.id.slice(-6).toUpperCase()}
                       </span>
-                    )}
-                    {ad.showAddress && ad.contactAddress && (
-                      <span style={{ display: "flex", alignItems: "center", gap: 7, fontSize: "clamp(12px, 1.5vw, 20px)", color: "#fff", fontWeight: 600 }}>
-                        <span style={{ fontSize: "clamp(14px, 1.6vw, 22px)" }}>📍</span> {ad.contactAddress}
-                      </span>
-                    )}
-                    {ad.showWebsite && ad.contactWebsite && (
-                      <span style={{ display: "flex", alignItems: "center", gap: 7, fontSize: "clamp(12px, 1.5vw, 20px)", color: "#4A90C4", fontWeight: 600 }}>
-                        <span style={{ fontSize: "clamp(14px, 1.6vw, 22px)" }}>🌐</span> {ad.contactWebsite}
-                      </span>
-                    )}
+                    </div>
+                    {/* Slide counter */}
+                    <div style={{ position: "absolute", top: 20, right: 24, background: "rgba(10,26,46,0.6)", color: "rgba(255,255,255,0.7)", fontSize: 13, padding: "4px 12px", borderRadius: 20, backdropFilter: "blur(4px)" }}>
+                      {idx + 1} / {ads.length}
+                    </div>
                   </div>
                 )}
-
-                {/* Location info bar */}
-                <div style={{
-                  position: "absolute",
-                  bottom: 0, left: 0, right: 0,
-                  padding: "10px 32px",
-                  display: "flex", alignItems: "center", justifyContent: "flex-end",
-                }}>
-                  <span style={{
-                    fontSize: "clamp(10px, 1.2vw, 15px)",
-                    color: "rgba(255,255,255,0.6)",
-                    whiteSpace: "nowrap",
-                  }}>
-                    Ad #{ad.id.slice(-6).toUpperCase()}
-                  </span>
-                </div>
               </div>
-
-              {/* Slide counter */}
-              <div style={{
-                position: "absolute",
-                top: 20,
-                right: 24,
-                background: "rgba(10,26,46,0.6)",
-                color: "rgba(255,255,255,0.7)",
-                fontSize: 13,
-                padding: "4px 12px",
-                borderRadius: 20,
-                backdropFilter: "blur(4px)",
-              }}>
-                {idx + 1} / {ads.length}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -390,6 +332,123 @@ function HeaderBar({ locationName, storeNumber }: { locationName: string; storeN
         <div style={{ fontSize: 11, color: "#4A90C4" }}>
           <DateDisplay />
         </div>
+      </div>
+    </div>
+  );
+}
+
+function SplitAdSlide({ ad, idx, total }: { ad: Ad; idx: number; total: number }) {
+  const len = ad.title.length;
+  const titleSize = len <= 20
+    ? "clamp(30px, 4.5vw, 66px)"
+    : len <= 40
+    ? "clamp(22px, 3.2vw, 48px)"
+    : "clamp(17px, 2.4vw, 36px)";
+
+  return (
+    <div style={{ height: "100%", display: "flex", position: "relative" }}>
+      {/* Left panel */}
+      <div style={{
+        width: "42%",
+        background: "#0A1A2E",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        padding: "clamp(20px, 4vw, 56px)",
+        position: "relative",
+        flexShrink: 0,
+        borderRight: "1px solid rgba(74,144,196,0.15)",
+      }}>
+        {/* Title */}
+        <div style={{
+          fontFamily: "Georgia, serif",
+          fontSize: titleSize,
+          fontWeight: 700,
+          color: "#fff",
+          lineHeight: 1.15,
+          marginBottom: "clamp(10px, 1.8vw, 22px)",
+        }}>
+          {ad.title}
+        </div>
+
+        {/* Description */}
+        {ad.description && (
+          <div style={{
+            fontSize: "clamp(12px, 1.3vw, 18px)",
+            color: "rgba(255,255,255,0.65)",
+            lineHeight: 1.6,
+            marginBottom: "clamp(14px, 2vw, 28px)",
+          }}>
+            {ad.description}
+          </div>
+        )}
+
+        {/* Accent divider */}
+        {(ad.showPhone || ad.showAddress || ad.showWebsite) && (
+          <div style={{ width: 44, height: 3, background: "#E8563A", borderRadius: 2, marginBottom: "clamp(12px, 1.8vw, 24px)" }} />
+        )}
+
+        {/* Contact fields */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "clamp(8px, 1.2vw, 16px)" }}>
+          {ad.showPhone && ad.contactPhone && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: "clamp(14px, 1.5vw, 22px)" }}>📞</span>
+              <span style={{ fontSize: "clamp(12px, 1.4vw, 20px)", color: "#fff", fontWeight: 600 }}>{ad.contactPhone}</span>
+            </div>
+          )}
+          {ad.showAddress && ad.contactAddress && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: "clamp(14px, 1.5vw, 22px)" }}>📍</span>
+              <span style={{ fontSize: "clamp(12px, 1.4vw, 20px)", color: "#fff", fontWeight: 600 }}>{ad.contactAddress}</span>
+            </div>
+          )}
+          {ad.showWebsite && ad.contactWebsite && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: "clamp(14px, 1.5vw, 22px)" }}>🌐</span>
+              <span style={{ fontSize: "clamp(12px, 1.4vw, 20px)", color: "#4A90C4", fontWeight: 600 }}>{ad.contactWebsite}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Branding */}
+        <div style={{
+          position: "absolute",
+          bottom: "clamp(10px, 1.8vw, 20px)",
+          left: "clamp(20px, 4vw, 56px)",
+          fontFamily: "Georgia, serif",
+          fontSize: "clamp(9px, 0.9vw, 12px)",
+          fontWeight: 700,
+          color: "rgba(255,255,255,0.25)",
+        }}>
+          Community <span style={{ color: "rgba(232,86,58,0.45)" }}>Bulletin</span>
+          <span style={{ color: "rgba(74,144,196,0.45)" }}>.com</span>
+        </div>
+      </div>
+
+      {/* Right panel — image */}
+      <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
+        <img
+          src={ad.imageUrl}
+          alt={ad.title}
+          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        />
+      </div>
+
+      {/* Slide counter */}
+      <div style={{
+        position: "absolute", top: 16, right: 20,
+        background: "rgba(10,26,46,0.7)", color: "rgba(255,255,255,0.7)",
+        fontSize: 13, padding: "4px 12px", borderRadius: 20, backdropFilter: "blur(4px)",
+      }}>
+        {idx + 1} / {total}
+      </div>
+
+      {/* Ad # */}
+      <div style={{
+        position: "absolute", bottom: 10, right: 20,
+        fontSize: "clamp(10px, 0.9vw, 13px)", color: "rgba(255,255,255,0.35)",
+      }}>
+        Ad #{ad.id.slice(-6).toUpperCase()}
       </div>
     </div>
   );

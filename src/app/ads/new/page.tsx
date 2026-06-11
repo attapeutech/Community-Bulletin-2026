@@ -547,48 +547,58 @@ export default function NewAdPage() {
 
               {/* Summary */}
               <div style={{ background: "#F4F7FB", borderRadius: 12, padding: 20, marginBottom: 24 }}>
-                {uploadedImageUrl && (
-                  <div style={{ position: "relative", marginBottom: 16, background: "#0A1A2E", borderRadius: 8, overflow: "hidden" }}>
-                    {/* Full image — no crop */}
-                    <img
-                      src={uploadedImageUrl}
-                      alt={title}
-                      style={{ width: "100%", maxHeight: 280, objectFit: "contain", display: "block" }}
-                    />
-                    {/* Bottom gradient */}
-                    <div style={{
-                      position: "absolute", inset: 0,
-                      background: "linear-gradient(to top, rgba(10,26,46,0.75) 0%, transparent 30%)",
-                      pointerEvents: "none",
-                    }} />
-                    {/* Location info bar */}
-                    <div style={{
-                      position: "absolute", bottom: 0, left: 0, right: 0,
-                      padding: "10px 14px",
-                      display: "flex", alignItems: "center", justifyContent: "space-between",
-                    }}>
-                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.9)", fontWeight: 500 }}>
-                        {selectedLocation?.storeName} — {selectedLocation?.addressLine1}, {selectedLocation?.city.name}, {selectedLocation?.state.code} {selectedLocation?.postalCode?.code}
-                      </span>
-                      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", whiteSpace: "nowrap", marginLeft: 12 }}>
-                        Ad #Preview
-                      </span>
+                {uploadedImageUrl && (() => {
+                  const hasSplit = !!(contactPhone || contactAddress || contactWebsite);
+                  const titleLen = title.length;
+                  const titleSize = titleLen <= 20 ? "clamp(18px, 3vw, 40px)" : titleLen <= 40 ? "clamp(14px, 2.2vw, 30px)" : "clamp(12px, 1.6vw, 22px)";
+                  return (
+                    <div style={{ position: "relative", marginBottom: 16, background: "#0A1A2E", borderRadius: 8, overflow: "hidden" }}>
+                      {hasSplit ? (
+                        /* Split layout preview */
+                        <div style={{ display: "flex", height: 240 }}>
+                          <div style={{ width: "42%", background: "#0A1A2E", display: "flex", flexDirection: "column", justifyContent: "center", padding: "16px 20px", position: "relative", flexShrink: 0, borderRight: "1px solid rgba(74,144,196,0.2)" }}>
+                            <div style={{ fontFamily: "Georgia,serif", fontSize: titleSize, fontWeight: 700, color: "#fff", lineHeight: 1.2, marginBottom: 8 }}>{title}</div>
+                            {description && <div style={{ fontSize: "clamp(10px, 1vw, 13px)", color: "rgba(255,255,255,0.6)", lineHeight: 1.5, marginBottom: 10 }}>{description}</div>}
+                            {(showPhone || showAddress || showWebsite) && <div style={{ width: 28, height: 2, background: "#E8563A", borderRadius: 1, marginBottom: 10 }} />}
+                            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                              {showPhone && contactPhone && <div style={{ fontSize: "clamp(10px, 1vw, 13px)", color: "#fff", fontWeight: 600 }}>📞 {contactPhone}</div>}
+                              {showAddress && contactAddress && <div style={{ fontSize: "clamp(10px, 1vw, 13px)", color: "#fff", fontWeight: 600 }}>📍 {contactAddress}</div>}
+                              {showWebsite && contactWebsite && <div style={{ fontSize: "clamp(10px, 1vw, 13px)", color: "#4A90C4", fontWeight: 600 }}>🌐 {contactWebsite}</div>}
+                            </div>
+                            <div style={{ position: "absolute", bottom: 8, left: 20, fontSize: 9, color: "rgba(255,255,255,0.25)", fontFamily: "Georgia,serif", fontWeight: 700 }}>
+                              Community <span style={{ color: "rgba(232,86,58,0.45)" }}>Bulletin</span><span style={{ color: "rgba(74,144,196,0.45)" }}>.com</span>
+                            </div>
+                          </div>
+                          <div style={{ flex: 1, overflow: "hidden" }}>
+                            <img src={uploadedImageUrl} alt={title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                          </div>
+                        </div>
+                      ) : (
+                        /* Full-screen preview */
+                        <>
+                          <img src={uploadedImageUrl} alt={title} style={{ width: "100%", maxHeight: 240, objectFit: "contain", display: "block" }} />
+                          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,26,46,0.75) 0%, transparent 30%)", pointerEvents: "none" }} />
+                          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "10px 14px", display: "flex", justifyContent: "flex-end" }}>
+                            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.6)" }}>Ad #Preview</span>
+                          </div>
+                        </>
+                      )}
+                      {/* Preview button */}
+                      <button
+                        onClick={() => setShowPreview(true)}
+                        style={{
+                          position: "absolute", top: 10, right: 10,
+                          background: "rgba(10,26,46,0.75)", color: "#fff",
+                          border: "none", borderRadius: 6, padding: "6px 12px",
+                          fontSize: 12, fontWeight: 600, cursor: "pointer",
+                          backdropFilter: "blur(4px)", display: "flex", alignItems: "center", gap: 6,
+                        }}
+                      >
+                        <span>⛶</span> Preview on display screen
+                      </button>
                     </div>
-                    {/* Preview button */}
-                    <button
-                      onClick={() => setShowPreview(true)}
-                      style={{
-                        position: "absolute", top: 10, right: 10,
-                        background: "rgba(10,26,46,0.75)", color: "#fff",
-                        border: "none", borderRadius: 6, padding: "6px 12px",
-                        fontSize: 12, fontWeight: 600, cursor: "pointer",
-                        backdropFilter: "blur(4px)", display: "flex", alignItems: "center", gap: 6,
-                      }}
-                    >
-                      <span>⛶</span> Preview on display screen
-                    </button>
-                  </div>
-                )}
+                  );
+                })()}
                 <div style={{ display: "grid", gap: 10, fontSize: 14 }}>
                   <div><span style={{ color: "#6B8FA8" }}>Location:</span> <strong>{selectedLocation?.storeName}</strong></div>
                   <div><span style={{ color: "#6B8FA8" }}>Title:</span> <strong>{title}</strong></div>
@@ -618,74 +628,61 @@ export default function NewAdPage() {
       </div>
 
       {/* ── Display screen preview modal ── */}
-      {showPreview && uploadedImageUrl && (
-        <div
-          onClick={() => setShowPreview(false)}
-          style={{
-            position: "fixed", inset: 0, zIndex: 1000,
-            background: "rgba(0,0,0,0.85)",
-            display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center",
-          }}
-        >
-          {/* TV frame */}
+      {showPreview && uploadedImageUrl && (() => {
+        const hasSplit = !!(contactPhone || contactAddress || contactWebsite);
+        const titleLen = title.length;
+        const titleSize = titleLen <= 20 ? "clamp(28px, 4vw, 58px)" : titleLen <= 40 ? "clamp(20px, 2.8vw, 42px)" : "clamp(15px, 2vw, 30px)";
+        return (
           <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              width: "min(90vw, 1100px)",
-              maxHeight: "80vh",
-              background: "#0A1A2E",
-              borderRadius: 12,
-              overflow: "hidden",
-              position: "relative",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: "0 0 0 8px #1a1a1a, 0 0 0 12px #333, 0 24px 48px rgba(0,0,0,0.8)",
-            }}
+            onClick={() => setShowPreview(false)}
+            style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.85)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}
           >
-            {/* Full image — no crop */}
-            <img
-              src={uploadedImageUrl}
-              alt={title}
-              style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", maxHeight: "80vh" }}
-            />
-
-            {/* Subtle bottom gradient for the info bar */}
-            <div style={{
-              position: "absolute", inset: 0,
-              background: "linear-gradient(to top, rgba(10,26,46,0.75) 0%, transparent 18%)",
-            }} />
-
-            {/* Location info bar */}
-            <div style={{
-              position: "absolute", bottom: 0, left: 0, right: 0,
-              padding: "16px 32px",
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-            }}>
-              <span style={{
-                fontSize: "clamp(11px, 1.4vw, 18px)",
-                color: "rgba(255,255,255,0.9)",
-                fontWeight: 500, letterSpacing: "0.01em",
-              }}>
-                Store Location: {selectedLocation?.storeName} — {selectedLocation?.city.name} ({selectedLocation?.addressLine1})
-              </span>
-              <span style={{
-                fontSize: "clamp(10px, 1.2vw, 15px)",
-                color: "rgba(255,255,255,0.6)",
-                whiteSpace: "nowrap", marginLeft: 24,
-              }}>
-                Ad #Preview
-              </span>
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: "min(90vw, 1100px)", height: "min(56vw, 620px)",
+                background: "#0A1A2E", borderRadius: 12, overflow: "hidden",
+                position: "relative", display: "flex",
+                boxShadow: "0 0 0 8px #1a1a1a, 0 0 0 12px #333, 0 24px 48px rgba(0,0,0,0.8)",
+              }}
+            >
+              {hasSplit ? (
+                <>
+                  {/* Left panel */}
+                  <div style={{ width: "42%", background: "#0A1A2E", display: "flex", flexDirection: "column", justifyContent: "center", padding: "clamp(20px, 4vw, 52px)", position: "relative", flexShrink: 0, borderRight: "1px solid rgba(74,144,196,0.15)" }}>
+                    <div style={{ fontFamily: "Georgia,serif", fontSize: titleSize, fontWeight: 700, color: "#fff", lineHeight: 1.15, marginBottom: "clamp(10px, 1.5vw, 20px)" }}>{title}</div>
+                    {description && <div style={{ fontSize: "clamp(11px, 1.2vw, 17px)", color: "rgba(255,255,255,0.65)", lineHeight: 1.6, marginBottom: "clamp(12px, 1.8vw, 24px)" }}>{description}</div>}
+                    {(showPhone || showAddress || showWebsite) && <div style={{ width: 40, height: 3, background: "#E8563A", borderRadius: 2, marginBottom: "clamp(10px, 1.5vw, 20px)" }} />}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "clamp(8px, 1vw, 14px)" }}>
+                      {showPhone && contactPhone && <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "clamp(12px, 1.3vw, 18px)", color: "#fff", fontWeight: 600 }}>📞 {contactPhone}</div>}
+                      {showAddress && contactAddress && <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "clamp(12px, 1.3vw, 18px)", color: "#fff", fontWeight: 600 }}>📍 {contactAddress}</div>}
+                      {showWebsite && contactWebsite && <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "clamp(12px, 1.3vw, 18px)", color: "#4A90C4", fontWeight: 600 }}>🌐 {contactWebsite}</div>}
+                    </div>
+                    <div style={{ position: "absolute", bottom: 16, left: "clamp(20px, 4vw, 52px)", fontFamily: "Georgia,serif", fontSize: "clamp(9px, 0.9vw, 12px)", fontWeight: 700, color: "rgba(255,255,255,0.25)" }}>
+                      Community <span style={{ color: "rgba(232,86,58,0.45)" }}>Bulletin</span><span style={{ color: "rgba(74,144,196,0.45)" }}>.com</span>
+                    </div>
+                  </div>
+                  {/* Right panel */}
+                  <div style={{ flex: 1, overflow: "hidden" }}>
+                    <img src={uploadedImageUrl} alt={title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <img src={uploadedImageUrl} alt={title} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
+                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,26,46,0.75) 0%, transparent 18%)" }} />
+                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "16px 32px", display: "flex", justifyContent: "flex-end" }}>
+                    <span style={{ fontSize: "clamp(10px, 1.2vw, 15px)", color: "rgba(255,255,255,0.6)" }}>Ad #Preview</span>
+                  </div>
+                </>
+              )}
             </div>
+            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, marginTop: 20 }}>
+              This is how your ad will appear on the in-store display screen · Click anywhere or press Esc to close
+            </p>
           </div>
-
-          {/* Caption */}
-          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, marginTop: 20 }}>
-            This is how your ad will appear on the in-store display screen · Click anywhere or press Esc to close
-          </p>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

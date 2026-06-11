@@ -415,19 +415,6 @@ function SplitAdSlide({ ad, idx, total }: { ad: Ad; idx: number; total: number }
           )}
         </div>
 
-        {/* Branding */}
-        <div style={{
-          position: "absolute",
-          bottom: "clamp(10px, 1.8vw, 20px)",
-          left: "clamp(20px, 4vw, 56px)",
-          fontFamily: "Georgia, serif",
-          fontSize: "clamp(9px, 0.9vw, 12px)",
-          fontWeight: 700,
-          color: "rgba(255,255,255,0.25)",
-        }}>
-          Community <span style={{ color: "rgba(232,86,58,0.45)" }}>Bulletin</span>
-          <span style={{ color: "rgba(74,144,196,0.45)" }}>.com</span>
-        </div>
       </div>
 
       {/* Right panel — image */}

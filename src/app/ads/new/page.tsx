@@ -570,9 +570,6 @@ export default function NewAdPage() {
                               {showAddress && contactAddress && <div style={{ fontSize: "clamp(10px, 1vw, 13px)", color: "#fff", fontWeight: 600 }}>📍 {contactAddress}</div>}
                               {showWebsite && contactWebsite && <div style={{ fontSize: "clamp(10px, 1vw, 13px)", color: "#4A90C4", fontWeight: 600 }}>🌐 {contactWebsite}</div>}
                             </div>
-                            <div style={{ position: "absolute", bottom: 8, left: 20, fontSize: 9, color: "rgba(255,255,255,0.25)", fontFamily: "Georgia,serif", fontWeight: 700 }}>
-                              Community <span style={{ color: "rgba(232,86,58,0.45)" }}>Bulletin</span><span style={{ color: "rgba(74,144,196,0.45)" }}>.com</span>
-                            </div>
                           </div>
                           <div style={{ flex: 1, overflow: "hidden" }}>
                             <img src={uploadedImageUrl} alt={title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
@@ -667,9 +664,6 @@ export default function NewAdPage() {
                       {showPhone && contactPhone && <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "clamp(12px, 1.3vw, 18px)", color: "#fff", fontWeight: 600 }}>📞 {contactPhone}</div>}
                       {showAddress && contactAddress && <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "clamp(12px, 1.3vw, 18px)", color: "#fff", fontWeight: 600 }}>📍 {contactAddress}</div>}
                       {showWebsite && contactWebsite && <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "clamp(12px, 1.3vw, 18px)", color: "#4A90C4", fontWeight: 600 }}>🌐 {contactWebsite}</div>}
-                    </div>
-                    <div style={{ position: "absolute", bottom: 16, left: "clamp(20px, 4vw, 52px)", fontFamily: "Georgia,serif", fontSize: "clamp(9px, 0.9vw, 12px)", fontWeight: 700, color: "rgba(255,255,255,0.25)" }}>
-                      Community <span style={{ color: "rgba(232,86,58,0.45)" }}>Bulletin</span><span style={{ color: "rgba(74,144,196,0.45)" }}>.com</span>
                     </div>
                   </div>
                   {/* Right panel */}

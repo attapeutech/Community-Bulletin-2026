@@ -351,7 +351,7 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
                 color: "rgba(255,255,255,0.9)",
                 fontWeight: 500, letterSpacing: "0.01em",
               }}>
-                {previewAd.location.storeName} — {previewAd.location.addressLine1}{previewAd.location.addressLine2 ? `, ${previewAd.location.addressLine2}` : ""}, {previewAd.location.cityName}, {previewAd.location.stateCode} {previewAd.location.postalCode}
+                {previewAd.location.storeName}
               </span>
               <span style={{
                 fontSize: "clamp(10px, 1.2vw, 15px)",

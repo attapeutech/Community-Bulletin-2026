@@ -165,11 +165,6 @@ export default async function AdDetailPage({
         imageUrl={ad.imageUrl}
         title={ad.title}
         storeName={location.storeName}
-        addressLine1={location.addressLine1}
-        addressLine2={location.addressLine2}
-        cityName={location.cityName}
-        stateCode={location.stateCode}
-        postalCode={location.postalCode}
         adId={ad.id}
       />
 

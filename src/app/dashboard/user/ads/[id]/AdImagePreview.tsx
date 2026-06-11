@@ -6,17 +6,10 @@ type Props = {
   imageUrl: string;
   title: string;
   storeName: string;
-  addressLine1: string;
-  addressLine2: string | null;
-  cityName: string;
-  stateCode: string;
-  postalCode: string;
   adId: string;
 };
 
-export default function AdImagePreview({ imageUrl, title, storeName, addressLine1, addressLine2, cityName, stateCode, postalCode, adId }: Props) {
-  const fullAddress = `${addressLine1}${addressLine2 ? `, ${addressLine2}` : ""}, ${cityName}, ${stateCode} ${postalCode}`;
-  const infoLine = `${storeName} — ${fullAddress}`;
+export default function AdImagePreview({ imageUrl, title, storeName, adId }: Props) {
   const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
@@ -49,7 +42,7 @@ export default function AdImagePreview({ imageUrl, title, storeName, addressLine
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
           <span style={{ fontSize: 12, color: "rgba(255,255,255,0.9)", fontWeight: 500 }}>
-            {infoLine}
+            {storeName}
           </span>
           <span style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", whiteSpace: "nowrap", marginLeft: 12 }}>
             Ad #{adId.slice(-6).toUpperCase()}
@@ -112,7 +105,7 @@ export default function AdImagePreview({ imageUrl, title, storeName, addressLine
                 color: "rgba(255,255,255,0.9)",
                 fontWeight: 500, letterSpacing: "0.01em",
               }}>
-                {infoLine}
+                {storeName}
               </span>
               <span style={{
                 fontSize: "clamp(10px, 1.2vw, 15px)",

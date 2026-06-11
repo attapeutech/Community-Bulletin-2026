@@ -383,9 +383,14 @@ function SplitAdSlide({ ad, idx, total }: { ad: Ad; idx: number; total: number }
           </div>
         )}
 
-        {/* Accent divider */}
+        {/* Accent divider + Contact Info label */}
         {(ad.showPhone || ad.showAddress || ad.showWebsite) && (
-          <div style={{ width: 44, height: 3, background: "#E8563A", borderRadius: 2, marginBottom: "clamp(12px, 1.8vw, 24px)" }} />
+          <>
+            <div style={{ width: 44, height: 3, background: "#E8563A", borderRadius: 2, marginBottom: "clamp(10px, 1.4vw, 18px)" }} />
+            <div style={{ fontSize: "clamp(9px, 0.85vw, 12px)", fontWeight: 700, letterSpacing: "0.12em", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: "clamp(8px, 1vw, 14px)" }}>
+              Contact Info
+            </div>
+          </>
         )}
 
         {/* Contact fields */}

@@ -18,6 +18,12 @@ type Ad = {
   status: string;
   paymentStatus: string;
   createdAt: string;
+  contactPhone:   string | null;
+  contactAddress: string | null;
+  contactWebsite: string | null;
+  showPhone:   boolean;
+  showAddress: boolean;
+  showWebsite: boolean;
   user: { id: string; name: string; email: string };
   location: { id: string; storeName: string; slug: string; addressLine1: string; addressLine2: string | null; cityName: string; stateCode: string; postalCode: string };
 };
@@ -306,67 +312,68 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
       )}
 
       {/* Display screen preview modal */}
-      {previewAd && (
-        <div
-          onClick={() => setPreviewAd(null)}
-          style={{
-            position: "fixed", inset: 0, zIndex: 1000,
-            background: "rgba(0,0,0,0.85)",
-            display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center",
-          }}
-        >
-          {/* TV frame */}
+      {previewAd && (() => {
+        const hasSplit = !!(previewAd.contactPhone || previewAd.contactAddress || previewAd.contactWebsite);
+        const len = previewAd.title.length;
+        const titleSize = len <= 20 ? "clamp(28px, 4vw, 58px)" : len <= 40 ? "clamp(20px, 2.8vw, 42px)" : "clamp(15px, 2vw, 30px)";
+        return (
           <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              width: "min(90vw, 1100px)",
-              maxHeight: "80vh",
-              background: "#0A1A2E",
-              borderRadius: 12,
-              overflow: "hidden",
-              position: "relative",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: "0 0 0 8px #1a1a1a, 0 0 0 12px #333, 0 24px 48px rgba(0,0,0,0.8)",
-            }}
+            onClick={() => setPreviewAd(null)}
+            style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.85)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}
           >
-            <img
-              src={previewAd.imageUrl}
-              alt={previewAd.title}
-              style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", maxHeight: "80vh" }}
-            />
-            <div style={{
-              position: "absolute", inset: 0,
-              background: "linear-gradient(to top, rgba(10,26,46,0.75) 0%, transparent 18%)",
-            }} />
-            <div style={{
-              position: "absolute", bottom: 0, left: 0, right: 0,
-              padding: "16px 32px",
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-            }}>
-              <span style={{
-                fontSize: "clamp(11px, 1.4vw, 18px)",
-                color: "rgba(255,255,255,0.9)",
-                fontWeight: 500, letterSpacing: "0.01em",
-              }}>
-                {previewAd.location.storeName}
-              </span>
-              <span style={{
-                fontSize: "clamp(10px, 1.2vw, 15px)",
-                color: "rgba(255,255,255,0.6)",
-                whiteSpace: "nowrap", marginLeft: 24,
-              }}>
-                Ad #{previewAd.id.slice(-6).toUpperCase()}
-              </span>
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: "min(90vw, 1100px)", height: "min(56vw, 620px)",
+                background: "#0A1A2E", borderRadius: 12, overflow: "hidden",
+                position: "relative", display: "flex",
+                boxShadow: "0 0 0 8px #1a1a1a, 0 0 0 12px #333, 0 24px 48px rgba(0,0,0,0.8)",
+              }}
+            >
+              {hasSplit ? (
+                <>
+                  <div style={{ width: "42%", background: "#0A1A2E", display: "flex", flexDirection: "column", justifyContent: "center", padding: "clamp(20px, 4vw, 52px)", position: "relative", flexShrink: 0, borderRight: "1px solid rgba(74,144,196,0.15)" }}>
+                    <div style={{ fontFamily: "Georgia,serif", fontSize: titleSize, fontWeight: 700, color: "#fff", lineHeight: 1.15, marginBottom: "clamp(10px, 1.5vw, 20px)" }}>{previewAd.title}</div>
+                    {previewAd.description && <div style={{ fontSize: "clamp(11px, 1.2vw, 17px)", color: "rgba(255,255,255,0.65)", lineHeight: 1.6, marginBottom: "clamp(12px, 1.8vw, 24px)" }}>{previewAd.description}</div>}
+                    {(previewAd.showPhone || previewAd.showAddress || previewAd.showWebsite) && (
+                      <>
+                        <div style={{ width: 40, height: 3, background: "#E8563A", borderRadius: 2, marginBottom: "clamp(8px, 1.2vw, 16px)" }} />
+                        <div style={{ fontSize: "clamp(9px, 0.8vw, 11px)", fontWeight: 700, letterSpacing: "0.12em", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: "clamp(8px, 1vw, 14px)" }}>Contact Info</div>
+                      </>
+                    )}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "clamp(8px, 1vw, 14px)" }}>
+                      {previewAd.showPhone   && previewAd.contactPhone   && <div style={{ fontSize: "clamp(12px, 1.3vw, 18px)", color: "#fff",     fontWeight: 600 }}>📞 {previewAd.contactPhone}</div>}
+                      {previewAd.showAddress && previewAd.contactAddress && <div style={{ fontSize: "clamp(12px, 1.3vw, 18px)", color: "#fff",     fontWeight: 600 }}>📍 {previewAd.contactAddress}</div>}
+                      {previewAd.showWebsite && previewAd.contactWebsite && <div style={{ fontSize: "clamp(12px, 1.3vw, 18px)", color: "#4A90C4", fontWeight: 600 }}>🌐 {previewAd.contactWebsite}</div>}
+                    </div>
+                    <div style={{ position: "absolute", bottom: 16, left: "clamp(20px, 4vw, 52px)", fontFamily: "Georgia,serif", fontSize: "clamp(9px, 0.9vw, 12px)", fontWeight: 700, color: "rgba(255,255,255,0.25)" }}>
+                      Community <span style={{ color: "rgba(232,86,58,0.45)" }}>Bulletin</span><span style={{ color: "rgba(74,144,196,0.45)" }}>.com</span>
+                    </div>
+                  </div>
+                  <div style={{ flex: 1, overflow: "hidden" }}>
+                    <img src={previewAd.imageUrl} alt={previewAd.title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                  </div>
+                  <div style={{ position: "absolute", bottom: 12, right: 20, fontSize: "clamp(10px, 0.9vw, 13px)", color: "rgba(255,255,255,0.35)" }}>
+                    Ad #{previewAd.id.slice(-6).toUpperCase()}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <img src={previewAd.imageUrl} alt={previewAd.title} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
+                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,26,46,0.75) 0%, transparent 18%)" }} />
+                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "16px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: "clamp(11px, 1.4vw, 18px)", color: "rgba(255,255,255,0.9)", fontWeight: 500 }}>{previewAd.location.storeName}</span>
+                    <span style={{ fontSize: "clamp(10px, 1.2vw, 15px)", color: "rgba(255,255,255,0.6)", whiteSpace: "nowrap", marginLeft: 24 }}>Ad #{previewAd.id.slice(-6).toUpperCase()}</span>
+                  </div>
+                </>
+              )}
             </div>
+            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, marginTop: 20 }}>
+              This is how the ad will appear on the display screen · Click anywhere or press Esc to close
+            </p>
           </div>
-          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, marginTop: 20 }}>
-            This is how the ad will appear on the display screen · Click anywhere or press Esc to close
-          </p>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

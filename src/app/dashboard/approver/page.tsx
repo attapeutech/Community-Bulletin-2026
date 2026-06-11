@@ -16,6 +16,12 @@ export default async function ApproverDashboard() {
       status: ads.status,
       paymentStatus: ads.paymentStatus,
       createdAt: ads.createdAt,
+      contactPhone:   ads.contactPhone,
+      contactAddress: ads.contactAddress,
+      contactWebsite: ads.contactWebsite,
+      showPhone:   ads.showPhone,
+      showAddress: ads.showAddress,
+      showWebsite: ads.showWebsite,
       user: {
         id: users.id,
         name: users.name,

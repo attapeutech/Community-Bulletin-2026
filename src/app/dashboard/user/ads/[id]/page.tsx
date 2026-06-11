@@ -164,8 +164,15 @@ export default async function AdDetailPage({
       <AdImagePreview
         imageUrl={ad.imageUrl}
         title={ad.title}
+        description={ad.description}
         storeName={location.storeName}
         adId={ad.id}
+        contactPhone={ad.contactPhone}
+        contactAddress={ad.contactAddress}
+        contactWebsite={ad.contactWebsite}
+        showPhone={ad.showPhone}
+        showAddress={ad.showAddress}
+        showWebsite={ad.showWebsite}
       />
 
       {/* Details */}

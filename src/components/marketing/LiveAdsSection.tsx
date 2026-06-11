@@ -33,8 +33,7 @@ function AdCard({ ad }: { ad: LiveAd }) {
 
   return (
     <Link
-      href={`/display/${ad.locationSlug}`}
-      target="_blank"
+      href={`/ad/${ad.id}`}
       style={{ textDecoration: "none" }}
     >
       <div style={{
@@ -139,9 +138,9 @@ function AdCard({ ad }: { ad: LiveAd }) {
           </div>
         </div>
 
-        {/* View Display CTA */}
+        {/* CTA footer */}
         <div style={{ padding: "10px 16px", borderTop: "1px solid #EDF2F7", background: "#F7FAFC", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: "#1A3A5C" }}>View Live Display</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: "#1A3A5C" }}>View Ad Details</span>
           <span style={{ fontSize: 14, color: "#4A90C4" }}>→</span>
         </div>
       </div>

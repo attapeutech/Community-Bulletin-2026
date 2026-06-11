@@ -10,6 +10,7 @@ const PUBLIC_ROUTES = [
   "/verify-email",
   "/two-factor",
   "/display",
+  "/ad",
   "/help",
   "/privacy",
   "/terms",

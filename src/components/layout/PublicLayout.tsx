@@ -80,7 +80,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-[#D8E4EE] shadow-sm flex flex-col">
 
         {/* Row 1 — always visible */}
-        <div className="h-16 flex items-center justify-between px-4 sm:px-8 gap-3">
+        <div className="h-16 w-full flex items-center justify-between px-4 sm:px-8 gap-3">
 
           {/* Logo */}
           <Link href="/" className="no-underline flex items-center gap-2.5 shrink-0">
@@ -172,7 +172,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* Mobile + landscape tablet: location pill (mobile only) + hamburger */}
-          <div className="lg:hidden flex items-center gap-2 ml-auto">
+          <div className="lg:hidden flex items-center gap-2 ml-auto shrink-0">
             <button
               onClick={() => setLocationPickerOpen(true)}
               className="md:hidden flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors"

@@ -16,6 +16,9 @@ const editSchema = z.object({
   contactPhone:   z.string().max(50).nullable().optional(),
   contactAddress: z.string().max(300).nullable().optional(),
   contactWebsite: z.string().max(500).nullable().optional(),
+  showPhone:      z.boolean().optional(),
+  showAddress:    z.boolean().optional(),
+  showWebsite:    z.boolean().optional(),
 });
 
 // PATCH /api/admin/ads/[id] — admin direct edit for testing (no emails / refunds)

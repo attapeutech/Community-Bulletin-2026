@@ -60,6 +60,7 @@ export default async function AdminDashboard() {
     .select({
       id: ads.id,
       title: ads.title,
+      description: ads.description,
       imageUrl: ads.imageUrl,
       status: ads.status,
       paymentStatus: ads.paymentStatus,
@@ -70,6 +71,9 @@ export default async function AdminDashboard() {
       contactPhone: ads.contactPhone,
       contactAddress: ads.contactAddress,
       contactWebsite: ads.contactWebsite,
+      showPhone: ads.showPhone,
+      showAddress: ads.showAddress,
+      showWebsite: ads.showWebsite,
       user: { id: users.id, name: users.name, email: users.email },
       location: { id: locations.id, storeName: locations.storeName, slug: locations.slug },
     })

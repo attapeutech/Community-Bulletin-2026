@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useDashboardSocket } from "@/lib/socket/client";
 import { Check, X, RefreshCw, Trash2, MonitorPlay, Pencil } from "lucide-react";
 
@@ -64,6 +65,7 @@ type User = {
 type Ad = {
   id: string;
   title: string;
+  description: string | null;
   imageUrl: string;
   status: string;
   paymentStatus: string;
@@ -74,6 +76,9 @@ type Ad = {
   contactPhone: string | null;
   contactAddress: string | null;
   contactWebsite: string | null;
+  showPhone: boolean;
+  showAddress: boolean;
+  showWebsite: boolean;
   user: { id: string; name: string; email: string };
   location: { id: string; storeName: string; slug: string };
 };
@@ -108,6 +113,9 @@ type EditDraft = {
   contactPhone: string;
   contactAddress: string;
   contactWebsite: string;
+  showPhone: boolean;
+  showAddress: boolean;
+  showWebsite: boolean;
 };
 
 function toDatetimeLocal(iso: string) {
@@ -127,7 +135,7 @@ function AdminEditAdDialog({
 }) {
   const [draft, setDraft] = useState<EditDraft>({
     title:          ad.title,
-    description:    "",
+    description:    ad.description    ?? "",
     status:         ad.status,
     paymentStatus:  ad.paymentStatus,
     startedAt:      toDatetimeLocal(ad.startedAt),
@@ -136,12 +144,15 @@ function AdminEditAdDialog({
     contactPhone:   ad.contactPhone   ?? "",
     contactAddress: ad.contactAddress ?? "",
     contactWebsite: ad.contactWebsite ?? "",
+    showPhone:      ad.showPhone,
+    showAddress:    ad.showAddress,
+    showWebsite:    ad.showWebsite,
   });
   const [saving,      setSaving]      = useState(false);
   const [error,       setError]       = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  const set = (k: keyof EditDraft, v: string | number) => {
+  const set = (k: keyof EditDraft, v: string | number | boolean) => {
     setDraft(d => ({ ...d, [k]: v }));
     setFieldErrors(e => { const n = { ...e }; delete n[k as string]; return n; });
   };
@@ -169,6 +180,9 @@ function AdminEditAdDialog({
           contactPhone:   draft.contactPhone.trim()   || null,
           contactAddress: draft.contactAddress.trim() || null,
           contactWebsite: draft.contactWebsite.trim() || null,
+          showPhone:      draft.showPhone,
+          showAddress:    draft.showAddress,
+          showWebsite:    draft.showWebsite,
         }),
       });
       const json = await res.json();
@@ -184,12 +198,20 @@ function AdminEditAdDialog({
         }
         throw new Error(json.error ?? "Save failed");
       }
+      toast.success("Ad updated successfully");
       onSaved({
-        title:        draft.title.trim(),
-        status:       draft.status as Ad["status"],
-        paymentStatus: draft.paymentStatus as Ad["paymentStatus"],
-        startedAt:    new Date(draft.startedAt).toISOString(),
-        endedAt:      new Date(draft.endedAt).toISOString(),
+        title:          draft.title.trim(),
+        description:    draft.description.trim() || null,
+        status:         draft.status as Ad["status"],
+        paymentStatus:  draft.paymentStatus as Ad["paymentStatus"],
+        startedAt:      new Date(draft.startedAt).toISOString(),
+        endedAt:        new Date(draft.endedAt).toISOString(),
+        contactPhone:   draft.contactPhone.trim()   || null,
+        contactAddress: draft.contactAddress.trim() || null,
+        contactWebsite: draft.contactWebsite.trim() || null,
+        showPhone:      draft.showPhone,
+        showAddress:    draft.showAddress,
+        showWebsite:    draft.showWebsite,
       });
       onClose();
     } catch (e: any) {
@@ -251,17 +273,35 @@ function AdminEditAdDialog({
 
           {/* Contact fields */}
           <div>
-            <label className={labelCls}>Phone <span className="normal-case text-[#9DB8CC] font-normal">(optional)</span></label>
+            <div className="flex items-center justify-between mb-1">
+              <label className={labelCls + " mb-0"}>Phone <span className="normal-case text-[#9DB8CC] font-normal">(optional)</span></label>
+              <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-[#6B8FA8]">
+                <input type="checkbox" checked={draft.showPhone} onChange={e => set("showPhone", e.target.checked)} className="accent-[#4A90C4]" />
+                Show on display
+              </label>
+            </div>
             <input className={`${inputCls} ${fieldErrors.contactPhone ? "border-red-400" : ""}`} placeholder="e.g. (555) 123-4567" value={draft.contactPhone} onChange={e => set("contactPhone", e.target.value)} />
             {fe("contactPhone")}
           </div>
           <div>
-            <label className={labelCls}>Address <span className="normal-case text-[#9DB8CC] font-normal">(optional)</span></label>
+            <div className="flex items-center justify-between mb-1">
+              <label className={labelCls + " mb-0"}>Address <span className="normal-case text-[#9DB8CC] font-normal">(optional)</span></label>
+              <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-[#6B8FA8]">
+                <input type="checkbox" checked={draft.showAddress} onChange={e => set("showAddress", e.target.checked)} className="accent-[#4A90C4]" />
+                Show on display
+              </label>
+            </div>
             <input className={`${inputCls} ${fieldErrors.contactAddress ? "border-red-400" : ""}`} placeholder="e.g. 123 Main St, City, State" value={draft.contactAddress} onChange={e => set("contactAddress", e.target.value)} />
             {fe("contactAddress")}
           </div>
           <div>
-            <label className={labelCls}>Website URL <span className="normal-case text-[#9DB8CC] font-normal">(optional)</span></label>
+            <div className="flex items-center justify-between mb-1">
+              <label className={labelCls + " mb-0"}>Website URL <span className="normal-case text-[#9DB8CC] font-normal">(optional)</span></label>
+              <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-[#6B8FA8]">
+                <input type="checkbox" checked={draft.showWebsite} onChange={e => set("showWebsite", e.target.checked)} className="accent-[#4A90C4]" />
+                Show on display
+              </label>
+            </div>
             <input className={`${inputCls} ${fieldErrors.contactWebsite ? "border-red-400" : ""}`} placeholder="https://example.com" value={draft.contactWebsite} onChange={e => set("contactWebsite", e.target.value)} />
             {fe("contactWebsite")}
           </div>
@@ -1018,7 +1058,6 @@ export default function AdminPanelClient({
           onSaved={(updated) => {
             setAds(prev => prev.map(a => a.id === editingAd.id ? { ...a, ...updated } : a));
             setEditingAd(null);
-            showAdToast("Ad updated", true);
           }}
         />
       )}

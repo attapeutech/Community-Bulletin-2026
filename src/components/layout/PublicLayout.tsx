@@ -94,11 +94,11 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             </div>
           </Link>
 
-          {/* Desktop: location picker + search */}
-          <div className="hidden md:flex items-center gap-2 flex-1 max-w-sm mx-4">
+          {/* Location picker + search — icon-only at md, full at lg */}
+          <div className="hidden md:flex items-center gap-1.5 flex-1 max-w-[150px] lg:max-w-sm mx-2 lg:mx-4">
             <button
               onClick={() => setLocationPickerOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors shrink-0"
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors shrink-0"
               style={{
                 border: `1px solid ${locationLabel ? "#4A90C4" : "#D8E4EE"}`,
                 background: locationLabel ? "#EDF5FF" : "#F7FAFC",
@@ -106,31 +106,31 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               }}
             >
               <MapPin size={12} />
-              {locationLabel ?? "All locations"}
+              <span className="hidden lg:inline">{locationLabel ?? "All locations"}</span>
               {locationLabel && (
                 <span
                   onClick={(e) => { e.stopPropagation(); handleLocationSave(null); }}
-                  className="ml-0.5 text-[#6B8FA8] font-normal text-sm leading-none"
+                  className="hidden lg:inline ml-0.5 text-[#6B8FA8] font-normal text-sm leading-none"
                 >×</span>
               )}
             </button>
             <div className="relative flex-1">
-              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9DB8CC] pointer-events-none" />
+              <Search size={13} className="absolute left-2 top-1/2 -translate-y-1/2 text-[#9DB8CC] pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search live ads…"
+                placeholder="Search…"
                 value={searchInput}
                 onChange={e => handleSearch(e.target.value)}
-                className="w-full pl-8 pr-6 py-1.5 border border-[#D8E4EE] rounded-lg text-sm text-[#1A3A5C] bg-[#FAFCFF] outline-none focus:border-[#4A90C4] transition-colors"
+                className="w-full pl-7 pr-5 py-1.5 border border-[#D8E4EE] rounded-lg text-sm text-[#1A3A5C] bg-[#FAFCFF] outline-none focus:border-[#4A90C4] transition-colors"
               />
               {searchInput && (
-                <button onClick={() => handleSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-[#9DB8CC] bg-transparent border-none cursor-pointer text-base leading-none">×</button>
+                <button onClick={() => handleSearch("")} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[#9DB8CC] bg-transparent border-none cursor-pointer text-base leading-none">×</button>
               )}
             </div>
           </div>
 
-          {/* Desktop nav links */}
-          <div className="hidden md:flex items-center gap-5">
+          {/* Pill buttons — visible at md+ */}
+          <div className="hidden md:flex items-center gap-2">
             <Link href="/live-ads" className="no-underline flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
@@ -141,6 +141,10 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             <Link href="/dashboard/user" className="no-underline flex items-center gap-1 bg-[#E8563A] hover:bg-[#D04530] text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors">
               + Post an Ad
             </Link>
+          </div>
+
+          {/* Text nav links — full desktop only (lg+) */}
+          <div className="hidden lg:flex items-center gap-5">
             {NAV_LINKS.map((l) => (
               <Link key={l.href} href={l.href} className="no-underline flex items-center gap-1.5 text-sm text-[#4A7FA5] font-medium hover:text-[#1A3A5C] transition-colors">
                 <l.icon size={14} />
@@ -149,8 +153,8 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             ))}
           </div>
 
-          {/* Desktop CTA */}
-          <div className="hidden md:flex items-center gap-3 shrink-0">
+          {/* CTA buttons — full desktop only (lg+) */}
+          <div className="hidden lg:flex items-center gap-3 shrink-0">
             {user ? (
               <Link href="/dashboard" className="no-underline flex items-center gap-2.5 text-sm font-semibold text-white pl-1 pr-4 py-1 rounded-full bg-[#1A3A5C] hover:bg-[#0F2540] transition-colors">
                 <Avatar className="w-7 h-7 shrink-0">
@@ -167,11 +171,11 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             )}
           </div>
 
-          {/* Mobile: location pill + hamburger */}
-          <div className="md:hidden flex items-center gap-2 ml-auto">
+          {/* Mobile + landscape tablet: location pill (mobile only) + hamburger */}
+          <div className="lg:hidden flex items-center gap-2 ml-auto">
             <button
               onClick={() => setLocationPickerOpen(true)}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors"
+              className="md:hidden flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors"
               style={{
                 border: `1px solid ${locationLabel ? "#4A90C4" : "#D8E4EE"}`,
                 background: locationLabel ? "#EDF5FF" : "#F7FAFC",
@@ -207,10 +211,11 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
         </div>
       </nav>
 
-      {/* Mobile hamburger dropdown */}
+      {/* Hamburger dropdown — mobile + landscape tablet (hidden at lg+) */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed top-[108px] left-0 right-0 z-40 bg-white border-b border-[#D8E4EE] shadow-lg px-4 py-4 flex flex-col gap-1">
-          <div className="flex items-center gap-2 mb-1">
+        <div className="lg:hidden fixed top-[108px] md:top-16 left-0 right-0 z-40 bg-white border-b border-[#D8E4EE] shadow-lg px-4 py-4 flex flex-col gap-1">
+          {/* Pills shown only on mobile (md+ already has them in the nav bar) */}
+          <div className="flex items-center gap-2 mb-1 md:hidden">
             <Link href="/live-ads" onClick={() => setMobileMenuOpen(false)} className="no-underline flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-4 py-2.5 rounded-full transition-colors">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body style={{ margin: 0, padding: 0, background: "#F4F7FB", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+      <body style={{ margin: 0, padding: 0, background: "#F4F7FB", fontFamily: "system-ui, -apple-system, sans-serif", overflowX: "hidden" }}>
         {children}
         <ScrollToTop />
         <Toaster richColors position="top-right" />

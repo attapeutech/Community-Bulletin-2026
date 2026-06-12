@@ -54,7 +54,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
             </span>
-            LIVE
+            Live Ads
           </Link>
           {NAV_LINKS.map((l) => (
             <Link key={l.href} href={l.href} className="no-underline flex items-center gap-1.5 text-sm text-[#4A7FA5] font-medium hover:text-[#1A3A5C] transition-colors">

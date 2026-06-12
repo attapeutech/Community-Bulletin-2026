@@ -118,7 +118,7 @@ export default function LandingPage() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
             </span>
-            LIVE
+            Live Ads
           </Link>
           {NAV_LINKS.map((l) => (
             <a key={l.href} href={l.href} className="no-underline flex items-center gap-1.5 text-sm text-[#4A7FA5] font-medium hover:text-[#1A3A5C] transition-colors">
@@ -446,6 +446,17 @@ export default function LandingPage() {
       {/* ── FOOTER ── */}
       <footer className="bg-[#0F2540] px-4 sm:px-8 pt-10 pb-6 border-t border-white/[0.08]">
         <div className="max-w-4xl mx-auto">
+          {/* Live Ads CTA */}
+          <div className="flex items-center gap-4 flex-wrap mb-8 pb-8 border-b border-white/[0.08]">
+            <Link href="/live-ads" className="no-underline flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white text-sm font-bold px-4 py-2 rounded-full transition-colors">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+              </span>
+              Live Ads
+            </Link>
+            <span className="text-sm text-[#6B8FA8]">Browse live ads running right now in your area</span>
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 mb-10">
             <div className="col-span-2 sm:col-span-1">
               <div className="flex items-center gap-2.5 mb-3.5">

@@ -11,6 +11,7 @@ const PUBLIC_ROUTES = [
   "/two-factor",
   "/display",
   "/ad",
+  "/live-ads",
   "/help",
   "/privacy",
   "/terms",
@@ -26,6 +27,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/cron") ||
     pathname.startsWith("/api/display") ||
     pathname.startsWith("/api/ads/live") ||
+    pathname.startsWith("/api/geo") ||
     pathname.startsWith("/api/support") ||
     pathname.startsWith("/api/auth/verify-recaptcha") ||
     pathname.startsWith("/_next") ||

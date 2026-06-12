@@ -7,7 +7,9 @@ import { eq, and, lte, gte, asc, or, ilike, sql } from "drizzle-orm";
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = req.nextUrl;
-    const search = searchParams.get("search")?.trim() ?? "";
+    const search    = searchParams.get("search")?.trim() ?? "";
+    const stateCode = searchParams.get("state")?.trim().toUpperCase() ?? "";
+    const cityName  = searchParams.get("city")?.trim() ?? "";
     const now = new Date();
 
     const baseWhere = and(
@@ -15,7 +17,9 @@ export async function GET(req: NextRequest) {
       eq(ads.paymentStatus, "paid"),
       lte(ads.startedAt, now),
       gte(ads.endedAt, now),
-      eq(locations.isActive, true)
+      eq(locations.isActive, true),
+      stateCode ? eq(states.code, stateCode) : undefined,
+      cityName  ? ilike(cities.name, cityName) : undefined,
     );
 
     const searchWhere = search

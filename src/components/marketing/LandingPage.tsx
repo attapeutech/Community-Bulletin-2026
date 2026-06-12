@@ -1,15 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Icon } from "@/components/layout/Icon";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Menu, X } from "lucide-react";
 import { useSession } from "@/lib/auth/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LiveAdsSection from "./LiveAdsSection";
+import LocationPickerDialog from "./LocationPickerDialog";
+
+type SelectedLocation = { stateCode: string; stateName: string; cityName: string };
 
 const NAV_LINKS = [
-  { label: "Live Ads", href: "#live-ads" },
+  { label: "Live Ads", href: "/live-ads" },
   { label: "How it works", href: "#how-it-works" },
   { label: "Features", href: "#features" },
   { label: "Pricing", href: "#pricing" },
@@ -40,8 +44,13 @@ const STATS = [
 ];
 
 export default function LandingPage() {
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [locationPickerOpen, setLocationPickerOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
+  const [searchInput, setSearchInput] = useState("");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { data: session } = useSession();
 
   useEffect(() => {
@@ -49,6 +58,31 @@ export default function LandingPage() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const navigateToLiveAds = (loc: SelectedLocation | null, q: string) => {
+    const params = new URLSearchParams();
+    if (loc?.stateCode) params.set("state", loc.stateCode);
+    if (loc?.cityName)  params.set("city",  loc.cityName);
+    if (q.trim())       params.set("search", q.trim());
+    router.push(`/live-ads${params.toString() ? `?${params}` : ""}`);
+  };
+
+  const handleLocationSave = (loc: SelectedLocation | null) => {
+    setSelectedLocation(loc);
+    navigateToLiveAds(loc, searchInput);
+  };
+
+  const handleSearch = (val: string) => {
+    setSearchInput(val);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => navigateToLiveAds(selectedLocation, val), 400);
+  };
+
+  const locationLabel = selectedLocation
+    ? selectedLocation.cityName
+      ? `${selectedLocation.cityName}, ${selectedLocation.stateCode}`
+      : selectedLocation.stateName || selectedLocation.stateCode
+    : null;
 
   return (
     <div className="font-sans text-[#1A3A5C] overflow-x-hidden">
@@ -70,12 +104,40 @@ export default function LandingPage() {
         </Link>
 
         {/* Desktop nav links */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-6">
           {NAV_LINKS.map((l) => (
             <a key={l.href} href={l.href} className="no-underline text-sm text-[#4A7FA5] font-medium hover:text-[#1A3A5C] transition-colors">
               {l.label}
             </a>
           ))}
+        </div>
+
+        {/* Location picker + search */}
+        <div className="hidden md:flex items-center gap-2 flex-1 max-w-md mx-4">
+          <button
+            onClick={() => setLocationPickerOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors flex-shrink-0"
+            style={{ border: `1px solid ${locationLabel ? "#4A90C4" : "#D8E4EE"}`, background: locationLabel ? "#EDF5FF" : "#fff", color: locationLabel ? "#1A3A5C" : "#6B8FA8" }}
+          >
+            <span>📍</span>
+            {locationLabel ?? "Location"}
+            {locationLabel && (
+              <span onClick={(e) => { e.stopPropagation(); handleLocationSave(null); }} className="ml-1 text-[#6B8FA8] font-normal">×</span>
+            )}
+          </button>
+          <div className="relative flex-1">
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9DB8CC] text-sm pointer-events-none">🔍</span>
+            <input
+              type="text"
+              placeholder="Search live ads…"
+              value={searchInput}
+              onChange={e => handleSearch(e.target.value)}
+              className="w-full pl-8 pr-7 py-1.5 border border-[#D8E4EE] rounded-lg text-sm text-[#1A3A5C] bg-[#FAFCFF] outline-none"
+            />
+            {searchInput && (
+              <button onClick={() => handleSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-[#9DB8CC] bg-transparent border-none cursor-pointer text-base">×</button>
+            )}
+          </div>
         </div>
 
         {/* Desktop CTA */}
@@ -402,6 +464,13 @@ export default function LandingPage() {
         </div>
       </footer>
 
+      {/* Location picker dialog */}
+      <LocationPickerDialog
+        open={locationPickerOpen}
+        onClose={() => setLocationPickerOpen(false)}
+        onSave={handleLocationSave}
+        initial={selectedLocation}
+      />
     </div>
   );
 }

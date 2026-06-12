@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import "./globals.css";
@@ -15,9 +16,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body style={{ margin: 0, padding: 0, background: "#F4F7FB", fontFamily: "system-ui, -apple-system, sans-serif" }}>
-        {children}
+    <html lang="en" suppressHydrationWarning>
+      <body style={{ margin: 0, padding: 0, fontFamily: "system-ui, -apple-system, sans-serif" }}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          {children}
+        </ThemeProvider>
         <ScrollToTop />
         <Toaster richColors position="top-right" />
       </body>

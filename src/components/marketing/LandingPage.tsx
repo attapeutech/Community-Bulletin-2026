@@ -31,7 +31,7 @@ export default function LandingPage() {
   const { data: session } = useSession();
 
   return (
-    <div className="font-sans text-[#1A3A5C] overflow-x-hidden">
+    <div className="font-sans text-[#1A3A5C] dark:text-[#DEEAF4] overflow-x-hidden">
 
       {/* ── HERO ── */}
       <section className="relative bg-gradient-to-br from-[#1A3A5C] via-[#0F2540] to-[#1A3A5C] px-4 sm:px-8 pt-20 sm:pt-24 pb-16 sm:pb-20 text-center overflow-hidden">
@@ -89,12 +89,12 @@ export default function LandingPage() {
       </section>
 
       {/* ── STATS BAR ── */}
-      <section className="bg-white border-b border-[#D8E4EE]">
+      <section className="bg-white dark:bg-[#0F1E2E] border-b border-[#D8E4EE] dark:border-[#1E3550]">
         <div className="max-w-4xl mx-auto px-4 sm:px-8 py-8 grid grid-cols-2 sm:grid-cols-4 gap-6">
           {STATS.map(({ value, label }) => (
             <div key={label} className="text-center px-4">
               <div className="font-serif text-3xl sm:text-4xl font-bold text-[#E8563A]">{value}</div>
-              <div className="text-xs sm:text-sm text-[#6B8FA8] mt-1">{label}</div>
+              <div className="text-xs sm:text-sm text-[#6B8FA8] dark:text-[#7AA8C4] mt-1">{label}</div>
             </div>
           ))}
         </div>
@@ -104,23 +104,23 @@ export default function LandingPage() {
       <LiveAdsSection />
 
       {/* ── HOW IT WORKS ── */}
-      <section id="how-it-works" className="px-4 sm:px-8 py-16 sm:py-20 bg-[#F4F7FB]">
+      <section id="how-it-works" className="px-4 sm:px-8 py-16 sm:py-20 bg-[#F4F7FB] dark:bg-[#0B1A27]">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12 sm:mb-14">
             <div className="text-xs font-bold text-[#E8563A] tracking-widest uppercase mb-3">How it works</div>
-            <h2 className="font-serif text-[clamp(26px,4vw,40px)] font-bold text-[#1A3A5C] mb-4">
+            <h2 className="font-serif text-[clamp(26px,4vw,40px)] font-bold text-[#1A3A5C] dark:text-white mb-4">
               From idea to live screen in minutes
             </h2>
-            <p className="text-base text-[#6B8FA8] max-w-md mx-auto">
+            <p className="text-base text-[#6B8FA8] dark:text-[#7AA8C4] max-w-md mx-auto">
               No design skills needed. No long contracts. Just pick a location, upload your ad, and go.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {HOW_IT_WORKS.map(({ step, title, desc }) => (
-              <div key={step} className="bg-white rounded-2xl p-6 border border-[#D8E4EE]">
-                <div className="font-serif text-5xl font-bold text-[#E8EFF6] leading-none mb-4">{step}</div>
-                <h3 className="text-base font-bold text-[#1A3A5C] mb-2">{title}</h3>
-                <p className="text-sm text-[#6B8FA8] leading-relaxed">{desc}</p>
+              <div key={step} className="bg-white dark:bg-[#0F1E2E] rounded-2xl p-6 border border-[#D8E4EE] dark:border-[#1E3550]">
+                <div className="font-serif text-5xl font-bold text-[#E8EFF6] dark:text-[#1E3550] leading-none mb-4">{step}</div>
+                <h3 className="text-base font-bold text-[#1A3A5C] dark:text-white mb-2">{title}</h3>
+                <p className="text-sm text-[#6B8FA8] dark:text-[#7AA8C4] leading-relaxed">{desc}</p>
               </div>
             ))}
           </div>
@@ -128,20 +128,20 @@ export default function LandingPage() {
       </section>
 
       {/* ── FEATURES ── */}
-      <section id="features" className="px-4 sm:px-8 py-16 sm:py-20 bg-white">
+      <section id="features" className="px-4 sm:px-8 py-16 sm:py-20 bg-white dark:bg-[#0F1E2E]">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12 sm:mb-14">
             <div className="text-xs font-bold text-[#E8563A] tracking-widest uppercase mb-3">Features</div>
-            <h2 className="font-serif text-[clamp(26px,4vw,40px)] font-bold text-[#1A3A5C]">
+            <h2 className="font-serif text-[clamp(26px,4vw,40px)] font-bold text-[#1A3A5C] dark:text-white">
               Everything you need to advertise locally
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {FEATURES.map(({ icon, title, desc }) => (
-              <div key={title} className="bg-[#F4F7FB] rounded-2xl p-6 border border-[#D8E4EE]">
+              <div key={title} className="bg-[#F4F7FB] dark:bg-[#0B1A27] rounded-2xl p-6 border border-[#D8E4EE] dark:border-[#1E3550]">
                 <div className="text-3xl mb-3">{icon}</div>
-                <h3 className="text-base font-bold text-[#1A3A5C] mb-2">{title}</h3>
-                <p className="text-sm text-[#6B8FA8] leading-relaxed">{desc}</p>
+                <h3 className="text-base font-bold text-[#1A3A5C] dark:text-white mb-2">{title}</h3>
+                <p className="text-sm text-[#6B8FA8] dark:text-[#7AA8C4] leading-relaxed">{desc}</p>
               </div>
             ))}
           </div>
@@ -149,29 +149,29 @@ export default function LandingPage() {
       </section>
 
       {/* ── PRICING ── */}
-      <section id="pricing" className="px-4 sm:px-8 py-16 sm:py-20 bg-[#F4F7FB]">
+      <section id="pricing" className="px-4 sm:px-8 py-16 sm:py-20 bg-[#F4F7FB] dark:bg-[#0B1A27]">
         <div className="max-w-4xl mx-auto text-center">
           <div className="text-xs font-bold text-[#E8563A] tracking-widest uppercase mb-3">Pricing</div>
-          <h2 className="font-serif text-[clamp(26px,4vw,40px)] font-bold text-[#1A3A5C] mb-4">
+          <h2 className="font-serif text-[clamp(26px,4vw,40px)] font-bold text-[#1A3A5C] dark:text-white mb-4">
             Simple, transparent pricing
           </h2>
-          <p className="text-base text-[#6B8FA8] mb-12">No subscriptions. No hidden fees. Pay only when you post.</p>
+          <p className="text-base text-[#6B8FA8] dark:text-[#7AA8C4] mb-12">No subscriptions. No hidden fees. Pay only when you post.</p>
 
           <div className="flex justify-center">
-            <div className="relative bg-white rounded-2xl border-2 border-[#1A3A5C] p-8 sm:p-10 max-w-sm w-full">
+            <div className="relative bg-white dark:bg-[#0F1E2E] rounded-2xl border-2 border-[#1A3A5C] dark:border-[#4A90C4] p-8 sm:p-10 max-w-sm w-full">
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#E8563A] text-white text-[11px] font-bold px-4 py-1 rounded-full tracking-wide uppercase">
                 Most Popular
               </div>
-              <div className="font-serif text-5xl font-bold text-[#1A3A5C]">$100</div>
-              <div className="text-sm text-[#6B8FA8] mb-6">per location / 1 week</div>
+              <div className="font-serif text-5xl font-bold text-[#1A3A5C] dark:text-white">$100</div>
+              <div className="text-sm text-[#6B8FA8] dark:text-[#7AA8C4] mb-6">per location / 1 week</div>
               <ul className="text-left mb-8 space-y-2">
                 {["1 store location", "1-week display period", "Full carousel rotation", "Real-time approval status", "Email notifications", "Full refund if denied"].map((item) => (
-                  <li key={item} className="text-sm text-[#4A5568] flex items-center gap-2">
+                  <li key={item} className="text-sm text-[#4A5568] dark:text-[#9DC4E0] flex items-center gap-2">
                     <span className="text-[#1D9E75] font-bold">✓</span> {item}
                   </li>
                 ))}
               </ul>
-              <Link href={session ? "/ads/new" : "/register"} className="block text-center no-underline bg-[#1A3A5C] text-white px-6 py-3 rounded-lg text-base font-bold hover:bg-[#0F2540] transition-colors">
+              <Link href={session ? "/ads/new" : "/register"} className="block text-center no-underline bg-[#1A3A5C] dark:bg-[#4A90C4] text-white px-6 py-3 rounded-lg text-base font-bold hover:bg-[#0F2540] dark:hover:bg-[#3A7AB4] transition-colors">
                 {session ? "Post an ad" : "Get started"}
               </Link>
             </div>
@@ -228,12 +228,12 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA BANNER ── */}
-      <section className="px-4 sm:px-8 py-16 sm:py-20 bg-white text-center">
+      <section className="px-4 sm:px-8 py-16 sm:py-20 bg-white dark:bg-[#0F1E2E] text-center">
         <div className="max-w-xl mx-auto">
-          <h2 className="font-serif text-[clamp(26px,4vw,42px)] font-bold text-[#1A3A5C] mb-4">
+          <h2 className="font-serif text-[clamp(26px,4vw,42px)] font-bold text-[#1A3A5C] dark:text-white mb-4">
             Ready to reach your community?
           </h2>
-          <p className="text-base text-[#6B8FA8] mb-9 leading-relaxed">
+          <p className="text-base text-[#6B8FA8] dark:text-[#7AA8C4] mb-9 leading-relaxed">
             Join hundreds of local businesses already advertising on CommunityBulletin.
             Your first ad is just a few clicks away.
           </p>
@@ -241,7 +241,7 @@ export default function LandingPage() {
             <Link href="/register" className="no-underline bg-[#1A3A5C] text-white px-8 py-3.5 rounded-xl text-base font-bold hover:bg-[#0F2540] transition-colors">
               Create free account
             </Link>
-            <Link href="/login" className="no-underline bg-white text-[#1A3A5C] px-8 py-3.5 rounded-xl text-base font-semibold border border-[#D1DDE8] hover:bg-[#F4F7FB] transition-colors">
+            <Link href="/login" className="no-underline bg-transparent dark:bg-white/5 text-[#1A3A5C] dark:text-white px-8 py-3.5 rounded-xl text-base font-semibold border border-[#D1DDE8] dark:border-[#1E3550] hover:bg-[#F4F7FB] dark:hover:bg-white/10 transition-colors">
               Sign in
             </Link>
           </div>

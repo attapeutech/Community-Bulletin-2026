@@ -10,6 +10,7 @@ import { useSession } from "@/lib/auth/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LocationPickerDialog from "@/components/marketing/LocationPickerDialog";
 import { readSavedLocation, writeSavedLocation } from "@/lib/location-preference";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 type SelectedLocation = { stateCode: string; stateName: string; cityName: string };
 
@@ -73,20 +74,24 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
     ? user.name.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2)
     : "?";
 
+  const locBtnCls = locationLabel
+    ? "border border-[#4A90C4] bg-[#EDF5FF] text-[#1A3A5C] dark:bg-[#1A3A5C]/30 dark:border-[#4A90C4]/60 dark:text-[#9DC4E0]"
+    : "border border-[#D8E4EE] bg-[#F7FAFC] text-[#6B8FA8] dark:border-[#1E3550] dark:bg-[#0F1E2E] dark:text-[#5B8FAA]";
+
   return (
-    <div className="min-h-screen bg-[#F4F7FB] font-sans text-[#1A3A5C] flex flex-col">
+    <div className="min-h-screen bg-[#F4F7FB] dark:bg-[#0B1A27] font-sans text-[#1A3A5C] dark:text-[#DEEAF4] flex flex-col">
 
       {/* ── Navbar ── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-[#D8E4EE] shadow-sm flex flex-col">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#0B1A27]/95 backdrop-blur-sm border-b border-[#D8E4EE] dark:border-[#1E3550] shadow-sm flex flex-col">
 
         {/* Row 1 — always visible */}
         <div className="h-16 w-full flex items-center justify-between px-4 sm:px-8 gap-3">
 
           {/* Logo */}
           <Link href="/" className="no-underline flex items-center gap-2.5 shrink-0">
-            <div className="bg-[#E8EFF6] rounded-[10px] p-1.5 flex"><Icon size={28} /></div>
+            <div className="bg-[#E8EFF6] dark:bg-[#1E3550] rounded-[10px] p-1.5 flex"><Icon size={28} /></div>
             <div>
-              <div className="font-serif font-bold text-[14px] text-[#1A3A5C] leading-tight">Community</div>
+              <div className="font-serif font-bold text-[14px] text-[#1A3A5C] dark:text-white leading-tight">Community</div>
               <div className="font-serif font-bold text-[14px] leading-tight">
                 <span className="text-[#E8563A]">Bulletin</span>
                 <span className="text-[#4A90C4] text-[11px] font-normal">.com</span>
@@ -98,19 +103,14 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
           <div className="hidden md:flex items-center gap-1.5 flex-1 max-w-[150px] lg:max-w-sm mx-2 lg:mx-4">
             <button
               onClick={() => setLocationPickerOpen(true)}
-              className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors shrink-0"
-              style={{
-                border: `1px solid ${locationLabel ? "#4A90C4" : "#D8E4EE"}`,
-                background: locationLabel ? "#EDF5FF" : "#F7FAFC",
-                color: locationLabel ? "#1A3A5C" : "#6B8FA8",
-              }}
+              className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors shrink-0 ${locBtnCls}`}
             >
               <MapPin size={12} />
               <span className="hidden lg:inline">{locationLabel ?? "All locations"}</span>
               {locationLabel && (
                 <span
                   onClick={(e) => { e.stopPropagation(); handleLocationSave(null); }}
-                  className="hidden lg:inline ml-0.5 text-[#6B8FA8] font-normal text-sm leading-none"
+                  className="hidden lg:inline ml-0.5 text-[#6B8FA8] dark:text-[#5B8FAA] font-normal text-sm leading-none"
                 >×</span>
               )}
             </button>
@@ -121,7 +121,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
                 placeholder="Search…"
                 value={searchInput}
                 onChange={e => handleSearch(e.target.value)}
-                className="w-full pl-7 pr-5 py-1.5 border border-[#D8E4EE] rounded-lg text-sm text-[#1A3A5C] bg-[#FAFCFF] outline-none focus:border-[#4A90C4] transition-colors"
+                className="w-full pl-7 pr-5 py-1.5 border border-[#D8E4EE] dark:border-[#1E3550] rounded-lg text-sm text-[#1A3A5C] dark:text-white bg-[#FAFCFF] dark:bg-[#0F1E2E] placeholder:text-[#9DB8CC] dark:placeholder:text-[#4A6A80] outline-none focus:border-[#4A90C4] transition-colors"
               />
               {searchInput && (
                 <button onClick={() => handleSearch("")} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[#9DB8CC] bg-transparent border-none cursor-pointer text-base leading-none">×</button>
@@ -146,15 +146,16 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
           {/* Text nav links — full desktop only (lg+) */}
           <div className="hidden lg:flex items-center gap-5">
             {NAV_LINKS.map((l) => (
-              <Link key={l.href} href={l.href} className="no-underline flex items-center gap-1.5 text-sm text-[#4A7FA5] font-medium hover:text-[#1A3A5C] transition-colors">
+              <Link key={l.href} href={l.href} className="no-underline flex items-center gap-1.5 text-sm text-[#4A7FA5] dark:text-[#7AA8C4] font-medium hover:text-[#1A3A5C] dark:hover:text-white transition-colors">
                 <l.icon size={14} />
                 {l.label}
               </Link>
             ))}
           </div>
 
-          {/* CTA buttons — full desktop only (lg+) */}
-          <div className="hidden lg:flex items-center gap-3 shrink-0">
+          {/* CTA + theme toggle — full desktop only (lg+) */}
+          <div className="hidden lg:flex items-center gap-2 shrink-0">
+            <ThemeToggle />
             {user ? (
               <Link href="/dashboard" className="no-underline flex items-center gap-2.5 text-sm font-semibold text-white pl-1 pr-4 py-1 rounded-full bg-[#1A3A5C] hover:bg-[#0F2540] transition-colors">
                 <Avatar className="w-7 h-7 shrink-0">
@@ -165,16 +166,17 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               </Link>
             ) : (
               <>
-                <Link href="/login" className="no-underline text-sm font-semibold text-[#1A3A5C] px-4 py-2 rounded-lg border border-[#D1DDE8] hover:bg-[#F4F7FB] transition-colors">Sign in</Link>
+                <Link href="/login" className="no-underline text-sm font-semibold text-[#1A3A5C] dark:text-white px-4 py-2 rounded-lg border border-[#D1DDE8] dark:border-[#1E3550] hover:bg-[#F4F7FB] dark:hover:bg-[#1E3550] transition-colors">Sign in</Link>
                 <Link href="/register" className="no-underline text-sm font-semibold text-white px-4 py-2 rounded-lg bg-[#1A3A5C] hover:bg-[#0F2540] transition-colors">Get started free</Link>
               </>
             )}
           </div>
 
           {/* Mobile + landscape tablet: hamburger only in Row 1 */}
-          <div className="lg:hidden flex items-center ml-auto shrink-0">
+          <div className="lg:hidden flex items-center gap-1 ml-auto shrink-0">
+            <ThemeToggle />
             <button
-              className="p-2 rounded-lg text-[#1A3A5C] hover:bg-[#F4F7FB] transition-colors"
+              className="p-2 rounded-lg text-[#1A3A5C] dark:text-[#9DC4E0] hover:bg-[#F4F7FB] dark:hover:bg-[#1E3550] transition-colors"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle menu"
             >
@@ -184,15 +186,10 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Row 2 — mobile: location picker + search bar */}
-        <div className="md:hidden h-11 px-3 flex items-center gap-2 border-t border-[#F0F5FA] bg-white">
+        <div className="md:hidden h-11 px-3 flex items-center gap-2 border-t border-[#F0F5FA] dark:border-[#1E3550] bg-white dark:bg-[#0B1A27]">
           <button
             onClick={() => setLocationPickerOpen(true)}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-semibold transition-colors shrink-0"
-            style={{
-              border: `1px solid ${locationLabel ? "#4A90C4" : "#D8E4EE"}`,
-              background: locationLabel ? "#EDF5FF" : "#F7FAFC",
-              color: locationLabel ? "#1A3A5C" : "#6B8FA8",
-            }}
+            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-colors shrink-0 ${locBtnCls}`}
           >
             <MapPin size={12} />
             {locationLabel && <span className="max-w-[64px] truncate">{locationLabel}</span>}
@@ -203,7 +200,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             placeholder="Search live ads…"
             value={searchInput}
             onChange={e => handleSearch(e.target.value)}
-            className="flex-1 text-sm text-[#1A3A5C] bg-transparent outline-none placeholder:text-[#9DB8CC]"
+            className="flex-1 text-sm text-[#1A3A5C] dark:text-white bg-transparent outline-none placeholder:text-[#9DB8CC] dark:placeholder:text-[#4A6A80]"
           />
           {searchInput && (
             <button onClick={() => handleSearch("")} className="text-[#9DB8CC] bg-transparent border-none cursor-pointer text-base leading-none">×</button>
@@ -213,7 +210,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
 
       {/* Hamburger dropdown — mobile + landscape tablet (hidden at lg+) */}
       {mobileMenuOpen && (
-        <div className="lg:hidden fixed top-[108px] md:top-16 left-0 right-0 z-40 bg-white border-b border-[#D8E4EE] shadow-lg px-4 py-4 flex flex-col gap-1">
+        <div className="lg:hidden fixed top-[108px] md:top-16 left-0 right-0 z-40 bg-white dark:bg-[#0D1B2A] border-b border-[#D8E4EE] dark:border-[#1E3550] shadow-lg px-4 py-4 flex flex-col gap-1">
           {/* Pills shown only on mobile (md+ already has them in the nav bar) */}
           <div className="flex items-center gap-2 mb-1 md:hidden">
             <Link href="/live-ads" onClick={() => setMobileMenuOpen(false)} className="no-underline flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-4 py-2.5 rounded-full transition-colors">
@@ -228,12 +225,12 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
           {NAV_LINKS.map((l) => (
-            <Link key={l.href} href={l.href} className="no-underline flex items-center gap-2.5 text-sm text-[#4A7FA5] font-medium py-2.5 px-1 border-b border-[#F0F5FA]" onClick={() => setMobileMenuOpen(false)}>
-              <l.icon size={15} className="shrink-0 text-[#9DB8CC]" />
+            <Link key={l.href} href={l.href} className="no-underline flex items-center gap-2.5 text-sm text-[#4A7FA5] dark:text-[#7AA8C4] font-medium py-2.5 px-1 border-b border-[#F0F5FA] dark:border-[#1E3550]" onClick={() => setMobileMenuOpen(false)}>
+              <l.icon size={15} className="shrink-0 text-[#9DB8CC] dark:text-[#4A6A80]" />
               {l.label}
             </Link>
           ))}
-          <div className="h-px bg-[#E8EFF6] my-2" />
+          <div className="h-px bg-[#E8EFF6] dark:bg-[#1E3550] my-2" />
           {user ? (
             <Link href="/dashboard" className="no-underline flex items-center gap-2.5 text-sm font-semibold text-white pl-2 pr-4 py-2 rounded-full bg-[#1A3A5C]" onClick={() => setMobileMenuOpen(false)}>
               <Avatar className="w-7 h-7 shrink-0">
@@ -244,7 +241,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             </Link>
           ) : (
             <>
-              <Link href="/login" className="no-underline text-sm font-medium py-2.5 px-1 text-[#1A3A5C] border-b border-[#F0F5FA]" onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
+              <Link href="/login" className="no-underline text-sm font-medium py-2.5 px-1 text-[#1A3A5C] dark:text-[#9DC4E0] border-b border-[#F0F5FA] dark:border-[#1E3550]" onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
               <Link href="/register" className="no-underline text-sm font-semibold py-2.5 px-1 text-[#E8563A]" onClick={() => setMobileMenuOpen(false)}>Create account — free</Link>
             </>
           )}
@@ -257,7 +254,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="bg-[#0F2540] px-4 sm:px-8 pt-10 pb-6 border-t border-white/[0.08]">
+      <footer className="bg-[#0F2540] dark:bg-[#080F18] px-4 sm:px-8 pt-10 pb-6 border-t border-white/[0.08]">
         <div className="max-w-4xl mx-auto">
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-8 mb-10">
             <div className="col-span-2 sm:col-span-1">

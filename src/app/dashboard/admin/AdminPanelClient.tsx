@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useDashboardSocket } from "@/lib/socket/client";
-import { Check, X, RefreshCw, Trash2, MonitorPlay } from "lucide-react";
+import { Check, X, RefreshCw, Trash2, MonitorPlay, Pencil } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -92,6 +92,185 @@ function StatCard({ label, value, sub, accentClass, onClick }: { label: string; 
   );
 }
 
+// ─── Admin Edit Dialog ────────────────────────────────────────────────────────
+
+type EditDraft = {
+  title: string;
+  description: string;
+  status: string;
+  paymentStatus: string;
+  startedAt: string;
+  endedAt: string;
+  displayOrder: number;
+};
+
+function toDatetimeLocal(iso: string) {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function AdminEditAdDialog({
+  ad,
+  onClose,
+  onSaved,
+}: {
+  ad: Ad;
+  onClose: () => void;
+  onSaved: (updated: Partial<Ad>) => void;
+}) {
+  const [draft, setDraft] = useState<EditDraft>({
+    title:        ad.title,
+    description:  "",
+    status:       ad.status,
+    paymentStatus: ad.paymentStatus,
+    startedAt:    toDatetimeLocal(ad.startedAt),
+    endedAt:      toDatetimeLocal(ad.endedAt),
+    displayOrder: 0,
+  });
+  const [saving, setSaving] = useState(false);
+  const [error,  setError]  = useState<string | null>(null);
+
+  const set = (k: keyof EditDraft, v: string | number) =>
+    setDraft(d => ({ ...d, [k]: v }));
+
+  async function save() {
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/ads/${ad.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title:         draft.title.trim(),
+          description:   draft.description.trim() || null,
+          status:        draft.status,
+          paymentStatus: draft.paymentStatus,
+          startedAt:     new Date(draft.startedAt).toISOString(),
+          endedAt:       new Date(draft.endedAt).toISOString(),
+          displayOrder:  Number(draft.displayOrder),
+        }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error ?? "Save failed");
+      onSaved({
+        title:        draft.title.trim(),
+        status:       draft.status as Ad["status"],
+        paymentStatus: draft.paymentStatus as Ad["paymentStatus"],
+        startedAt:    new Date(draft.startedAt).toISOString(),
+        endedAt:      new Date(draft.endedAt).toISOString(),
+      });
+      onClose();
+    } catch (e: any) {
+      setError(e.message ?? "Unknown error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const labelCls = "text-[11px] font-semibold text-[#6B8FA8] uppercase tracking-wide mb-1 block";
+  const inputCls = "w-full border border-[#D8E4EE] rounded-lg px-3 py-2 text-sm text-[#1A3A5C] bg-[#FAFCFF] outline-none focus:border-[#4A90C4]";
+  const selectCls = `${inputCls} appearance-none cursor-pointer`;
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div onClick={onClose} className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
+
+      {/* Dialog */}
+      <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(96vw,520px)] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        {/* Header */}
+        <div className="bg-[#1A3A5C] px-6 py-4 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2">
+            <Pencil size={15} className="text-white/70" />
+            <span className="font-serif font-bold text-white text-[16px]">Edit Ad (Admin)</span>
+          </div>
+          <button onClick={onClose} className="text-white/50 hover:text-white text-xl leading-none bg-transparent border-none cursor-pointer">×</button>
+        </div>
+
+        {/* Ad thumbnail + id */}
+        <div className="flex items-center gap-3 px-6 py-3 border-b border-[#EDF2F7] bg-[#F7FAFC] shrink-0">
+          <img src={ad.imageUrl} alt="" className="w-12 h-9 object-cover rounded-md shrink-0" />
+          <div>
+            <div className="text-xs font-semibold text-[#1A3A5C] truncate max-w-[320px]">{ad.title}</div>
+            <div className="text-[10px] text-[#9DB8CC] font-mono">ID: {ad.id}</div>
+          </div>
+          <span className="ml-auto text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-0.5 font-semibold">Testing only — no emails sent</span>
+        </div>
+
+        {/* Form */}
+        <div className="overflow-y-auto p-6 flex flex-col gap-4">
+          {error && (
+            <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</div>
+          )}
+
+          {/* Title */}
+          <div>
+            <label className={labelCls}>Title</label>
+            <input className={inputCls} value={draft.title} onChange={e => set("title", e.target.value)} />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className={labelCls}>Description <span className="normal-case text-[#9DB8CC] font-normal">(optional)</span></label>
+            <textarea className={`${inputCls} resize-none`} rows={2} value={draft.description} onChange={e => set("description", e.target.value)} />
+          </div>
+
+          {/* Status + Payment status */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelCls}>Status</label>
+              <select className={selectCls} value={draft.status} onChange={e => set("status", e.target.value)}>
+                {["pending","approved","denied","expired","cancelled"].map(s => (
+                  <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>Payment Status</label>
+              <select className={selectCls} value={draft.paymentStatus} onChange={e => set("paymentStatus", e.target.value)}>
+                {["unpaid","paid","refunded","refund_pending","failed"].map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Dates */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelCls}>Start date</label>
+              <input type="datetime-local" className={inputCls} value={draft.startedAt} onChange={e => set("startedAt", e.target.value)} />
+            </div>
+            <div>
+              <label className={labelCls}>End date</label>
+              <input type="datetime-local" className={inputCls} value={draft.endedAt} onChange={e => set("endedAt", e.target.value)} />
+            </div>
+          </div>
+
+          {/* Display order */}
+          <div className="w-32">
+            <label className={labelCls}>Display order</label>
+            <input type="number" min={0} className={inputCls} value={draft.displayOrder} onChange={e => set("displayOrder", Number(e.target.value))} />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-[#EDF2F7] flex justify-end gap-3 shrink-0 bg-[#FAFCFF]">
+          <Button variant="outline" size="sm" onClick={onClose} className="h-auto px-4 py-2 text-sm font-semibold border-[#D8E4EE] text-[#6B8FA8]">
+            Cancel
+          </Button>
+          <Button size="sm" disabled={saving} onClick={save} className="h-auto px-5 py-2 text-sm font-semibold bg-[#1A3A5C] hover:bg-[#14304d] text-white">
+            {saving ? "Saving…" : "Save changes"}
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function AdminPanelClient({
   initialStats,
   initialUsers,
@@ -123,6 +302,7 @@ export default function AdminPanelClient({
   const [overrideNote, setOverrideNote] = useState<Record<string, string>>({});
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [editingAd, setEditingAd] = useState<Ad | null>(null);
 
   // Force-refresh display screens
   const [refreshingSlug, setRefreshingSlug] = useState<string | null>(null);
@@ -721,6 +901,16 @@ export default function AdminPanelClient({
                           <Link href={`/dashboard/user/ads/${ad.id}`} className="text-xs text-[#4A90C4] no-underline px-2 py-1">
                             Details ↗
                           </Link>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setEditingAd(ad)}
+                            className="px-2 py-0.5 h-auto rounded text-[11px] font-semibold border-[#4A90C4] text-[#4A90C4] bg-blue-50 hover:bg-blue-100"
+                            title="Edit ad (admin)"
+                          >
+                            <Pencil size={11} className="mr-1" />
+                            Edit
+                          </Button>
                           {/* Delete — two-step inline confirmation */}
                           {confirmDelete === ad.id ? (
                             <span className="flex items-center gap-1 ml-1">
@@ -765,6 +955,18 @@ export default function AdminPanelClient({
           </Card>
         </TabsContent>
       </Tabs>
+
+      {editingAd && (
+        <AdminEditAdDialog
+          ad={editingAd}
+          onClose={() => setEditingAd(null)}
+          onSaved={(updated) => {
+            setAds(prev => prev.map(a => a.id === editingAd.id ? { ...a, ...updated } : a));
+            setEditingAd(null);
+            showAdToast("Ad updated", true);
+          }}
+        />
+      )}
     </div>
   );
 }

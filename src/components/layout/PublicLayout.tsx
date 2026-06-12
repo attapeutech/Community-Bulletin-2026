@@ -3,15 +3,16 @@
 import Link from "next/link";
 import { Icon } from "@/components/layout/Icon";
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Lightbulb, Sparkles, Tag, LifeBuoy, Store } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useSession } from "@/lib/auth/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-const NAV_LINKS = [
-  { label: "How it works", href: "/#how-it-works" },
-  { label: "Features",     href: "/#features" },
-  { label: "Pricing",      href: "/#pricing" },
-  { label: "Help",         href: "/help" },
+const NAV_LINKS: { label: string; href: string; icon: LucideIcon }[] = [
+  { label: "How it works", href: "/#how-it-works", icon: Lightbulb },
+  { label: "Features",     href: "/#features",     icon: Sparkles  },
+  { label: "Pricing",      href: "/#pricing",      icon: Tag       },
+  { label: "Help",         href: "/help",           icon: LifeBuoy  },
 ];
 
 const FOOTER_LINKS = [
@@ -56,7 +57,8 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             LIVE
           </Link>
           {NAV_LINKS.map((l) => (
-            <Link key={l.href} href={l.href} className="no-underline text-sm text-[#4A7FA5] font-medium hover:text-[#1A3A5C] transition-colors">
+            <Link key={l.href} href={l.href} className="no-underline flex items-center gap-1.5 text-sm text-[#4A7FA5] font-medium hover:text-[#1A3A5C] transition-colors">
+              <l.icon size={14} />
               {l.label}
             </Link>
           ))}
@@ -101,7 +103,8 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             LIVE Ads
           </Link>
           {NAV_LINKS.map((l) => (
-            <Link key={l.href} href={l.href} className="no-underline text-sm text-[#4A7FA5] font-medium py-2.5 px-1 border-b border-[#F0F5FA]" onClick={() => setMobileMenuOpen(false)}>
+            <Link key={l.href} href={l.href} className="no-underline flex items-center gap-2.5 text-sm text-[#4A7FA5] font-medium py-2.5 px-1 border-b border-[#F0F5FA]" onClick={() => setMobileMenuOpen(false)}>
+              <l.icon size={15} className="shrink-0 text-[#9DB8CC]" />
               {l.label}
             </Link>
           ))}
@@ -168,7 +171,10 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             </div>
             {FOOTER_LINKS.map(({ title, links }) => (
               <div key={title}>
-                <div className="text-xs font-bold text-white mb-3.5 tracking-wider uppercase">{title}</div>
+                <div className="flex items-center gap-1.5 text-xs font-bold text-white mb-3.5 tracking-wider uppercase">
+                  {title === "For Stores" && <Store size={12} className="shrink-0" />}
+                  {title}
+                </div>
                 <ul className="space-y-2">
                   {links.map((link) => (
                     <li key={link.label}>

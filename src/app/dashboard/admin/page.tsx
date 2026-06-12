@@ -67,6 +67,9 @@ export default async function AdminDashboard() {
       startedAt: ads.startedAt,
       endedAt: ads.endedAt,
       createdAt: ads.createdAt,
+      contactPhone: ads.contactPhone,
+      contactAddress: ads.contactAddress,
+      contactWebsite: ads.contactWebsite,
       user: { id: users.id, name: users.name, email: users.email },
       location: { id: locations.id, storeName: locations.storeName, slug: locations.slug },
     })

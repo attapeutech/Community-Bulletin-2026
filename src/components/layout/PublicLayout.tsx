@@ -8,7 +8,6 @@ import { useSession } from "@/lib/auth/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const NAV_LINKS = [
-  { label: "Live Ads",    href: "/live-ads" },
   { label: "How it works", href: "/#how-it-works" },
   { label: "Features",     href: "/#features" },
   { label: "Pricing",      href: "/#pricing" },
@@ -16,7 +15,7 @@ const NAV_LINKS = [
 ];
 
 const FOOTER_LINKS = [
-  { title: "Advertise",  links: [{ label: "Post an ad", href: "/register" }, { label: "Live Ads", href: "/live-ads" }, { label: "How it works", href: "/#how-it-works" }, { label: "Pricing", href: "/#pricing" }] },
+  { title: "Advertise",  links: [{ label: "Post an ad", href: "/register" }, { label: "How it works", href: "/#how-it-works" }, { label: "Pricing", href: "/#pricing" }] },
   { title: "For Stores", links: [{ label: "List your store", href: "/register" }, { label: "Store dashboard", href: "/dashboard/store-owner" }] },
   { title: "Account",    links: [{ label: "Sign in", href: "/login" }, { label: "Create account", href: "/register" }, { label: "Dashboard", href: "/dashboard" }] },
   { title: "Company",    links: [{ label: "Help & Support", href: "/help" }, { label: "Contact Us", href: "/contact" }, { label: "Privacy policy", href: "/privacy" }, { label: "Terms of service", href: "/terms" }] },
@@ -49,6 +48,13 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-7">
+          <Link href="/live-ads" className="no-underline flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+            </span>
+            LIVE
+          </Link>
           {NAV_LINKS.map((l) => (
             <Link key={l.href} href={l.href} className="no-underline text-sm text-[#4A7FA5] font-medium hover:text-[#1A3A5C] transition-colors">
               {l.label}
@@ -87,6 +93,13 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
       {/* Mobile menu */}
       {mobileMenuOpen && (
         <div className="md:hidden fixed top-16 left-0 right-0 z-40 bg-white border-b border-[#D8E4EE] shadow-lg px-4 py-4 flex flex-col gap-1">
+          <Link href="/live-ads" onClick={() => setMobileMenuOpen(false)} className="no-underline flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-4 py-2.5 rounded-full mb-1 transition-colors w-fit">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+            </span>
+            LIVE Ads
+          </Link>
           {NAV_LINKS.map((l) => (
             <Link key={l.href} href={l.href} className="no-underline text-sm text-[#4A7FA5] font-medium py-2.5 px-1 border-b border-[#F0F5FA]" onClick={() => setMobileMenuOpen(false)}>
               {l.label}
@@ -125,6 +138,19 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
       {/* ── Footer ── */}
       <footer className="bg-[#0F2540] px-4 sm:px-8 pt-10 pb-6 border-t border-white/[0.08]">
         <div className="max-w-4xl mx-auto">
+          {/* Live Ads CTA */}
+          <div className="flex items-center justify-between flex-wrap gap-4 mb-8 pb-8 border-b border-white/[0.08]">
+            <div className="flex items-center gap-3">
+              <Link href="/live-ads" className="no-underline flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white text-sm font-bold px-4 py-2 rounded-full transition-colors">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+                </span>
+                LIVE Ads
+              </Link>
+              <span className="text-sm text-[#6B8FA8]">Browse live ads running right now in your area</span>
+            </div>
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-8 mb-10">
             <div className="col-span-2 sm:col-span-1">
               <div className="flex items-center gap-2.5 mb-3.5">

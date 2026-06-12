@@ -171,20 +171,8 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             )}
           </div>
 
-          {/* Mobile + landscape tablet: location pill (mobile only) + hamburger */}
-          <div className="lg:hidden flex items-center gap-2 ml-auto shrink-0">
-            <button
-              onClick={() => setLocationPickerOpen(true)}
-              className="md:hidden flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors"
-              style={{
-                border: `1px solid ${locationLabel ? "#4A90C4" : "#D8E4EE"}`,
-                background: locationLabel ? "#EDF5FF" : "#F7FAFC",
-                color: locationLabel ? "#1A3A5C" : "#6B8FA8",
-              }}
-            >
-              <MapPin size={13} />
-              {locationLabel && <span className="max-w-[72px] truncate">{locationLabel}</span>}
-            </button>
+          {/* Mobile + landscape tablet: hamburger only in Row 1 */}
+          <div className="lg:hidden flex items-center ml-auto shrink-0">
             <button
               className="p-2 rounded-lg text-[#1A3A5C] hover:bg-[#F4F7FB] transition-colors"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -195,8 +183,20 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        {/* Row 2 — mobile search bar */}
-        <div className="md:hidden h-11 px-4 flex items-center gap-2 border-t border-[#F0F5FA] bg-white">
+        {/* Row 2 — mobile: location picker + search bar */}
+        <div className="md:hidden h-11 px-3 flex items-center gap-2 border-t border-[#F0F5FA] bg-white">
+          <button
+            onClick={() => setLocationPickerOpen(true)}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-semibold transition-colors shrink-0"
+            style={{
+              border: `1px solid ${locationLabel ? "#4A90C4" : "#D8E4EE"}`,
+              background: locationLabel ? "#EDF5FF" : "#F7FAFC",
+              color: locationLabel ? "#1A3A5C" : "#6B8FA8",
+            }}
+          >
+            <MapPin size={12} />
+            {locationLabel && <span className="max-w-[64px] truncate">{locationLabel}</span>}
+          </button>
           <Search size={13} className="text-[#9DB8CC] shrink-0" />
           <input
             type="text"

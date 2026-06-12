@@ -142,7 +142,11 @@ function LiveAdsContent() {
           </Link>
         </div>
 
-        <LiveAdsGrid state={stateParam} city={cityParam} search={searchParam} />
+        <LiveAdsGrid
+          state={selectedLocation?.stateCode ?? ""}
+          city={selectedLocation?.cityName ?? ""}
+          search={searchInput}
+        />
       </main>
 
       <LocationPickerDialog

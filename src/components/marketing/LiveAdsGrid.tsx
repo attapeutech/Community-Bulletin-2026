@@ -146,7 +146,28 @@ export default function LiveAdsGrid({ state = "", city = "", search = "", limit 
     return (
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
         {[...Array(limit ?? 6)].map((_, i) => (
-          <div key={i} style={{ background: "#fff", borderRadius: 14, border: "1px solid #D8E4EE", height: 340, opacity: 0.5 }} />
+          <div key={i} style={{ background: "#fff", borderRadius: 14, border: "1px solid #D8E4EE", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+            {/* Image area */}
+            <div className="skeleton" style={{ height: 180, borderRadius: 0 }} />
+            {/* Body */}
+            <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
+              <div className="skeleton" style={{ height: 16, width: "70%" }} />
+              <div className="skeleton" style={{ height: 12, width: "90%" }} />
+              <div className="skeleton" style={{ height: 12, width: "60%" }} />
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
+                <div className="skeleton" style={{ width: 16, height: 16, borderRadius: "50%" }} />
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
+                  <div className="skeleton" style={{ height: 13, width: "55%" }} />
+                  <div className="skeleton" style={{ height: 11, width: "35%" }} />
+                </div>
+              </div>
+            </div>
+            {/* Footer */}
+            <div style={{ padding: "10px 16px", borderTop: "1px solid #EDF2F7", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div className="skeleton" style={{ height: 12, width: "40%" }} />
+              <div className="skeleton" style={{ height: 12, width: "12%" }} />
+            </div>
+          </div>
         ))}
       </div>
     );

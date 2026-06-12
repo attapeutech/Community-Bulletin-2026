@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { ads, locations, cities, states, postalCodes } from "@/lib/db/schema";
-import { eq, and, lte, gte, asc, or, ilike, sql } from "drizzle-orm";
+import { eq, and, lte, gte, asc, or, ilike } from "drizzle-orm";
 
 // GET /api/ads/live — public: all currently running ads, searchable
 export async function GET(req: NextRequest) {
@@ -26,10 +26,10 @@ export async function GET(req: NextRequest) {
       ? or(
           ilike(locations.storeName, `%${search}%`),
           ilike(locations.addressLine1, `%${search}%`),
-          ilike(sql`coalesce(${locations.storeNumber}, '')`, `%${search}%`),
+          ilike(locations.storeNumber, `%${search}%`),
           ilike(cities.name, `%${search}%`),
           ilike(ads.title, `%${search}%`),
-          ilike(sql`coalesce(${ads.description}, '')`, `%${search}%`),
+          ilike(ads.description, `%${search}%`),
           ilike(ads.id, `%${search}%`)
         )
       : undefined;

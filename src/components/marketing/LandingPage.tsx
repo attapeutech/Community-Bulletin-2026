@@ -9,6 +9,7 @@ import { useSession } from "@/lib/auth/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LiveAdsSection from "./LiveAdsSection";
 import LocationPickerDialog from "./LocationPickerDialog";
+import { readSavedLocation, writeSavedLocation } from "@/lib/location-preference";
 
 type SelectedLocation = { stateCode: string; stateName: string; cityName: string };
 
@@ -51,6 +52,12 @@ export default function LandingPage() {
   const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
   const [searchInput, setSearchInput] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Restore saved location from localStorage after hydration
+  useEffect(() => {
+    const stored = readSavedLocation();
+    if (stored) setSelectedLocation(stored);
+  }, []);
   const { data: session } = useSession();
 
   useEffect(() => {
@@ -69,6 +76,7 @@ export default function LandingPage() {
 
   const handleLocationSave = (loc: SelectedLocation | null) => {
     setSelectedLocation(loc);
+    writeSavedLocation(loc);
     navigateToLiveAds(loc, searchInput);
   };
 

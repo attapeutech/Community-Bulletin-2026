@@ -8,6 +8,7 @@ import { useSession } from "@/lib/auth/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LiveAdsGrid from "@/components/marketing/LiveAdsGrid";
 import LocationPickerDialog from "@/components/marketing/LocationPickerDialog";
+import { readSavedLocation, writeSavedLocation } from "@/lib/location-preference";
 
 type SelectedLocation = { stateCode: string; stateName: string; cityName: string };
 
@@ -21,15 +22,21 @@ function LiveAdsContent() {
   const searchParam = searchParams.get("search") ?? "";
 
   const [locationPickerOpen, setLocationPickerOpen] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(
-    stateParam ? { stateCode: stateParam, stateName: stateParam, cityName: cityParam } : null
-  );
+  // Priority: URL params → localStorage → null
+  const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(() => {
+    if (stateParam) return { stateCode: stateParam, stateName: stateParam, cityName: cityParam };
+    return readSavedLocation();
+  });
   const [searchInput, setSearchInput] = useState(searchParam);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // When URL location params change, sync state and persist
   useEffect(() => {
-    setSelectedLocation(stateParam ? { stateCode: stateParam, stateName: stateParam, cityName: cityParam } : null);
-    // Do not reset searchInput here — overrides active typing when debounce updates the URL
+    if (stateParam) {
+      const loc = { stateCode: stateParam, stateName: stateParam, cityName: cityParam };
+      setSelectedLocation(loc);
+      writeSavedLocation(loc);
+    }
   }, [stateParam, cityParam]);
 
   const pushParams = useCallback((loc: SelectedLocation | null, q: string) => {
@@ -42,6 +49,7 @@ function LiveAdsContent() {
 
   const handleLocationSave = (loc: SelectedLocation | null) => {
     setSelectedLocation(loc);
+    writeSavedLocation(loc);
     pushParams(loc, searchInput);
   };
 

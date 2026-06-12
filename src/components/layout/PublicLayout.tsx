@@ -138,6 +138,9 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               </span>
               Live Ads
             </Link>
+            <Link href="/dashboard/user" className="no-underline flex items-center gap-1 bg-[#E8563A] hover:bg-[#D04530] text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors">
+              + Post New Ad
+            </Link>
             {NAV_LINKS.map((l) => (
               <Link key={l.href} href={l.href} className="no-underline flex items-center gap-1.5 text-sm text-[#4A7FA5] font-medium hover:text-[#1A3A5C] transition-colors">
                 <l.icon size={14} />
@@ -207,13 +210,18 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
       {/* Mobile hamburger dropdown */}
       {mobileMenuOpen && (
         <div className="md:hidden fixed top-[108px] left-0 right-0 z-40 bg-white border-b border-[#D8E4EE] shadow-lg px-4 py-4 flex flex-col gap-1">
-          <Link href="/live-ads" onClick={() => setMobileMenuOpen(false)} className="no-underline flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-4 py-2.5 rounded-full mb-1 transition-colors w-fit">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
-            </span>
-            Live Ads
-          </Link>
+          <div className="flex items-center gap-2 mb-1">
+            <Link href="/live-ads" onClick={() => setMobileMenuOpen(false)} className="no-underline flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-4 py-2.5 rounded-full transition-colors">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+              </span>
+              Live Ads
+            </Link>
+            <Link href="/dashboard/user" onClick={() => setMobileMenuOpen(false)} className="no-underline flex items-center gap-1 bg-[#E8563A] hover:bg-[#D04530] text-white text-sm font-bold px-4 py-2.5 rounded-full transition-colors">
+              + Post New Ad
+            </Link>
+          </div>
           {NAV_LINKS.map((l) => (
             <Link key={l.href} href={l.href} className="no-underline flex items-center gap-2.5 text-sm text-[#4A7FA5] font-medium py-2.5 px-1 border-b border-[#F0F5FA]" onClick={() => setMobileMenuOpen(false)}>
               <l.icon size={15} className="shrink-0 text-[#9DB8CC]" />
@@ -246,7 +254,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
       {/* ── Footer ── */}
       <footer className="bg-[#0F2540] px-4 sm:px-8 pt-10 pb-6 border-t border-white/[0.08]">
         <div className="max-w-4xl mx-auto">
-          {/* Live Ads CTA strip */}
+          {/* Live Ads + Post New Ad CTA strip */}
           <div className="flex items-center gap-3 flex-wrap mb-8 pb-8 border-b border-white/[0.08]">
             <Link href="/live-ads" className="no-underline flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white text-sm font-bold px-4 py-2 rounded-full transition-colors">
               <span className="relative flex h-2 w-2">
@@ -255,7 +263,10 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               </span>
               Live Ads
             </Link>
-            <span className="text-sm text-[#6B8FA8]">Browse live ads running right now in your area</span>
+            <Link href="/dashboard/user" className="no-underline flex items-center gap-1 bg-[#E8563A] hover:bg-[#D04530] text-white text-sm font-bold px-4 py-2 rounded-full transition-colors">
+              + Post New Ad
+            </Link>
+            <span className="text-sm text-[#6B8FA8]">Browse live ads or start your own campaign</span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-8 mb-10">

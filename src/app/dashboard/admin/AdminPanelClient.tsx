@@ -137,15 +137,23 @@ function AdminEditAdDialog({
     contactAddress: ad.contactAddress ?? "",
     contactWebsite: ad.contactWebsite ?? "",
   });
-  const [saving, setSaving] = useState(false);
-  const [error,  setError]  = useState<string | null>(null);
+  const [saving,      setSaving]      = useState(false);
+  const [error,       setError]       = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  const set = (k: keyof EditDraft, v: string | number) =>
+  const set = (k: keyof EditDraft, v: string | number) => {
     setDraft(d => ({ ...d, [k]: v }));
+    setFieldErrors(e => { const n = { ...e }; delete n[k as string]; return n; });
+  };
+
+  const fe = (k: string) => fieldErrors[k]
+    ? <p className="text-[11px] text-red-600 mt-1">{fieldErrors[k]}</p>
+    : null;
 
   async function save() {
     setSaving(true);
     setError(null);
+    setFieldErrors({});
     try {
       const res = await fetch(`/api/admin/ads/${ad.id}`, {
         method: "PATCH",
@@ -164,7 +172,18 @@ function AdminEditAdDialog({
         }),
       });
       const json = await res.json();
-      if (!json.success) throw new Error(json.error ?? "Save failed");
+      if (!json.success) {
+        if (json.details?.length) {
+          const fe: Record<string, string> = {};
+          for (const d of json.details) {
+            const field = d.path?.[0] as string | undefined;
+            if (field) fe[field] = d.message;
+          }
+          setFieldErrors(fe);
+          throw new Error("Please fix the highlighted fields.");
+        }
+        throw new Error(json.error ?? "Save failed");
+      }
       onSaved({
         title:        draft.title.trim(),
         status:       draft.status as Ad["status"],
@@ -219,46 +238,53 @@ function AdminEditAdDialog({
           {/* Title */}
           <div>
             <label className={labelCls}>Title</label>
-            <input className={inputCls} value={draft.title} onChange={e => set("title", e.target.value)} />
+            <input className={`${inputCls} ${fieldErrors.title ? "border-red-400" : ""}`} value={draft.title} onChange={e => set("title", e.target.value)} />
+            {fe("title")}
           </div>
 
           {/* Description */}
           <div>
             <label className={labelCls}>Description <span className="normal-case text-[#9DB8CC] font-normal">(optional)</span></label>
-            <textarea className={`${inputCls} resize-none`} rows={2} value={draft.description} onChange={e => set("description", e.target.value)} />
+            <textarea className={`${inputCls} resize-none ${fieldErrors.description ? "border-red-400" : ""}`} rows={2} value={draft.description} onChange={e => set("description", e.target.value)} />
+            {fe("description")}
           </div>
 
           {/* Contact fields */}
           <div>
             <label className={labelCls}>Phone <span className="normal-case text-[#9DB8CC] font-normal">(optional)</span></label>
-            <input className={inputCls} placeholder="e.g. (555) 123-4567" value={draft.contactPhone} onChange={e => set("contactPhone", e.target.value)} />
+            <input className={`${inputCls} ${fieldErrors.contactPhone ? "border-red-400" : ""}`} placeholder="e.g. (555) 123-4567" value={draft.contactPhone} onChange={e => set("contactPhone", e.target.value)} />
+            {fe("contactPhone")}
           </div>
           <div>
             <label className={labelCls}>Address <span className="normal-case text-[#9DB8CC] font-normal">(optional)</span></label>
-            <input className={inputCls} placeholder="e.g. 123 Main St, City, State" value={draft.contactAddress} onChange={e => set("contactAddress", e.target.value)} />
+            <input className={`${inputCls} ${fieldErrors.contactAddress ? "border-red-400" : ""}`} placeholder="e.g. 123 Main St, City, State" value={draft.contactAddress} onChange={e => set("contactAddress", e.target.value)} />
+            {fe("contactAddress")}
           </div>
           <div>
             <label className={labelCls}>Website URL <span className="normal-case text-[#9DB8CC] font-normal">(optional)</span></label>
-            <input className={inputCls} placeholder="https://example.com" value={draft.contactWebsite} onChange={e => set("contactWebsite", e.target.value)} />
+            <input className={`${inputCls} ${fieldErrors.contactWebsite ? "border-red-400" : ""}`} placeholder="https://example.com" value={draft.contactWebsite} onChange={e => set("contactWebsite", e.target.value)} />
+            {fe("contactWebsite")}
           </div>
 
           {/* Status + Payment status */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Status</label>
-              <select className={selectCls} value={draft.status} onChange={e => set("status", e.target.value)}>
+              <select className={`${selectCls} ${fieldErrors.status ? "border-red-400" : ""}`} value={draft.status} onChange={e => set("status", e.target.value)}>
                 {["pending","approved","denied","expired","cancelled"].map(s => (
                   <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
                 ))}
               </select>
+              {fe("status")}
             </div>
             <div>
               <label className={labelCls}>Payment Status</label>
-              <select className={selectCls} value={draft.paymentStatus} onChange={e => set("paymentStatus", e.target.value)}>
+              <select className={`${selectCls} ${fieldErrors.paymentStatus ? "border-red-400" : ""}`} value={draft.paymentStatus} onChange={e => set("paymentStatus", e.target.value)}>
                 {["unpaid","paid","refunded","refund_pending","failed"].map(s => (
                   <option key={s} value={s}>{s}</option>
                 ))}
               </select>
+              {fe("paymentStatus")}
             </div>
           </div>
 
@@ -266,18 +292,21 @@ function AdminEditAdDialog({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Start date</label>
-              <input type="datetime-local" className={inputCls} value={draft.startedAt} onChange={e => set("startedAt", e.target.value)} />
+              <input type="datetime-local" className={`${inputCls} ${fieldErrors.startedAt ? "border-red-400" : ""}`} value={draft.startedAt} onChange={e => set("startedAt", e.target.value)} />
+              {fe("startedAt")}
             </div>
             <div>
               <label className={labelCls}>End date</label>
-              <input type="datetime-local" className={inputCls} value={draft.endedAt} onChange={e => set("endedAt", e.target.value)} />
+              <input type="datetime-local" className={`${inputCls} ${fieldErrors.endedAt ? "border-red-400" : ""}`} value={draft.endedAt} onChange={e => set("endedAt", e.target.value)} />
+              {fe("endedAt")}
             </div>
           </div>
 
           {/* Display order */}
           <div className="w-32">
             <label className={labelCls}>Display order</label>
-            <input type="number" min={0} className={inputCls} value={draft.displayOrder} onChange={e => set("displayOrder", Number(e.target.value))} />
+            <input type="number" min={0} className={`${inputCls} ${fieldErrors.displayOrder ? "border-red-400" : ""}`} value={draft.displayOrder} onChange={e => set("displayOrder", Number(e.target.value))} />
+            {fe("displayOrder")}
           </div>
         </div>
 

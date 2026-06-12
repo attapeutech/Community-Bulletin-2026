@@ -21,7 +21,7 @@ const NAV_LINKS: { label: string; href: string; icon: LucideIcon }[] = [
 ];
 
 const FOOTER_LINKS = [
-  { title: "Advertise",  links: [{ label: "How it works", href: "/#how-it-works" }, { label: "Pricing", href: "/#pricing" }] },
+  { title: "Advertise",  pill: { label: "+ Post an Ad", href: "/dashboard/user" }, links: [{ label: "How it works", href: "/#how-it-works" }, { label: "Pricing", href: "/#pricing" }] },
   { title: "For Stores", links: [{ label: "List your store", href: "/register" }, { label: "Store dashboard", href: "/dashboard/store-owner" }] },
   { title: "Account",    links: [{ label: "Sign in", href: "/login" }, { label: "Create account", href: "/register" }, { label: "Dashboard", href: "/dashboard" }] },
   { title: "Company",    links: [{ label: "Help & Support", href: "/help" }, { label: "Contact Us", href: "/contact" }, { label: "Privacy policy", href: "/privacy" }, { label: "Terms of service", href: "/terms" }] },
@@ -139,7 +139,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               Live Ads
             </Link>
             <Link href="/dashboard/user" className="no-underline flex items-center gap-1 bg-[#E8563A] hover:bg-[#D04530] text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors">
-              + Post New Ad
+              + Post an Ad
             </Link>
             {NAV_LINKS.map((l) => (
               <Link key={l.href} href={l.href} className="no-underline flex items-center gap-1.5 text-sm text-[#4A7FA5] font-medium hover:text-[#1A3A5C] transition-colors">
@@ -219,7 +219,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               Live Ads
             </Link>
             <Link href="/dashboard/user" onClick={() => setMobileMenuOpen(false)} className="no-underline flex items-center gap-1 bg-[#E8563A] hover:bg-[#D04530] text-white text-sm font-bold px-4 py-2.5 rounded-full transition-colors">
-              + Post New Ad
+              + Post an Ad
             </Link>
           </div>
           {NAV_LINKS.map((l) => (
@@ -276,17 +276,19 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
                   </span>
                   Live Ads
                 </Link>
-                <Link href="/dashboard/user" className="no-underline flex items-center gap-1 bg-[#E8563A] hover:bg-[#D04530] text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors">
-                  + Post New Ad
-                </Link>
               </div>
             </div>
-            {FOOTER_LINKS.map(({ title, links }) => (
+            {FOOTER_LINKS.map(({ title, links, pill }) => (
               <div key={title}>
                 <div className="flex items-center gap-1.5 text-xs font-bold text-white mb-3.5 tracking-wider uppercase">
                   {title === "For Stores" && <Store size={12} className="shrink-0" />}
                   {title}
                 </div>
+                {pill && (
+                  <Link href={pill.href} className="no-underline inline-flex items-center bg-[#E8563A] hover:bg-[#D04530] text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors mb-3">
+                    {pill.label}
+                  </Link>
+                )}
                 <ul className="space-y-2">
                   {links.map((link) => (
                     <li key={link.label}>

@@ -71,6 +71,9 @@ type Ad = {
   startedAt: string;
   endedAt: string;
   createdAt: string;
+  contactPhone: string | null;
+  contactAddress: string | null;
+  contactWebsite: string | null;
   user: { id: string; name: string; email: string };
   location: { id: string; storeName: string; slug: string };
 };
@@ -102,6 +105,9 @@ type EditDraft = {
   startedAt: string;
   endedAt: string;
   displayOrder: number;
+  contactPhone: string;
+  contactAddress: string;
+  contactWebsite: string;
 };
 
 function toDatetimeLocal(iso: string) {
@@ -120,13 +126,16 @@ function AdminEditAdDialog({
   onSaved: (updated: Partial<Ad>) => void;
 }) {
   const [draft, setDraft] = useState<EditDraft>({
-    title:        ad.title,
-    description:  "",
-    status:       ad.status,
-    paymentStatus: ad.paymentStatus,
-    startedAt:    toDatetimeLocal(ad.startedAt),
-    endedAt:      toDatetimeLocal(ad.endedAt),
-    displayOrder: 0,
+    title:          ad.title,
+    description:    "",
+    status:         ad.status,
+    paymentStatus:  ad.paymentStatus,
+    startedAt:      toDatetimeLocal(ad.startedAt),
+    endedAt:        toDatetimeLocal(ad.endedAt),
+    displayOrder:   0,
+    contactPhone:   ad.contactPhone   ?? "",
+    contactAddress: ad.contactAddress ?? "",
+    contactWebsite: ad.contactWebsite ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [error,  setError]  = useState<string | null>(null);
@@ -142,13 +151,16 @@ function AdminEditAdDialog({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title:         draft.title.trim(),
-          description:   draft.description.trim() || null,
-          status:        draft.status,
-          paymentStatus: draft.paymentStatus,
-          startedAt:     new Date(draft.startedAt).toISOString(),
-          endedAt:       new Date(draft.endedAt).toISOString(),
-          displayOrder:  Number(draft.displayOrder),
+          title:          draft.title.trim(),
+          description:    draft.description.trim() || null,
+          status:         draft.status,
+          paymentStatus:  draft.paymentStatus,
+          startedAt:      new Date(draft.startedAt).toISOString(),
+          endedAt:        new Date(draft.endedAt).toISOString(),
+          displayOrder:   Number(draft.displayOrder),
+          contactPhone:   draft.contactPhone.trim()   || null,
+          contactAddress: draft.contactAddress.trim() || null,
+          contactWebsite: draft.contactWebsite.trim() || null,
         }),
       });
       const json = await res.json();
@@ -214,6 +226,20 @@ function AdminEditAdDialog({
           <div>
             <label className={labelCls}>Description <span className="normal-case text-[#9DB8CC] font-normal">(optional)</span></label>
             <textarea className={`${inputCls} resize-none`} rows={2} value={draft.description} onChange={e => set("description", e.target.value)} />
+          </div>
+
+          {/* Contact fields */}
+          <div>
+            <label className={labelCls}>Phone <span className="normal-case text-[#9DB8CC] font-normal">(optional)</span></label>
+            <input className={inputCls} placeholder="e.g. (555) 123-4567" value={draft.contactPhone} onChange={e => set("contactPhone", e.target.value)} />
+          </div>
+          <div>
+            <label className={labelCls}>Address <span className="normal-case text-[#9DB8CC] font-normal">(optional)</span></label>
+            <input className={inputCls} placeholder="e.g. 123 Main St, City, State" value={draft.contactAddress} onChange={e => set("contactAddress", e.target.value)} />
+          </div>
+          <div>
+            <label className={labelCls}>Website URL <span className="normal-case text-[#9DB8CC] font-normal">(optional)</span></label>
+            <input className={inputCls} placeholder="https://example.com" value={draft.contactWebsite} onChange={e => set("contactWebsite", e.target.value)} />
           </div>
 
           {/* Status + Payment status */}

@@ -6,13 +6,16 @@ import { requireAdmin } from "@/lib/auth/session";
 import { eq } from "drizzle-orm";
 
 const editSchema = z.object({
-  title:         z.string().min(1).max(200).optional(),
-  description:   z.string().max(1000).nullable().optional(),
-  status:        z.enum(["pending", "approved", "denied", "expired", "cancelled"]).optional(),
-  paymentStatus: z.enum(["unpaid", "paid", "refunded", "refund_pending", "failed"]).optional(),
-  startedAt:     z.string().datetime().optional(),
-  endedAt:       z.string().datetime().optional(),
-  displayOrder:  z.number().int().min(0).optional(),
+  title:          z.string().min(1).max(200).optional(),
+  description:    z.string().max(1000).nullable().optional(),
+  status:         z.enum(["pending", "approved", "denied", "expired", "cancelled"]).optional(),
+  paymentStatus:  z.enum(["unpaid", "paid", "refunded", "refund_pending", "failed"]).optional(),
+  startedAt:      z.string().datetime().optional(),
+  endedAt:        z.string().datetime().optional(),
+  displayOrder:   z.number().int().min(0).optional(),
+  contactPhone:   z.string().max(50).nullable().optional(),
+  contactAddress: z.string().max(300).nullable().optional(),
+  contactWebsite: z.string().url().or(z.literal("")).nullable().optional(),
 });
 
 // PATCH /api/admin/ads/[id] — admin direct edit for testing (no emails / refunds)

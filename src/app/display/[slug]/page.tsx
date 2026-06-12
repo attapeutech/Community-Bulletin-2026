@@ -82,7 +82,7 @@ export default function DisplayPage() {
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    document.documentElement.requestFullscreen().catch(() => {});
+    document.documentElement.requestFullscreen?.().catch(() => {});
     const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", onFsChange);
     return () => document.removeEventListener("fullscreenchange", onFsChange);
@@ -96,9 +96,9 @@ export default function DisplayPage() {
 
   function toggleFullscreen() {
     if (document.fullscreenElement) {
-      document.exitFullscreen();
+      document.exitFullscreen?.();
     } else {
-      document.documentElement.requestFullscreen().catch(() => {});
+      document.documentElement.requestFullscreen?.().catch(() => {});
     }
   }
 

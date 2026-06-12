@@ -29,8 +29,8 @@ function LiveAdsContent() {
 
   useEffect(() => {
     setSelectedLocation(stateParam ? { stateCode: stateParam, stateName: stateParam, cityName: cityParam } : null);
-    setSearchInput(searchParam);
-  }, [stateParam, cityParam, searchParam]);
+    // Do not reset searchInput here — overrides active typing when debounce updates the URL
+  }, [stateParam, cityParam]);
 
   const pushParams = useCallback((loc: SelectedLocation | null, q: string) => {
     const params = new URLSearchParams();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "@/components/layout/Icon";
@@ -11,7 +11,7 @@ import LocationPickerDialog from "@/components/marketing/LocationPickerDialog";
 
 type SelectedLocation = { stateCode: string; stateName: string; cityName: string };
 
-export default function LiveAdsPage() {
+function LiveAdsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
@@ -27,7 +27,6 @@ export default function LiveAdsPage() {
   const [searchInput, setSearchInput] = useState(searchParam);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Sync URL → state when params change
   useEffect(() => {
     setSelectedLocation(stateParam ? { stateCode: stateParam, stateName: stateParam, cityName: cityParam } : null);
     setSearchInput(searchParam);
@@ -61,9 +60,7 @@ export default function LiveAdsPage() {
   return (
     <div style={{ minHeight: "100vh", background: "#F4F7FB" }}>
 
-      {/* Navbar */}
       <nav style={{ position: "sticky", top: 0, zIndex: 50, background: "#fff", borderBottom: "1px solid #D8E4EE", height: 64, display: "flex", alignItems: "center", padding: "0 24px", gap: 12 }}>
-        {/* Logo */}
         <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
           <div style={{ background: "#E8EFF6", borderRadius: 10, padding: 6, display: "flex" }}>
             <Icon size={28} />
@@ -77,7 +74,6 @@ export default function LiveAdsPage() {
           </div>
         </Link>
 
-        {/* Location picker */}
         <button
           onClick={() => setLocationPickerOpen(true)}
           style={{
@@ -99,7 +95,6 @@ export default function LiveAdsPage() {
           )}
         </button>
 
-        {/* Search */}
         <div style={{ flex: 1, position: "relative", maxWidth: 440 }}>
           <span style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "#9DB8CC", pointerEvents: "none" }}>🔍</span>
           <input
@@ -114,10 +109,8 @@ export default function LiveAdsPage() {
           )}
         </div>
 
-        {/* Spacer */}
         <div style={{ flex: 1 }} />
 
-        {/* Auth */}
         {session ? (
           <Link href="/dashboard" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600, color: "#fff", background: "#1A3A5C", padding: "6px 14px 6px 8px", borderRadius: 30, flexShrink: 0 }}>
             <Avatar style={{ width: 26, height: 26 }}>
@@ -136,9 +129,7 @@ export default function LiveAdsPage() {
         )}
       </nav>
 
-      {/* Page content */}
       <main style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 20px" }}>
-        {/* Header */}
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 28 }}>
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, color: "#E8563A", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6 }}>Live right now</div>
@@ -154,7 +145,6 @@ export default function LiveAdsPage() {
         <LiveAdsGrid state={stateParam} city={cityParam} search={searchParam} />
       </main>
 
-      {/* Location dialog */}
       <LocationPickerDialog
         open={locationPickerOpen}
         onClose={() => setLocationPickerOpen(false)}
@@ -162,5 +152,17 @@ export default function LiveAdsPage() {
         initial={selectedLocation}
       />
     </div>
+  );
+}
+
+export default function LiveAdsPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: "100vh", background: "#F4F7FB", display: "flex", alignItems: "center", justifyContent: "center", color: "#6B8FA8", fontSize: 14 }}>
+        Loading…
+      </div>
+    }>
+      <LiveAdsContent />
+    </Suspense>
   );
 }

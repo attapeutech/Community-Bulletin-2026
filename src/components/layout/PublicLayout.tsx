@@ -21,7 +21,7 @@ const NAV_LINKS: { label: string; href: string; icon: LucideIcon }[] = [
 ];
 
 const FOOTER_LINKS = [
-  { title: "Advertise",  links: [{ label: "Live Ads", href: "/live-ads" }, { label: "Post New Ad", href: "/dashboard/user" }, { label: "How it works", href: "/#how-it-works" }, { label: "Pricing", href: "/#pricing" }] },
+  { title: "Advertise",  links: [{ label: "How it works", href: "/#how-it-works" }, { label: "Pricing", href: "/#pricing" }] },
   { title: "For Stores", links: [{ label: "List your store", href: "/register" }, { label: "Store dashboard", href: "/dashboard/store-owner" }] },
   { title: "Account",    links: [{ label: "Sign in", href: "/login" }, { label: "Create account", href: "/register" }, { label: "Dashboard", href: "/dashboard" }] },
   { title: "Company",    links: [{ label: "Help & Support", href: "/help" }, { label: "Contact Us", href: "/contact" }, { label: "Privacy policy", href: "/privacy" }, { label: "Terms of service", href: "/terms" }] },
@@ -265,9 +265,21 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
                   </div>
                 </div>
               </div>
-              <p className="text-sm text-[#6B8FA8] leading-relaxed max-w-[220px]">
+              <p className="text-sm text-[#6B8FA8] leading-relaxed max-w-[220px] mb-4">
                 Digital in-store advertising for local communities.
               </p>
+              <div className="flex flex-wrap gap-2">
+                <Link href="/live-ads" className="no-underline flex items-center gap-1.5 bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+                  </span>
+                  Live Ads
+                </Link>
+                <Link href="/dashboard/user" className="no-underline flex items-center gap-1 bg-[#E8563A] hover:bg-[#D04530] text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors">
+                  + Post New Ad
+                </Link>
+              </div>
             </div>
             {FOOTER_LINKS.map(({ title, links }) => (
               <div key={title}>

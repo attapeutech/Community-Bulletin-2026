@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { PublicLayout } from "@/components/layout/PublicLayout";
 import Link from "next/link";
 import {
   HelpCircle, BookOpen, CreditCard, Store,
@@ -96,8 +95,7 @@ export default function HelpPage() {
   const [activeCategory, setActiveCategory] = useState(0);
 
   return (
-    <PublicLayout>
-
+    <>
       {/* ── Hero ── */}
       <section className="pt-14 pb-14 px-4 sm:px-8 bg-gradient-to-br from-[#1A3A5C] via-[#0F2540] to-[#1A3A5C] text-center">
         <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 mb-5">
@@ -167,7 +165,6 @@ export default function HelpPage() {
           </Link>
         </div>
       </section>
-
-    </PublicLayout>
+    </>
   );
 }

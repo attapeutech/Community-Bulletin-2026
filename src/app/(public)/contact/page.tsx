@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { GoogleReCaptchaProvider, useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { useSession } from "@/lib/auth/client";
-import { PublicLayout } from "@/components/layout/PublicLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -120,8 +119,7 @@ function ContactForm({ defaultEmail }: { defaultEmail?: string }) {
 function ContactPageContent() {
   const { data: session } = useSession();
   return (
-    <PublicLayout>
-
+    <>
       {/* ── Hero ── */}
       <section className="pt-14 pb-14 px-4 sm:px-8 bg-gradient-to-br from-[#1A3A5C] via-[#0F2540] to-[#1A3A5C] text-center">
         <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 mb-5">
@@ -150,8 +148,7 @@ function ContactPageContent() {
           </div>
         </div>
       </section>
-
-    </PublicLayout>
+    </>
   );
 }
 

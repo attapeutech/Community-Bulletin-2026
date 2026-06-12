@@ -1,25 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Icon } from "@/components/layout/Icon";
-import { useState, useEffect, useRef } from "react";
-import { Menu, X, Lightbulb, Sparkles, Tag, Store } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { useSession } from "@/lib/auth/client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LiveAdsSection from "./LiveAdsSection";
-import LocationPickerDialog from "./LocationPickerDialog";
-import { readSavedLocation, writeSavedLocation } from "@/lib/location-preference";
-
-type SelectedLocation = { stateCode: string; stateName: string; cityName: string };
-
-const NAV_LINKS: { label: string; href: string; icon: LucideIcon }[] = [
-  { label: "How it works", href: "#how-it-works", icon: Lightbulb },
-  { label: "Features",     href: "#features",     icon: Sparkles  },
-  { label: "Pricing",      href: "#pricing",      icon: Tag       },
-  { label: "For stores",   href: "#stores",       icon: Store     },
-];
 
 const FEATURES = [
   { icon: "📍", title: "Location-targeted ads", desc: "Choose exactly which store locations display your ad. Target by city, state, or specific address." },
@@ -45,195 +28,17 @@ const STATS = [
 ];
 
 export default function LandingPage() {
-  const router = useRouter();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [locationPickerOpen, setLocationPickerOpen] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
-  const [searchInput, setSearchInput] = useState("");
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Restore saved location from localStorage after hydration
-  useEffect(() => {
-    const stored = readSavedLocation();
-    if (stored) setSelectedLocation(stored);
-  }, []);
   const { data: session } = useSession();
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  const navigateToLiveAds = (loc: SelectedLocation | null, q: string) => {
-    const params = new URLSearchParams();
-    if (loc?.stateCode) params.set("state", loc.stateCode);
-    if (loc?.cityName)  params.set("city",  loc.cityName);
-    if (q.trim())       params.set("search", q.trim());
-    router.push(`/live-ads${params.toString() ? `?${params}` : ""}`);
-  };
-
-  const handleLocationSave = (loc: SelectedLocation | null) => {
-    setSelectedLocation(loc);
-    writeSavedLocation(loc);
-    navigateToLiveAds(loc, searchInput);
-  };
-
-  const handleSearch = (val: string) => {
-    setSearchInput(val);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => navigateToLiveAds(selectedLocation, val), 400);
-  };
-
-  const locationLabel = selectedLocation
-    ? selectedLocation.cityName
-      ? `${selectedLocation.cityName}, ${selectedLocation.stateCode}`
-      : selectedLocation.stateName || selectedLocation.stateCode
-    : null;
 
   return (
     <div className="font-sans text-[#1A3A5C] overflow-x-hidden">
 
-      {/* ── NAVBAR ── */}
-      <nav className={`fixed top-0 left-0 right-0 w-full z-50 bg-white/95 backdrop-blur-sm border-b border-[#D8E4EE] h-16 flex items-center justify-between px-4 sm:px-8 transition-shadow duration-200 ${scrolled ? "shadow-md" : "shadow-none"}`}>
-        {/* Logo */}
-        <Link href="/" className="no-underline flex items-center gap-2.5">
-          <div className="bg-[#E8EFF6] rounded-[10px] p-1.5 flex">
-            <Icon size={32} />
-          </div>
-          <div>
-            <div className="font-serif font-bold text-[15px] text-[#1A3A5C] leading-tight">Community</div>
-            <div className="font-serif font-bold text-[15px] leading-tight">
-              <span className="text-[#E8563A]">Bulletin</span>
-              <span className="text-[#4A90C4] text-[11px] font-normal">.com</span>
-            </div>
-          </div>
-        </Link>
-
-        {/* Desktop nav links */}
-        <div className="hidden md:flex items-center gap-6">
-          <Link href="/live-ads" className="no-underline flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
-            </span>
-            Live Ads
-          </Link>
-          {NAV_LINKS.map((l) => (
-            <a key={l.href} href={l.href} className="no-underline flex items-center gap-1.5 text-sm text-[#4A7FA5] font-medium hover:text-[#1A3A5C] transition-colors">
-              <l.icon size={14} />
-              {l.label}
-            </a>
-          ))}
-        </div>
-
-        {/* Location picker + search */}
-        <div className="hidden md:flex items-center gap-2 flex-1 max-w-md mx-4">
-          <button
-            onClick={() => setLocationPickerOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors flex-shrink-0"
-            style={{ border: `1px solid ${locationLabel ? "#4A90C4" : "#D8E4EE"}`, background: locationLabel ? "#EDF5FF" : "#fff", color: locationLabel ? "#1A3A5C" : "#6B8FA8" }}
-          >
-            <span>📍</span>
-            {locationLabel ?? "Location"}
-            {locationLabel && (
-              <span onClick={(e) => { e.stopPropagation(); handleLocationSave(null); }} className="ml-1 text-[#6B8FA8] font-normal">×</span>
-            )}
-          </button>
-          <div className="relative flex-1">
-            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9DB8CC] text-sm pointer-events-none">🔍</span>
-            <input
-              type="text"
-              placeholder="Search live ads…"
-              value={searchInput}
-              onChange={e => handleSearch(e.target.value)}
-              className="w-full pl-8 pr-7 py-1.5 border border-[#D8E4EE] rounded-lg text-sm text-[#1A3A5C] bg-[#FAFCFF] outline-none"
-            />
-            {searchInput && (
-              <button onClick={() => handleSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-[#9DB8CC] bg-transparent border-none cursor-pointer text-base">×</button>
-            )}
-          </div>
-        </div>
-
-        {/* Desktop CTA */}
-        <div className="hidden md:flex items-center gap-3">
-          {session ? (
-            <Link href="/dashboard" className="no-underline flex items-center gap-2.5 text-sm font-semibold text-white pl-1 pr-4 py-1 rounded-full bg-[#1A3A5C] hover:bg-[#0F2540] transition-colors">
-              <Avatar className="w-7 h-7 shrink-0">
-                <AvatarImage src={session.user.image ?? ""} alt={session.user.name ?? ""} className="object-cover" />
-                <AvatarFallback className="bg-[#4A90C4] text-white text-[11px] font-bold">
-                  {(session.user.name ?? "?").split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2)}
-                </AvatarFallback>
-              </Avatar>
-              Go to Dashboard
-            </Link>
-          ) : (
-            <>
-              <Link href="/login" className="no-underline text-sm font-semibold text-[#1A3A5C] px-4 py-2 rounded-lg border border-[#D1DDE8] hover:bg-[#F4F7FB] transition-colors">
-                Sign in
-              </Link>
-              <Link href="/register" className="no-underline text-sm font-semibold text-white px-4 py-2 rounded-lg bg-[#1A3A5C] hover:bg-[#0F2540] transition-colors">
-                Get started free
-              </Link>
-            </>
-          )}
-        </div>
-
-        {/* Mobile hamburger */}
-        <button
-          className="md:hidden p-2 rounded-lg text-[#1A3A5C] hover:bg-[#F4F7FB] transition-colors"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label="Toggle menu"
-        >
-          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
-      </nav>
-
-      {/* Mobile menu dropdown */}
-      {mobileMenuOpen && (
-        <div className="md:hidden fixed top-16 left-0 right-0 z-40 bg-white border-b border-[#D8E4EE] shadow-lg px-4 py-4 flex flex-col gap-1">
-          <Link href="/live-ads" onClick={() => setMobileMenuOpen(false)} className="no-underline flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-4 py-2.5 rounded-full mb-1 transition-colors w-fit">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
-            </span>
-            LIVE Ads
-          </Link>
-          {NAV_LINKS.map((l) => (
-            <a key={l.href} href={l.href} className="no-underline flex items-center gap-2.5 text-sm text-[#4A7FA5] font-medium py-2.5 px-1 border-b border-[#F0F5FA]" onClick={() => setMobileMenuOpen(false)}>
-              <l.icon size={15} className="shrink-0 text-[#9DB8CC]" />
-              {l.label}
-            </a>
-          ))}
-          <div className="flex flex-col gap-2 pt-2">
-            {session ? (
-              <Link href="/dashboard" className="no-underline flex items-center justify-center gap-2.5 text-sm font-semibold text-white pl-2 pr-4 py-1.5 rounded-full bg-[#1A3A5C]">
-                <Avatar className="w-7 h-7 shrink-0">
-                  <AvatarImage src={session.user.image ?? ""} alt={session.user.name ?? ""} className="object-cover" />
-                  <AvatarFallback className="bg-[#4A90C4] text-white text-[11px] font-bold">
-                    {(session.user.name ?? "?").split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2)}
-                  </AvatarFallback>
-                </Avatar>
-                Go to Dashboard
-              </Link>
-            ) : (
-              <>
-                <Link href="/login" className="no-underline text-sm font-semibold text-[#1A3A5C] px-4 py-2.5 rounded-lg border border-[#D1DDE8] text-center">Sign in</Link>
-                <Link href="/register" className="no-underline text-sm font-semibold text-white px-4 py-2.5 rounded-lg bg-[#1A3A5C] text-center">Get started free</Link>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* ── HERO ── */}
-      <section className="relative bg-gradient-to-br from-[#1A3A5C] via-[#0F2540] to-[#1A3A5C] px-4 sm:px-8 pt-36 sm:pt-40 pb-16 sm:pb-20 text-center overflow-hidden">
+      <section className="relative bg-gradient-to-br from-[#1A3A5C] via-[#0F2540] to-[#1A3A5C] px-4 sm:px-8 pt-20 sm:pt-24 pb-16 sm:pb-20 text-center overflow-hidden">
         <div className="absolute top-[-100px] right-[-100px] w-80 h-80 rounded-full bg-[#4A90C4]/[0.08] pointer-events-none" />
         <div className="absolute bottom-[-80px] left-[-80px] w-64 h-64 rounded-full bg-[#E8563A]/[0.06] pointer-events-none" />
 
         <div className="max-w-3xl mx-auto relative">
-          {/* Badge */}
           <div className="inline-flex items-center gap-1.5 bg-[#E8563A]/15 border border-[#E8563A]/30 rounded-full px-3.5 py-1.5 mb-7">
             <span className="w-1.5 h-1.5 rounded-full bg-[#E8563A] inline-block" />
             <span className="text-xs font-semibold text-[#E8563A] tracking-wide uppercase">Now live in 48 states</span>
@@ -443,69 +248,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
-      <footer className="bg-[#0F2540] px-4 sm:px-8 pt-10 pb-6 border-t border-white/[0.08]">
-        <div className="max-w-4xl mx-auto">
-          {/* Live Ads CTA */}
-          <div className="flex items-center gap-4 flex-wrap mb-8 pb-8 border-b border-white/[0.08]">
-            <Link href="/live-ads" className="no-underline flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white text-sm font-bold px-4 py-2 rounded-full transition-colors">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
-              </span>
-              Live Ads
-            </Link>
-            <span className="text-sm text-[#6B8FA8]">Browse live ads running right now in your area</span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 mb-10">
-            <div className="col-span-2 sm:col-span-1">
-              <div className="flex items-center gap-2.5 mb-3.5">
-                <div className="bg-[#E8EFF6] rounded-lg p-1.5 flex">
-                  <Icon size={24} />
-                </div>
-                <div>
-                  <div className="font-serif font-bold text-white text-[13px] leading-tight">Community</div>
-                  <div className="font-serif font-bold text-[#E8563A] text-[13px] leading-tight">Bulletin<span className="text-[#4A90C4] text-[10px] font-normal">.com</span></div>
-                </div>
-              </div>
-              <p className="text-sm text-[#6B8FA8] leading-relaxed max-w-[220px]">
-                Digital in-store advertising for local communities.
-              </p>
-            </div>
-            {[
-              { title: "Advertise", links: ["Post an ad", "Browse locations", "How it works", "Pricing"] },
-              { title: "For Stores", links: ["List your store", "Store dashboard", "Display setup"] },
-              { title: "Company", links: ["About us", "Contact us", "Help & Support", "Privacy policy", "Terms of service"] },
-            ].map(({ title, links }) => (
-              <div key={title}>
-                <div className="text-xs font-bold text-white mb-3.5 tracking-wider uppercase">{title}</div>
-                <ul className="space-y-2">
-                  {links.map((link) => (
-                    <li key={link}>
-                      <a
-                        href={link === "Help & Support" ? "/help" : link === "Privacy policy" ? "/privacy" : link === "Terms of service" ? "/terms" : link === "Contact us" ? "/contact" : link === "Post an ad" ? (session ? "/ads/new" : "/register") : "#"}
-                        className="text-sm text-[#6B8FA8] no-underline hover:text-white transition-colors"
-                      >{link}</a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-          <div className="border-t border-white/[0.08] pt-5 flex flex-col sm:flex-row justify-between items-center gap-2">
-            <p className="text-xs text-[#4A7FA5]">© 2026 CommunityBulletin.com. All rights reserved.</p>
-            <p className="text-xs text-[#4A7FA5]">Made with ❤️ for local communities</p>
-          </div>
-        </div>
-      </footer>
-
-      {/* Location picker dialog */}
-      <LocationPickerDialog
-        open={locationPickerOpen}
-        onClose={() => setLocationPickerOpen(false)}
-        onSave={handleLocationSave}
-        initial={selectedLocation}
-      />
     </div>
   );
 }

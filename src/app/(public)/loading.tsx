@@ -1,20 +1,7 @@
-// Home page route-level loading
 export default function HomeLoading() {
   return (
     <div style={{ minHeight: "100vh", background: "#F4F7FB" }}>
-      {/* Navbar */}
-      <div style={{ background: "#fff", borderBottom: "1px solid #D8E4EE", height: 64, display: "flex", alignItems: "center", padding: "0 24px", gap: 32 }}>
-        <div className="skeleton" style={{ width: 144, height: 36, borderRadius: 10 }} />
-        <div style={{ display: "flex", gap: 24, flex: 1 }}>
-          {[80, 96, 64, 56, 72].map((w, i) => (
-            <div key={i} className="skeleton" style={{ width: w, height: 13 }} />
-          ))}
-        </div>
-        <div className="skeleton" style={{ width: 80,  height: 34, borderRadius: 8 }} />
-        <div className="skeleton" style={{ width: 110, height: 34, borderRadius: 8 }} />
-      </div>
-
-      {/* Hero */}
+      {/* Hero skeleton */}
       <div style={{ background: "#1A3A5C", padding: "80px 24px 72px", display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
         <div className="skeleton" style={{ width: 96, height: 11, background: "rgba(255,255,255,0.12)" }} />
         <div className="skeleton" style={{ width: "min(560px, 80vw)", height: 48, background: "rgba(255,255,255,0.12)" }} />
@@ -39,7 +26,7 @@ export default function HomeLoading() {
         </div>
       </div>
 
-      {/* Cards section */}
+      {/* Cards */}
       <div style={{ background: "#F4F7FB", padding: "48px 24px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 24 }}>

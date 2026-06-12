@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Icon } from "@/components/layout/Icon";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Menu, X, Lightbulb, Sparkles, Tag, LifeBuoy, Store, Search, MapPin } from "lucide-react";
+import { Menu, X, Lightbulb, Sparkles, Tag, LifeBuoy, Store, Search, MapPin, LogIn, UserPlus, LayoutDashboard, Monitor, Mail, Shield, FileText } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useSession } from "@/lib/auth/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,10 +21,10 @@ const NAV_LINKS: { label: string; href: string; icon: LucideIcon }[] = [
 ];
 
 const FOOTER_LINKS = [
-  { title: "Advertise",  pill: { label: "+ Post an Ad", href: "/dashboard/user" }, links: [{ label: "How it works", href: "/#how-it-works" }, { label: "Pricing", href: "/#pricing" }] },
-  { title: "For Stores", links: [{ label: "List your store", href: "/register" }, { label: "Store dashboard", href: "/dashboard/store-owner" }] },
-  { title: "Account",    links: [{ label: "Sign in", href: "/login" }, { label: "Create account", href: "/register" }, { label: "Dashboard", href: "/dashboard" }] },
-  { title: "Company",    links: [{ label: "Help & Support", href: "/help" }, { label: "Contact Us", href: "/contact" }, { label: "Privacy policy", href: "/privacy" }, { label: "Terms of service", href: "/terms" }] },
+  { title: "Advertise",  pill: { label: "+ Post an Ad", href: "/dashboard/user" }, links: [{ label: "How it works", href: "/#how-it-works", icon: Lightbulb }, { label: "Pricing", href: "/#pricing", icon: Tag }] },
+  { title: "For Stores", links: [{ label: "List your store", href: "/register", icon: Store }, { label: "Store dashboard", href: "/dashboard/store-owner", icon: Monitor }] },
+  { title: "Account",    links: [{ label: "Sign in", href: "/login", icon: LogIn }, { label: "Create account", href: "/register", icon: UserPlus }, { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard }] },
+  { title: "Company",    links: [{ label: "Help & Support", href: "/help", icon: LifeBuoy }, { label: "Contact Us", href: "/contact", icon: Mail }, { label: "Privacy policy", href: "/privacy", icon: Shield }, { label: "Terms of service", href: "/terms", icon: FileText }] },
 ];
 
 export function PublicLayout({ children }: { children: React.ReactNode }) {
@@ -292,7 +292,8 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
                 <ul className="space-y-2">
                   {links.map((link) => (
                     <li key={link.label}>
-                      <Link href={link.href} className="text-sm text-[#6B8FA8] no-underline hover:text-white transition-colors">
+                      <Link href={link.href} className="flex items-center gap-1.5 text-sm text-[#6B8FA8] no-underline hover:text-white transition-colors">
+                        {"icon" in link && link.icon && <link.icon size={13} className="shrink-0 opacity-60" />}
                         {link.label}
                       </Link>
                     </li>

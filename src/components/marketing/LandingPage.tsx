@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/layout/Icon";
 import { useState, useEffect, useRef } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Lightbulb, Sparkles, Tag, Store } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useSession } from "@/lib/auth/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LiveAdsSection from "./LiveAdsSection";
@@ -13,12 +14,11 @@ import { readSavedLocation, writeSavedLocation } from "@/lib/location-preference
 
 type SelectedLocation = { stateCode: string; stateName: string; cityName: string };
 
-const NAV_LINKS = [
-  { label: "Live Ads", href: "/live-ads" },
-  { label: "How it works", href: "#how-it-works" },
-  { label: "Features", href: "#features" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "For stores", href: "#stores" },
+const NAV_LINKS: { label: string; href: string; icon: LucideIcon }[] = [
+  { label: "How it works", href: "#how-it-works", icon: Lightbulb },
+  { label: "Features",     href: "#features",     icon: Sparkles  },
+  { label: "Pricing",      href: "#pricing",      icon: Tag       },
+  { label: "For stores",   href: "#stores",       icon: Store     },
 ];
 
 const FEATURES = [
@@ -113,8 +113,16 @@ export default function LandingPage() {
 
         {/* Desktop nav links */}
         <div className="hidden md:flex items-center gap-6">
+          <Link href="/live-ads" className="no-underline flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+            </span>
+            LIVE
+          </Link>
           {NAV_LINKS.map((l) => (
-            <a key={l.href} href={l.href} className="no-underline text-sm text-[#4A7FA5] font-medium hover:text-[#1A3A5C] transition-colors">
+            <a key={l.href} href={l.href} className="no-underline flex items-center gap-1.5 text-sm text-[#4A7FA5] font-medium hover:text-[#1A3A5C] transition-colors">
+              <l.icon size={14} />
               {l.label}
             </a>
           ))}
@@ -184,9 +192,17 @@ export default function LandingPage() {
 
       {/* Mobile menu dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed top-16 left-0 right-0 z-40 bg-white border-b border-[#D8E4EE] shadow-lg px-4 py-4 flex flex-col gap-3">
+        <div className="md:hidden fixed top-16 left-0 right-0 z-40 bg-white border-b border-[#D8E4EE] shadow-lg px-4 py-4 flex flex-col gap-1">
+          <Link href="/live-ads" onClick={() => setMobileMenuOpen(false)} className="no-underline flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-4 py-2.5 rounded-full mb-1 transition-colors w-fit">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+            </span>
+            LIVE Ads
+          </Link>
           {NAV_LINKS.map((l) => (
-            <a key={l.href} href={l.href} className="no-underline text-sm text-[#4A7FA5] font-medium py-2 border-b border-[#F0F5FA]" onClick={() => setMobileMenuOpen(false)}>
+            <a key={l.href} href={l.href} className="no-underline flex items-center gap-2.5 text-sm text-[#4A7FA5] font-medium py-2.5 px-1 border-b border-[#F0F5FA]" onClick={() => setMobileMenuOpen(false)}>
+              <l.icon size={15} className="shrink-0 text-[#9DB8CC]" />
               {l.label}
             </a>
           ))}

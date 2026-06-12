@@ -49,11 +49,27 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
 
       {/* ── RIGHT PANEL ── */}
       <div className="flex-1 bg-secondary flex items-center justify-center px-4 sm:px-8 py-10">
-        <Card className="w-full max-w-[400px] border-border/50 shadow-none rounded-2xl">
-          <CardContent className="px-5 sm:px-8 py-7 sm:py-9">
-            {children}
-          </CardContent>
-        </Card>
+        <div className="w-full max-w-[400px] flex flex-col items-center gap-6">
+          {/* Mobile-only logo */}
+          <Link href="/" className="lg:hidden flex items-center gap-3 no-underline">
+            <div className="bg-[#E8EFF6] rounded-xl p-2 flex items-center justify-center">
+              <Icon size={36} />
+            </div>
+            <div className="flex flex-col leading-none">
+              <span className="font-serif font-bold text-[17px] text-[#1A3A5C]">Community</span>
+              <span className="font-serif font-bold text-[17px] leading-none">
+                <span style={{ color: "#E8563A" }}>Bulletin</span>
+                <span className="text-[#4A90C4] text-[11px] font-sans font-normal">.com</span>
+              </span>
+            </div>
+          </Link>
+
+          <Card className="w-full border-border/50 shadow-none rounded-2xl">
+            <CardContent className="px-5 sm:px-8 py-7 sm:py-9">
+              {children}
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
     </div>

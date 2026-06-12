@@ -29,8 +29,7 @@ export async function GET(req: NextRequest) {
           ilike(locations.storeNumber, `%${search}%`),
           ilike(cities.name, `%${search}%`),
           ilike(ads.title, `%${search}%`),
-          ilike(ads.description, `%${search}%`),
-          ilike(ads.id, `%${search}%`)
+          ilike(ads.description, `%${search}%`)
         )
       : undefined;
 

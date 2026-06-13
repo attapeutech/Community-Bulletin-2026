@@ -280,7 +280,10 @@ function AdminEditAdDialog({
                 Show on display
               </label>
             </div>
-            <input className={`${inputCls} ${fieldErrors.contactPhone ? "border-red-400" : ""}`} placeholder="e.g. (555) 123-4567" value={draft.contactPhone} onChange={e => set("contactPhone", e.target.value)} />
+            <input className={`${inputCls} ${fieldErrors.contactPhone ? "border-red-400" : ""}`} placeholder="e.g. (555) 123-4567" value={draft.contactPhone} onChange={e => {
+              set("contactPhone", e.target.value);
+              if (e.target.value.trim()) setDraft(d => ({ ...d, showPhone: true }));
+            }} />
             {fe("contactPhone")}
           </div>
           <div>
@@ -291,7 +294,10 @@ function AdminEditAdDialog({
                 Show on display
               </label>
             </div>
-            <input className={`${inputCls} ${fieldErrors.contactAddress ? "border-red-400" : ""}`} placeholder="e.g. 123 Main St, City, State" value={draft.contactAddress} onChange={e => set("contactAddress", e.target.value)} />
+            <input className={`${inputCls} ${fieldErrors.contactAddress ? "border-red-400" : ""}`} placeholder="e.g. 123 Main St, City, State" value={draft.contactAddress} onChange={e => {
+              set("contactAddress", e.target.value);
+              if (e.target.value.trim()) setDraft(d => ({ ...d, showAddress: true }));
+            }} />
             {fe("contactAddress")}
           </div>
           <div>
@@ -302,7 +308,10 @@ function AdminEditAdDialog({
                 Show on display
               </label>
             </div>
-            <input className={`${inputCls} ${fieldErrors.contactWebsite ? "border-red-400" : ""}`} placeholder="https://example.com" value={draft.contactWebsite} onChange={e => set("contactWebsite", e.target.value)} />
+            <input className={`${inputCls} ${fieldErrors.contactWebsite ? "border-red-400" : ""}`} placeholder="https://example.com" value={draft.contactWebsite} onChange={e => {
+              set("contactWebsite", e.target.value);
+              if (e.target.value.trim()) setDraft(d => ({ ...d, showWebsite: true }));
+            }} />
             {fe("contactWebsite")}
           </div>
 

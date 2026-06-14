@@ -813,7 +813,90 @@ export default function AdminPanelClient({
               <p className="text-xs text-[#6B8FA8] mt-1">{users.length} registered accounts</p>
             </CardHeader>
             <CardContent className="p-0">
-              <div>
+
+              {/* ── Mobile cards (hidden on sm+) ── */}
+              <div className="sm:hidden divide-y divide-[#D8E4EE]">
+                {pagedUsers.map(u => {
+                  const badgeClass = ROLE_BADGE_CLASS[u.role] ?? ROLE_BADGE_CLASS.user;
+                  const isSelf = u.id === currentUserId;
+                  const adCount = ads.filter(a => a.user.id === u.id).length;
+                  return (
+                    <div key={u.id} className="px-4 py-4 flex flex-col gap-3">
+                      {/* Row 1: name + role badge */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="font-semibold text-[13px] text-[#1A3A5C] flex flex-wrap items-center gap-1">
+                            {u.name}
+                            {isSelf && <span className="text-[10px] text-[#6B8FA8]">(you)</span>}
+                            {u.twoFactorEnabled && <span className="text-[10px] text-green-700">2FA</span>}
+                            {u.banned && <span className="text-[10px] font-semibold text-white bg-red-500 rounded px-1.5 py-0.5">Banned</span>}
+                          </div>
+                          <div className="text-xs text-[#6B8FA8] mt-0.5">{u.email}</div>
+                          <div className="text-[11px] text-[#9DB8CC] mt-0.5">Joined {new Date(u.createdAt).toLocaleDateString()}</div>
+                        </div>
+                        <Badge variant="outline" className={cn("text-[11px] font-semibold px-2.5 py-0.5 rounded-full shrink-0", badgeClass)}>
+                          {ROLE_LABEL[u.role] ?? u.role}
+                        </Badge>
+                      </div>
+                      {/* Row 2: actions */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        {adCount > 0 && (
+                          <button
+                            onClick={() => { setUserSearch(u.name); setStatusFilter("all"); setActiveTab("ads"); }}
+                            className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-blue-100 text-blue-800 text-[11px] font-bold hover:bg-blue-200 cursor-pointer border-0"
+                          >
+                            {adCount} ad{adCount !== 1 ? "s" : ""}
+                          </button>
+                        )}
+                        {!isSelf && (
+                          <Select value={u.role} disabled={roleChanging === u.id} onValueChange={v => changeRole(u.id, v)}>
+                            <SelectTrigger className={cn("h-7 w-28 text-xs text-[#1A3A5C] border-[#D8E4EE] bg-[#F7F9FC]", roleChanging === u.id && "opacity-60")}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="user">User</SelectItem>
+                              <SelectItem value="store_owner">Store Owner</SelectItem>
+                              <SelectItem value="approver">Approver</SelectItem>
+                              <SelectItem value="admin">Admin</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
+                        {!isSelf && (u.banned ? (
+                          <Button variant="outline" size="sm" disabled={banning === u.id} onClick={() => banUser(u.id, false)}
+                            className="h-7 px-3 text-[11px] font-semibold border-green-300 text-green-700 bg-green-50 hover:bg-green-100">
+                            {banning === u.id ? "…" : "Unban"}
+                          </Button>
+                        ) : confirmBan === u.id ? (
+                          <div className="flex flex-col gap-1.5 w-full">
+                            <Input placeholder="Ban reason (optional)" value={banReasonInput[u.id] ?? ""}
+                              onChange={e => setBanReasonInput(r => ({ ...r, [u.id]: e.target.value }))}
+                              className="h-7 text-xs border-[#D8E4EE] bg-[#F7F9FC]" />
+                            <div className="flex gap-1">
+                              <Button variant="outline" size="sm" disabled={banning === u.id} onClick={() => banUser(u.id, true)}
+                                className="h-7 px-2.5 text-[11px] font-semibold border-red-300 text-red-700 bg-red-50 hover:bg-red-100">
+                                {banning === u.id ? "…" : "Confirm"}
+                              </Button>
+                              <Button variant="outline" size="sm" onClick={() => setConfirmBan(null)}
+                                className="h-7 px-2.5 text-[11px] font-semibold border-[#D8E4EE] text-[#6B8FA8] bg-white">
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <Button variant="outline" size="sm" onClick={() => setConfirmBan(u.id)}
+                            className="h-7 px-3 text-[11px] font-semibold border-red-200 text-red-600 bg-red-50 hover:bg-red-100">
+                            Ban
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+                {users.length === 0 && <div className="py-8 text-center text-[#6B8FA8] text-sm">No users found.</div>}
+              </div>
+
+              {/* ── Desktop table (hidden below sm) ── */}
+              <div className="hidden sm:block">
               <table className="w-full border-collapse text-[13px]">
                 <thead>
                   <tr className="bg-[#F7F9FC]">
@@ -957,6 +1040,7 @@ export default function AdminPanelClient({
                 <div className="py-8 text-center text-[#6B8FA8] text-sm">No users found.</div>
               )}
               </div>
+
               <Paginator page={userPage} total={users.length} onChange={setUserPage} />
             </CardContent>
           </Card>

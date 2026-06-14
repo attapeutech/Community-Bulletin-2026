@@ -12,6 +12,7 @@ const editSchema = z.object({
   paymentStatus:  z.enum(["unpaid", "paid", "refunded", "refund_pending", "failed"]).optional(),
   startedAt:      z.string().datetime().optional(),
   endedAt:        z.string().datetime().optional(),
+  imageUrl:       z.string().url().optional(),
   displayOrder:   z.number().int().min(0).optional(),
   contactPhone:   z.string().max(50).nullable().optional(),
   contactAddress: z.string().max(300).nullable().optional(),

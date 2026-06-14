@@ -151,6 +151,30 @@ function AdminEditAdDialog({
   const [saving,      setSaving]      = useState(false);
   const [error,       setError]       = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [newImageUrl, setNewImageUrl] = useState<string | null>(null);
+  const [uploading,   setUploading]   = useState(false);
+  const [uploadErr,   setUploadErr]   = useState<string | null>(null);
+
+  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setUploadErr(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("folder", "ads");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error ?? "Upload failed");
+      setNewImageUrl(json.data.publicUrl);
+    } catch (e: any) {
+      setUploadErr(e.message ?? "Upload failed");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }
 
   const set = (k: keyof EditDraft, v: string | number | boolean) => {
     setDraft(d => ({ ...d, [k]: v }));
@@ -177,6 +201,7 @@ function AdminEditAdDialog({
           startedAt:      new Date(draft.startedAt).toISOString(),
           endedAt:        new Date(draft.endedAt).toISOString(),
           displayOrder:   Number(draft.displayOrder),
+          ...(newImageUrl ? { imageUrl: newImageUrl } : {}),
           contactPhone:   draft.contactPhone.trim()   || null,
           contactAddress: draft.contactAddress.trim() || null,
           contactWebsite: draft.contactWebsite.trim() || null,
@@ -206,6 +231,7 @@ function AdminEditAdDialog({
         paymentStatus:  draft.paymentStatus as Ad["paymentStatus"],
         startedAt:      new Date(draft.startedAt).toISOString(),
         endedAt:        new Date(draft.endedAt).toISOString(),
+        ...(newImageUrl ? { imageUrl: newImageUrl } : {}),
         contactPhone:   draft.contactPhone.trim()   || null,
         contactAddress: draft.contactAddress.trim() || null,
         contactWebsite: draft.contactWebsite.trim() || null,
@@ -243,12 +269,23 @@ function AdminEditAdDialog({
 
         {/* Ad thumbnail + id */}
         <div className="flex items-center gap-3 px-6 py-3 border-b border-[#EDF2F7] bg-[#F7FAFC] shrink-0">
-          <img src={ad.imageUrl} alt="" className="w-12 h-9 object-cover rounded-md shrink-0" />
-          <div>
-            <div className="text-xs font-semibold text-[#1A3A5C] truncate max-w-[320px]">{ad.title}</div>
+          <label className="relative group cursor-pointer shrink-0" title="Click to replace image">
+            <img src={newImageUrl ?? ad.imageUrl} alt="" className="w-12 h-9 object-cover rounded-md" />
+            <div className="absolute inset-0 bg-black/50 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              {uploading
+                ? <span className="text-white text-[9px] font-bold">…</span>
+                : <span className="text-white text-[9px] font-bold leading-tight text-center">Replace</span>
+              }
+            </div>
+            <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={handleImageChange} disabled={uploading} />
+          </label>
+          <div className="min-w-0">
+            <div className="text-xs font-semibold text-[#1A3A5C] truncate max-w-[280px]">{ad.title}</div>
             <div className="text-[10px] text-[#9DB8CC] font-mono">ID: {ad.id}</div>
+            {newImageUrl && <div className="text-[10px] text-green-600 font-semibold mt-0.5">✓ New image ready to save</div>}
+            {uploadErr  && <div className="text-[10px] text-red-600 mt-0.5">{uploadErr}</div>}
           </div>
-          <span className="ml-auto text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-0.5 font-semibold">Testing only — no emails sent</span>
+          <span className="ml-auto text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-0.5 font-semibold shrink-0">Testing only — no emails sent</span>
         </div>
 
         {/* Form */}

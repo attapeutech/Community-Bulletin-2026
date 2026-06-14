@@ -672,7 +672,7 @@ export default function AdminPanelClient({
   const pagedAds   = filteredAds.slice((adPage - 1) * PAGE_SIZE, adPage * PAGE_SIZE);
 
   return (
-    <div className="max-w-[920px] w-full">
+    <div className="w-full">
       {/* Toasts */}
       {userToast && (
         <Alert

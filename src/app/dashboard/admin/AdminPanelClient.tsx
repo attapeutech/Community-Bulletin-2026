@@ -813,32 +813,35 @@ export default function AdminPanelClient({
               <p className="text-xs text-[#6B8FA8] mt-1">{users.length} registered accounts</p>
             </CardHeader>
             <CardContent className="p-0">
-
-              {/* ── Mobile cards (hidden on sm+) ── */}
-              <div className="sm:hidden divide-y divide-[#D8E4EE]">
+              <div className="divide-y divide-[#D8E4EE]">
                 {pagedUsers.map(u => {
                   const badgeClass = ROLE_BADGE_CLASS[u.role] ?? ROLE_BADGE_CLASS.user;
                   const isSelf = u.id === currentUserId;
                   const adCount = ads.filter(a => a.user.id === u.id).length;
                   return (
-                    <div key={u.id} className="px-4 py-4 flex flex-col gap-3">
-                      {/* Row 1: name + role badge */}
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <div className="font-semibold text-[13px] text-[#1A3A5C] flex flex-wrap items-center gap-1">
-                            {u.name}
+                    <div key={u.id} className="px-5 py-4 flex flex-col gap-3">
+                      {/* Top row: identity + role */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
+                            <span className="font-semibold text-sm text-[#1A3A5C]">{u.name}</span>
                             {isSelf && <span className="text-[10px] text-[#6B8FA8]">(you)</span>}
-                            {u.twoFactorEnabled && <span className="text-[10px] text-green-700">2FA</span>}
+                            {u.twoFactorEnabled && <span title="2FA enabled" className="text-[10px] text-green-700 font-semibold">2FA</span>}
                             {u.banned && <span className="text-[10px] font-semibold text-white bg-red-500 rounded px-1.5 py-0.5">Banned</span>}
                           </div>
-                          <div className="text-xs text-[#6B8FA8] mt-0.5">{u.email}</div>
-                          <div className="text-[11px] text-[#9DB8CC] mt-0.5">Joined {new Date(u.createdAt).toLocaleDateString()}</div>
+                          <div className="text-xs text-[#6B8FA8] truncate">{u.email}</div>
+                          <div className="text-[11px] text-[#9DB8CC] mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
+                            <span>Joined {new Date(u.createdAt).toLocaleDateString()}</span>
+                            {u.lastLoginAt && <span>Login {new Date(u.lastLoginAt).toLocaleString()}</span>}
+                            {u.lastLogoutAt && <span>Logout {new Date(u.lastLogoutAt).toLocaleString()}</span>}
+                          </div>
                         </div>
                         <Badge variant="outline" className={cn("text-[11px] font-semibold px-2.5 py-0.5 rounded-full shrink-0", badgeClass)}>
                           {ROLE_LABEL[u.role] ?? u.role}
                         </Badge>
                       </div>
-                      {/* Row 2: actions */}
+
+                      {/* Bottom row: actions */}
                       <div className="flex flex-wrap items-center gap-2">
                         {adCount > 0 && (
                           <button
@@ -862,15 +865,18 @@ export default function AdminPanelClient({
                           </Select>
                         )}
                         {!isSelf && (u.banned ? (
-                          <Button variant="outline" size="sm" disabled={banning === u.id} onClick={() => banUser(u.id, false)}
-                            className="h-7 px-3 text-[11px] font-semibold border-green-300 text-green-700 bg-green-50 hover:bg-green-100">
-                            {banning === u.id ? "…" : "Unban"}
-                          </Button>
+                          <div className="flex flex-col gap-1">
+                            {u.banReason && <span className="text-[11px] text-red-600 italic">"{u.banReason}"</span>}
+                            <Button variant="outline" size="sm" disabled={banning === u.id} onClick={() => banUser(u.id, false)}
+                              className="h-7 px-3 text-[11px] font-semibold border-green-300 text-green-700 bg-green-50 hover:bg-green-100">
+                              {banning === u.id ? "…" : "Unban"}
+                            </Button>
+                          </div>
                         ) : confirmBan === u.id ? (
-                          <div className="flex flex-col gap-1.5 w-full">
-                            <Input placeholder="Ban reason (optional)" value={banReasonInput[u.id] ?? ""}
+                          <div className="flex flex-col gap-1.5">
+                            <Input placeholder="Reason (optional)" value={banReasonInput[u.id] ?? ""}
                               onChange={e => setBanReasonInput(r => ({ ...r, [u.id]: e.target.value }))}
-                              className="h-7 text-xs border-[#D8E4EE] bg-[#F7F9FC]" />
+                              className="h-7 text-xs border-[#D8E4EE] bg-[#F7F9FC] w-40" />
                             <div className="flex gap-1">
                               <Button variant="outline" size="sm" disabled={banning === u.id} onClick={() => banUser(u.id, true)}
                                 className="h-7 px-2.5 text-[11px] font-semibold border-red-300 text-red-700 bg-red-50 hover:bg-red-100">
@@ -892,155 +898,10 @@ export default function AdminPanelClient({
                     </div>
                   );
                 })}
-                {users.length === 0 && <div className="py-8 text-center text-[#6B8FA8] text-sm">No users found.</div>}
+                {users.length === 0 && (
+                  <div className="py-8 text-center text-[#6B8FA8] text-sm">No users found.</div>
+                )}
               </div>
-
-              {/* ── Desktop table (hidden below sm) ── */}
-              <div className="hidden sm:block">
-              <table className="w-full border-collapse text-[13px]">
-                <thead>
-                  <tr className="bg-[#F7F9FC]">
-                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Name</th>
-                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Email</th>
-                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Role</th>
-                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em] hidden md:table-cell">Joined</th>
-                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em] hidden lg:table-cell">Last Login</th>
-                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em] hidden lg:table-cell">Last Logout</th>
-                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Ads</th>
-                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Change Role</th>
-                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Ban</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pagedUsers.map((u, idx) => {
-                    const badgeClass = ROLE_BADGE_CLASS[u.role] ?? ROLE_BADGE_CLASS.user;
-                    const isSelf = u.id === currentUserId;
-                    return (
-                      <tr key={u.id} className={idx > 0 ? "border-t border-[#D8E4EE]" : ""}>
-                        <td className="px-4 py-3 text-[#1A3A5C] font-semibold">
-                          <div className="flex flex-wrap items-center gap-1">
-                            {u.name}
-                            {isSelf && <span className="text-[10px] text-[#6B8FA8]">(you)</span>}
-                            {u.twoFactorEnabled && <span title="2FA enabled" className="text-[10px] text-green-700">2FA</span>}
-                            {u.banned && <span className="text-[10px] font-semibold text-white bg-red-500 rounded px-1.5 py-0.5">Banned</span>}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-[#6B8FA8] text-xs max-w-[140px]"><span className="block truncate" title={u.email}>{u.email}</span></td>
-                        <td className="px-4 py-3">
-                          <Badge variant="outline" className={cn("text-[11px] font-semibold px-2.5 py-0.5 rounded-full", badgeClass)}>
-                            {ROLE_LABEL[u.role] ?? u.role}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3 text-[#6B8FA8] text-xs hidden md:table-cell">
-                          {new Date(u.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-3 text-[#6B8FA8] text-xs whitespace-nowrap hidden lg:table-cell">
-                          {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : <span className="text-[#CBD5E0]">—</span>}
-                        </td>
-                        <td className="px-4 py-3 text-[#6B8FA8] text-xs whitespace-nowrap hidden lg:table-cell">
-                          {u.lastLogoutAt ? new Date(u.lastLogoutAt).toLocaleString() : <span className="text-[#CBD5E0]">—</span>}
-                        </td>
-                        <td className="px-4 py-3">
-                          {(() => {
-                            const count = ads.filter(a => a.user.id === u.id).length;
-                            return count > 0 ? (
-                              <button
-                                onClick={() => { setUserSearch(u.name); setStatusFilter("all"); setActiveTab("ads"); }}
-                                className="inline-flex items-center justify-center min-w-[28px] h-6 px-2 rounded-full bg-blue-100 text-blue-800 text-[11px] font-bold hover:bg-blue-200 cursor-pointer border-0"
-                              >
-                                {count}
-                              </button>
-                            ) : (
-                              <span className="text-xs text-[#CBD5E0]">0</span>
-                            );
-                          })()}
-                        </td>
-                        <td className="px-4 py-3">
-                          {isSelf ? (
-                            <span className="text-xs text-[#6B8FA8]">—</span>
-                          ) : (
-                            <Select
-                              value={u.role}
-                              disabled={roleChanging === u.id}
-                              onValueChange={(value) => changeRole(u.id, value)}
-                            >
-                              <SelectTrigger className={cn("h-8 w-28 text-xs text-[#1A3A5C] border-[#D8E4EE] bg-[#F7F9FC]", roleChanging === u.id && "opacity-60")}>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="user">User</SelectItem>
-                                <SelectItem value="store_owner">Store Owner</SelectItem>
-                                <SelectItem value="approver">Approver</SelectItem>
-                                <SelectItem value="admin">Admin</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          {isSelf ? (
-                            <span className="text-xs text-[#6B8FA8]">—</span>
-                          ) : u.banned ? (
-                            <div className="flex flex-col gap-1">
-                              {u.banReason && <span className="text-[11px] text-red-600 italic">"{u.banReason}"</span>}
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={banning === u.id}
-                                onClick={() => banUser(u.id, false)}
-                                className="h-auto px-3 py-1 text-[11px] font-semibold border-green-300 text-green-700 bg-green-50 hover:bg-green-100"
-                              >
-                                {banning === u.id ? "…" : "Unban"}
-                              </Button>
-                            </div>
-                          ) : confirmBan === u.id ? (
-                            <div className="flex flex-col gap-1.5">
-                              <Input
-                                placeholder="Reason (optional)"
-                                value={banReasonInput[u.id] ?? ""}
-                                onChange={e => setBanReasonInput(r => ({ ...r, [u.id]: e.target.value }))}
-                                className="h-7 text-xs border-[#D8E4EE] bg-[#F7F9FC] w-36"
-                              />
-                              <div className="flex gap-1">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  disabled={banning === u.id}
-                                  onClick={() => banUser(u.id, true)}
-                                  className="h-auto px-2.5 py-1 text-[11px] font-semibold border-red-300 text-red-700 bg-red-50 hover:bg-red-100"
-                                >
-                                  {banning === u.id ? "…" : "Confirm"}
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setConfirmBan(null)}
-                                  className="h-auto px-2.5 py-1 text-[11px] font-semibold border-[#D8E4EE] text-[#6B8FA8] bg-white"
-                                >
-                                  Cancel
-                                </Button>
-                              </div>
-                            </div>
-                          ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setConfirmBan(u.id)}
-                              className="h-auto px-3 py-1 text-[11px] font-semibold border-red-200 text-red-600 bg-red-50 hover:bg-red-100"
-                            >
-                              Ban
-                            </Button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              {users.length === 0 && (
-                <div className="py-8 text-center text-[#6B8FA8] text-sm">No users found.</div>
-              )}
-              </div>
-
               <Paginator page={userPage} total={users.length} onChange={setUserPage} />
             </CardContent>
           </Card>

@@ -83,6 +83,49 @@ type Ad = {
   location: { id: string; storeName: string; slug: string };
 };
 
+const PAGE_SIZE = 10;
+
+function Paginator({ page, total, onChange }: { page: number; total: number; onChange: (p: number) => void }) {
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  if (totalPages <= 1) return null;
+
+  const pages = Array.from({ length: totalPages }, (_, i) => i + 1)
+    .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+    .reduce<(number | "…")[]>((acc, p, i, arr) => {
+      if (i > 0 && (p as number) - (arr[i - 1] as number) > 1) acc.push("…");
+      acc.push(p);
+      return acc;
+    }, []);
+
+  return (
+    <div className="flex items-center justify-between px-5 py-3 border-t border-[#D8E4EE] bg-[#F7F9FC]">
+      <span className="text-[11px] text-[#6B8FA8]">
+        {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total}
+      </span>
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => onChange(page - 1)} disabled={page === 1}
+          className="px-2.5 py-1 rounded border text-[11px] disabled:opacity-35 disabled:cursor-not-allowed border-[#D8E4EE] text-[#6B8FA8] hover:border-[#4A90C4] hover:text-[#1A3A5C] bg-white cursor-pointer"
+        >← Prev</button>
+        {pages.map((p, i) =>
+          p === "…"
+            ? <span key={`d${i}`} className="px-1 text-[11px] text-[#9DB8CC]">…</span>
+            : <button key={p} onClick={() => onChange(p as number)}
+                className={cn("min-w-[28px] h-7 rounded border text-[11px] font-semibold",
+                  page === p
+                    ? "bg-[#1A3A5C] border-[#1A3A5C] text-white"
+                    : "border-[#D8E4EE] text-[#6B8FA8] hover:border-[#4A90C4] hover:text-[#1A3A5C] bg-white cursor-pointer"
+                )}>{p}</button>
+        )}
+        <button
+          onClick={() => onChange(page + 1)} disabled={page === totalPages}
+          className="px-2.5 py-1 rounded border text-[11px] disabled:opacity-35 disabled:cursor-not-allowed border-[#D8E4EE] text-[#6B8FA8] hover:border-[#4A90C4] hover:text-[#1A3A5C] bg-white cursor-pointer"
+        >Next →</button>
+      </div>
+    </div>
+  );
+}
+
 function StatCard({ label, value, sub, accentClass, onClick }: { label: string; value: string | number; sub?: string; accentClass?: string; onClick?: () => void }) {
   return (
     <div
@@ -434,6 +477,10 @@ export default function AdminPanelClient({
   const [banReasonInput, setBanReasonInput] = useState<Record<string, string>>({});
   const [confirmBan, setConfirmBan] = useState<string | null>(null);
 
+  // Pagination
+  const [userPage, setUserPage] = useState(1);
+  const [adPage,   setAdPage]   = useState(1);
+
   // Ads state
   const [ads, setAds] = useState<Ad[]>(initialAds);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -617,6 +664,13 @@ export default function AdminPanelClient({
     return matchStatus && matchUser;
   });
 
+  // Reset pages when filters/data change
+  useEffect(() => { setAdPage(1);   }, [statusFilter, userSearch]);
+  useEffect(() => { setUserPage(1); }, [users.length]);
+
+  const pagedUsers = users.slice((userPage - 1) * PAGE_SIZE, userPage * PAGE_SIZE);
+  const pagedAds   = filteredAds.slice((adPage - 1) * PAGE_SIZE, adPage * PAGE_SIZE);
+
   return (
     <div className="max-w-[920px] w-full">
       {/* Toasts */}
@@ -766,39 +820,41 @@ export default function AdminPanelClient({
                     <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Name</th>
                     <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Email</th>
                     <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Role</th>
-                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Joined</th>
-                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Last Login</th>
-                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Last Logout</th>
+                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em] hidden md:table-cell">Joined</th>
+                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em] hidden lg:table-cell">Last Login</th>
+                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em] hidden lg:table-cell">Last Logout</th>
                     <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Ads</th>
                     <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Change Role</th>
                     <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Ban</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((u, idx) => {
+                  {pagedUsers.map((u, idx) => {
                     const badgeClass = ROLE_BADGE_CLASS[u.role] ?? ROLE_BADGE_CLASS.user;
                     const isSelf = u.id === currentUserId;
                     return (
                       <tr key={u.id} className={idx > 0 ? "border-t border-[#D8E4EE]" : ""}>
                         <td className="px-4 py-3 text-[#1A3A5C] font-semibold">
-                          {u.name}
-                          {isSelf && <span className="ml-1.5 text-[10px] text-[#6B8FA8]">(you)</span>}
-                          {u.twoFactorEnabled && <span title="2FA enabled" className="ml-1.5 text-[10px] text-green-700">2FA</span>}
-                          {u.banned && <span className="ml-1.5 text-[10px] font-semibold text-white bg-red-500 rounded px-1.5 py-0.5">Banned</span>}
+                          <div className="flex flex-wrap items-center gap-1">
+                            {u.name}
+                            {isSelf && <span className="text-[10px] text-[#6B8FA8]">(you)</span>}
+                            {u.twoFactorEnabled && <span title="2FA enabled" className="text-[10px] text-green-700">2FA</span>}
+                            {u.banned && <span className="text-[10px] font-semibold text-white bg-red-500 rounded px-1.5 py-0.5">Banned</span>}
+                          </div>
                         </td>
-                        <td className="px-4 py-3 text-[#6B8FA8]">{u.email}</td>
+                        <td className="px-4 py-3 text-[#6B8FA8] text-xs">{u.email}</td>
                         <td className="px-4 py-3">
                           <Badge variant="outline" className={cn("text-[11px] font-semibold px-2.5 py-0.5 rounded-full", badgeClass)}>
                             {ROLE_LABEL[u.role] ?? u.role}
                           </Badge>
                         </td>
-                        <td className="px-4 py-3 text-[#6B8FA8] text-xs">
+                        <td className="px-4 py-3 text-[#6B8FA8] text-xs hidden md:table-cell">
                           {new Date(u.createdAt).toLocaleDateString()}
                         </td>
-                        <td className="px-4 py-3 text-[#6B8FA8] text-xs whitespace-nowrap">
+                        <td className="px-4 py-3 text-[#6B8FA8] text-xs whitespace-nowrap hidden lg:table-cell">
                           {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : <span className="text-[#CBD5E0]">—</span>}
                         </td>
-                        <td className="px-4 py-3 text-[#6B8FA8] text-xs whitespace-nowrap">
+                        <td className="px-4 py-3 text-[#6B8FA8] text-xs whitespace-nowrap hidden lg:table-cell">
                           {u.lastLogoutAt ? new Date(u.lastLogoutAt).toLocaleString() : <span className="text-[#CBD5E0]">—</span>}
                         </td>
                         <td className="px-4 py-3">
@@ -901,6 +957,7 @@ export default function AdminPanelClient({
                 <div className="py-8 text-center text-[#6B8FA8] text-sm">No users found.</div>
               )}
               </div>
+              <Paginator page={userPage} total={users.length} onChange={setUserPage} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -960,7 +1017,7 @@ export default function AdminPanelClient({
             {filteredAds.length === 0 ? (
               <div className="py-8 text-center text-[#6B8FA8] text-sm">No ads match this filter.</div>
             ) : (
-              filteredAds.map((ad, idx) => {
+              pagedAds.map((ad, idx) => {
                 const statusClass = STATUS_BADGE_CLASS[ad.status] ?? STATUS_BADGE_CLASS.pending;
                 return (
                   <div key={ad.id} className={cn(idx > 0 && "border-t border-[#D8E4EE]", "px-5 py-3.5")}>
@@ -1093,6 +1150,7 @@ export default function AdminPanelClient({
                 );
               })
             )}
+            <Paginator page={adPage} total={filteredAds.length} onChange={setAdPage} />
           </Card>
         </TabsContent>
       </Tabs>

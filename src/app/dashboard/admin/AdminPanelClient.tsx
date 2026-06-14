@@ -813,7 +813,7 @@ export default function AdminPanelClient({
               <p className="text-xs text-[#6B8FA8] mt-1">{users.length} registered accounts</p>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
+              <div>
               <table className="w-full border-collapse text-[13px]">
                 <thead>
                   <tr className="bg-[#F7F9FC]">
@@ -842,7 +842,7 @@ export default function AdminPanelClient({
                             {u.banned && <span className="text-[10px] font-semibold text-white bg-red-500 rounded px-1.5 py-0.5">Banned</span>}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-[#6B8FA8] text-xs">{u.email}</td>
+                        <td className="px-4 py-3 text-[#6B8FA8] text-xs max-w-[140px]"><span className="block truncate" title={u.email}>{u.email}</span></td>
                         <td className="px-4 py-3">
                           <Badge variant="outline" className={cn("text-[11px] font-semibold px-2.5 py-0.5 rounded-full", badgeClass)}>
                             {ROLE_LABEL[u.role] ?? u.role}
@@ -881,7 +881,7 @@ export default function AdminPanelClient({
                               disabled={roleChanging === u.id}
                               onValueChange={(value) => changeRole(u.id, value)}
                             >
-                              <SelectTrigger className={cn("h-8 w-36 text-xs text-[#1A3A5C] border-[#D8E4EE] bg-[#F7F9FC]", roleChanging === u.id && "opacity-60")}>
+                              <SelectTrigger className={cn("h-8 w-28 text-xs text-[#1A3A5C] border-[#D8E4EE] bg-[#F7F9FC]", roleChanging === u.id && "opacity-60")}>
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -893,7 +893,7 @@ export default function AdminPanelClient({
                             </Select>
                           )}
                         </td>
-                        <td className="px-4 py-3 min-w-[160px]">
+                        <td className="px-4 py-3">
                           {isSelf ? (
                             <span className="text-xs text-[#6B8FA8]">—</span>
                           ) : u.banned ? (

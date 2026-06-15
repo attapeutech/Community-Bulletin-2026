@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
       .select({
         id: ads.id,
         title: ads.title,
+        description: ads.description,
         imageUrl: ads.imageUrl,
         status: ads.status,
         paymentStatus: ads.paymentStatus,
@@ -33,6 +34,14 @@ export async function GET(req: NextRequest) {
         startedAt: ads.startedAt,
         endedAt: ads.endedAt,
         createdAt: ads.createdAt,
+        contactPhone: ads.contactPhone,
+        contactAddress: ads.contactAddress,
+        contactWebsite: ads.contactWebsite,
+        showPhone: ads.showPhone,
+        showAddress: ads.showAddress,
+        showWebsite: ads.showWebsite,
+        viewCount: ads.viewCount,
+        websiteClickCount: ads.websiteClickCount,
         user: { id: users.id, name: users.name, email: users.email },
         location: { id: locations.id, storeName: locations.storeName, slug: locations.slug },
       })

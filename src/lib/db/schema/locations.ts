@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, boolean, integer, timestamp } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { users } from "./users";
 import { countries } from "./countries";
@@ -31,6 +31,12 @@ export const locations = pgTable("locations", {
   slug: text("slug").notNull().unique(),         // e.g. "whole-foods-seattle-98101"
   displayName: text("display_name"),             // friendly name shown on display screen
   currency: text("currency").default("USD").notNull(), // ISO 4217 per location
+  pricePerWeekCents: integer("price_per_week_cents").default(10000).notNull(), // default $100/week
+  equipmentProvided: boolean("equipment_provided").default(false).notNull(),   // true = 50% share, false = 25%
+  description: text("description"),
+  category: text("category"),
+  logoUrl: text("logo_url"),
+  businessHours: text("business_hours"),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

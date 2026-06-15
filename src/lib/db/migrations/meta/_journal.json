@@ -22,6 +22,13 @@
       "when": 1780313521604,
       "tag": "0002_loving_adam_destine",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1750000000000,
+      "tag": "0003_store_owner_fields",
+      "breakpoints": true
     }
   ]
 }

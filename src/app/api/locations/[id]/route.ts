@@ -13,6 +13,12 @@ const updateSchema = z.object({
   displayName: z.string().max(120).nullable().optional(),
   currency: z.string().length(3).optional(),
   isActive: z.boolean().optional(),
+  pricePerWeekCents: z.number().int().min(100).max(1000000).optional(),
+  equipmentProvided: z.boolean().optional(),
+  description: z.string().max(1000).nullable().optional(),
+  category: z.string().max(100).nullable().optional(),
+  logoUrl: z.string().url().nullable().optional(),
+  businessHours: z.string().max(500).nullable().optional(),
 });
 
 // PATCH /api/locations/[id]

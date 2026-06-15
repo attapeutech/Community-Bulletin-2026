@@ -48,6 +48,9 @@ export const ads = pgTable("ads", {
   showPhone:      boolean("show_phone").default(false).notNull(),
   showAddress:    boolean("show_address").default(false).notNull(),
   showWebsite:    boolean("show_website").default(false).notNull(),
+  // Analytics counters
+  viewCount:         integer("view_count").default(0).notNull(),
+  websiteClickCount: integer("website_click_count").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

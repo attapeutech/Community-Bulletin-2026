@@ -149,6 +149,26 @@ export default function DisplayPage() {
     emblaApi?.reInit();
   }, [ads, emblaApi]);
 
+  // Track view whenever carousel settles on a slide
+  useEffect(() => {
+    if (!emblaApi || ads.length === 0) return;
+    function trackCurrentSlide() {
+      const idx = emblaApi!.selectedScrollSnap();
+      const ad = ads[idx];
+      if (ad) {
+        fetch(`/api/ads/${ad.id}/track`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ event: "view" }),
+        }).catch(() => {});
+      }
+    }
+    // Track initial slide
+    trackCurrentSlide();
+    emblaApi.on("select", trackCurrentSlide);
+    return () => { emblaApi.off("select", trackCurrentSlide); };
+  }, [emblaApi, ads]);
+
   // Socket.io: join location room, refresh ads on push
   useDisplaySocket(slug, fetchAds);
 
@@ -410,7 +430,21 @@ function SplitAdSlide({ ad, idx, total }: { ad: Ad; idx: number; total: number }
           {ad.showWebsite && ad.contactWebsite && (
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: "clamp(14px, 1.5vw, 22px)" }}>🌐</span>
-              <span style={{ fontSize: "clamp(12px, 1.4vw, 20px)", color: "#4A90C4", fontWeight: 600 }}>{ad.contactWebsite}</span>
+              <a
+                href={ad.contactWebsite.startsWith("http") ? ad.contactWebsite : `https://${ad.contactWebsite}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => {
+                  fetch(`/api/ads/${ad.id}/track`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ event: "website_click" }),
+                  }).catch(() => {});
+                }}
+                style={{ fontSize: "clamp(12px, 1.4vw, 20px)", color: "#4A90C4", fontWeight: 600, textDecoration: "underline" }}
+              >
+                {ad.contactWebsite}
+              </a>
             </div>
           )}
         </div>

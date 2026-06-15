@@ -204,6 +204,29 @@ export default async function AdDetailPage({
         )}
       </div>
 
+      {/* Analytics */}
+      {ad.status === "approved" && (
+        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "16px 24px", marginBottom: 24 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#6B8FA8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 14 }}>
+            Ad Performance
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div style={{ background: "#F7F9FC", borderRadius: 10, padding: "14px 18px" }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: "#1A3A5C" }}>{ad.viewCount.toLocaleString()}</div>
+              <div style={{ fontSize: 12, color: "#6B8FA8", marginTop: 2 }}>Display impressions</div>
+              <div style={{ fontSize: 11, color: "#9DC4E0", marginTop: 1 }}>times shown on screen</div>
+            </div>
+            {ad.showWebsite && ad.contactWebsite && (
+              <div style={{ background: "#F7F9FC", borderRadius: 10, padding: "14px 18px" }}>
+                <div style={{ fontSize: 28, fontWeight: 700, color: "#1A3A5C" }}>{ad.websiteClickCount.toLocaleString()}</div>
+                <div style={{ fontSize: 12, color: "#6B8FA8", marginTop: 2 }}>Website clicks</div>
+                <div style={{ fontSize: 11, color: "#9DC4E0", marginTop: 1 }}>visitors to your site</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Payments */}
       {adPayments.length > 0 && (
         <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", overflow: "hidden" }}>

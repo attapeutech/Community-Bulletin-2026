@@ -29,6 +29,13 @@
       "when": 1750000000000,
       "tag": "0003_store_owner_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1750010000000,
+      "tag": "0004_ad_analytics",
+      "breakpoints": true
     }
   ]
 }

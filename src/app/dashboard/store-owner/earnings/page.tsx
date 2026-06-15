@@ -10,37 +10,23 @@ function formatCents(cents: number, currency = "USD") {
   return new Intl.NumberFormat("en-US", { style: "currency", currency, minimumFractionDigits: 2 }).format(cents / 100);
 }
 
-function StatusPill({ status }: { status: string }) {
-  const map: Record<string, { bg: string; color: string; label: string }> = {
-    paid:           { bg: "#dcfce7", color: "#166534", label: "Paid" },
-    pending:        { bg: "#fef9c3", color: "#854d0e", label: "Pending" },
-    refunded:       { bg: "#fee2e2", color: "#991b1b", label: "Refunded" },
-    refund_pending: { bg: "#fee2e2", color: "#991b1b", label: "Refund Pending" },
-    failed:         { bg: "#f1f5f9", color: "#475569", label: "Failed" },
-  };
-  const s = map[status] ?? { bg: "#f1f5f9", color: "#475569", label: status };
-  return (
-    <span style={{ background: s.bg, color: s.color, fontSize: 11, fontWeight: 600, padding: "2px 10px", borderRadius: 20 }}>
-      {s.label}
-    </span>
-  );
-}
-
 export default async function EarningsPage() {
   const session = await requireStoreOwner();
   const role = (session.user as any).role as string;
   const userId = (session.user as any).id as string;
   const isAdmin = role === "admin";
 
-  // Fetch all paid payment records for this store owner's locations
+  // Build where clause — admin sees all, store_owner sees own locations only
+  const whereClause = isAdmin
+    ? eq(payments.status, "paid")
+    : and(eq(locations.storeOwnerId, userId), eq(payments.status, "paid"));
+
   const rows = await db
     .select({
       paymentId:         payments.id,
-      paymentStatus:     payments.status,
       amountCents:       payments.amountCents,
       currency:          payments.currency,
       paymentCreatedAt:  payments.createdAt,
-      adId:              ads.id,
       adTitle:           ads.title,
       adStartedAt:       ads.startedAt,
       adEndedAt:         ads.endedAt,
@@ -51,15 +37,10 @@ export default async function EarningsPage() {
       advertiserName:    users.name,
     })
     .from(payments)
-    .innerJoin(ads,       eq(payments.adId,        ads.id))
-    .innerJoin(locations, eq(ads.locationId,        locations.id))
-    .innerJoin(users,     eq(payments.userId,       users.id))
-    .where(
-      and(
-        ...(isAdmin ? [] : [eq(locations.storeOwnerId, userId)]),
-        eq(payments.status, "paid"),
-      )
-    )
+    .innerJoin(ads,       eq(payments.adId,  ads.id))
+    .innerJoin(locations, eq(ads.locationId, locations.id))
+    .innerJoin(users,     eq(payments.userId, users.id))
+    .where(whereClause)
     .orderBy(desc(payments.createdAt));
 
   // Compute totals

@@ -50,6 +50,27 @@ export default async function AdDetailPage({
   const userId = (session.user as any).id as string;
   const role = (session.user as any).role as string;
 
+  // Quick auth check before incrementing — just verify ad exists and user has access
+  const [quickCheck] = await db
+    .select({ userId: ads.userId })
+    .from(ads)
+    .where(eq(ads.id, id))
+    .limit(1);
+
+  if (!quickCheck) notFound();
+
+  if (
+    quickCheck.userId !== userId &&
+    role !== "approver" &&
+    role !== "admin"
+  ) {
+    redirect("/dashboard");
+  }
+
+  // Increment view count now that access is confirmed
+  await db.update(ads).set({ viewCount: sql`${ads.viewCount} + 1` }).where(eq(ads.id, id)).catch(() => {});
+
+  // Main query — will reflect the just-incremented viewCount
   const [row] = await db
     .select({
       ad: ads,
@@ -75,18 +96,6 @@ export default async function AdDetailPage({
     .limit(1);
 
   if (!row) notFound();
-
-  // Only owner, approver, or admin can view
-  if (
-    row.user.id !== userId &&
-    role !== "approver" &&
-    role !== "admin"
-  ) {
-    redirect("/dashboard");
-  }
-
-  // Count this page view
-  await db.update(ads).set({ viewCount: sql`${ads.viewCount} + 1` }).where(eq(ads.id, id)).catch(() => {});
 
   const adPayments = await db
     .select()

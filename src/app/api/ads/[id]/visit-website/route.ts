@@ -5,22 +5,32 @@ import { eq, sql } from "drizzle-orm";
 
 // GET /api/ads/[id]/visit-website — increments websiteClickCount then redirects
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
 
+  // Fetch the website URL first
   const [ad] = await db
+    .select({ contactWebsite: ads.contactWebsite })
+    .from(ads)
+    .where(eq(ads.id, id))
+    .limit(1);
+
+  if (!ad?.contactWebsite) {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+
+  // Increment counter
+  await db
     .update(ads)
     .set({ websiteClickCount: sql`${ads.websiteClickCount} + 1` })
     .where(eq(ads.id, id))
-    .returning({ contactWebsite: ads.contactWebsite });
+    .catch(() => {});
 
-  const url = ad?.contactWebsite;
-  if (!url) {
-    return NextResponse.json({ error: "No website configured" }, { status: 404 });
-  }
+  const destination = ad.contactWebsite.startsWith("http")
+    ? ad.contactWebsite
+    : `https://${ad.contactWebsite}`;
 
-  const destination = url.startsWith("http") ? url : `https://${url}`;
   return NextResponse.redirect(destination);
 }

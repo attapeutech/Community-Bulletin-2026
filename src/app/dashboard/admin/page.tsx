@@ -17,6 +17,8 @@ export default async function AdminDashboard() {
     totalUsersRow,
     totalLocationsRow,
     revenueRow,
+    viewsRow,
+    clicksRow,
   ] = await Promise.all([
     db.select({ count: count() }).from(ads),
     db.select({ count: count() }).from(ads).where(eq(ads.status, "pending")),
@@ -25,6 +27,8 @@ export default async function AdminDashboard() {
     db.select({ count: count() }).from(users),
     db.select({ count: count() }).from(locations),
     db.select({ total: sum(payments.amountCents) }).from(payments).where(eq(payments.status, "paid")),
+    db.select({ total: sum(ads.viewCount) }).from(ads),
+    db.select({ total: sum(ads.websiteClickCount) }).from(ads),
   ]);
 
   const stats = {
@@ -35,6 +39,8 @@ export default async function AdminDashboard() {
     totalUsers: totalUsersRow[0].count,
     totalLocations: totalLocationsRow[0].count,
     totalRevenueCents: Number(revenueRow[0].total ?? 0),
+    totalViews: Number(viewsRow[0].total ?? 0),
+    totalWebsiteClicks: Number(clicksRow[0].total ?? 0),
   };
 
   // Fetch all users
@@ -74,6 +80,8 @@ export default async function AdminDashboard() {
       showPhone: ads.showPhone,
       showAddress: ads.showAddress,
       showWebsite: ads.showWebsite,
+      viewCount: ads.viewCount,
+      websiteClickCount: ads.websiteClickCount,
       user: { id: users.id, name: users.name, email: users.email },
       location: { id: locations.id, storeName: locations.storeName, slug: locations.slug },
     })

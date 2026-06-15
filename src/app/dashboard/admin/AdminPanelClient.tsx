@@ -46,6 +46,8 @@ type Stats = {
   totalUsers: number;
   totalLocations: number;
   totalRevenueCents: number;
+  totalViews: number;
+  totalWebsiteClicks: number;
 };
 
 type User = {
@@ -79,6 +81,8 @@ type Ad = {
   showPhone: boolean;
   showAddress: boolean;
   showWebsite: boolean;
+  viewCount: number;
+  websiteClickCount: number;
   user: { id: string; name: string; email: string };
   location: { id: string; storeName: string; slug: string };
 };
@@ -735,6 +739,8 @@ export default function AdminPanelClient({
             <StatCard label="Denied" value={stats.deniedAds} accentClass="text-red-800" onClick={() => { setStatusFilter("denied"); setUserSearch(""); setActiveTab("ads"); }} />
             <StatCard label="Users" value={stats.totalUsers} onClick={() => setActiveTab("users")} />
             <StatCard label="Locations" value={stats.totalLocations} onClick={() => { window.location.href = "/dashboard/store-owner"; }} />
+            <StatCard label="Total Ad Views" value={stats.totalViews.toLocaleString()} sub="detail page opens" />
+            <StatCard label="Website Clicks" value={stats.totalWebsiteClicks.toLocaleString()} sub="clicked through to site" accentClass="text-[#4A90C4]" />
           </div>
 
           {/* Quick links */}
@@ -985,6 +991,16 @@ export default function AdminPanelClient({
                             {ad.user.name}
                           </button>
                           <span>· {ad.location.storeName} · submitted {new Date(ad.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex items-center gap-3 mb-1">
+                          <span className="text-[11px] text-[#6B8FA8]">
+                            👁 <span className="font-semibold text-[#1A3A5C]">{ad.viewCount.toLocaleString()}</span> views
+                          </span>
+                          {ad.showWebsite && ad.contactWebsite && (
+                            <span className="text-[11px] text-[#6B8FA8]">
+                              🌐 <span className="font-semibold text-[#1A3A5C]">{ad.websiteClickCount.toLocaleString()}</span> site clicks
+                            </span>
+                          )}
                         </div>
                         {ad.reviewNote && (
                           <div className="text-xs text-yellow-800 bg-yellow-50 rounded px-2 py-0.5 inline-block">

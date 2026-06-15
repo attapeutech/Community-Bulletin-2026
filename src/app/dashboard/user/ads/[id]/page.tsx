@@ -1,7 +1,7 @@
 import { requireAuth } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import { ads, locations, users, payments, cities, states, postalCodes } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import AdImagePreview from "./AdImagePreview";
@@ -84,6 +84,9 @@ export default async function AdDetailPage({
   ) {
     redirect("/dashboard");
   }
+
+  // Count this page view
+  await db.update(ads).set({ viewCount: sql`${ads.viewCount} + 1` }).where(eq(ads.id, id)).catch(() => {});
 
   const adPayments = await db
     .select()
@@ -180,6 +183,18 @@ export default async function AdDetailPage({
         <Row label="Location" value={<>{location.storeName}<br /><span style={{ fontSize: 12, color: "#6B8FA8" }}>{location.addressLine1}{location.addressLine2 ? `, ${location.addressLine2}` : ""}, {location.cityName}, {location.stateCode} {location.postalCode}</span></>} />
         <Row label="Title" value={ad.title} />
         {ad.description && <Row label="Description" value={ad.description} />}
+        {ad.showWebsite && ad.contactWebsite && (
+          <Row label="Website" value={
+            <a
+              href={`/api/ads/${ad.id}/visit-website`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "#4A90C4", textDecoration: "underline" }}
+            >
+              {ad.contactWebsite} ↗
+            </a>
+          } />
+        )}
         <Row label="Status" value={<Badge {...adStatus} />} />
         <Row label="Payment" value={<Badge {...payStatus} />} />
         <Row
@@ -205,27 +220,25 @@ export default async function AdDetailPage({
       </div>
 
       {/* Analytics */}
-      {ad.status === "approved" && (
-        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "16px 24px", marginBottom: 24 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#6B8FA8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 14 }}>
-            Ad Performance
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <div style={{ background: "#F7F9FC", borderRadius: 10, padding: "14px 18px" }}>
-              <div style={{ fontSize: 28, fontWeight: 700, color: "#1A3A5C" }}>{ad.viewCount.toLocaleString()}</div>
-              <div style={{ fontSize: 12, color: "#6B8FA8", marginTop: 2 }}>Display impressions</div>
-              <div style={{ fontSize: 11, color: "#9DC4E0", marginTop: 1 }}>times shown on screen</div>
-            </div>
-            {ad.showWebsite && ad.contactWebsite && (
-              <div style={{ background: "#F7F9FC", borderRadius: 10, padding: "14px 18px" }}>
-                <div style={{ fontSize: 28, fontWeight: 700, color: "#1A3A5C" }}>{ad.websiteClickCount.toLocaleString()}</div>
-                <div style={{ fontSize: 12, color: "#6B8FA8", marginTop: 2 }}>Website clicks</div>
-                <div style={{ fontSize: 11, color: "#9DC4E0", marginTop: 1 }}>visitors to your site</div>
-              </div>
-            )}
-          </div>
+      <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "16px 24px", marginBottom: 24 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#6B8FA8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 14 }}>
+          Ad Performance
         </div>
-      )}
+        <div style={{ display: "grid", gridTemplateColumns: ad.showWebsite && ad.contactWebsite ? "1fr 1fr" : "1fr", gap: 16 }}>
+          <div style={{ background: "#F7F9FC", borderRadius: 10, padding: "14px 18px" }}>
+            <div style={{ fontSize: 28, fontWeight: 700, color: "#1A3A5C" }}>{ad.viewCount.toLocaleString()}</div>
+            <div style={{ fontSize: 12, color: "#6B8FA8", marginTop: 2 }}>Total views</div>
+            <div style={{ fontSize: 11, color: "#9DC4E0", marginTop: 1 }}>detail page opens</div>
+          </div>
+          {ad.showWebsite && ad.contactWebsite && (
+            <div style={{ background: "#F7F9FC", borderRadius: 10, padding: "14px 18px" }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: "#1A3A5C" }}>{ad.websiteClickCount.toLocaleString()}</div>
+              <div style={{ fontSize: 12, color: "#6B8FA8", marginTop: 2 }}>Website visits</div>
+              <div style={{ fontSize: 11, color: "#9DC4E0", marginTop: 1 }}>clicked through to site</div>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Payments */}
       {adPayments.length > 0 && (

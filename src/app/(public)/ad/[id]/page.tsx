@@ -4,6 +4,7 @@ import { eq, and } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import PublicAdPreview from "./PublicAdPreview";
+import { TrackedWebsiteLink } from "@/components/ui/TrackedWebsiteLink";
 
 export default async function PublicAdDetailPage({
   params,
@@ -129,14 +130,9 @@ export default async function PublicAdDetailPage({
                   </a>
                 )}
                 {row.showWebsite && row.contactWebsite && (
-                  <a
-                    href={row.contactWebsite.startsWith("http") ? row.contactWebsite : `https://${row.contactWebsite}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#4A90C4", textDecoration: "none", fontWeight: 600, fontSize: 14 }}
-                  >
-                    🌐 {row.contactWebsite}
-                  </a>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontWeight: 600, fontSize: 14 }}>
+                    🌐 <TrackedWebsiteLink adId={row.id} url={row.contactWebsite} />
+                  </span>
                 )}
               </div>
             </Row>

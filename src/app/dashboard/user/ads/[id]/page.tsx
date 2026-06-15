@@ -6,7 +6,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import AdImagePreview from "./AdImagePreview";
 import AdActions from "./AdActions";
-import { TrackedWebsiteLink } from "./TrackedWebsiteLink";
+import { TrackedWebsiteLink } from "@/components/ui/TrackedWebsiteLink";
 
 const STATUS_COLORS: Record<string, { bg: string; color: string; label: string }> = {
   pending:   { bg: "#fef9c3", color: "#854d0e", label: "Pending Review" },

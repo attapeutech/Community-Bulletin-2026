@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { QRCodeSVG } from "qrcode.react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,6 +61,56 @@ function FieldError({ msg }: { msg?: string }) {
 
 function formatCents(cents: number, currency = "USD") {
   return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(cents / 100);
+}
+
+function DisplayScreenCard({ slug }: { slug: string }) {
+  const [copied, setCopied] = useState(false);
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
+  const displayUrl = `${appUrl}/display/${slug}`;
+
+  function copyUrl() {
+    navigator.clipboard.writeText(displayUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  return (
+    <Card className="border-[#D8E4EE] mb-6 overflow-hidden">
+      <div className="px-6 py-4 border-b border-[#D8E4EE]">
+        <h2 className="font-serif text-[18px] text-[#1A3A5C] m-0">Display Screen Setup</h2>
+        <p className="text-xs text-[#6B8FA8] mt-1 mb-0">
+          Open this URL on your TV browser, or scan the QR code to launch the display.
+        </p>
+      </div>
+      <div className="px-6 py-5 flex flex-col sm:flex-row gap-6 items-start sm:items-center">
+        {/* QR code */}
+        <div className="shrink-0 bg-white p-3 rounded-xl border border-[#D8E4EE] shadow-sm">
+          <QRCodeSVG value={displayUrl} size={128} bgColor="#ffffff" fgColor="#1A3A5C" level="M" />
+        </div>
+        {/* URL + instructions */}
+        <div className="flex-1 min-w-0">
+          <div className="text-[11px] font-semibold text-[#6B8FA8] uppercase tracking-wider mb-2">Display URL</div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <code className="flex-1 min-w-0 text-[13px] font-mono text-[#1A3A5C] bg-[#F0F7FF] border border-[#D8E4EE] rounded-lg px-3 py-2 truncate block">
+              {displayUrl}
+            </code>
+            <button
+              onClick={copyUrl}
+              className="shrink-0 text-xs font-semibold px-3 py-2 rounded-lg border border-[#D1DDE8] bg-white text-[#1A3A5C] hover:bg-[#F0F7FF] transition-colors"
+            >
+              {copied ? "Copied!" : "Copy"}
+            </button>
+          </div>
+          <div className="mt-4 flex flex-col gap-1.5 text-[12px] text-[#6B8FA8]">
+            <div className="flex items-start gap-2"><span className="text-[#4A90C4] font-bold mt-0.5">1.</span> On your TV, open a web browser (Chrome, Edge, or Firefox)</div>
+            <div className="flex items-start gap-2"><span className="text-[#4A90C4] font-bold mt-0.5">2.</span> Navigate to the URL above, or scan the QR code with a phone and follow the link</div>
+            <div className="flex items-start gap-2"><span className="text-[#4A90C4] font-bold mt-0.5">3.</span> Press <kbd className="text-[10px] bg-[#F0F7FF] border border-[#D8E4EE] rounded px-1.5 py-0.5 font-mono">F11</kbd> for fullscreen — ads will rotate automatically</div>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
 }
 
 export default function LocationDetailClient({
@@ -233,6 +284,11 @@ export default function LocationDetailClient({
             <div className="text-sm font-semibold text-[#1A3A5C] truncate">{location.category || "—"}</div>
           </div>
         </div>
+      )}
+
+      {/* Display Screen Link + QR Code */}
+      {!editMode && (
+        <DisplayScreenCard slug={location.slug} />
       )}
 
       {/* Edit form */}

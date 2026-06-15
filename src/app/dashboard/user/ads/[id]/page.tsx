@@ -6,6 +6,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import AdImagePreview from "./AdImagePreview";
 import AdActions from "./AdActions";
+import { TrackedWebsiteLink } from "./TrackedWebsiteLink";
 
 const STATUS_COLORS: Record<string, { bg: string; color: string; label: string }> = {
   pending:   { bg: "#fef9c3", color: "#854d0e", label: "Pending Review" },
@@ -193,16 +194,7 @@ export default async function AdDetailPage({
         <Row label="Title" value={ad.title} />
         {ad.description && <Row label="Description" value={ad.description} />}
         {ad.showWebsite && ad.contactWebsite && (
-          <Row label="Website" value={
-            <a
-              href={`/api/ads/${ad.id}/visit-website`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: "#4A90C4", textDecoration: "underline" }}
-            >
-              {ad.contactWebsite} ↗
-            </a>
-          } />
+          <Row label="Website" value={<TrackedWebsiteLink adId={ad.id} url={ad.contactWebsite} />} />
         )}
         <Row label="Status" value={<Badge {...adStatus} />} />
         <Row label="Payment" value={<Badge {...payStatus} />} />

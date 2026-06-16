@@ -99,7 +99,7 @@ function AdCard({ ad }: { ad: LiveAd }) {
               <div style={{ fontSize: 11, color: "#4A6B82" }}>{ad.cityName}, {ad.stateCode}</div>
             </div>
           </div>
-          <div style={{ fontSize: 10, color: "#9DB8CC", marginTop: "auto", paddingTop: 6, borderTop: "1px solid #EDF2F7" }}>
+          <div style={{ fontSize: 10, color: "#5B7D96", marginTop: "auto", paddingTop: 6, borderTop: "1px solid #EDF2F7" }}>
             Ad #{ad.id.slice(-6).toUpperCase()}
           </div>
         </div>

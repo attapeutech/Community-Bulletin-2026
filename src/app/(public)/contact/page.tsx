@@ -65,7 +65,7 @@ function ContactForm({ defaultEmail }: { defaultEmail?: string }) {
           <CheckCircle2 size={32} className="text-green-600" />
         </div>
         <h3 className="text-xl font-bold text-[#1A3A5C] mb-2">Message sent!</h3>
-        <p className="text-sm text-[#6B8FA8] max-w-sm">We'll get back to you within 1–2 business days. Check your inbox for a confirmation email.</p>
+        <p className="text-sm text-[#4A6B82] max-w-sm">We'll get back to you within 1–2 business days. Check your inbox for a confirmation email.</p>
         <Button variant="ghost" onClick={() => { setSent(false); reset({ email: defaultEmail ?? "" }); }} className="mt-6 text-[#4A90C4]">
           Send another message
         </Button>
@@ -140,7 +140,7 @@ function ContactPageContent() {
             <MessageSquare size={20} className="text-[#4A90C4]" />
             <div>
               <h2 className="font-serif font-bold text-lg text-[#1A3A5C]">Send us a message</h2>
-              <p className="text-xs text-[#6B8FA8]">We read every message and reply as quickly as we can.</p>
+              <p className="text-xs text-[#4A6B82]">We read every message and reply as quickly as we can.</p>
             </div>
           </div>
           <div className="px-6 py-6">

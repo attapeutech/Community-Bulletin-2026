@@ -43,7 +43,7 @@ function VerifyContent() {
           <h1 style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 21, color: "#1A3A5C", margin: "0 0 8px" }}>
             Verifying your email…
           </h1>
-          <p style={{ fontSize: 13, color: "#6B8FA8", margin: 0 }}>Please wait a moment.</p>
+          <p style={{ fontSize: 13, color: "#4A6B82", margin: 0 }}>Please wait a moment.</p>
         </>
       )}
 
@@ -57,7 +57,7 @@ function VerifyContent() {
           <h1 style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 21, color: "#1A3A5C", margin: "0 0 8px" }}>
             Email verified!
           </h1>
-          <p style={{ fontSize: 13, color: "#6B8FA8", margin: "0 0 24px" }}>
+          <p style={{ fontSize: 13, color: "#4A6B82", margin: "0 0 24px" }}>
             Your email has been verified. You can now sign in.
           </p>
           <button onClick={() => router.push("/login")} style={primaryBtn}>
@@ -76,7 +76,7 @@ function VerifyContent() {
           <h1 style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 21, color: "#1A3A5C", margin: "0 0 8px" }}>
             Link expired
           </h1>
-          <p style={{ fontSize: 13, color: "#6B8FA8", margin: "0 0 24px" }}>
+          <p style={{ fontSize: 13, color: "#4A6B82", margin: "0 0 24px" }}>
             This verification link is invalid or has expired. Please request a new one.
           </p>
           <button onClick={() => router.push("/login")} style={primaryBtn}>
@@ -91,7 +91,7 @@ function VerifyContent() {
 export default function VerifyEmailPage() {
   return (
     <AuthLayout>
-      <Suspense fallback={<div style={{ color: "#6B8FA8", fontSize: 14, textAlign: "center" }}>Loading…</div>}>
+      <Suspense fallback={<div style={{ color: "#4A6B82", fontSize: 14, textAlign: "center" }}>Loading…</div>}>
         <VerifyContent />
       </Suspense>
     </AuthLayout>

@@ -103,13 +103,13 @@ function Paginator({ page, total, onChange }: { page: number; total: number; onC
 
   return (
     <div className="flex items-center justify-between px-5 py-3 border-t border-[#D8E4EE] bg-[#F7F9FC]">
-      <span className="text-[11px] text-[#6B8FA8]">
+      <span className="text-[11px] text-[#4A6B82]">
         {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total}
       </span>
       <div className="flex items-center gap-1">
         <button
           onClick={() => onChange(page - 1)} disabled={page === 1}
-          className="px-2.5 py-1 rounded border text-[11px] disabled:opacity-35 disabled:cursor-not-allowed border-[#D8E4EE] text-[#6B8FA8] hover:border-[#4A90C4] hover:text-[#1A3A5C] bg-white cursor-pointer"
+          className="px-2.5 py-1 rounded border text-[11px] disabled:opacity-35 disabled:cursor-not-allowed border-[#D8E4EE] text-[#4A6B82] hover:border-[#4A90C4] hover:text-[#1A3A5C] bg-white cursor-pointer"
         >← Prev</button>
         {pages.map((p, i) =>
           p === "…"
@@ -118,12 +118,12 @@ function Paginator({ page, total, onChange }: { page: number; total: number; onC
                 className={cn("min-w-[28px] h-7 rounded border text-[11px] font-semibold",
                   page === p
                     ? "bg-[#1A3A5C] border-[#1A3A5C] text-white"
-                    : "border-[#D8E4EE] text-[#6B8FA8] hover:border-[#4A90C4] hover:text-[#1A3A5C] bg-white cursor-pointer"
+                    : "border-[#D8E4EE] text-[#4A6B82] hover:border-[#4A90C4] hover:text-[#1A3A5C] bg-white cursor-pointer"
                 )}>{p}</button>
         )}
         <button
           onClick={() => onChange(page + 1)} disabled={page === totalPages}
-          className="px-2.5 py-1 rounded border text-[11px] disabled:opacity-35 disabled:cursor-not-allowed border-[#D8E4EE] text-[#6B8FA8] hover:border-[#4A90C4] hover:text-[#1A3A5C] bg-white cursor-pointer"
+          className="px-2.5 py-1 rounded border text-[11px] disabled:opacity-35 disabled:cursor-not-allowed border-[#D8E4EE] text-[#4A6B82] hover:border-[#4A90C4] hover:text-[#1A3A5C] bg-white cursor-pointer"
         >Next →</button>
       </div>
     </div>
@@ -139,10 +139,10 @@ function StatCard({ label, value, sub, accentClass, onClick }: { label: string; 
         onClick && "cursor-pointer hover:border-[#4A90C4] hover:bg-[#F7FAFD]"
       )}
     >
-      <div className="text-[11px] font-semibold text-[#6B8FA8] uppercase tracking-[0.05em] mb-2">{label}</div>
+      <div className="text-[11px] font-semibold text-[#4A6B82] uppercase tracking-[0.05em] mb-2">{label}</div>
       <div className={cn("text-[28px] font-bold leading-none", accentClass ?? "text-[#1A3A5C]")}>{value}</div>
-      {sub && <div className="text-xs text-[#6B8FA8] mt-1">{sub}</div>}
-      {onClick && <div className="text-[10px] text-[#9DC4E0] mt-2">Click to view →</div>}
+      {sub && <div className="text-xs text-[#4A6B82] mt-1">{sub}</div>}
+      {onClick && <div className="text-[10px] text-[#5B7D96] mt-2">Click to view →</div>}
     </div>
   );
 }
@@ -294,7 +294,7 @@ function AdminEditAdDialog({
     }
   }
 
-  const labelCls = "text-[11px] font-semibold text-[#6B8FA8] uppercase tracking-wide mb-1 block";
+  const labelCls = "text-[11px] font-semibold text-[#4A6B82] uppercase tracking-wide mb-1 block";
   const inputCls = "w-full border border-[#D8E4EE] rounded-lg px-3 py-2 text-sm text-[#1A3A5C] bg-[#FAFCFF] outline-none focus:border-[#4A90C4]";
   const selectCls = `${inputCls} appearance-none cursor-pointer`;
 
@@ -359,7 +359,7 @@ function AdminEditAdDialog({
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className={labelCls + " mb-0"}>Phone <span className="normal-case text-[#9DB8CC] font-normal">(optional)</span></label>
-              <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-[#6B8FA8]">
+              <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-[#4A6B82]">
                 <input type="checkbox" checked={draft.showPhone} onChange={e => set("showPhone", e.target.checked)} className="accent-[#4A90C4]" />
                 Show on display
               </label>
@@ -373,7 +373,7 @@ function AdminEditAdDialog({
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className={labelCls + " mb-0"}>Address <span className="normal-case text-[#9DB8CC] font-normal">(optional)</span></label>
-              <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-[#6B8FA8]">
+              <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-[#4A6B82]">
                 <input type="checkbox" checked={draft.showAddress} onChange={e => set("showAddress", e.target.checked)} className="accent-[#4A90C4]" />
                 Show on display
               </label>
@@ -387,7 +387,7 @@ function AdminEditAdDialog({
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className={labelCls + " mb-0"}>Website URL <span className="normal-case text-[#9DB8CC] font-normal">(optional)</span></label>
-              <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-[#6B8FA8]">
+              <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-[#4A6B82]">
                 <input type="checkbox" checked={draft.showWebsite} onChange={e => set("showWebsite", e.target.checked)} className="accent-[#4A90C4]" />
                 Show on display
               </label>
@@ -445,7 +445,7 @@ function AdminEditAdDialog({
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-[#EDF2F7] flex justify-end gap-3 shrink-0 bg-[#FAFCFF]">
-          <Button variant="outline" size="sm" onClick={onClose} className="h-auto px-4 py-2 text-sm font-semibold border-[#D8E4EE] text-[#6B8FA8]">
+          <Button variant="outline" size="sm" onClick={onClose} className="h-auto px-4 py-2 text-sm font-semibold border-[#D8E4EE] text-[#4A6B82]">
             Cancel
           </Button>
           <Button size="sm" disabled={saving} onClick={save} className="h-auto px-5 py-2 text-sm font-semibold bg-[#1A3A5C] hover:bg-[#14304d] text-white">
@@ -702,7 +702,7 @@ export default function AdminPanelClient({
       {/* Header */}
       <div className="mb-7">
         <h1 className="font-serif text-[26px] font-bold text-[#1A3A5C] mb-1.5">Admin Panel</h1>
-        <p className="text-[#6B8FA8] text-sm">Platform-wide oversight — users, ads, and revenue.</p>
+        <p className="text-[#4A6B82] text-sm">Platform-wide oversight — users, ads, and revenue.</p>
       </div>
 
       {/* Tabs */}
@@ -710,19 +710,19 @@ export default function AdminPanelClient({
         <TabsList className="mb-7 bg-[#F0F5FA] rounded-[10px] p-1 h-auto gap-1.5">
           <TabsTrigger
             value="overview"
-            className="rounded-lg text-[13px] px-[18px] py-2 data-[state=active]:bg-[#1A3A5C] data-[state=active]:text-white data-[state=active]:shadow-none data-[state=inactive]:text-[#6B8FA8] data-[state=inactive]:bg-transparent"
+            className="rounded-lg text-[13px] px-[18px] py-2 data-[state=active]:bg-[#1A3A5C] data-[state=active]:text-white data-[state=active]:shadow-none data-[state=inactive]:text-[#4A6B82] data-[state=inactive]:bg-transparent"
           >
             Overview
           </TabsTrigger>
           <TabsTrigger
             value="users"
-            className="rounded-lg text-[13px] px-[18px] py-2 data-[state=active]:bg-[#1A3A5C] data-[state=active]:text-white data-[state=active]:shadow-none data-[state=inactive]:text-[#6B8FA8] data-[state=inactive]:bg-transparent"
+            className="rounded-lg text-[13px] px-[18px] py-2 data-[state=active]:bg-[#1A3A5C] data-[state=active]:text-white data-[state=active]:shadow-none data-[state=inactive]:text-[#4A6B82] data-[state=inactive]:bg-transparent"
           >
             Users ({stats.totalUsers})
           </TabsTrigger>
           <TabsTrigger
             value="ads"
-            className="rounded-lg text-[13px] px-[18px] py-2 data-[state=active]:bg-[#1A3A5C] data-[state=active]:text-white data-[state=active]:shadow-none data-[state=inactive]:text-[#6B8FA8] data-[state=inactive]:bg-transparent"
+            className="rounded-lg text-[13px] px-[18px] py-2 data-[state=active]:bg-[#1A3A5C] data-[state=active]:text-white data-[state=active]:shadow-none data-[state=inactive]:text-[#4A6B82] data-[state=inactive]:bg-transparent"
           >
             All Ads ({stats.totalAds})
           </TabsTrigger>
@@ -780,13 +780,13 @@ export default function AdminPanelClient({
                   <MonitorPlay size={17} className="text-[#4A90C4]" />
                   Display Screens
                 </CardTitle>
-                <p className="text-xs text-[#6B8FA8] mt-1">Force-push a refresh to all display screens at a location.</p>
+                <p className="text-xs text-[#4A6B82] mt-1">Force-push a refresh to all display screens at a location.</p>
               </CardHeader>
               <CardContent className="p-5 flex flex-wrap gap-3">
                 {uniqueLocations.map(loc => (
                   <div key={loc.slug} className="flex items-center gap-2 bg-[#F7F9FC] border border-[#D8E4EE] rounded-lg px-4 py-2.5">
                     <span className="text-[13px] font-semibold text-[#1A3A5C]">{loc.storeName}</span>
-                    <span className="text-[11px] text-[#6B8FA8]">{loc.slug}</span>
+                    <span className="text-[11px] text-[#4A6B82]">{loc.slug}</span>
                     <Button
                       variant="outline"
                       size="sm"
@@ -816,7 +816,7 @@ export default function AdminPanelClient({
           <Card className="rounded-xl border-[#D8E4EE] overflow-hidden">
             <CardHeader className="px-6 py-4 border-b border-[#D8E4EE]">
               <CardTitle className="font-serif text-[18px] text-[#1A3A5C]">All Users</CardTitle>
-              <p className="text-xs text-[#6B8FA8] mt-1">{users.length} registered accounts</p>
+              <p className="text-xs text-[#4A6B82] mt-1">{users.length} registered accounts</p>
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-[#D8E4EE]">
@@ -831,11 +831,11 @@ export default function AdminPanelClient({
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
                             <span className="font-semibold text-sm text-[#1A3A5C]">{u.name}</span>
-                            {isSelf && <span className="text-[10px] text-[#6B8FA8]">(you)</span>}
+                            {isSelf && <span className="text-[10px] text-[#4A6B82]">(you)</span>}
                             {u.twoFactorEnabled && <span title="2FA enabled" className="text-[10px] text-green-700 font-semibold">2FA</span>}
                             {u.banned && <span className="text-[10px] font-semibold text-white bg-red-500 rounded px-1.5 py-0.5">Banned</span>}
                           </div>
-                          <div className="text-xs text-[#6B8FA8] truncate">{u.email}</div>
+                          <div className="text-xs text-[#4A6B82] truncate">{u.email}</div>
                           <div className="text-[11px] text-[#9DB8CC] mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
                             <span>Joined {new Date(u.createdAt).toLocaleDateString()}</span>
                             {u.lastLoginAt && <span>Login {new Date(u.lastLoginAt).toLocaleString()}</span>}
@@ -889,7 +889,7 @@ export default function AdminPanelClient({
                                 {banning === u.id ? "…" : "Confirm"}
                               </Button>
                               <Button variant="outline" size="sm" onClick={() => setConfirmBan(null)}
-                                className="h-7 px-2.5 text-[11px] font-semibold border-[#D8E4EE] text-[#6B8FA8] bg-white">
+                                className="h-7 px-2.5 text-[11px] font-semibold border-[#D8E4EE] text-[#4A6B82] bg-white">
                                 Cancel
                               </Button>
                             </div>
@@ -905,7 +905,7 @@ export default function AdminPanelClient({
                   );
                 })}
                 {users.length === 0 && (
-                  <div className="py-8 text-center text-[#6B8FA8] text-sm">No users found.</div>
+                  <div className="py-8 text-center text-[#4A6B82] text-sm">No users found.</div>
                 )}
               </div>
               <Paginator page={userPage} total={users.length} onChange={setUserPage} />
@@ -925,7 +925,7 @@ export default function AdminPanelClient({
                   "px-3.5 py-1.5 rounded-full border text-xs transition-colors",
                   statusFilter === s
                     ? "bg-[#1A3A5C] border-[#1A3A5C] text-white font-semibold"
-                    : "bg-white border-[#D8E4EE] text-[#6B8FA8] font-normal hover:border-[#1A3A5C] cursor-pointer"
+                    : "bg-white border-[#D8E4EE] text-[#4A6B82] font-normal hover:border-[#1A3A5C] cursor-pointer"
                 )}
               >
                 {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -946,7 +946,7 @@ export default function AdminPanelClient({
               {userSearch && (
                 <button
                   onClick={() => setUserSearch("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[#6B8FA8] hover:text-[#1A3A5C] text-xs leading-none"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[#4A6B82] hover:text-[#1A3A5C] text-xs leading-none"
                 >
                   ✕
                 </button>
@@ -954,7 +954,7 @@ export default function AdminPanelClient({
             </div>
             <button
               onClick={fetchAllAds}
-              className="ml-auto px-3.5 py-1.5 rounded-full border text-xs bg-white border-[#D8E4EE] text-[#6B8FA8] hover:border-[#1A3A5C] hover:text-[#1A3A5C] flex items-center gap-1.5 cursor-pointer"
+              className="ml-auto px-3.5 py-1.5 rounded-full border text-xs bg-white border-[#D8E4EE] text-[#4A6B82] hover:border-[#1A3A5C] hover:text-[#1A3A5C] flex items-center gap-1.5 cursor-pointer"
             >
               <RefreshCw size={11} />
               Refresh
@@ -963,10 +963,10 @@ export default function AdminPanelClient({
 
           <Card className="rounded-xl border-[#D8E4EE] overflow-hidden">
             <div className="px-5 py-3.5 border-b border-[#D8E4EE]">
-              <span className="text-[13px] text-[#6B8FA8]">{filteredAds.length} ads</span>
+              <span className="text-[13px] text-[#4A6B82]">{filteredAds.length} ads</span>
             </div>
             {filteredAds.length === 0 ? (
-              <div className="py-8 text-center text-[#6B8FA8] text-sm">No ads match this filter.</div>
+              <div className="py-8 text-center text-[#4A6B82] text-sm">No ads match this filter.</div>
             ) : (
               pagedAds.map((ad, idx) => {
                 const statusClass = STATUS_BADGE_CLASS[ad.status] ?? STATUS_BADGE_CLASS.pending;
@@ -980,9 +980,9 @@ export default function AdminPanelClient({
                           <Badge variant="outline" className={cn("text-[11px] font-semibold px-2.5 py-0.5 rounded-full", statusClass)}>
                             {ad.status.charAt(0).toUpperCase() + ad.status.slice(1)}
                           </Badge>
-                          <span className="text-[11px] text-[#9DC4E0] bg-blue-50 rounded px-1.5 py-0.5">{ad.paymentStatus}</span>
+                          <span className="text-[11px] text-[#5B7D96] bg-blue-50 rounded px-1.5 py-0.5">{ad.paymentStatus}</span>
                         </div>
-                        <div className="text-xs text-[#6B8FA8] mb-0.5 flex items-center gap-1 flex-wrap">
+                        <div className="text-xs text-[#4A6B82] mb-0.5 flex items-center gap-1 flex-wrap">
                           <button
                             onClick={() => setUserSearch(ad.user.name)}
                             className="font-semibold text-[#4A90C4] hover:underline cursor-pointer bg-transparent border-0 p-0 text-xs"
@@ -993,11 +993,11 @@ export default function AdminPanelClient({
                           <span>· {ad.location.storeName} · submitted {new Date(ad.createdAt).toLocaleDateString()}</span>
                         </div>
                         <div className="flex items-center gap-3 mb-1">
-                          <span className="text-[11px] text-[#6B8FA8]">
+                          <span className="text-[11px] text-[#4A6B82]">
                             👁 <span className="font-semibold text-[#1A3A5C]">{ad.viewCount.toLocaleString()}</span> views
                           </span>
                           {ad.showWebsite && ad.contactWebsite && (
-                            <span className="text-[11px] text-[#6B8FA8]">
+                            <span className="text-[11px] text-[#4A6B82]">
                               🌐 <span className="font-semibold text-[#1A3A5C]">{ad.websiteClickCount.toLocaleString()}</span> site clicks
                             </span>
                           )}
@@ -1088,7 +1088,7 @@ export default function AdminPanelClient({
                                 size="sm"
                                 disabled={deleting === ad.id}
                                 onClick={() => setConfirmDelete(null)}
-                                className="px-2 py-0.5 h-auto rounded text-[11px] font-semibold border-[#D8E4EE] text-[#6B8FA8] bg-white hover:bg-[#F0F5FA]"
+                                className="px-2 py-0.5 h-auto rounded text-[11px] font-semibold border-[#D8E4EE] text-[#4A6B82] bg-white hover:bg-[#F0F5FA]"
                               >
                                 No
                               </Button>
@@ -1098,7 +1098,7 @@ export default function AdminPanelClient({
                               variant="ghost"
                               size="sm"
                               onClick={() => setConfirmDelete(ad.id)}
-                              className="ml-1 px-1.5 py-0.5 h-auto text-[#9DC4E0] hover:text-red-600 hover:bg-red-50"
+                              className="ml-1 px-1.5 py-0.5 h-auto text-[#5B7D96] hover:text-red-600 hover:bg-red-50"
                               title="Delete ad"
                             >
                               <Trash2 size={13} />

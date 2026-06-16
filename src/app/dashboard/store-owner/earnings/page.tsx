@@ -76,13 +76,13 @@ export default async function EarningsPage() {
           <h1 style={{ fontFamily: "Georgia,serif", fontSize: 26, fontWeight: 700, color: ACCENT }}>
             {isAdmin ? "All Earnings" : "My Earnings"}
           </h1>
-          <p style={{ color: "#6B8FA8", fontSize: 14, marginTop: 4 }}>
+          <p style={{ color: "#4A6B82", fontSize: 14, marginTop: 4 }}>
             Revenue from paid ads across {byLocation.size > 0 ? byLocation.size : "your"} location{byLocation.size !== 1 ? "s" : ""}.
           </p>
         </div>
         <Link
           href="/dashboard/store-owner"
-          style={{ fontSize: 13, color: "#6B8FA8", textDecoration: "none" }}
+          style={{ fontSize: 13, color: "#4A6B82", textDecoration: "none" }}
         >
           ← Back to Locations
         </Link>
@@ -91,24 +91,24 @@ export default async function EarningsPage() {
       {/* Summary cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 28, marginTop: 20 }}>
         <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "16px 20px" }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: "#6B8FA8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Total Ad Revenue</div>
+          <div style={{ fontSize: 10, fontWeight: 600, color: "#4A6B82", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Total Ad Revenue</div>
           <div style={{ fontSize: 22, fontWeight: 700, color: ACCENT }}>{formatCents(totalRevenueCents)}</div>
-          <div style={{ fontSize: 11, color: "#9DC4E0", marginTop: 2 }}>gross from advertisers</div>
+          <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 2 }}>gross from advertisers</div>
         </div>
         <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "16px 20px" }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: "#6B8FA8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Your Earnings</div>
+          <div style={{ fontSize: 10, fontWeight: 600, color: "#4A6B82", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Your Earnings</div>
           <div style={{ fontSize: 22, fontWeight: 700, color: "#166534" }}>{formatCents(totalEarningsCents)}</div>
-          <div style={{ fontSize: 11, color: "#9DC4E0", marginTop: 2 }}>your revenue share</div>
+          <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 2 }}>your revenue share</div>
         </div>
         <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "16px 20px" }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: "#6B8FA8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Paid Ads</div>
+          <div style={{ fontSize: 10, fontWeight: 600, color: "#4A6B82", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Paid Ads</div>
           <div style={{ fontSize: 22, fontWeight: 700, color: ACCENT }}>{rows.length}</div>
-          <div style={{ fontSize: 11, color: "#9DC4E0", marginTop: 2 }}>completed payments</div>
+          <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 2 }}>completed payments</div>
         </div>
         <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "16px 20px" }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: "#6B8FA8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Payout Status</div>
+          <div style={{ fontSize: 10, fontWeight: 600, color: "#4A6B82", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Payout Status</div>
           <div style={{ fontSize: 15, fontWeight: 700, color: "#92400E" }}>Pending</div>
-          <div style={{ fontSize: 11, color: "#9DC4E0", marginTop: 2 }}>payouts processed manually</div>
+          <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 2 }}>payouts processed manually</div>
         </div>
       </div>
 
@@ -116,7 +116,7 @@ export default async function EarningsPage() {
         <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: 48, textAlign: "center" }}>
           <div style={{ fontSize: 36, marginBottom: 12 }}>💰</div>
           <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: ACCENT, marginBottom: 8 }}>No earnings yet</h2>
-          <p style={{ color: "#6B8FA8", fontSize: 14 }}>Earnings will appear here once advertisers pay for ads at your locations.</p>
+          <p style={{ color: "#4A6B82", fontSize: 14 }}>Earnings will appear here once advertisers pay for ads at your locations.</p>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -131,12 +131,12 @@ export default async function EarningsPage() {
                   <div key={locId} style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "16px 20px", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 700, fontSize: 14, color: ACCENT }}>{loc.name}</div>
-                      <div style={{ fontSize: 12, color: "#6B8FA8", marginTop: 2 }}>
+                      <div style={{ fontSize: 12, color: "#4A6B82", marginTop: 2 }}>
                         {loc.count} paid ad{loc.count !== 1 ? "s" : ""} · {loc.equipmentProvided ? "50%" : "25%"} revenue share
                       </div>
                     </div>
                     <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: 13, color: "#6B8FA8" }}>Ad revenue: <strong style={{ color: ACCENT }}>{formatCents(loc.revenueCents)}</strong></div>
+                      <div style={{ fontSize: 13, color: "#4A6B82" }}>Ad revenue: <strong style={{ color: ACCENT }}>{formatCents(loc.revenueCents)}</strong></div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: "#166534", marginTop: 2 }}>Your share: {formatCents(loc.earningsCents)}</div>
                     </div>
                     <Link
@@ -180,22 +180,22 @@ export default async function EarningsPage() {
                       <div style={{ fontSize: 14, fontWeight: 600, color: ACCENT, marginBottom: 2 }}>
                         {row.adTitle}
                       </div>
-                      <div style={{ fontSize: 12, color: "#6B8FA8" }}>
+                      <div style={{ fontSize: 12, color: "#4A6B82" }}>
                         by {row.advertiserName}
                       </div>
-                      <div style={{ fontSize: 11, color: "#9DC4E0", marginTop: 4 }}>
+                      <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 4 }}>
                         {row.locationName} · {new Date(row.paymentCreatedAt).toLocaleDateString()}
                       </div>
                     </div>
                     {/* Right: amounts */}
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <div style={{ fontSize: 11, color: "#6B8FA8", marginBottom: 2 }}>
+                      <div style={{ fontSize: 11, color: "#4A6B82", marginBottom: 2 }}>
                         Ad revenue: <span style={{ fontWeight: 600, color: ACCENT }}>{formatCents(row.amountCents, row.currency)}</span>
                       </div>
                       <div style={{ fontSize: 15, fontWeight: 700, color: "#166534" }}>
                         {formatCents(earningsCents, row.currency)}
                       </div>
-                      <div style={{ fontSize: 10, color: "#9DC4E0" }}>
+                      <div style={{ fontSize: 10, color: "#5B7D96" }}>
                         your {(rate * 100).toFixed(0)}% share
                       </div>
                     </div>

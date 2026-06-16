@@ -120,7 +120,7 @@ export default function LocationPickerDialog({ open, onClose, onSave, initial }:
         <div style={{ padding: "24px" }}>
           {/* Country */}
           <div style={{ marginBottom: 16 }}>
-            <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#6B8FA8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Country</label>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#4A6B82", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Country</label>
             <select
               value={countryId}
               onChange={e => setCountryId(e.target.value)}
@@ -133,7 +133,7 @@ export default function LocationPickerDialog({ open, onClose, onSave, initial }:
 
           {/* State */}
           <div style={{ marginBottom: 16 }}>
-            <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#6B8FA8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>State</label>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#4A6B82", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>State</label>
             <select
               value={stateId}
               onChange={e => handleStateChange(e.target.value)}
@@ -147,7 +147,7 @@ export default function LocationPickerDialog({ open, onClose, onSave, initial }:
 
           {/* City */}
           <div style={{ marginBottom: 24 }}>
-            <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#6B8FA8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>City</label>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#4A6B82", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>City</label>
             <select
               value={cityName}
               onChange={e => setCityName(e.target.value)}
@@ -163,7 +163,7 @@ export default function LocationPickerDialog({ open, onClose, onSave, initial }:
           <div style={{ display: "flex", gap: 10 }}>
             <button
               onClick={handleClear}
-              style={{ flex: 1, padding: "10px", borderRadius: 8, border: "1px solid #D8E4EE", background: "#fff", color: "#6B8FA8", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+              style={{ flex: 1, padding: "10px", borderRadius: 8, border: "1px solid #D8E4EE", background: "#fff", color: "#4A6B82", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
             >
               Clear filter
             </button>

@@ -94,7 +94,7 @@ export default function LandingPage() {
           {STATS.map(({ value, label }) => (
             <div key={label} className="text-center px-4">
               <div className="font-serif text-3xl sm:text-4xl font-bold text-[#E8563A]">{value}</div>
-              <div className="text-xs sm:text-sm text-[#6B8FA8] dark:text-[#7AA8C4] mt-1">{label}</div>
+              <div className="text-xs sm:text-sm text-[#4A6B82] dark:text-[#7AA8C4] mt-1">{label}</div>
             </div>
           ))}
         </div>
@@ -111,7 +111,7 @@ export default function LandingPage() {
             <h2 className="font-serif text-[clamp(26px,4vw,40px)] font-bold text-[#1A3A5C] dark:text-white mb-4">
               From idea to live screen in minutes
             </h2>
-            <p className="text-base text-[#6B8FA8] dark:text-[#7AA8C4] max-w-md mx-auto">
+            <p className="text-base text-[#4A6B82] dark:text-[#7AA8C4] max-w-md mx-auto">
               No design skills needed. No long contracts. Just pick a location, upload your ad, and go.
             </p>
           </div>
@@ -120,7 +120,7 @@ export default function LandingPage() {
               <div key={step} className="bg-white dark:bg-[#0F1E2E] rounded-2xl p-6 border border-[#D8E4EE] dark:border-[#1E3550]">
                 <div className="font-serif text-5xl font-bold text-[#E8EFF6] dark:text-[#1E3550] leading-none mb-4">{step}</div>
                 <h3 className="text-base font-bold text-[#1A3A5C] dark:text-white mb-2">{title}</h3>
-                <p className="text-sm text-[#6B8FA8] dark:text-[#7AA8C4] leading-relaxed">{desc}</p>
+                <p className="text-sm text-[#4A6B82] dark:text-[#7AA8C4] leading-relaxed">{desc}</p>
               </div>
             ))}
           </div>
@@ -141,7 +141,7 @@ export default function LandingPage() {
               <div key={title} className="bg-[#F4F7FB] dark:bg-[#0B1A27] rounded-2xl p-6 border border-[#D8E4EE] dark:border-[#1E3550]">
                 <div className="text-3xl mb-3">{icon}</div>
                 <h3 className="text-base font-bold text-[#1A3A5C] dark:text-white mb-2">{title}</h3>
-                <p className="text-sm text-[#6B8FA8] dark:text-[#7AA8C4] leading-relaxed">{desc}</p>
+                <p className="text-sm text-[#4A6B82] dark:text-[#7AA8C4] leading-relaxed">{desc}</p>
               </div>
             ))}
           </div>
@@ -155,7 +155,7 @@ export default function LandingPage() {
           <h2 className="font-serif text-[clamp(26px,4vw,40px)] font-bold text-[#1A3A5C] dark:text-white mb-4">
             Simple, transparent pricing
           </h2>
-          <p className="text-base text-[#6B8FA8] dark:text-[#7AA8C4] mb-12">No subscriptions. No hidden fees. Pay only when you post.</p>
+          <p className="text-base text-[#4A6B82] dark:text-[#7AA8C4] mb-12">No subscriptions. No hidden fees. Pay only when you post.</p>
 
           <div className="flex justify-center">
             <div className="relative bg-white dark:bg-[#0F1E2E] rounded-2xl border-2 border-[#1A3A5C] dark:border-[#4A90C4] p-8 sm:p-10 max-w-sm w-full">
@@ -163,7 +163,7 @@ export default function LandingPage() {
                 Most Popular
               </div>
               <div className="font-serif text-5xl font-bold text-[#1A3A5C] dark:text-white">$100</div>
-              <div className="text-sm text-[#6B8FA8] dark:text-[#7AA8C4] mb-6">per location / 1 week</div>
+              <div className="text-sm text-[#4A6B82] dark:text-[#7AA8C4] mb-6">per location / 1 week</div>
               <ul className="text-left mb-8 space-y-2">
                 {["1 store location", "1-week display period", "Full carousel rotation", "Real-time approval status", "Email notifications", "Full refund if denied"].map((item) => (
                   <li key={item} className="text-sm text-[#4A5568] dark:text-[#9DC4E0] flex items-center gap-2">
@@ -233,7 +233,7 @@ export default function LandingPage() {
           <h2 className="font-serif text-[clamp(26px,4vw,42px)] font-bold text-[#1A3A5C] dark:text-white mb-4">
             Ready to reach your community?
           </h2>
-          <p className="text-base text-[#6B8FA8] dark:text-[#7AA8C4] mb-9 leading-relaxed">
+          <p className="text-base text-[#4A6B82] dark:text-[#7AA8C4] mb-9 leading-relaxed">
             Join hundreds of local businesses already advertising on CommunityBulletin.
             Your first ad is just a few clicks away.
           </p>

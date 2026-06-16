@@ -65,7 +65,7 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
           boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
         }} />
       </div>
-      <span style={{ fontSize: 12, color: checked ? ACCENT : "#6B8FA8", fontWeight: checked ? 600 : 400 }}>
+      <span style={{ fontSize: 12, color: checked ? ACCENT : "#4A6B82", fontWeight: checked ? 600 : 400 }}>
         {label}
       </span>
     </div>
@@ -146,13 +146,13 @@ function StepBar({ current }: { current: Step }) {
               <div style={{
                 width: 32, height: 32, borderRadius: "50%",
                 background: done ? "#16a34a" : active ? ACCENT : "#D8E4EE",
-                color: done || active ? "#fff" : "#6B8FA8",
+                color: done || active ? "#fff" : "#4A6B82",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 13, fontWeight: 700,
               }}>
                 {done ? "✓" : num}
               </div>
-              <div style={{ fontSize: 11, marginTop: 4, color: active ? ACCENT : "#6B8FA8", fontWeight: active ? 600 : 400 }}>
+              <div style={{ fontSize: 11, marginTop: 4, color: active ? ACCENT : "#4A6B82", fontWeight: active ? 600 : 400 }}>
                 {label}
               </div>
             </div>
@@ -317,13 +317,13 @@ export default function NewAdPage() {
     <div style={{ minHeight: "100vh", background: "#F4F7FB", display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 16px" }}>
       {/* Header */}
       <div style={{ width: "100%", maxWidth: 640 }}>
-        <a href="/dashboard/user" style={{ fontSize: 13, color: "#6B8FA8", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 24 }}>
+        <a href="/dashboard/user" style={{ fontSize: 13, color: "#4A6B82", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 24 }}>
           ← Back to dashboard
         </a>
         <h1 style={{ fontFamily: "Georgia,serif", fontSize: 28, fontWeight: 700, color: ACCENT, marginBottom: 4 }}>
           Post a New Ad
         </h1>
-        <p style={{ color: "#6B8FA8", fontSize: 14, marginBottom: 32 }}>
+        <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 32 }}>
           $100 / 1 week · Displayed on in-store screens at your chosen location.
         </p>
 
@@ -340,7 +340,7 @@ export default function NewAdPage() {
           {step === 1 && (
             <div>
               <h2 style={{ fontFamily: "Georgia,serif", fontSize: 20, color: ACCENT, marginBottom: 4 }}>Choose a location</h2>
-              <p style={{ fontSize: 13, color: "#6B8FA8", marginBottom: 24 }}>Search for a store where your ad will be displayed.</p>
+              <p style={{ fontSize: 13, color: "#4A6B82", marginBottom: 24 }}>Search for a store where your ad will be displayed.</p>
 
               <div style={{ marginBottom: 8 }}>
                 <Label>Search locations</Label>
@@ -353,11 +353,11 @@ export default function NewAdPage() {
               </div>
 
               {locLoading && (
-                <p style={{ fontSize: 13, color: "#6B8FA8", margin: "8px 0" }}>Searching…</p>
+                <p style={{ fontSize: 13, color: "#4A6B82", margin: "8px 0" }}>Searching…</p>
               )}
 
               {!locLoading && locSearched && locations.length === 0 && (
-                <div style={{ fontSize: 13, color: "#6B8FA8", background: "#F4F7FB", border: "1px solid #D8E4EE", borderRadius: 8, padding: "12px 16px", margin: "8px 0" }}>
+                <div style={{ fontSize: 13, color: "#4A6B82", background: "#F4F7FB", border: "1px solid #D8E4EE", borderRadius: 8, padding: "12px 16px", margin: "8px 0" }}>
                   No locations found for &ldquo;{locSearch}&rdquo;. Try a different store name or city.
                 </div>
               )}
@@ -380,7 +380,7 @@ export default function NewAdPage() {
                       }}
                     >
                       <div style={{ fontWeight: 600, color: ACCENT }}>{loc.storeName}</div>
-                      <div style={{ fontSize: 12, color: "#6B8FA8" }}>
+                      <div style={{ fontSize: 12, color: "#4A6B82" }}>
                         {loc.addressLine1}, {loc.city.name}, {loc.state.code} {loc.postalCode?.code}
                       </div>
                     </button>
@@ -391,7 +391,7 @@ export default function NewAdPage() {
               {selectedLocation && (
                 <div style={{ background: "#F0F7FF", border: "1px solid #4A90C4", borderRadius: 8, padding: "12px 16px", marginTop: 16 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: "#1A3A5C" }}>Selected: {selectedLocation.storeName}</div>
-                  <div style={{ fontSize: 12, color: "#6B8FA8" }}>
+                  <div style={{ fontSize: 12, color: "#4A6B82" }}>
                     {selectedLocation.addressLine1}, {selectedLocation.city.name}, {selectedLocation.state.code} {selectedLocation.postalCode?.code}
                   </div>
                 </div>
@@ -409,7 +409,7 @@ export default function NewAdPage() {
           {step === 2 && (
             <div>
               <h2 style={{ fontFamily: "Georgia,serif", fontSize: 20, color: ACCENT, marginBottom: 4 }}>Ad details</h2>
-              <p style={{ fontSize: 13, color: "#6B8FA8", marginBottom: 24 }}>Write a short title and optional description.</p>
+              <p style={{ fontSize: 13, color: "#4A6B82", marginBottom: 24 }}>Write a short title and optional description.</p>
 
               <div style={{ marginBottom: 20 }}>
                 <Label>Ad title *</Label>
@@ -419,7 +419,7 @@ export default function NewAdPage() {
                   onChange={(e) => setTitle(e.target.value)}
                   maxLength={120}
                 />
-                <div style={{ fontSize: 11, color: "#6B8FA8", marginTop: 4, textAlign: "right" }}>{title.length}/120</div>
+                <div style={{ fontSize: 11, color: "#4A6B82", marginTop: 4, textAlign: "right" }}>{title.length}/120</div>
               </div>
 
               <div style={{ marginBottom: 20 }}>
@@ -430,7 +430,7 @@ export default function NewAdPage() {
                   onChange={(e) => setDescription(e.target.value)}
                   maxLength={500}
                 />
-                <div style={{ fontSize: 11, color: "#6B8FA8", marginTop: 4, textAlign: "right" }}>{description.length}/500</div>
+                <div style={{ fontSize: 11, color: "#4A6B82", marginTop: 4, textAlign: "right" }}>{description.length}/500</div>
               </div>
 
               {/* Contact info */}
@@ -438,7 +438,7 @@ export default function NewAdPage() {
                 <div style={{ fontFamily: "Georgia,serif", fontSize: 15, fontWeight: 700, color: ACCENT, marginBottom: 4 }}>
                   Contact Information
                 </div>
-                <p style={{ fontSize: 12, color: "#6B8FA8", marginBottom: 16 }}>
+                <p style={{ fontSize: 12, color: "#4A6B82", marginBottom: 16 }}>
                   Optional — toggle each field to show it on the display screen with your ad. Great if you don't have a designed flyer.
                 </p>
                 {[
@@ -458,7 +458,7 @@ export default function NewAdPage() {
                     />
                   </div>
                 ))}
-                <p style={{ fontSize: 11, color: "#9DC4E0", marginTop: 4 }}>
+                <p style={{ fontSize: 11, color: "#5B7D96", marginTop: 4 }}>
                   Contact info is saved to your profile and pre-filled on future ads.
                 </p>
               </div>
@@ -479,7 +479,7 @@ export default function NewAdPage() {
           {step === 3 && (
             <div>
               <h2 style={{ fontFamily: "Georgia,serif", fontSize: 20, color: ACCENT, marginBottom: 4 }}>Upload your image</h2>
-              <p style={{ fontSize: 13, color: "#6B8FA8", marginBottom: 24 }}>
+              <p style={{ fontSize: 13, color: "#4A6B82", marginBottom: 24 }}>
                 JPEG, PNG or WebP · Max 10 MB · Recommended: 1920×1080px (16:9)
               </p>
 
@@ -503,7 +503,7 @@ export default function NewAdPage() {
                 ) : (
                   <>
                     <div style={{ fontSize: 32, marginBottom: 8 }}>🖼️</div>
-                    <div style={{ fontSize: 14, color: "#6B8FA8" }}>
+                    <div style={{ fontSize: 14, color: "#4A6B82" }}>
                       {isDragActive ? "Drop image here" : "Drag & drop or click to browse"}
                     </div>
                   </>
@@ -512,7 +512,7 @@ export default function NewAdPage() {
 
               {imageFile && !uploadedImageUrl && (
                 <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontSize: 12, color: "#6B8FA8", marginBottom: 8 }}>{imageFile.name}</div>
+                  <div style={{ fontSize: 12, color: "#4A6B82", marginBottom: 8 }}>{imageFile.name}</div>
                   <Btn onClick={uploadImage} disabled={uploading}>
                     {uploading ? "Uploading…" : "Upload Image"}
                   </Btn>
@@ -541,7 +541,7 @@ export default function NewAdPage() {
           {step === 4 && (
             <div>
               <h2 style={{ fontFamily: "Georgia,serif", fontSize: 20, color: ACCENT, marginBottom: 4 }}>Review & submit</h2>
-              <p style={{ fontSize: 13, color: "#6B8FA8", marginBottom: 24 }}>
+              <p style={{ fontSize: 13, color: "#4A6B82", marginBottom: 24 }}>
                 Confirm your ad details. Payment of <strong>$100.00</strong> is collected on the next step.
               </p>
 
@@ -602,14 +602,14 @@ export default function NewAdPage() {
                   );
                 })()}
                 <div style={{ display: "grid", gap: 10, fontSize: 14 }}>
-                  <div><span style={{ color: "#6B8FA8" }}>Location:</span> <strong>{selectedLocation?.storeName}</strong></div>
-                  <div><span style={{ color: "#6B8FA8" }}>Title:</span> <strong>{title}</strong></div>
-                  {description && <div><span style={{ color: "#6B8FA8" }}>Description:</span> {description}</div>}
-                  <div><span style={{ color: "#6B8FA8" }}>Duration:</span> 1 week</div>
-                  <div><span style={{ color: "#6B8FA8" }}>Price:</span> <strong style={{ color: RED }}>$100.00</strong></div>
+                  <div><span style={{ color: "#4A6B82" }}>Location:</span> <strong>{selectedLocation?.storeName}</strong></div>
+                  <div><span style={{ color: "#4A6B82" }}>Title:</span> <strong>{title}</strong></div>
+                  {description && <div><span style={{ color: "#4A6B82" }}>Description:</span> {description}</div>}
+                  <div><span style={{ color: "#4A6B82" }}>Duration:</span> 1 week</div>
+                  <div><span style={{ color: "#4A6B82" }}>Price:</span> <strong style={{ color: RED }}>$100.00</strong></div>
                   {(showPhone || showAddress || showWebsite) && (
                     <div style={{ marginTop: 8, borderTop: "1px solid #D8E4EE", paddingTop: 8 }}>
-                      <div style={{ fontSize: 12, color: "#6B8FA8", marginBottom: 4, fontWeight: 600 }}>Shown on display:</div>
+                      <div style={{ fontSize: 12, color: "#4A6B82", marginBottom: 4, fontWeight: 600 }}>Shown on display:</div>
                       {showPhone   && contactPhone   && <div style={{ fontSize: 13 }}>📞 {contactPhone}</div>}
                       {showAddress && contactAddress && <div style={{ fontSize: 13 }}>📍 {contactAddress}</div>}
                       {showWebsite && contactWebsite && <div style={{ fontSize: 13 }}>🌐 {contactWebsite}</div>}

@@ -87,7 +87,7 @@ export default async function StoreOwnerPage() {
           + Add Location
         </Link>
       </div>
-      <p style={{ color: "#6B8FA8", fontSize: 14, marginBottom: 32 }}>
+      <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 32 }}>
         {isAdmin ? "Manage all store locations across the platform." : "Manage your store locations and their active ad displays."}
       </p>
 
@@ -95,7 +95,7 @@ export default async function StoreOwnerPage() {
         <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: 48, textAlign: "center" }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>🏪</div>
           <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: ACCENT, marginBottom: 8 }}>No locations yet</h2>
-          <p style={{ color: "#6B8FA8", fontSize: 14, marginBottom: 24 }}>Add your first store location to start accepting ads.</p>
+          <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 24 }}>Add your first store location to start accepting ads.</p>
           <Link href="/dashboard/store-owner/locations/new" style={{ background: ACCENT, color: "#fff", padding: "10px 24px", borderRadius: 8, textDecoration: "none", fontSize: 14, fontWeight: 600 }}>
             Add first location
           </Link>
@@ -127,31 +127,31 @@ export default async function StoreOwnerPage() {
                       {loc.category && <Badge bg="#EEF2FF" color="#3730A3">{loc.category}</Badge>}
                       {isAdmin && <Badge bg="#E8EFF6" color="#1A3A5C">{loc.storeOwner.name}</Badge>}
                     </div>
-                    <div style={{ fontSize: 13, color: "#6B8FA8" }}>
+                    <div style={{ fontSize: 13, color: "#4A6B82" }}>
                       {loc.addressLine1} · {loc.city.name}, {loc.state.code} {loc.postalCode.code}
                     </div>
-                    <div style={{ fontSize: 11, color: "#9DC4E0", marginTop: 4, fontFamily: "monospace" }}>
+                    <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 4, fontFamily: "monospace" }}>
                       /display/{loc.slug}
                     </div>
 
                     {/* Pricing + earnings row */}
                     <div style={{ display: "flex", gap: 20, marginTop: 10, flexWrap: "wrap" }}>
                       <div style={{ fontSize: 13 }}>
-                        <span style={{ color: "#6B8FA8" }}>Price / week: </span>
+                        <span style={{ color: "#4A6B82" }}>Price / week: </span>
                         <span style={{ fontWeight: 600, color: ACCENT }}>{formatCents(loc.pricePerWeekCents, loc.currency)}</span>
                       </div>
                       <div style={{ fontSize: 13 }}>
-                        <span style={{ color: "#6B8FA8" }}>Revenue share: </span>
+                        <span style={{ color: "#4A6B82" }}>Revenue share: </span>
                         <span style={{ fontWeight: 600, color: loc.equipmentProvided ? "#166534" : "#92400E" }}>
                           {loc.equipmentProvided ? "50%" : "25%"}
                         </span>
-                        <span style={{ fontSize: 11, color: "#9DC4E0", marginLeft: 4 }}>
+                        <span style={{ fontSize: 11, color: "#5B7D96", marginLeft: 4 }}>
                           ({loc.equipmentProvided ? "equipment provided" : "platform equipment"})
                         </span>
                       </div>
                       {totalRevCents > 0 && (
                         <div style={{ fontSize: 13 }}>
-                          <span style={{ color: "#6B8FA8" }}>Your earnings: </span>
+                          <span style={{ color: "#4A6B82" }}>Your earnings: </span>
                           <span style={{ fontWeight: 600, color: "#166534" }}>{formatCents(earningsCents, loc.currency)}</span>
                         </div>
                       )}

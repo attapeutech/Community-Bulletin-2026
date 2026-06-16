@@ -80,7 +80,7 @@ function FaqItem({ q, a }: { q: string; a: React.ReactNode }) {
         </span>
         <ChevronDown
           size={18}
-          className={`shrink-0 mt-0.5 text-[#6B8FA8] transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`shrink-0 mt-0.5 text-[#4A6B82] transition-transform duration-200 ${open ? "rotate-180" : ""}`}
         />
       </button>
       {open && (
@@ -136,7 +136,7 @@ export default function HelpPage() {
           <div className="px-6 py-5 border-b border-[#E8EFF6] flex items-center gap-3">
             {(() => { const CatIcon = FAQ_CATEGORIES[activeCategory].icon; return <CatIcon size={20} style={{ color: FAQ_CATEGORIES[activeCategory].color }} />; })()}
             <h2 className="font-serif font-bold text-lg text-[#1A3A5C]">{FAQ_CATEGORIES[activeCategory].label}</h2>
-            <span className="ml-auto text-xs text-[#6B8FA8]">{FAQ_CATEGORIES[activeCategory].faqs.length} questions</span>
+            <span className="ml-auto text-xs text-[#4A6B82]">{FAQ_CATEGORIES[activeCategory].faqs.length} questions</span>
           </div>
           <div className="px-6 divide-y divide-[#E8EFF6]">
             {FAQ_CATEGORIES[activeCategory].faqs.map((faq) => (
@@ -154,7 +154,7 @@ export default function HelpPage() {
           </div>
           <div className="flex-1">
             <h2 className="font-serif font-bold text-lg text-[#1A3A5C] mb-1">Still need help?</h2>
-            <p className="text-sm text-[#6B8FA8]">Can't find the answer you're looking for? Send us a message and we'll get back to you within 1–2 business days.</p>
+            <p className="text-sm text-[#4A6B82]">Can't find the answer you're looking for? Send us a message and we'll get back to you within 1–2 business days.</p>
           </div>
           <Link
             href="/contact"

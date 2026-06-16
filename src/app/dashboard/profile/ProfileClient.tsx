@@ -73,7 +73,7 @@ function NameSection({ initialName }: { initialName: string }) {
     <Card className="mb-6 rounded-xl border-[#E2EAF2]">
       <CardHeader className="pb-1">
         <CardTitle className="font-serif text-base text-[#1A3A5C]">Personal information</CardTitle>
-        <CardDescription className="text-xs text-[#6B8FA8]">Update your display name.</CardDescription>
+        <CardDescription className="text-xs text-[#4A6B82]">Update your display name.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -131,7 +131,7 @@ function PasswordSection() {
     <Card className="mb-6 rounded-xl border-[#E2EAF2]">
       <CardHeader className="pb-1">
         <CardTitle className="font-serif text-base text-[#1A3A5C]">Change password</CardTitle>
-        <CardDescription className="text-xs text-[#6B8FA8]">Choose a strong password for your account.</CardDescription>
+        <CardDescription className="text-xs text-[#4A6B82]">Choose a strong password for your account.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -255,7 +255,7 @@ function AvatarSection({ name, email, image }: { name: string; email: string; im
     <Card className="mb-6 rounded-xl border-[#E2EAF2]">
       <CardHeader className="pb-1">
         <CardTitle className="font-serif text-base text-[#1A3A5C]">Profile photo</CardTitle>
-        <CardDescription className="text-xs text-[#6B8FA8]">Upload a photo to personalise your account.</CardDescription>
+        <CardDescription className="text-xs text-[#4A6B82]">Upload a photo to personalise your account.</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-5">
@@ -292,7 +292,7 @@ function AvatarSection({ name, email, image }: { name: string; email: string; im
 
           <div className="flex-1 min-w-0">
             <div className="text-sm font-semibold text-[#1A3A5C] mb-0.5 truncate">{name}</div>
-            <div className="text-xs text-[#6B8FA8] mb-3">{email}</div>
+            <div className="text-xs text-[#4A6B82] mb-3">{email}</div>
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
@@ -318,7 +318,7 @@ function AvatarSection({ name, email, image }: { name: string; email: string; im
                 </Button>
               )}
             </div>
-            <p className="text-[11px] text-[#6B8FA8] mt-2">JPEG, PNG or WebP · max 5 MB</p>
+            <p className="text-[11px] text-[#4A6B82] mt-2">JPEG, PNG or WebP · max 5 MB</p>
           </div>
         </div>
 
@@ -361,7 +361,7 @@ function TwoFactorSection({ enabled }: { enabled: boolean }) {
     <Card className="mb-6 rounded-xl border-[#E2EAF2]">
       <CardHeader className="pb-1">
         <CardTitle className="font-serif text-base text-[#1A3A5C]">Two-factor authentication</CardTitle>
-        <CardDescription className="text-xs text-[#6B8FA8]">Add an extra layer of security to your account.</CardDescription>
+        <CardDescription className="text-xs text-[#4A6B82]">Add an extra layer of security to your account.</CardDescription>
       </CardHeader>
       <CardContent>
         <div className={`flex items-center justify-between rounded-[10px] px-5 py-4 border ${on ? "bg-green-50 border-green-200" : "bg-[#F7F9FC] border-[#D1DDE8]"}`}>
@@ -369,7 +369,7 @@ function TwoFactorSection({ enabled }: { enabled: boolean }) {
             <div className="text-sm font-semibold text-[#1A3A5C] mb-0.5">
               Email verification code
             </div>
-            <div className="text-xs text-[#6B8FA8]">
+            <div className="text-xs text-[#4A6B82]">
               {on
                 ? "A 6-digit code will be sent to your email on each login."
                 : "Enable to receive a one-time code by email when you sign in."}
@@ -409,7 +409,7 @@ export function ProfileClient({
       <h1 className="font-serif font-bold text-[22px] text-[#1A3A5C] mb-1">
         Account settings
       </h1>
-      <p className="text-[13px] text-[#6B8FA8] mb-7">
+      <p className="text-[13px] text-[#4A6B82] mb-7">
         Manage your profile and security preferences.
       </p>
 

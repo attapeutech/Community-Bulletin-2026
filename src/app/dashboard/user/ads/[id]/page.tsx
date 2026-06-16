@@ -35,7 +35,7 @@ function Badge({ bg, color, label }: { bg: string; color: string; label: string 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div style={{ display: "flex", gap: 16, padding: "12px 0", borderBottom: "1px solid #D8E4EE", fontSize: 14 }}>
-      <div style={{ width: 160, flexShrink: 0, color: "#6B8FA8", fontSize: 13 }}>{label}</div>
+      <div style={{ width: 160, flexShrink: 0, color: "#4A6B82", fontSize: 13 }}>{label}</div>
       <div style={{ flex: 1, color: "#1A3A5C" }}>{value}</div>
     </div>
   );
@@ -113,8 +113,8 @@ export default async function AdDetailPage({
   return (
     <div style={{ maxWidth: 720 }}>
       {/* Breadcrumb */}
-      <div style={{ marginBottom: 24, display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#6B8FA8" }}>
-        <Link href="/dashboard/user" style={{ color: "#6B8FA8", textDecoration: "none" }}>My Ads</Link>
+      <div style={{ marginBottom: 24, display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#4A6B82" }}>
+        <Link href="/dashboard/user" style={{ color: "#4A6B82", textDecoration: "none" }}>My Ads</Link>
         <span>›</span>
         <span style={{ color: "#1A3A5C" }}>{ad.title}</span>
       </div>
@@ -190,7 +190,7 @@ export default async function AdDetailPage({
 
       {/* Details */}
       <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "0 24px", marginBottom: 24 }}>
-        <Row label="Location" value={<>{location.storeName}<br /><span style={{ fontSize: 12, color: "#6B8FA8" }}>{location.addressLine1}{location.addressLine2 ? `, ${location.addressLine2}` : ""}, {location.cityName}, {location.stateCode} {location.postalCode}</span></>} />
+        <Row label="Location" value={<>{location.storeName}<br /><span style={{ fontSize: 12, color: "#4A6B82" }}>{location.addressLine1}{location.addressLine2 ? `, ${location.addressLine2}` : ""}, {location.cityName}, {location.stateCode} {location.postalCode}</span></>} />
         <Row label="Title" value={ad.title} />
         {ad.description && <Row label="Description" value={ad.description} />}
         {ad.showWebsite && ad.contactWebsite && (
@@ -212,7 +212,7 @@ export default async function AdDetailPage({
         />
         {ad.reviewNote && (
           <div style={{ padding: "16px 0" }}>
-            <div style={{ fontSize: 13, color: "#6B8FA8", marginBottom: 8 }}>Reviewer note</div>
+            <div style={{ fontSize: 13, color: "#4A6B82", marginBottom: 8 }}>Reviewer note</div>
             <div style={{ background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#991b1b" }}>
               {ad.reviewNote}
             </div>
@@ -222,20 +222,20 @@ export default async function AdDetailPage({
 
       {/* Analytics */}
       <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "16px 24px", marginBottom: 24 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: "#6B8FA8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 14 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#4A6B82", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 14 }}>
           Ad Performance
         </div>
         <div style={{ display: "grid", gridTemplateColumns: ad.showWebsite && ad.contactWebsite ? "1fr 1fr" : "1fr", gap: 16 }}>
           <div style={{ background: "#F7F9FC", borderRadius: 10, padding: "14px 18px" }}>
             <div style={{ fontSize: 28, fontWeight: 700, color: "#1A3A5C" }}>{ad.viewCount.toLocaleString()}</div>
-            <div style={{ fontSize: 12, color: "#6B8FA8", marginTop: 2 }}>Total views</div>
-            <div style={{ fontSize: 11, color: "#9DC4E0", marginTop: 1 }}>detail page opens</div>
+            <div style={{ fontSize: 12, color: "#4A6B82", marginTop: 2 }}>Total views</div>
+            <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 1 }}>detail page opens</div>
           </div>
           {ad.showWebsite && ad.contactWebsite && (
             <div style={{ background: "#F7F9FC", borderRadius: 10, padding: "14px 18px" }}>
               <div style={{ fontSize: 28, fontWeight: 700, color: "#1A3A5C" }}>{ad.websiteClickCount.toLocaleString()}</div>
-              <div style={{ fontSize: 12, color: "#6B8FA8", marginTop: 2 }}>Website visits</div>
-              <div style={{ fontSize: 11, color: "#9DC4E0", marginTop: 1 }}>clicked through to site</div>
+              <div style={{ fontSize: 12, color: "#4A6B82", marginTop: 2 }}>Website visits</div>
+              <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 1 }}>clicked through to site</div>
             </div>
           )}
         </div>
@@ -252,13 +252,13 @@ export default async function AdDetailPage({
               <div key={pmt.id} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid #D8E4EE", fontSize: 13 }}>
                 <div>
                   <div style={{ fontWeight: 600, color: "#1A3A5C", textTransform: "capitalize" }}>{pmt.provider}</div>
-                  <div style={{ color: "#6B8FA8", fontSize: 11 }}>{pmt.providerTxId}</div>
+                  <div style={{ color: "#4A6B82", fontSize: 11 }}>{pmt.providerTxId}</div>
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <div style={{ fontWeight: 600, color: "#1A3A5C" }}>
                     ${(pmt.amountCents / 100).toFixed(2)} {pmt.currency}
                   </div>
-                  <div style={{ color: "#6B8FA8", fontSize: 11, textTransform: "capitalize" }}>{pmt.status}</div>
+                  <div style={{ color: "#4A6B82", fontSize: 11, textTransform: "capitalize" }}>{pmt.status}</div>
                 </div>
               </div>
             ))}

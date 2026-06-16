@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       html: `
         <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
           <h2 style="color:#1A3A5C;margin-bottom:4px">New Support Request</h2>
-          <p style="color:#6B8FA8;font-size:13px;margin-top:0">CommunityBulletin.com Help Center</p>
+          <p style="color:#4A6B82;font-size:13px;margin-top:0">CommunityBulletin.com Help Center</p>
           <hr style="border:none;border-top:1px solid #E2EAF2;margin:20px 0"/>
           <table style="width:100%;font-size:14px;color:#1A3A5C">
             <tr><td style="padding:6px 0;font-weight:600;width:100px">Name</td><td>${name}</td></tr>
@@ -59,10 +59,10 @@ export async function POST(req: NextRequest) {
           <p style="color:#374151;line-height:1.6">We've received your support request and will get back to you within <strong>1–2 business days</strong>.</p>
           <div style="background:#F4F7FB;border-radius:10px;padding:16px 20px;margin:20px 0">
             <p style="margin:0 0 6px;font-weight:600;color:#1A3A5C">Your message</p>
-            <p style="margin:0;color:#6B8FA8;font-size:13px;white-space:pre-wrap">${message}</p>
+            <p style="margin:0;color:#4A6B82;font-size:13px;white-space:pre-wrap">${message}</p>
           </div>
           <p style="color:#374151;line-height:1.6">If your issue is urgent, you can reply directly to this email.</p>
-          <p style="color:#6B8FA8;font-size:13px;margin-top:24px">— The CommunityBulletin.com Team</p>
+          <p style="color:#4A6B82;font-size:13px;margin-top:24px">— The CommunityBulletin.com Team</p>
         </div>
       `,
       text: `Thanks for reaching out, ${name}!\n\nWe've received your message and will get back to you within 1–2 business days.\n\nYour message:\n${message}`,

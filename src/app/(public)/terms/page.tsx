@@ -5,7 +5,7 @@ export default function TermsPage() {
 
       <div className="max-w-3xl mx-auto px-4 sm:px-8 py-16">
         <h1 className="font-serif font-bold text-3xl text-[#1A3A5C] mb-2">Terms of Service</h1>
-        <p className="text-sm text-[#6B8FA8] mb-10">Last updated: May 2026</p>
+        <p className="text-sm text-[#4A6B82] mb-10">Last updated: May 2026</p>
 
         {[
           {

@@ -143,11 +143,11 @@ export default function NewLocationPage() {
 
   return (
     <div className="max-w-[680px] w-full">
-      <a href="/dashboard/store-owner" className="inline-block mb-6 text-[13px] text-[#6B8FA8] no-underline hover:underline">
+      <a href="/dashboard/store-owner" className="inline-block mb-6 text-[13px] text-[#4A6B82] no-underline hover:underline">
         ← Back to locations
       </a>
       <h1 className="font-serif text-[26px] font-bold text-[#1A3A5C] mb-1">Add Location</h1>
-      <p className="text-[#6B8FA8] text-sm mb-8">
+      <p className="text-[#4A6B82] text-sm mb-8">
         Register a store location where ads will be displayed on screen.
       </p>
 
@@ -162,7 +162,7 @@ export default function NewLocationPage() {
         {/* ── Store Info ── */}
         <Card className="border-[#D8E4EE]">
           <CardContent className="pt-6 flex flex-col gap-5">
-            <p className="text-[11px] font-semibold text-[#6B8FA8] uppercase tracking-wider -mb-2">Store Information</p>
+            <p className="text-[11px] font-semibold text-[#4A6B82] uppercase tracking-wider -mb-2">Store Information</p>
 
             {/* Logo upload */}
             <div>
@@ -181,7 +181,7 @@ export default function NewLocationPage() {
                   <Button type="button" variant="outline" size="sm" onClick={() => logoRef.current?.click()} disabled={uploading} className="text-xs">
                     {uploading ? "Uploading…" : logoUrl ? "Replace Logo" : "Upload Logo"}
                   </Button>
-                  <p className="text-[10px] text-[#9DC4E0] mt-1">JPG, PNG or WebP · max 10 MB</p>
+                  <p className="text-[10px] text-[#5B7D96] mt-1">JPG, PNG or WebP · max 10 MB</p>
                 </div>
               </div>
               <input ref={logoRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
@@ -222,7 +222,7 @@ export default function NewLocationPage() {
         {/* ── Address ── */}
         <Card className="border-[#D8E4EE]">
           <CardContent className="pt-6 flex flex-col gap-5">
-            <p className="text-[11px] font-semibold text-[#6B8FA8] uppercase tracking-wider -mb-2">Location &amp; Address</p>
+            <p className="text-[11px] font-semibold text-[#4A6B82] uppercase tracking-wider -mb-2">Location &amp; Address</p>
 
             <div>
               <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">Address line 1 *</Label>
@@ -306,7 +306,7 @@ export default function NewLocationPage() {
         {/* ── Pricing & Equipment ── */}
         <Card className="border-[#D8E4EE]">
           <CardContent className="pt-6 flex flex-col gap-5">
-            <p className="text-[11px] font-semibold text-[#6B8FA8] uppercase tracking-wider -mb-2">Pricing &amp; Revenue Share</p>
+            <p className="text-[11px] font-semibold text-[#4A6B82] uppercase tracking-wider -mb-2">Pricing &amp; Revenue Share</p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
@@ -314,7 +314,7 @@ export default function NewLocationPage() {
                   Ad price per week *
                 </Label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B8FA8] text-sm">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4A6B82] text-sm">$</span>
                   <Input
                     type="number"
                     min={1}
@@ -325,7 +325,7 @@ export default function NewLocationPage() {
                   />
                 </div>
                 <FieldError msg={errors.pricePerWeekCents?.message} />
-                <p className="text-[10px] text-[#9DC4E0] mt-1">This is what advertisers pay per week to display their ad here.</p>
+                <p className="text-[10px] text-[#5B7D96] mt-1">This is what advertisers pay per week to display their ad here.</p>
               </div>
 
               <div>

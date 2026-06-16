@@ -86,7 +86,7 @@ function AdCard({ ad }: { ad: LiveAd }) {
             <>
               <div style={{ fontFamily: "Georgia,serif", fontSize: 15, fontWeight: 700, color: "#1A3A5C", lineHeight: 1.3 }}>{ad.title}</div>
               {ad.description && (
-                <div style={{ fontSize: 12, color: "#6B8FA8", lineHeight: 1.5, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{ad.description}</div>
+                <div style={{ fontSize: 12, color: "#4A6B82", lineHeight: 1.5, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{ad.description}</div>
               )}
             </>
           )}
@@ -96,7 +96,7 @@ function AdCard({ ad }: { ad: LiveAd }) {
               <div style={{ fontSize: 13, fontWeight: 600, color: "#1A3A5C" }}>
                 {ad.locationName}{ad.storeNumber && <span style={{ color: "#E8563A", marginLeft: 4 }}>#{ad.storeNumber}</span>}
               </div>
-              <div style={{ fontSize: 11, color: "#6B8FA8" }}>{ad.cityName}, {ad.stateCode}</div>
+              <div style={{ fontSize: 11, color: "#4A6B82" }}>{ad.cityName}, {ad.stateCode}</div>
             </div>
           </div>
           <div style={{ fontSize: 10, color: "#9DB8CC", marginTop: "auto", paddingTop: 6, borderTop: "1px solid #EDF2F7" }}>
@@ -175,7 +175,7 @@ export default function LiveAdsGrid({ state = "", city = "", search = "", limit 
 
   if (ads.length === 0) {
     return (
-      <div style={{ textAlign: "center", padding: "60px 0", color: "#6B8FA8" }}>
+      <div style={{ textAlign: "center", padding: "60px 0", color: "#4A6B82" }}>
         <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
         <div style={{ fontSize: 16, fontWeight: 600, color: "#1A3A5C", marginBottom: 6 }}>
           {search || state || city ? "No ads match your filter" : "No live ads at the moment"}

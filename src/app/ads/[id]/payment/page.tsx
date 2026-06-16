@@ -143,7 +143,7 @@ export default function PaymentPage() {
         <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #D8E4EE", padding: 48, maxWidth: 480, textAlign: "center" }}>
           <div style={{ fontSize: 56, marginBottom: 16 }}>🎉</div>
           <h1 style={{ fontFamily: "Georgia,serif", fontSize: 24, color: ACCENT, marginBottom: 8 }}>Payment received!</h1>
-          <p style={{ color: "#6B8FA8", fontSize: 14, marginBottom: 24 }}>
+          <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 24 }}>
             Your ad has been submitted for review. You'll receive an email once it's approved (typically within 1–2 business days).
           </p>
           <a
@@ -161,7 +161,7 @@ export default function PaymentPage() {
   if (adLoading) {
     return (
       <div style={{ minHeight: "100vh", background: "#F4F7FB", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p style={{ color: "#6B8FA8", fontSize: 14 }}>Loading…</p>
+        <p style={{ color: "#4A6B82", fontSize: 14 }}>Loading…</p>
       </div>
     );
   }
@@ -181,7 +181,7 @@ export default function PaymentPage() {
         <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #D8E4EE", padding: 48, maxWidth: 480, textAlign: "center" }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
           <h2 style={{ fontFamily: "Georgia,serif", fontSize: 20, color: ACCENT, marginBottom: 8 }}>Already paid</h2>
-          <p style={{ color: "#6B8FA8", fontSize: 14, marginBottom: 24 }}>This ad has been paid and is pending review.</p>
+          <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 24 }}>This ad has been paid and is pending review.</p>
           <a href="/dashboard/user" style={{ display: "inline-block", background: ACCENT, color: "#fff", padding: "10px 24px", borderRadius: 8, textDecoration: "none", fontSize: 14, fontWeight: 600 }}>
             View My Ads
           </a>
@@ -194,14 +194,14 @@ export default function PaymentPage() {
   return (
     <div style={{ minHeight: "100vh", background: "#F4F7FB", display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 16px" }}>
       <div style={{ width: "100%", maxWidth: 560 }}>
-        <a href="/dashboard/user" style={{ fontSize: 13, color: "#6B8FA8", textDecoration: "none", marginBottom: 24, display: "inline-block" }}>
+        <a href="/dashboard/user" style={{ fontSize: 13, color: "#4A6B82", textDecoration: "none", marginBottom: 24, display: "inline-block" }}>
           ← Back to dashboard
         </a>
 
         <h1 style={{ fontFamily: "Georgia,serif", fontSize: 28, fontWeight: 700, color: ACCENT, marginBottom: 4 }}>
           Complete Payment
         </h1>
-        <p style={{ color: "#6B8FA8", fontSize: 14, marginBottom: 32 }}>
+        <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 32 }}>
           Your ad will be submitted for review once payment is confirmed.
         </p>
 
@@ -215,7 +215,7 @@ export default function PaymentPage() {
             />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 700, fontSize: 15, color: ACCENT, marginBottom: 2 }}>{ad.title}</div>
-              <div style={{ fontSize: 12, color: "#6B8FA8" }}>{ad.location.storeName} · 1-week display</div>
+              <div style={{ fontSize: 12, color: "#4A6B82" }}>{ad.location.storeName} · 1-week display</div>
             </div>
             <div style={{ fontWeight: 700, fontSize: 20, color: "#E8563A", flexShrink: 0 }}>$100</div>
           </div>
@@ -242,9 +242,9 @@ export default function PaymentPage() {
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
               <span style={{ fontSize: 20 }}>💳</span>
               <span style={{ fontWeight: 600, color: ACCENT }}>Credit / Debit Card</span>
-              <span style={{ fontSize: 11, background: "#E8EFF6", color: "#6B8FA8", padding: "2px 8px", borderRadius: 4 }}>via Stripe</span>
+              <span style={{ fontSize: 11, background: "#E8EFF6", color: "#4A6B82", padding: "2px 8px", borderRadius: 4 }}>via Stripe</span>
             </div>
-            <p style={{ fontSize: 13, color: "#6B8FA8", marginBottom: 16 }}>
+            <p style={{ fontSize: 13, color: "#4A6B82", marginBottom: 16 }}>
               Securely pay with any major card. You'll be redirected to Stripe's secure checkout.
             </p>
             <button
@@ -273,17 +273,17 @@ export default function PaymentPage() {
               <span style={{ fontSize: 20 }}>🅿️</span>
               <span style={{ fontWeight: 600, color: ACCENT }}>PayPal</span>
             </div>
-            <p style={{ fontSize: 13, color: "#6B8FA8", marginBottom: 16 }}>
+            <p style={{ fontSize: 13, color: "#4A6B82", marginBottom: 16 }}>
               Pay using your PayPal account or PayPal-supported cards.
             </p>
             <div id={paypalContainerId}>
               {!paypalReady && PAYPAL_CLIENT_ID && (
-                <div style={{ textAlign: "center", padding: 16, color: "#6B8FA8", fontSize: 13 }}>
+                <div style={{ textAlign: "center", padding: 16, color: "#4A6B82", fontSize: 13 }}>
                   Loading PayPal…
                 </div>
               )}
               {!PAYPAL_CLIENT_ID && (
-                <div style={{ textAlign: "center", padding: 16, color: "#6B8FA8", fontSize: 13 }}>
+                <div style={{ textAlign: "center", padding: 16, color: "#4A6B82", fontSize: 13 }}>
                   PayPal is not configured for this environment.
                 </div>
               )}

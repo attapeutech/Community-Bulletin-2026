@@ -103,7 +103,7 @@ export default async function UserDashboard() {
           + Post New Ad
         </Link>
       </div>
-      <p style={{ color: "#6B8FA8", fontSize: 14, marginBottom: 32 }}>
+      <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 32 }}>
         Manage your ads and track their status.
       </p>
 
@@ -116,7 +116,7 @@ export default async function UserDashboard() {
           { label: "Paid", value: paidAds },
         ].map(({ label, value }) => (
           <div key={label} style={{ background: "#fff", borderRadius: 12, padding: "20px 24px", border: "0.5px solid #D8E4EE" }}>
-            <div style={{ fontSize: 12, color: "#6B8FA8", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</div>
+            <div style={{ fontSize: 12, color: "#4A6B82", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</div>
             <div style={{ fontSize: 28, fontWeight: 700, color: "#1A3A5C", fontFamily: "Georgia,serif" }}>{value}</div>
           </div>
         ))}
@@ -127,7 +127,7 @@ export default async function UserDashboard() {
         <div style={{ background: "#fff", borderRadius: 12, border: "0.5px solid #D8E4EE", padding: 48, textAlign: "center" }}>
           <div style={{ fontSize: 40, marginBottom: 16 }}>📋</div>
           <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: "#1A3A5C", marginBottom: 8 }}>No ads yet</h2>
-          <p style={{ color: "#6B8FA8", fontSize: 14, marginBottom: 24 }}>
+          <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 24 }}>
             Post your first ad and reach customers at local store locations.
           </p>
           <Link
@@ -188,13 +188,13 @@ export default async function UserDashboard() {
                       <Badge {...adStatus} />
                       <Badge {...payStatus} />
                     </div>
-                    <div style={{ fontSize: 12, color: "#6B8FA8" }}>
+                    <div style={{ fontSize: 12, color: "#4A6B82" }}>
                       {ad.location.storeName} · {ad.location.addressLine1}, {ad.location.cityName}, {ad.location.stateCode} {ad.location.postalCode}
                       {ad.status === "approved" && (
                         <span> · {new Date(ad.startedAt).toLocaleDateString()} – {new Date(ad.endedAt).toLocaleDateString()}</span>
                       )}
                     </div>
-                    <div style={{ fontSize: 11, color: "#9DC4E0", marginTop: 2 }}>
+                    <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 2 }}>
                       Submitted {new Date(ad.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                     </div>
                   </div>
@@ -235,7 +235,7 @@ export default async function UserDashboard() {
                     )}
                     <Link
                       href={`/dashboard/user/ads/${ad.id}`}
-                      style={{ fontSize: 12, color: "#6B8FA8", textDecoration: "none" }}
+                      style={{ fontSize: 12, color: "#4A6B82", textDecoration: "none" }}
                     >
                       Details
                     </Link>

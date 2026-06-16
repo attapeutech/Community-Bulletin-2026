@@ -103,8 +103,8 @@ export default async function PublicStorePage({
                   </span>
                 )}
               </div>
-              <div className="text-[#6B8FA8] text-sm mb-1">{address}</div>
-              <div className="text-[#6B8FA8] text-sm">{cityLine}</div>
+              <div className="text-[#4A6B82] text-sm mb-1">{address}</div>
+              <div className="text-[#4A6B82] text-sm">{cityLine}</div>
               {loc.description && (
                 <p className="mt-4 text-[#4A5568] text-[14px] leading-relaxed">{loc.description}</p>
               )}
@@ -115,23 +115,23 @@ export default async function PublicStorePage({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           {/* Pricing */}
           <div className="bg-white rounded-xl border border-[#D8E4EE] p-5">
-            <div className="text-[10px] font-semibold text-[#6B8FA8] uppercase tracking-wider mb-2">Ad Price</div>
+            <div className="text-[10px] font-semibold text-[#4A6B82] uppercase tracking-wider mb-2">Ad Price</div>
             <div className="text-2xl font-bold text-[#1A3A5C]">{formatCents(loc.pricePerWeekCents, loc.currency)}</div>
-            <div className="text-[12px] text-[#9DC4E0] mt-0.5">per week</div>
+            <div className="text-[12px] text-[#5B7D96] mt-0.5">per week</div>
           </div>
           {/* Active ads */}
           <div className="bg-white rounded-xl border border-[#D8E4EE] p-5">
-            <div className="text-[10px] font-semibold text-[#6B8FA8] uppercase tracking-wider mb-2">Currently Running</div>
+            <div className="text-[10px] font-semibold text-[#4A6B82] uppercase tracking-wider mb-2">Currently Running</div>
             <div className="text-2xl font-bold text-[#1A3A5C]">{activeAdCount}</div>
-            <div className="text-[12px] text-[#9DC4E0] mt-0.5">active ad{activeAdCount !== 1 ? "s" : ""}</div>
+            <div className="text-[12px] text-[#5B7D96] mt-0.5">active ad{activeAdCount !== 1 ? "s" : ""}</div>
           </div>
           {/* Revenue share (for context) */}
           <div className="bg-white rounded-xl border border-[#D8E4EE] p-5">
-            <div className="text-[10px] font-semibold text-[#6B8FA8] uppercase tracking-wider mb-2">Display Setup</div>
+            <div className="text-[10px] font-semibold text-[#4A6B82] uppercase tracking-wider mb-2">Display Setup</div>
             <div className="text-2xl font-bold text-[#1A3A5C]">
               {loc.equipmentProvided ? "In-store TV" : "Provided"}
             </div>
-            <div className="text-[12px] text-[#9DC4E0] mt-0.5">
+            <div className="text-[12px] text-[#5B7D96] mt-0.5">
               {loc.equipmentProvided ? "store-owned equipment" : "platform equipment"}
             </div>
           </div>
@@ -148,7 +148,7 @@ export default async function PublicStorePage({
         {/* CTA */}
         <div className="bg-gradient-to-br from-[#1A3A5C] to-[#2a5a8c] rounded-2xl p-8 text-center text-white">
           <h2 className="font-serif text-2xl font-bold mb-2">Ready to reach local customers?</h2>
-          <p className="text-[#9DC4E0] text-sm mb-6 max-w-md mx-auto">
+          <p className="text-[#5B7D96] text-sm mb-6 max-w-md mx-auto">
             Your ad will be displayed on the in-store screen at {displayName} — seen by every customer who walks in.
           </p>
           <div className="flex gap-3 justify-center flex-wrap">

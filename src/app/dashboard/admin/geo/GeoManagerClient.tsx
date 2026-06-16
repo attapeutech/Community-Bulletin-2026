@@ -164,7 +164,7 @@ function CountriesTab() {
                   ) : (
                     <div className="flex items-center justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="text-sm text-[#1A3A5C] font-medium truncate">{c.name} <span className="text-[#6B8FA8] font-normal">({c.code})</span></p>
+                        <p className="text-sm text-[#1A3A5C] font-medium truncate">{c.name} <span className="text-[#4A6B82] font-normal">({c.code})</span></p>
                         {(c.phoneCode || c.currencyCode) && (
                           <p className="text-xs text-muted-foreground">{[c.phoneCode, c.currencyCode, c.currencySymbol].filter(Boolean).join(" · ")}</p>
                         )}
@@ -174,8 +174,8 @@ function CountriesTab() {
                           <ConfirmDelete onConfirm={() => handleDelete(c.id)} onCancel={() => setConfirmDeleteId(null)} />
                         ) : (
                           <>
-                            <button onClick={() => startEdit(c)} className="p-1 text-[#6B8FA8] hover:text-[#1A3A5C]" title="Edit"><Pencil size={14} /></button>
-                            <button onClick={() => setConfirmDeleteId(c.id)} disabled={!!deleting} className="p-1 text-[#6B8FA8] hover:text-red-600" title="Delete"><Trash2 size={14} /></button>
+                            <button onClick={() => startEdit(c)} className="p-1 text-[#4A6B82] hover:text-[#1A3A5C]" title="Edit"><Pencil size={14} /></button>
+                            <button onClick={() => setConfirmDeleteId(c.id)} disabled={!!deleting} className="p-1 text-[#4A6B82] hover:text-red-600" title="Delete"><Trash2 size={14} /></button>
                           </>
                         )}
                       </div>
@@ -305,14 +305,14 @@ function StatesTab({ countries }: { countries: Country[] }) {
                     </div>
                   ) : (
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm text-[#1A3A5C] font-medium">{s.name} <span className="text-[#6B8FA8] font-normal">({s.code})</span></p>
+                      <p className="text-sm text-[#1A3A5C] font-medium">{s.name} <span className="text-[#4A6B82] font-normal">({s.code})</span></p>
                       <div className="flex items-center gap-1 shrink-0">
                         {confirmDeleteId === s.id ? (
                           <ConfirmDelete onConfirm={() => handleDelete(s.id)} onCancel={() => setConfirmDeleteId(null)} />
                         ) : (
                           <>
-                            <button onClick={() => startEdit(s)} className="p-1 text-[#6B8FA8] hover:text-[#1A3A5C]" title="Edit"><Pencil size={14} /></button>
-                            <button onClick={() => setConfirmDeleteId(s.id)} disabled={!!deleting} className="p-1 text-[#6B8FA8] hover:text-red-600" title="Delete"><Trash2 size={14} /></button>
+                            <button onClick={() => startEdit(s)} className="p-1 text-[#4A6B82] hover:text-[#1A3A5C]" title="Edit"><Pencil size={14} /></button>
+                            <button onClick={() => setConfirmDeleteId(s.id)} disabled={!!deleting} className="p-1 text-[#4A6B82] hover:text-red-600" title="Delete"><Trash2 size={14} /></button>
                           </>
                         )}
                       </div>
@@ -458,8 +458,8 @@ function CitiesTab({ countries }: { countries: Country[] }) {
                           <ConfirmDelete onConfirm={() => handleDelete(c.id)} onCancel={() => setConfirmDeleteId(null)} />
                         ) : (
                           <>
-                            <button onClick={() => startEdit(c)} className="p-1 text-[#6B8FA8] hover:text-[#1A3A5C]" title="Edit"><Pencil size={14} /></button>
-                            <button onClick={() => setConfirmDeleteId(c.id)} disabled={!!deleting} className="p-1 text-[#6B8FA8] hover:text-red-600" title="Delete"><Trash2 size={14} /></button>
+                            <button onClick={() => startEdit(c)} className="p-1 text-[#4A6B82] hover:text-[#1A3A5C]" title="Edit"><Pencil size={14} /></button>
+                            <button onClick={() => setConfirmDeleteId(c.id)} disabled={!!deleting} className="p-1 text-[#4A6B82] hover:text-red-600" title="Delete"><Trash2 size={14} /></button>
                           </>
                         )}
                       </div>
@@ -622,8 +622,8 @@ function PostalCodesTab({ countries }: { countries: Country[] }) {
                           <ConfirmDelete onConfirm={() => handleDelete(p.id)} onCancel={() => setConfirmDeleteId(null)} />
                         ) : (
                           <>
-                            <button onClick={() => startEdit(p)} className="p-1 text-[#6B8FA8] hover:text-[#1A3A5C]" title="Edit"><Pencil size={14} /></button>
-                            <button onClick={() => setConfirmDeleteId(p.id)} disabled={!!deleting} className="p-1 text-[#6B8FA8] hover:text-red-600" title="Delete"><Trash2 size={14} /></button>
+                            <button onClick={() => startEdit(p)} className="p-1 text-[#4A6B82] hover:text-[#1A3A5C]" title="Edit"><Pencil size={14} /></button>
+                            <button onClick={() => setConfirmDeleteId(p.id)} disabled={!!deleting} className="p-1 text-[#4A6B82] hover:text-red-600" title="Delete"><Trash2 size={14} /></button>
                           </>
                         )}
                       </div>
@@ -649,11 +649,11 @@ export function GeoManagerClient() {
 
   return (
     <div className="max-w-[900px] w-full">
-      <a href="/dashboard/admin" className="inline-block mb-6 text-[13px] text-[#6B8FA8] no-underline hover:underline">
+      <a href="/dashboard/admin" className="inline-block mb-6 text-[13px] text-[#4A6B82] no-underline hover:underline">
         ← Back to Admin Panel
       </a>
       <h1 className="font-serif text-[26px] font-bold text-[#1A3A5C] mb-1">Geography Manager</h1>
-      <p className="text-[#6B8FA8] text-sm mb-8">
+      <p className="text-[#4A6B82] text-sm mb-8">
         Add, edit, and remove countries, states, cities, and postal codes used in location registration.
       </p>
 

@@ -59,7 +59,7 @@ export default async function PublicAdDetailPage({
       <div style={{ maxWidth: 760, margin: "0 auto" }}>
 
         {/* Back */}
-        <Link href="/#live-ads" style={{ fontSize: 13, color: "#6B8FA8", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 24 }}>
+        <Link href="/#live-ads" style={{ fontSize: 13, color: "#4A6B82", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 24 }}>
           ← Back to live ads
         </Link>
 
@@ -73,7 +73,7 @@ export default async function PublicAdDetailPage({
               <span style={{ width: 6, height: 6, background: "#16a34a", borderRadius: "50%", display: "inline-block" }} />
               Live Now
             </span>
-            <span style={{ fontSize: 12, color: "#6B8FA8" }}>
+            <span style={{ fontSize: 12, color: "#4A6B82" }}>
               through {fmt(row.endedAt)}
             </span>
           </div>
@@ -102,7 +102,7 @@ export default async function PublicAdDetailPage({
               {row.storeNumber && <span style={{ color: "#E8563A", marginLeft: 4 }}>#{row.storeNumber}</span>}
             </span>
             <br />
-            <span style={{ fontSize: 12, color: "#6B8FA8" }}>{fullAddress}</span>
+            <span style={{ fontSize: 12, color: "#4A6B82" }}>{fullAddress}</span>
           </Row>
 
           {row.description && (
@@ -143,7 +143,7 @@ export default async function PublicAdDetailPage({
           </Row>
 
           <Row label="Ad ID" last>
-            <span style={{ fontSize: 13, color: "#6B8FA8", fontFamily: "monospace" }}>#{row.id.slice(-6).toUpperCase()}</span>
+            <span style={{ fontSize: 13, color: "#4A6B82", fontFamily: "monospace" }}>#{row.id.slice(-6).toUpperCase()}</span>
           </Row>
         </div>
 
@@ -172,7 +172,7 @@ function Row({ label, children, last }: { label: string; children: React.ReactNo
       borderBottom: last ? "none" : "1px solid #D8E4EE",
       fontSize: 14,
     }}>
-      <div style={{ width: 140, flexShrink: 0, color: "#6B8FA8", fontSize: 13 }}>{label}</div>
+      <div style={{ width: 140, flexShrink: 0, color: "#4A6B82", fontSize: 13 }}>{label}</div>
       <div style={{ flex: 1 }}>{children}</div>
     </div>
   );

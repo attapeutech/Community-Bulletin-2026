@@ -79,7 +79,7 @@ function DisplayScreenCard({ slug }: { slug: string }) {
     <Card className="border-[#D8E4EE] mb-6 overflow-hidden">
       <div className="px-6 py-4 border-b border-[#D8E4EE]">
         <h2 className="font-serif text-[18px] text-[#1A3A5C] m-0">Display Screen Setup</h2>
-        <p className="text-xs text-[#6B8FA8] mt-1 mb-0">
+        <p className="text-xs text-[#4A6B82] mt-1 mb-0">
           Open this URL on your TV browser, or scan the QR code to launch the display.
         </p>
       </div>
@@ -90,7 +90,7 @@ function DisplayScreenCard({ slug }: { slug: string }) {
         </div>
         {/* URL + instructions */}
         <div className="flex-1 min-w-0">
-          <div className="text-[11px] font-semibold text-[#6B8FA8] uppercase tracking-wider mb-2">Display URL</div>
+          <div className="text-[11px] font-semibold text-[#4A6B82] uppercase tracking-wider mb-2">Display URL</div>
           <div className="flex items-center gap-2 flex-wrap">
             <code className="flex-1 min-w-0 text-[13px] font-mono text-[#1A3A5C] bg-[#F0F7FF] border border-[#D8E4EE] rounded-lg px-3 py-2 truncate block">
               {displayUrl}
@@ -102,7 +102,7 @@ function DisplayScreenCard({ slug }: { slug: string }) {
               {copied ? "Copied!" : "Copy"}
             </button>
           </div>
-          <div className="mt-4 flex flex-col gap-1.5 text-[12px] text-[#6B8FA8]">
+          <div className="mt-4 flex flex-col gap-1.5 text-[12px] text-[#4A6B82]">
             <div className="flex items-start gap-2"><span className="text-[#4A90C4] font-bold mt-0.5">1.</span> On your TV, open a web browser (Chrome, Edge, or Firefox)</div>
             <div className="flex items-start gap-2"><span className="text-[#4A90C4] font-bold mt-0.5">2.</span> Navigate to the URL above, or scan the QR code with a phone and follow the link</div>
             <div className="flex items-start gap-2"><span className="text-[#4A90C4] font-bold mt-0.5">3.</span> Press <kbd className="text-[10px] bg-[#F0F7FF] border border-[#D8E4EE] rounded px-1.5 py-0.5 font-mono">F11</kbd> for fullscreen — ads will rotate automatically</div>
@@ -219,8 +219,8 @@ export default function LocationDetailClient({
   return (
     <div className="max-w-[800px]">
       {/* Breadcrumb */}
-      <div className="mb-6 text-[13px] text-[#6B8FA8]">
-        <Link href="/dashboard/store-owner" className="text-[#6B8FA8] no-underline hover:underline">
+      <div className="mb-6 text-[13px] text-[#4A6B82]">
+        <Link href="/dashboard/store-owner" className="text-[#4A6B82] no-underline hover:underline">
           {isAdmin ? "All Locations" : "My Locations"}
         </Link>
         {" › "}
@@ -239,10 +239,10 @@ export default function LocationDetailClient({
           </div>
           <div>
             <h1 className="font-serif text-2xl font-bold text-[#1A3A5C] mb-1">{location.storeName}</h1>
-            <div className="text-[13px] text-[#6B8FA8]">
+            <div className="text-[13px] text-[#4A6B82]">
               {location.addressLine1} · {location.city.name}, {location.state.code} {location.postalCode.code}
             </div>
-            <div className="text-[11px] text-[#9DC4E0] mt-1 font-mono">/display/{location.slug}</div>
+            <div className="text-[11px] text-[#5B7D96] mt-1 font-mono">/display/{location.slug}</div>
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -265,22 +265,22 @@ export default function LocationDetailClient({
       {!editMode && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           <div className="bg-white rounded-xl border border-[#D8E4EE] p-4">
-            <div className="text-[10px] font-semibold text-[#6B8FA8] uppercase tracking-wider mb-1">Price / Week</div>
+            <div className="text-[10px] font-semibold text-[#4A6B82] uppercase tracking-wider mb-1">Price / Week</div>
             <div className="text-lg font-bold text-[#1A3A5C]">{formatCents(location.pricePerWeekCents, location.currency)}</div>
           </div>
           <div className="bg-white rounded-xl border border-[#D8E4EE] p-4">
-            <div className="text-[10px] font-semibold text-[#6B8FA8] uppercase tracking-wider mb-1">Revenue Share</div>
+            <div className="text-[10px] font-semibold text-[#4A6B82] uppercase tracking-wider mb-1">Revenue Share</div>
             <div className={cn("text-lg font-bold", location.equipmentProvided ? "text-green-700" : "text-amber-700")}>
               {shareRate}
             </div>
-            <div className="text-[10px] text-[#9DC4E0] mt-0.5">{location.equipmentProvided ? "equipment provided" : "platform equipment"}</div>
+            <div className="text-[10px] text-[#5B7D96] mt-0.5">{location.equipmentProvided ? "equipment provided" : "platform equipment"}</div>
           </div>
           <div className="bg-white rounded-xl border border-[#D8E4EE] p-4">
-            <div className="text-[10px] font-semibold text-[#6B8FA8] uppercase tracking-wider mb-1">Active Ads</div>
+            <div className="text-[10px] font-semibold text-[#4A6B82] uppercase tracking-wider mb-1">Active Ads</div>
             <div className="text-lg font-bold text-[#1A3A5C]">{approvedAds.length}</div>
           </div>
           <div className="bg-white rounded-xl border border-[#D8E4EE] p-4">
-            <div className="text-[10px] font-semibold text-[#6B8FA8] uppercase tracking-wider mb-1">Category</div>
+            <div className="text-[10px] font-semibold text-[#4A6B82] uppercase tracking-wider mb-1">Category</div>
             <div className="text-sm font-semibold text-[#1A3A5C] truncate">{location.category || "—"}</div>
           </div>
         </div>
@@ -319,7 +319,7 @@ export default function LocationDetailClient({
                     <Button type="button" variant="outline" size="sm" onClick={() => logoRef.current?.click()} disabled={uploading} className="text-xs">
                       {uploading ? "Uploading…" : logoUrl ? "Replace Logo" : "Upload Logo"}
                     </Button>
-                    <p className="text-[10px] text-[#9DC4E0] mt-1">JPG, PNG or WebP · max 10 MB</p>
+                    <p className="text-[10px] text-[#5B7D96] mt-1">JPG, PNG or WebP · max 10 MB</p>
                   </div>
                 </div>
                 <input ref={logoRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
@@ -386,7 +386,7 @@ export default function LocationDetailClient({
                     Price per week ($) *
                   </Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B8FA8] text-sm">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4A6B82] text-sm">$</span>
                     <Input
                       type="number"
                       min={1}
@@ -415,7 +415,7 @@ export default function LocationDetailClient({
                       </span>
                     </span>
                   </label>
-                  <p className="text-[10px] text-[#9DC4E0] mt-1.5">
+                  <p className="text-[10px] text-[#5B7D96] mt-1.5">
                     {equipmentProvided
                       ? "Great — you earn 50% of all ad revenue at this location."
                       : "Platform provides equipment — you earn 25% of ad revenue."}
@@ -438,7 +438,7 @@ export default function LocationDetailClient({
         <div className="px-6 py-4 flex items-center justify-between border-b border-[#D8E4EE]">
           <div>
             <h2 className="font-serif text-[18px] text-[#1A3A5C] m-0">Carousel Order</h2>
-            <p className="text-xs text-[#6B8FA8] mt-1 mb-0">
+            <p className="text-xs text-[#4A6B82] mt-1 mb-0">
               {approvedAds.length} approved ad{approvedAds.length !== 1 ? "s" : ""} · Use ↑↓ to reorder
             </p>
           </div>
@@ -450,7 +450,7 @@ export default function LocationDetailClient({
         </div>
 
         {approvedAds.length === 0 ? (
-          <div className="p-8 text-center text-[#6B8FA8] text-sm">No approved ads at this location yet.</div>
+          <div className="p-8 text-center text-[#4A6B82] text-sm">No approved ads at this location yet.</div>
         ) : (
           <div>
             {adList.filter(a => a.status === "approved").map((ad, idx, arr) => (
@@ -467,11 +467,11 @@ export default function LocationDetailClient({
                     className={cn("w-6 h-6 rounded border border-[#D8E4EE] bg-transparent text-xs leading-none", idx === arr.length - 1 ? "cursor-not-allowed text-[#D8E4EE]" : "cursor-pointer text-[#1A3A5C] hover:bg-[#F7F9FC]")}
                   >▼</button>
                 </div>
-                <div className="w-6 text-center text-xs text-[#9DC4E0] font-semibold">{idx + 1}</div>
+                <div className="w-6 text-center text-xs text-[#5B7D96] font-semibold">{idx + 1}</div>
                 <img src={ad.imageUrl} alt={ad.title} className="w-16 h-11 object-cover rounded-md shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-sm text-[#1A3A5C]">{ad.title}</div>
-                  <div className="text-xs text-[#6B8FA8]">
+                  <div className="text-xs text-[#4A6B82]">
                     {new Date(ad.startedAt).toLocaleDateString()} – {new Date(ad.endedAt).toLocaleDateString()} · by {ad.user.name}
                   </div>
                 </div>
@@ -485,10 +485,10 @@ export default function LocationDetailClient({
       <Card className="border-[#D8E4EE] overflow-hidden">
         <div className="px-6 py-4 border-b border-[#D8E4EE]">
           <h2 className="font-serif text-[18px] text-[#1A3A5C] m-0">All Ads at This Location</h2>
-          <p className="text-xs text-[#6B8FA8] mt-1 mb-0">{adList.length} total</p>
+          <p className="text-xs text-[#4A6B82] mt-1 mb-0">{adList.length} total</p>
         </div>
         {adList.length === 0 ? (
-          <div className="p-8 text-center text-[#6B8FA8] text-sm">No ads submitted yet.</div>
+          <div className="p-8 text-center text-[#4A6B82] text-sm">No ads submitted yet.</div>
         ) : (
           adList.map((ad, idx) => {
             const badgeProps = STATUS_BADGE[ad.status] ?? STATUS_BADGE.pending;
@@ -497,7 +497,7 @@ export default function LocationDetailClient({
                 <img src={ad.imageUrl} alt={ad.title} className="w-[60px] h-[42px] object-cover rounded-md shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-sm text-[#1A3A5C] mb-0.5">{ad.title}</div>
-                  <div className="text-xs text-[#6B8FA8]">by {ad.user.name} · {new Date(ad.createdAt).toLocaleDateString()}</div>
+                  <div className="text-xs text-[#4A6B82]">by {ad.user.name} · {new Date(ad.createdAt).toLocaleDateString()}</div>
                 </div>
                 <Badge variant={badgeProps.variant} className={badgeProps.className}>
                   {ad.status.charAt(0).toUpperCase() + ad.status.slice(1)}

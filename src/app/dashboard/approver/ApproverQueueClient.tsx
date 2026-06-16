@@ -137,11 +137,11 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
         <h1 className="font-serif text-[26px] font-bold text-[#1A3A5C]">
           Review Ads
         </h1>
-        <div className="text-[13px] text-[#6B8FA8]">
+        <div className="text-[13px] text-[#4A6B82]">
           {queue.length} ad{queue.length !== 1 ? "s" : ""} awaiting review
         </div>
       </div>
-      <p className="text-[#6B8FA8] text-sm mb-8">
+      <p className="text-[#4A6B82] text-sm mb-8">
         Ads are shown only after payment is confirmed. Review image, title, and content before approving.
       </p>
 
@@ -150,7 +150,7 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
           <CardContent className="py-12 text-center">
             <div className="text-[40px] mb-3">✅</div>
             <h2 className="font-serif text-[18px] text-[#1A3A5C] mb-2">All caught up!</h2>
-            <p className="text-[#6B8FA8] text-sm">No ads are currently pending review.</p>
+            <p className="text-[#4A6B82] text-sm">No ads are currently pending review.</p>
           </CardContent>
         </Card>
       ) : (
@@ -175,8 +175,8 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
                 />
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-sm text-[#1A3A5C] mb-0.5">{ad.title}</div>
-                  <div className="text-xs text-[#6B8FA8]">{ad.location.storeName}</div>
-                  <div className="text-[11px] text-[#9DC4E0] mt-1">
+                  <div className="text-xs text-[#4A6B82]">{ad.location.storeName}</div>
+                  <div className="text-[11px] text-[#5B7D96] mt-1">
                     By {ad.user.name} · {new Date(ad.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                   </div>
                 </div>
@@ -206,17 +206,17 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
 
               <h3 className="font-serif text-[18px] text-[#1A3A5C] mb-1">{selected.title}</h3>
               {selected.description && (
-                <p className="text-[13px] text-[#6B8FA8] mb-3">{selected.description}</p>
+                <p className="text-[13px] text-[#4A6B82] mb-3">{selected.description}</p>
               )}
 
               <Separator className="mb-4" />
 
               <div className="grid gap-1.5 text-xs mb-5">
-                <div><span className="text-[#9DC4E0]">Location: </span>{selected.location.storeName}</div>
-                <div><span className="text-[#9DC4E0]">Address: </span>{selected.location.addressLine1}{selected.location.addressLine2 ? `, ${selected.location.addressLine2}` : ""}, {selected.location.cityName}, {selected.location.stateCode} {selected.location.postalCode}</div>
-                <div><span className="text-[#9DC4E0]">Submitted by: </span>{selected.user.name} ({selected.user.email})</div>
+                <div><span className="text-[#5B7D96]">Location: </span>{selected.location.storeName}</div>
+                <div><span className="text-[#5B7D96]">Address: </span>{selected.location.addressLine1}{selected.location.addressLine2 ? `, ${selected.location.addressLine2}` : ""}, {selected.location.cityName}, {selected.location.stateCode} {selected.location.postalCode}</div>
+                <div><span className="text-[#5B7D96]">Submitted by: </span>{selected.user.name} ({selected.user.email})</div>
                 <div>
-                  <span className="text-[#9DC4E0]">Submitted: </span>
+                  <span className="text-[#5B7D96]">Submitted: </span>
                   {new Date(selected.createdAt).toLocaleDateString("en-US", { dateStyle: "long" })}
                 </div>
               </div>

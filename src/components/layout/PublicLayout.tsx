@@ -76,7 +76,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
 
   const locBtnCls = locationLabel
     ? "border border-[#4A90C4] bg-[#EDF5FF] text-[#1A3A5C] dark:bg-[#1A3A5C]/30 dark:border-[#4A90C4]/60 dark:text-[#9DC4E0]"
-    : "border border-[#D8E4EE] bg-[#F7FAFC] text-[#6B8FA8] dark:border-[#1E3550] dark:bg-[#0F1E2E] dark:text-[#5B8FAA]";
+    : "border border-[#D8E4EE] bg-[#F7FAFC] text-[#4A6B82] dark:border-[#1E3550] dark:bg-[#0F1E2E] dark:text-[#5B8FAA]";
 
   return (
     <div className="min-h-screen bg-[#F4F7FB] dark:bg-[#0B1A27] font-sans text-[#1A3A5C] dark:text-[#DEEAF4] flex flex-col">
@@ -110,7 +110,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               {locationLabel && (
                 <span
                   onClick={(e) => { e.stopPropagation(); handleLocationSave(null); }}
-                  className="hidden lg:inline ml-0.5 text-[#6B8FA8] dark:text-[#5B8FAA] font-normal text-sm leading-none"
+                  className="hidden lg:inline ml-0.5 text-[#4A6B82] dark:text-[#5B8FAA] font-normal text-sm leading-none"
                 >×</span>
               )}
             </button>
@@ -267,7 +267,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
                   </div>
                 </div>
               </div>
-              <p className="text-sm text-[#6B8FA8] leading-relaxed max-w-[220px] mb-4">
+              <p className="text-sm text-[#4A6B82] leading-relaxed max-w-[220px] mb-4">
                 Digital in-store advertising for local communities.
               </p>
               <div className="flex flex-wrap gap-2">
@@ -294,7 +294,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
                 <ul className="space-y-2">
                   {links.map((link) => (
                     <li key={link.label}>
-                      <Link href={link.href} className="flex items-center gap-1.5 text-sm text-[#6B8FA8] no-underline hover:text-white transition-colors">
+                      <Link href={link.href} className="flex items-center gap-1.5 text-sm text-[#4A6B82] no-underline hover:text-white transition-colors">
                         {"icon" in link && link.icon && <link.icon size={13} className="shrink-0 opacity-60" />}
                         {link.label}
                       </Link>

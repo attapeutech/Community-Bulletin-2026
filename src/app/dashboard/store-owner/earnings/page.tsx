@@ -156,49 +156,48 @@ export default async function EarningsPage() {
             <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, fontWeight: 700, color: ACCENT, marginBottom: 12 }}>
               All Transactions
             </h2>
-            <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", overflow: "hidden" }}>
-              {/* Table header */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 160px 120px 100px 90px", gap: 8, padding: "10px 20px", background: "#F7F9FC", borderBottom: "1px solid #D8E4EE", fontSize: 10, fontWeight: 600, color: "#6B8FA8", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                <div>Ad / Advertiser</div>
-                <div>Location</div>
-                <div>Date</div>
-                <div style={{ textAlign: "right" }}>Ad Revenue</div>
-                <div style={{ textAlign: "right" }}>Your Share</div>
-              </div>
-              {/* Rows */}
-              {rows.map((row, idx) => {
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {rows.map((row) => {
                 const rate = row.equipmentProvided ? 0.5 : 0.25;
                 const earningsCents = Math.round(row.amountCents * rate);
                 return (
                   <div
                     key={row.paymentId}
                     style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 160px 120px 100px 90px",
-                      gap: 8,
-                      padding: "12px 20px",
-                      alignItems: "center",
-                      borderBottom: idx < rows.length - 1 ? "1px solid #D8E4EE" : "none",
+                      background: "#fff",
+                      borderRadius: 10,
+                      border: "1px solid #D8E4EE",
+                      padding: "14px 16px",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      gap: 12,
+                      flexWrap: "wrap",
                     }}
                   >
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: ACCENT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {/* Left: ad + meta */}
+                    <div style={{ flex: "1 1 180px", minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: ACCENT, marginBottom: 2 }}>
                         {row.adTitle}
                       </div>
-                      <div style={{ fontSize: 11, color: "#6B8FA8", marginTop: 2 }}>by {row.advertiserName}</div>
+                      <div style={{ fontSize: 12, color: "#6B8FA8" }}>
+                        by {row.advertiserName}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#9DC4E0", marginTop: 4 }}>
+                        {row.locationName} · {new Date(row.paymentCreatedAt).toLocaleDateString()}
+                      </div>
                     </div>
-                    <div style={{ fontSize: 12, color: "#6B8FA8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {row.locationName}
-                    </div>
-                    <div style={{ fontSize: 12, color: "#6B8FA8", whiteSpace: "nowrap" }}>
-                      {new Date(row.paymentCreatedAt).toLocaleDateString()}
-                    </div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: ACCENT, textAlign: "right" }}>
-                      {formatCents(row.amountCents, row.currency)}
-                    </div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#166534", textAlign: "right" }}>
-                      {formatCents(earningsCents, row.currency)}
-                      <div style={{ fontSize: 10, fontWeight: 400, color: "#9DC4E0" }}>{(rate * 100).toFixed(0)}%</div>
+                    {/* Right: amounts */}
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                      <div style={{ fontSize: 11, color: "#6B8FA8", marginBottom: 2 }}>
+                        Ad revenue: <span style={{ fontWeight: 600, color: ACCENT }}>{formatCents(row.amountCents, row.currency)}</span>
+                      </div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: "#166534" }}>
+                        {formatCents(earningsCents, row.currency)}
+                      </div>
+                      <div style={{ fontSize: 10, color: "#9DC4E0" }}>
+                        your {(rate * 100).toFixed(0)}% share
+                      </div>
                     </div>
                   </div>
                 );

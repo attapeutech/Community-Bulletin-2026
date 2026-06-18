@@ -4,6 +4,7 @@ import { db } from "@/lib/db/client";
 import { ads, locations, cities, states, postalCodes } from "@/lib/db/schema";
 import { eq, and, desc, gte } from "drizzle-orm";
 import Link from "next/link";
+import { RenewAdButton } from "./RenewAdButton";
 
 const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }> = {
   pending:   { bg: "#fef9c3", color: "#854d0e", label: "Pending Review" },
@@ -190,10 +191,15 @@ export default async function UserDashboard() {
                     </div>
                     <div style={{ fontSize: 12, color: "#4A6B82" }}>
                       {ad.location.storeName} · {ad.location.addressLine1}, {ad.location.cityName}, {ad.location.stateCode} {ad.location.postalCode}
-                      {ad.status === "approved" && (
-                        <span> · {new Date(ad.startedAt).toLocaleDateString()} – {new Date(ad.endedAt).toLocaleDateString()}</span>
-                      )}
                     </div>
+                    {(ad.status === "approved" || ad.status === "expired" || ad.status === "cancelled") && (
+                      <div style={{ fontSize: 11, color: "#4A6B82", marginTop: 1 }}>
+                        {ad.status === "approved" ? "Runs" : "Ran"}{" "}
+                        {new Date(ad.startedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        {" – "}
+                        {new Date(ad.endedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      </div>
+                    )}
                     <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 2 }}>
                       Submitted {new Date(ad.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                     </div>
@@ -232,6 +238,9 @@ export default async function UserDashboard() {
                       >
                         View Live ↗
                       </Link>
+                    )}
+                    {(ad.status === "expired" || ad.status === "cancelled") && (
+                      <RenewAdButton adId={ad.id} />
                     )}
                     <Link
                       href={`/dashboard/user/ads/${ad.id}`}

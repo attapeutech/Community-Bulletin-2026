@@ -5,6 +5,7 @@ import { ads, locations, cities, states, postalCodes } from "@/lib/db/schema";
 import { eq, and, desc, gte } from "drizzle-orm";
 import Link from "next/link";
 import { RenewAdButton } from "./RenewAdButton";
+import { UserDashboardRefresher } from "./UserDashboardRefresher";
 
 const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }> = {
   pending:   { bg: "#fef9c3", color: "#854d0e", label: "Pending Review" },
@@ -83,6 +84,7 @@ export default async function UserDashboard() {
 
   return (
     <div>
+      <UserDashboardRefresher adIds={userAds.map(a => a.id)} />
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
         <h1 style={{ fontFamily: "Georgia,serif", fontSize: 26, fontWeight: 700, color: "#1A3A5C" }}>
           Welcome back, {user.name.split(" ")[0]}!

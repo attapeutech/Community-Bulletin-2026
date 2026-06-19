@@ -15,7 +15,7 @@ export async function PATCH(
     const role = (session.user as any).role as string;
     const { id } = await params;
 
-    const [ad] = await db.select({ userId: ads.userId, status: ads.status })
+    const [ad] = await db.select({ userId: ads.userId, status: ads.status, paymentStatus: ads.paymentStatus })
       .from(ads).where(eq(ads.id, id)).limit(1);
 
     if (!ad) return NextResponse.json({ success: false, error: "Ad not found" }, { status: 404 });
@@ -26,8 +26,11 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: "Only approved ads can be ended" }, { status: 400 });
     }
 
+    // Unpaid+approved is an inconsistent test state — reset to pending instead of cancelling
+    const newStatus = ad.paymentStatus !== "paid" ? "pending" : "cancelled";
+
     await db.update(ads)
-      .set({ status: "cancelled", endedAt: new Date(), updatedAt: new Date() })
+      .set({ status: newStatus, endedAt: new Date(), updatedAt: new Date() })
       .where(eq(ads.id, id));
 
     return NextResponse.json({ success: true });

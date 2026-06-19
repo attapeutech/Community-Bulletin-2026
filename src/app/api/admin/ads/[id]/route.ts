@@ -37,6 +37,22 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: "No fields to update" }, { status: 422 });
     }
 
+    // Fetch current ad to enforce consistency rules
+    const [current] = await db.select({ status: ads.status, paymentStatus: ads.paymentStatus })
+      .from(ads).where(eq(ads.id, id)).limit(1);
+
+    if (!current) {
+      return NextResponse.json({ success: false, error: "Ad not found" }, { status: 404 });
+    }
+
+    const resultingStatus        = fields.status        ?? current.status;
+    const resultingPaymentStatus = fields.paymentStatus ?? current.paymentStatus;
+
+    // An approved ad must have paid status — if not, demote to pending
+    if (resultingStatus === "approved" && resultingPaymentStatus !== "paid") {
+      fields.status = "pending";
+    }
+
     const [updated] = await db
       .update(ads)
       .set({

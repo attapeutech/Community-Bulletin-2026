@@ -98,6 +98,14 @@ export async function PATCH(req: NextRequest) {
 
     if (!row) return NextResponse.json({ success: false, error: "Ad not found" }, { status: 404 });
 
+    // Prevent approving an unpaid ad
+    if (status === "approved" && row.ad.paymentStatus !== "paid") {
+      return NextResponse.json(
+        { success: false, error: "Cannot approve an unpaid ad. Mark it as paid first." },
+        { status: 409 }
+      );
+    }
+
     const now = new Date();
     const isApproving = status === "approved";
     const endedAt = isApproving ? addDays(now, AD_DURATION_DAYS) : row.ad.endedAt;

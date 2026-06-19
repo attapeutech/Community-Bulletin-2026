@@ -992,6 +992,14 @@ export default function AdminPanelClient({
                           </button>
                           <span>· {ad.location.storeName} · submitted {new Date(ad.createdAt).toLocaleDateString()}</span>
                         </div>
+                        {(ad.status === "approved" || ad.status === "expired" || ad.status === "cancelled") && (
+                          <div className="text-[11px] text-[#4A6B82] mb-0.5">
+                            {ad.status === "approved" ? "Runs" : "Ran"}{" "}
+                            {new Date(ad.startedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                            {" – "}
+                            {new Date(ad.endedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                          </div>
+                        )}
                         <div className="flex items-center gap-3 mb-1">
                           <span className="text-[11px] text-[#4A6B82]">
                             👁 <span className="font-semibold text-[#1A3A5C]">{ad.viewCount.toLocaleString()}</span> views

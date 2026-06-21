@@ -56,6 +56,10 @@ export default async function UserDashboard() {
       startedAt: ads.startedAt,
       endedAt: ads.endedAt,
       createdAt: ads.createdAt,
+      viewCount: ads.viewCount,
+      websiteClickCount: ads.websiteClickCount,
+      showWebsite: ads.showWebsite,
+      contactWebsite: ads.contactWebsite,
       location: {
         storeName: locations.storeName,
         slug: locations.slug,
@@ -205,6 +209,18 @@ export default async function UserDashboard() {
                     <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 2 }}>
                       Submitted {new Date(ad.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                     </div>
+                    {(ad.status === "approved" || ad.status === "expired" || ad.status === "cancelled") && (
+                      <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
+                        <span style={{ fontSize: 11, color: "#4A6B82" }}>
+                          👁 <strong style={{ color: "#1A3A5C" }}>{ad.viewCount.toLocaleString()}</strong> views
+                        </span>
+                        {ad.showWebsite && ad.contactWebsite && (
+                          <span style={{ fontSize: 11, color: "#4A6B82" }}>
+                            🌐 <strong style={{ color: "#1A3A5C" }}>{ad.websiteClickCount.toLocaleString()}</strong> site clicks
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Actions */}

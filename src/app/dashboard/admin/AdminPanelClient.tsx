@@ -147,7 +147,7 @@ function StatCard({ label, value, sub, accentClass, onClick }: { label: string; 
   );
 }
 
-// ─── Admin Edit Dialog ────────────────────────────────────────────────────────
+// ─── Admin Edit Dialog ────────────────────────────────────────────────────────────────────────────────
 
 type EditDraft = {
   title: string;
@@ -457,7 +457,7 @@ function AdminEditAdDialog({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────────
 
 export default function AdminPanelClient({
   initialStats,
@@ -480,6 +480,8 @@ export default function AdminPanelClient({
   const [banning, setBanning] = useState<string | null>(null);
   const [banReasonInput, setBanReasonInput] = useState<Record<string, string>>({});
   const [confirmBan, setConfirmBan] = useState<string | null>(null);
+  const [confirmDeleteUser, setConfirmDeleteUser] = useState<string | null>(null);
+  const [deletingUser, setDeletingUser] = useState<string | null>(null);
 
   // Pagination
   const [userPage, setUserPage] = useState(1);
@@ -550,6 +552,23 @@ export default function AdminPanelClient({
       setBanning(null);
       setConfirmBan(null);
       setBanReasonInput(r => { const n = { ...r }; delete n[userId]; return n; });
+    }
+  }
+
+  async function deleteUser(userId: string) {
+    setDeletingUser(userId);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, { method: "DELETE" });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      setUsers(prev => prev.filter(u => u.id !== userId));
+      setAds(prev => prev.filter(a => a.user.id !== userId));
+      showUserToast("User and all related data deleted", true);
+    } catch (e: any) {
+      showUserToast(e.message || "Failed to delete user", false);
+    } finally {
+      setDeletingUser(null);
+      setConfirmDeleteUser(null);
     }
   }
 
@@ -898,6 +917,25 @@ export default function AdminPanelClient({
                           <Button variant="outline" size="sm" onClick={() => setConfirmBan(u.id)}
                             className="h-7 px-3 text-[11px] font-semibold border-red-200 text-red-600 bg-red-50 hover:bg-red-100">
                             Ban
+                          </Button>
+                        ))}
+                        {!isSelf && (confirmDeleteUser === u.id ? (
+                          <div className="flex items-center gap-1">
+                            <span className="text-[11px] text-red-700 font-semibold">Delete user + all data?</span>
+                            <Button variant="outline" size="sm" disabled={deletingUser === u.id}
+                              onClick={() => deleteUser(u.id)}
+                              className="h-7 px-2.5 text-[11px] font-semibold border-red-400 text-red-700 bg-red-100 hover:bg-red-200">
+                              {deletingUser === u.id ? "…" : "Confirm"}
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => setConfirmDeleteUser(null)}
+                              className="h-7 px-2.5 text-[11px] font-semibold border-[#D8E4EE] text-[#4A6B82] bg-white">
+                              Cancel
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button variant="outline" size="sm" onClick={() => setConfirmDeleteUser(u.id)}
+                            className="h-7 px-3 text-[11px] font-semibold border-red-300 text-red-700 bg-white hover:bg-red-50">
+                            Delete
                           </Button>
                         ))}
                       </div>

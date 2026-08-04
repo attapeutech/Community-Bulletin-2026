@@ -96,6 +96,14 @@ export default function LandingPage() {
               {l.label}
             </a>
           ))}
+          <a
+            href="/demo"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="no-underline text-sm font-semibold text-[#E8563A] hover:text-[#C94830] transition-colors"
+          >
+            Franchise Demo ↗
+          </a>
         </div>
 
         {/* Desktop CTA buttons */}
@@ -144,6 +152,16 @@ export default function LandingPage() {
                   {l.label}
                 </button>
               ))}
+              <SheetClose asChild>
+                <a
+                  href="/demo"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="no-underline block w-full text-left px-3.5 py-2.5 rounded-lg text-[#E8563A] text-sm font-semibold hover:bg-white/10 transition-colors"
+                >
+                  Franchise Demo ↗
+                </a>
+              </SheetClose>
 
               {/* CTA buttons */}
               <div className="mt-auto border-t border-white/10 pt-4 flex flex-col gap-2">

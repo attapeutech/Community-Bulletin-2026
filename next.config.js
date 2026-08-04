@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   serverExternalPackages: ["pg", "bcryptjs"],
+  async rewrites() {
+    return [{ source: "/demo", destination: "/demo.html" }];
+  },
   images: {
     remotePatterns: [
       {

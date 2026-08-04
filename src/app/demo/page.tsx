@@ -12,7 +12,7 @@ export default function DemoPage() {
     <div className="d-page">
       <nav className="d-nav" aria-label="Site navigation">
         <div className="d-nav-inner">
-          <div className="d-nav-brand">Community <em>Bulletin</em></div>
+          <a href="/" className="d-nav-brand">Community <em>Bulletin</em></a>
           <a href="#contact" className="d-nav-cta">Schedule a Call</a>
         </div>
       </nav>
@@ -24,7 +24,7 @@ export default function DemoPage() {
             <h1 className="d-h1">Your store.<br />Your community.<br />A new revenue stream.</h1>
             <p className="d-hero-sub">Community Bulletin places locally-targeted digital ads on screens inside your store — generating passive income while connecting your neighbors&rsquo; businesses to your customers.</p>
             <div className="d-hero-btns">
-              <a href="#contact" className="d-btn-p">Schedule a 20-min Call</a>
+              <a href="https://communitybulletin.com/contact" className="d-btn-p">Schedule a 20-min Call</a>
               <a href="#how" className="d-btn-g">See how it works ↓</a>
             </div>
           </div>
@@ -312,14 +312,10 @@ export default function DemoPage() {
           <h2 className="d-cta-h2">See the platform live.<br />Ask us anything.</h2>
           <p className="d-cta-sub">A 20-minute call is all it takes to see Community Bulletin in action and understand exactly what a pilot at your store would look like — with no commitment required.</p>
           <div className="d-cta-btns">
-            <a href="mailto:hello@communitybulletin.com" className="d-btn-xl">Schedule a Call</a>
-            <a href="mailto:hello@communitybulletin.com" className="d-btn-sec">Send an Email</a>
+            <a href="https://communitybulletin.com/contact" className="d-btn-xl">Schedule a Call</a>
+            <a href="https://communitybulletin.com/contact" className="d-btn-sec">Send an Email</a>
           </div>
           <div className="d-contact-row">
-            <div>
-              <div className="d-c-lbl">Email</div>
-              <div className="d-c-val">hello@communitybulletin.com</div>
-            </div>
             <div>
               <div className="d-c-lbl">Website</div>
               <div className="d-c-val">communitybulletin.com</div>
@@ -334,7 +330,7 @@ export default function DemoPage() {
 
       <footer className="d-footer">
         <div className="d-foot-inner">
-          <div className="d-foot-brand">Community <em>Bulletin</em></div>
+          <a href="/" className="d-foot-brand">Community <em>Bulletin</em></a>
           <div className="d-foot-copy">© 2026 Community Bulletin. All rights reserved.</div>
         </div>
       </footer>

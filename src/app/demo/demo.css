@@ -180,7 +180,7 @@
 .d-btn-xl:hover { background: var(--d-coral-dark); }
 .d-btn-sec { background: var(--d-fog); color: var(--d-navy); padding: 15px 28px; border-radius: var(--d-r); font-weight: 600; font-size: 16px; border: 1px solid var(--d-fog-mid); display: inline-block; }
 .d-btn-sec:hover { background: var(--d-fog-mid); }
-.d-contact-row { margin-top: 44px; padding-top: 44px; border-top: 1px solid var(--d-fog-mid); display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; text-align: left; }
+.d-contact-row { margin-top: 44px; padding-top: 44px; border-top: 1px solid var(--d-fog-mid); display: grid; grid-template-columns: repeat(2,1fr); gap: 24px; text-align: left; }
 .d-c-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--d-text-faint); margin-bottom: 5px; }
 .d-c-val { font-size: 14px; color: var(--d-text-muted); }
 

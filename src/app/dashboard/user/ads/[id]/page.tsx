@@ -4,37 +4,31 @@ import { ads, locations, users, payments, cities, states, postalCodes } from "@/
 import { eq } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import AdImagePreview from "./AdImagePreview";
 
-const STATUS_COLORS: Record<string, { bg: string; color: string; label: string }> = {
-  pending:   { bg: "#fef9c3", color: "#854d0e", label: "Pending Review" },
-  approved:  { bg: "#dcfce7", color: "#166534", label: "Approved & Live" },
-  denied:    { bg: "#fee2e2", color: "#991b1b", label: "Denied" },
-  expired:   { bg: "#f1f5f9", color: "#475569", label: "Expired" },
-  cancelled: { bg: "#f1f5f9", color: "#475569", label: "Cancelled" },
+const STATUS: Record<string, { className: string; label: string }> = {
+  pending:   { className: "bg-yellow-50 text-yellow-800 border-yellow-200", label: "Pending Review" },
+  approved:  { className: "bg-green-50 text-green-800 border-green-200",   label: "Approved & Live" },
+  denied:    { className: "bg-red-50 text-red-800 border-red-200",         label: "Denied" },
+  expired:   { className: "bg-slate-100 text-slate-600 border-slate-200",  label: "Expired" },
+  cancelled: { className: "bg-slate-100 text-slate-600 border-slate-200",  label: "Cancelled" },
 };
 
-const PAY_COLORS: Record<string, { bg: string; color: string; label: string }> = {
-  unpaid:        { bg: "#fff7ed", color: "#c2410c", label: "Unpaid" },
-  paid:          { bg: "#dcfce7", color: "#166534", label: "Paid — $100.00" },
-  refunded:      { bg: "#e0e7ff", color: "#3730a3", label: "Refunded" },
-  refund_pending:{ bg: "#fef9c3", color: "#854d0e", label: "Refund Pending" },
-  failed:        { bg: "#fee2e2", color: "#991b1b", label: "Payment Failed" },
+const PAY: Record<string, { className: string; label: string }> = {
+  unpaid:         { className: "bg-orange-50 text-orange-800 border-orange-200",  label: "Unpaid" },
+  paid:           { className: "bg-green-50 text-green-800 border-green-200",    label: "Paid — $100.00" },
+  refunded:       { className: "bg-indigo-50 text-indigo-800 border-indigo-200", label: "Refunded" },
+  refund_pending: { className: "bg-yellow-50 text-yellow-800 border-yellow-200", label: "Refund Pending" },
+  failed:         { className: "bg-red-50 text-red-800 border-red-200",          label: "Payment Failed" },
 };
 
-function Badge({ bg, color, label }: { bg: string; color: string; label: string }) {
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <span style={{ display: "inline-block", padding: "4px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600, background: bg, color }}>
-      {label}
-    </span>
-  );
-}
-
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div style={{ display: "flex", gap: 16, padding: "12px 0", borderBottom: "1px solid #D8E4EE", fontSize: 14 }}>
-      <div style={{ width: 160, flexShrink: 0, color: "#6B8FA8", fontSize: 13 }}>{label}</div>
-      <div style={{ flex: 1, color: "#1A3A5C" }}>{value}</div>
+    <div className="flex flex-col sm:flex-row gap-1 sm:gap-4 py-3 border-b border-[#D8E4EE] last:border-0 text-sm">
+      <div className="w-full sm:w-40 shrink-0 text-[#6B8FA8] text-[13px]">{label}</div>
+      <div className="flex-1 text-[#1A3A5C]">{children}</div>
     </div>
   );
 }
@@ -47,7 +41,7 @@ export default async function AdDetailPage({
   const { id } = await params;
   const session = await requireAuth();
   const userId = (session.user as any).id as string;
-  const role = (session.user as any).role as string;
+  const role   = (session.user as any).role as string;
 
   const [row] = await db
     .select({
@@ -74,86 +68,60 @@ export default async function AdDetailPage({
     .limit(1);
 
   if (!row) notFound();
+  if (row.user.id !== userId && role !== "approver" && role !== "admin") redirect("/dashboard");
 
-  // Only owner, approver, or admin can view
-  if (
-    row.user.id !== userId &&
-    role !== "approver" &&
-    role !== "admin"
-  ) {
-    redirect("/dashboard");
-  }
-
-  const adPayments = await db
-    .select()
-    .from(payments)
-    .where(eq(payments.adId, id));
+  const adPayments = await db.select().from(payments).where(eq(payments.adId, id));
 
   const { ad, location } = row;
-  const adStatus = STATUS_COLORS[ad.status] ?? STATUS_COLORS.pending;
-  const payStatus = PAY_COLORS[ad.paymentStatus] ?? PAY_COLORS.unpaid;
-
-  const isOwner = row.user.id === userId;
+  const adStatus  = STATUS[ad.status]         ?? STATUS.pending;
+  const payStatus = PAY[ad.paymentStatus]     ?? PAY.unpaid;
+  const isOwner      = row.user.id === userId;
   const needsPayment = ad.paymentStatus === "unpaid";
 
   return (
-    <div style={{ maxWidth: 720 }}>
+    <div className="max-w-[720px]">
       {/* Breadcrumb */}
-      <div style={{ marginBottom: 24, display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#6B8FA8" }}>
-        <Link href="/dashboard/user" style={{ color: "#6B8FA8", textDecoration: "none" }}>My Ads</Link>
+      <div className="mb-6 flex items-center gap-2 text-[13px] text-[#6B8FA8]">
+        <Link href="/dashboard/user" className="text-[#6B8FA8] no-underline hover:underline">My Ads</Link>
         <span>›</span>
-        <span style={{ color: "#1A3A5C" }}>{ad.title}</span>
+        <span className="text-[#1A3A5C]">{ad.title}</span>
       </div>
 
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
+      {/* Title + actions */}
+      <div className="flex items-start justify-between mb-6 gap-3 flex-wrap">
         <div>
-          <h1 style={{ fontFamily: "Georgia,serif", fontSize: 24, fontWeight: 700, color: "#1A3A5C", marginBottom: 8 }}>
-            {ad.title}
-          </h1>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <Badge {...adStatus} />
-            <Badge {...payStatus} />
+          <h1 className="font-serif text-[24px] font-bold text-[#1A3A5C] mb-2">{ad.title}</h1>
+          <div className="flex gap-2 flex-wrap">
+            <Badge variant="outline" className={cn("text-[13px] font-semibold px-3.5 py-1", adStatus.className)}>
+              {adStatus.label}
+            </Badge>
+            <Badge variant="outline" className={cn("text-[13px] font-semibold px-3.5 py-1", payStatus.className)}>
+              {payStatus.label}
+            </Badge>
           </div>
         </div>
-
-        {isOwner && needsPayment && (
-          <Link
-            href={`/ads/${ad.id}/payment`}
-            style={{
-              display: "inline-block",
-              background: "#E8563A",
-              color: "#fff",
-              padding: "10px 20px",
-              borderRadius: 8,
-              textDecoration: "none",
-              fontSize: 14,
-              fontWeight: 600,
-            }}
-          >
-            Complete Payment →
-          </Link>
-        )}
-        {ad.status === "approved" && (
-          <Link
-            href={`/display/${location.slug}`}
-            target="_blank"
-            style={{
-              display: "inline-block",
-              border: "1px solid #4A90C4",
-              color: "#4A90C4",
-              padding: "9px 18px",
-              borderRadius: 8,
-              textDecoration: "none",
-              fontSize: 14,
-              fontWeight: 600,
-            }}
-          >
-            View Live Display ↗
-          </Link>
-        )}
+        <div className="flex gap-2 flex-wrap">
+          {isOwner && needsPayment && (
+            <Link
+              href={`/ads/${ad.id}/payment`}
+              className="no-underline text-sm font-semibold bg-[#E8563A] text-white px-5 py-2.5 rounded-lg hover:bg-[#d44e34] transition-colors"
+            >
+              Complete Payment →
+            </Link>
+          )}
+          {ad.status === "approved" && (
+            <Link
+              href={`/display/${location.slug}`}
+              target="_blank"
+              className="no-underline text-sm font-semibold text-[#4A90C4] border border-[#4A90C4] px-4 py-2.5 rounded-lg hover:bg-[#4A90C4]/10 transition-colors"
+            >
+              View Live Display ↗
+            </Link>
+          )}
+        </div>
       </div>
 
-      {/* Ad image — display screen style with preview modal */}
+      {/* Ad image preview */}
       <AdImagePreview
         imageUrl={ad.imageUrl}
         title={ad.title}
@@ -166,53 +134,60 @@ export default async function AdDetailPage({
         adId={ad.id}
       />
 
-      {/* Details */}
-      <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "0 24px", marginBottom: 24 }}>
-        <Row label="Location" value={<>{location.storeName}<br /><span style={{ fontSize: 12, color: "#6B8FA8" }}>{location.addressLine1}{location.addressLine2 ? `, ${location.addressLine2}` : ""}, {location.cityName}, {location.stateCode} {location.postalCode}</span></>} />
-        <Row label="Title" value={ad.title} />
-        {ad.description && <Row label="Description" value={ad.description} />}
-        <Row label="Status" value={<Badge {...adStatus} />} />
-        <Row label="Payment" value={<Badge {...payStatus} />} />
-        <Row
-          label="Run dates"
-          value={
-            ad.status === "approved"
-              ? `${new Date(ad.startedAt).toLocaleDateString("en-US", { dateStyle: "long" })} – ${new Date(ad.endedAt).toLocaleDateString("en-US", { dateStyle: "long" })}`
-              : "Set upon approval"
-          }
-        />
-        <Row
-          label="Submitted"
-          value={new Date(ad.createdAt).toLocaleDateString("en-US", { dateStyle: "long" })}
-        />
+      {/* Details card */}
+      <div className="bg-white rounded-xl border border-[#D8E4EE] px-5 sm:px-6 mb-6">
+        <Row label="Location">
+          <span className="font-medium">{location.storeName}</span>
+          <br />
+          <span className="text-[12px] text-[#6B8FA8]">
+            {location.addressLine1}{location.addressLine2 ? `, ${location.addressLine2}` : ""}, {location.cityName}, {location.stateCode} {location.postalCode}
+          </span>
+        </Row>
+        <Row label="Title">{ad.title}</Row>
+        {ad.description && <Row label="Description">{ad.description}</Row>}
+        <Row label="Status">
+          <Badge variant="outline" className={cn("text-[12px] font-semibold", adStatus.className)}>
+            {adStatus.label}
+          </Badge>
+        </Row>
+        <Row label="Payment">
+          <Badge variant="outline" className={cn("text-[12px] font-semibold", payStatus.className)}>
+            {payStatus.label}
+          </Badge>
+        </Row>
+        <Row label="Run dates">
+          {ad.status === "approved"
+            ? `${new Date(ad.startedAt).toLocaleDateString("en-US", { dateStyle: "long" })} – ${new Date(ad.endedAt).toLocaleDateString("en-US", { dateStyle: "long" })}`
+            : <span className="text-[#9DC4E0]">Set upon approval</span>}
+        </Row>
+        <Row label="Submitted">
+          {new Date(ad.createdAt).toLocaleDateString("en-US", { dateStyle: "long" })}
+        </Row>
         {ad.reviewNote && (
-          <div style={{ padding: "16px 0" }}>
-            <div style={{ fontSize: 13, color: "#6B8FA8", marginBottom: 8 }}>Reviewer note</div>
-            <div style={{ background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#991b1b" }}>
+          <Row label="Reviewer note">
+            <div className="bg-red-50 border border-red-200 rounded-lg px-3.5 py-2.5 text-[13px] text-red-800">
               {ad.reviewNote}
             </div>
-          </div>
+          </Row>
         )}
       </div>
 
-      {/* Payments */}
+      {/* Payment history */}
       {adPayments.length > 0 && (
-        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", overflow: "hidden" }}>
-          <div style={{ padding: "16px 24px", borderBottom: "1px solid #D8E4EE" }}>
-            <h2 style={{ fontFamily: "Georgia,serif", fontSize: 16, color: "#1A3A5C" }}>Payment History</h2>
+        <div className="bg-white rounded-xl border border-[#D8E4EE] overflow-hidden">
+          <div className="px-5 sm:px-6 py-4 border-b border-[#D8E4EE]">
+            <h2 className="font-serif text-base text-[#1A3A5C]">Payment History</h2>
           </div>
-          <div style={{ padding: "0 24px" }}>
+          <div className="divide-y divide-[#D8E4EE]">
             {adPayments.map((pmt) => (
-              <div key={pmt.id} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid #D8E4EE", fontSize: 13 }}>
+              <div key={pmt.id} className="flex justify-between items-start px-5 sm:px-6 py-3 text-[13px]">
                 <div>
-                  <div style={{ fontWeight: 600, color: "#1A3A5C", textTransform: "capitalize" }}>{pmt.provider}</div>
-                  <div style={{ color: "#6B8FA8", fontSize: 11 }}>{pmt.providerTxId}</div>
+                  <div className="font-semibold text-[#1A3A5C] capitalize">{pmt.provider}</div>
+                  <div className="text-[11px] text-[#9DC4E0] font-mono mt-0.5 break-all">{pmt.providerTxId}</div>
                 </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontWeight: 600, color: "#1A3A5C" }}>
-                    ${(pmt.amountCents / 100).toFixed(2)} {pmt.currency}
-                  </div>
-                  <div style={{ color: "#6B8FA8", fontSize: 11, textTransform: "capitalize" }}>{pmt.status}</div>
+                <div className="text-right shrink-0 ml-4">
+                  <div className="font-semibold text-[#1A3A5C]">${(pmt.amountCents / 100).toFixed(2)} {pmt.currency}</div>
+                  <div className="text-[11px] text-[#6B8FA8] capitalize mt-0.5">{pmt.status}</div>
                 </div>
               </div>
             ))}

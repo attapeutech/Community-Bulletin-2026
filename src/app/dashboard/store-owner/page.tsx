@@ -3,16 +3,7 @@ import { db } from "@/lib/db/client";
 import { locations, ads, users, countries, states, cities, postalCodes } from "@/lib/db/schema";
 import { eq, and, count, desc } from "drizzle-orm";
 import Link from "next/link";
-
-const ACCENT = "#1A3A5C";
-
-function Badge({ children, bg, color }: { children: React.ReactNode; bg: string; color: string }) {
-  return (
-    <span style={{ display: "inline-block", padding: "2px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: bg, color }}>
-      {children}
-    </span>
-  );
-}
+import { Badge } from "@/components/ui/badge";
 
 export default async function StoreOwnerPage() {
   const session = await requireStoreOwner();
@@ -20,8 +11,9 @@ export default async function StoreOwnerPage() {
   const userId = (session.user as any).id as string;
   const isAdmin = role === "admin";
 
-  // Role-aware query: admin sees all, store_owner sees own
-  const conditions = isAdmin ? [eq(locations.isActive, true)] : [eq(locations.storeOwnerId, userId), eq(locations.isActive, true)];
+  const conditions = isAdmin
+    ? [eq(locations.isActive, true)]
+    : [eq(locations.storeOwnerId, userId), eq(locations.isActive, true)];
 
   const locs = await db
     .select({
@@ -45,7 +37,6 @@ export default async function StoreOwnerPage() {
     .where(and(...conditions))
     .orderBy(desc(locations.createdAt));
 
-  // Get active ad counts per location
   const adCounts = await db
     .select({ locationId: ads.locationId, total: count() })
     .from(ads)
@@ -55,74 +46,97 @@ export default async function StoreOwnerPage() {
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-        <h1 style={{ fontFamily: "Georgia,serif", fontSize: 26, fontWeight: 700, color: ACCENT }}>
+      {/* Header */}
+      <div className="flex items-start justify-between mb-2 gap-3 flex-wrap">
+        <h1 className="font-serif text-[26px] font-bold text-[#1A3A5C]">
           {isAdmin ? "All Locations" : "My Locations"}
         </h1>
         <Link
           href="/dashboard/store-owner/locations/new"
-          style={{ background: "#E8563A", color: "#fff", padding: "10px 20px", borderRadius: 8, textDecoration: "none", fontSize: 14, fontWeight: 600 }}
+          className="no-underline shrink-0 bg-[#E8563A] text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#d44e34] transition-colors"
         >
           + Add Location
         </Link>
       </div>
-      <p style={{ color: "#6B8FA8", fontSize: 14, marginBottom: 32 }}>
-        {isAdmin ? "Manage all store locations across the platform." : "Manage your store locations and their active ad displays."}
+      <p className="text-[#6B8FA8] text-sm mb-8">
+        {isAdmin
+          ? "Manage all store locations across the platform."
+          : "Manage your store locations and their active ad displays."}
       </p>
 
       {locs.length === 0 ? (
-        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: 48, textAlign: "center" }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>🏪</div>
-          <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: ACCENT, marginBottom: 8 }}>No locations yet</h2>
-          <p style={{ color: "#6B8FA8", fontSize: 14, marginBottom: 24 }}>Add your first store location to start accepting ads.</p>
-          <Link href="/dashboard/store-owner/locations/new" style={{ background: ACCENT, color: "#fff", padding: "10px 24px", borderRadius: 8, textDecoration: "none", fontSize: 14, fontWeight: 600 }}>
+        <div className="bg-white rounded-xl border border-[#D8E4EE] p-12 text-center">
+          <div className="text-[40px] mb-3">🏪</div>
+          <h2 className="font-serif text-lg text-[#1A3A5C] mb-2">No locations yet</h2>
+          <p className="text-[#6B8FA8] text-sm mb-6">
+            Add your first store location to start accepting ads.
+          </p>
+          <Link
+            href="/dashboard/store-owner/locations/new"
+            className="no-underline inline-block bg-[#1A3A5C] text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#15304d] transition-colors"
+          >
             Add first location
           </Link>
         </div>
       ) : (
-        <div style={{ display: "grid", gap: 16 }}>
-          {locs.map((loc) => (
-            <div key={loc.id} style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "20px 24px", display: "flex", alignItems: "center", gap: 20 }}>
-              {/* Icon */}
-              <div style={{ width: 48, height: 48, borderRadius: 12, background: "#F0F7FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 22 }}>
-                🏪
-              </div>
+        <div className="flex flex-col gap-4">
+          {locs.map((loc) => {
+            const activeCount = adCountMap[loc.id] ?? 0;
+            return (
+              <div
+                key={loc.id}
+                className="bg-white rounded-xl border border-[#D8E4EE] p-5 flex flex-col sm:flex-row sm:items-center gap-4"
+              >
+                {/* Icon */}
+                <div className="w-12 h-12 rounded-xl bg-[#F0F7FF] flex items-center justify-center shrink-0 text-[22px]">
+                  🏪
+                </div>
 
-              {/* Info */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
-                  <span style={{ fontWeight: 700, fontSize: 15, color: ACCENT }}>{loc.storeName}</span>
-                  <Badge bg="#dcfce7" color="#166534">{adCountMap[loc.id] ?? 0} active ad{(adCountMap[loc.id] ?? 0) !== 1 ? "s" : ""}</Badge>
-                  {isAdmin && (
-                    <Badge bg="#E8EFF6" color="#1A3A5C">{loc.storeOwner.name}</Badge>
-                  )}
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className="font-bold text-[15px] text-[#1A3A5C]">{loc.storeName}</span>
+                    <Badge
+                      variant="outline"
+                      className={activeCount > 0
+                        ? "bg-green-50 text-green-800 border-green-200 text-[11px] font-semibold"
+                        : "bg-slate-100 text-slate-600 border-slate-200 text-[11px] font-semibold"}
+                    >
+                      {activeCount} active ad{activeCount !== 1 ? "s" : ""}
+                    </Badge>
+                    {isAdmin && (
+                      <Badge variant="outline" className="bg-[#E8EFF6] text-[#1A3A5C] border-[#D8E4EE] text-[11px] font-semibold">
+                        {loc.storeOwner.name}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="text-[13px] text-[#6B8FA8]">
+                    {loc.addressLine1} · {loc.city.name}, {loc.state.code} {loc.postalCode.code}
+                  </div>
+                  <div className="text-[11px] text-[#9DC4E0] mt-1 font-mono">
+                    /display/{loc.slug}
+                  </div>
                 </div>
-                <div style={{ fontSize: 13, color: "#6B8FA8" }}>
-                  {loc.addressLine1} · {loc.city.name}, {loc.state.code} {loc.postalCode.code}
-                </div>
-                <div style={{ fontSize: 11, color: "#9DC4E0", marginTop: 4, fontFamily: "monospace" }}>
-                  /display/{loc.slug}
-                </div>
-              </div>
 
-              {/* Actions */}
-              <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-                <Link
-                  href={`/display/${loc.slug}`}
-                  target="_blank"
-                  style={{ fontSize: 12, color: "#4A90C4", border: "1px solid #4A90C4", padding: "6px 12px", borderRadius: 6, textDecoration: "none" }}
-                >
-                  View Display ↗
-                </Link>
-                <Link
-                  href={`/dashboard/store-owner/locations/${loc.id}`}
-                  style={{ fontSize: 12, color: "#fff", background: ACCENT, padding: "6px 14px", borderRadius: 6, textDecoration: "none", fontWeight: 600 }}
-                >
-                  Manage
-                </Link>
+                {/* Actions */}
+                <div className="flex gap-2 shrink-0 flex-wrap">
+                  <Link
+                    href={`/display/${loc.slug}`}
+                    target="_blank"
+                    className="no-underline text-xs font-semibold text-[#4A90C4] border border-[#4A90C4] px-3 py-1.5 rounded-lg hover:bg-[#4A90C4]/10 transition-colors"
+                  >
+                    View Display ↗
+                  </Link>
+                  <Link
+                    href={`/dashboard/store-owner/locations/${loc.id}`}
+                    className="no-underline text-xs font-semibold text-white bg-[#1A3A5C] px-3.5 py-1.5 rounded-lg hover:bg-[#15304d] transition-colors"
+                  >
+                    Manage
+                  </Link>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

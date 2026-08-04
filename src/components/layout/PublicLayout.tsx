@@ -151,6 +151,9 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
                 {l.label}
               </Link>
             ))}
+            <a href="/demo" target="_blank" rel="noopener noreferrer" className="no-underline flex items-center gap-1 text-sm font-semibold text-[#E8563A] hover:text-[#C94830] transition-colors">
+              Franchise Demo ↗
+            </a>
           </div>
 
           {/* CTA + theme toggle — full desktop only (lg+) */}
@@ -230,6 +233,9 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               {l.label}
             </Link>
           ))}
+          <a href="/demo" target="_blank" rel="noopener noreferrer" className="no-underline flex items-center gap-2.5 text-sm font-semibold py-2.5 px-1 text-[#E8563A] border-b border-[#F0F5FA] dark:border-[#1E3550]" onClick={() => setMobileMenuOpen(false)}>
+            Franchise Demo ↗
+          </a>
           <div className="h-px bg-[#E8EFF6] dark:bg-[#1E3550] my-2" />
           {user ? (
             <Link href="/dashboard" className="no-underline flex items-center gap-2.5 text-sm font-semibold text-white pl-2 pr-4 py-2 rounded-full bg-[#1A3A5C]" onClick={() => setMobileMenuOpen(false)}>

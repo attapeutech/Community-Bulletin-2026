@@ -180,8 +180,8 @@ export default function DemoPage() {
               </div>
             </div>
           </div>
-          <p style={{marginTop:"32px",fontSize:"12px",color:"rgba(255,255,255,.35)",lineHeight:"1.6"}}>
-            <strong style={{color:"rgba(255,255,255,.45)"}}>Disclaimer:</strong> Revenue figures are projections based on full capacity (40 active ads at $100/week) — not a guarantee. Actual results will vary based on advertiser demand at your location.
+          <p style={{marginTop:"32px",fontSize:"12px",color:"rgba(255,255,255,.6)",lineHeight:"1.6"}}>
+            <strong style={{color:"rgba(255,255,255,.8)"}}>Disclaimer:</strong> Revenue figures are projections based on full capacity (40 active ads at $100/week) — not a guarantee. Actual results will vary based on advertiser demand at your location.
           </p>
         </div>
       </section>

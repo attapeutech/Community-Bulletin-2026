@@ -301,10 +301,6 @@ export default function DemoPage() {
               <div className="d-fit-card-title">Community Bulletin aligns with Grocery Outlet&rsquo;s brand values</div>
               <div className="d-fit-card-body">Grocery Outlet&rsquo;s position as a community-first, value-driven retailer makes it a natural fit. The platform extends that promise — your store becomes a hub connecting your neighborhood&rsquo;s businesses and residents.</div>
             </div>
-            <div className="d-fit-card">
-              <div className="d-fit-card-title">Each franchise operates independently — you partner directly</div>
-              <div className="d-fit-card-body">Because Grocery Outlet franchises operate as independent businesses, you can partner with us directly and on your terms. No waiting for corporate approval, no one-size-fits-all rollout. We tailor the program to your store and your community.</div>
-            </div>
           </div>
         </div>
       </section>

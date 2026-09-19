@@ -2,8 +2,8 @@
 // MobileMenu don't import each other.
 
 export function Logo({ size = "lg" }: { size?: "lg" | "sm" }) {
-  const box = size === "lg" ? "w-[26px] h-[26px] rounded-[7px]" : "w-[22px] h-[22px] rounded-md";
-  const mark = size === "lg" ? "text-[11px]" : "text-[9px]";
+  const box = size === "lg" ? "w-[32px] h-[32px] rounded-[9px]" : "w-[26px] h-[26px] rounded-[7px]";
+  const mark = size === "lg" ? "text-[14px]" : "text-[11px]";
   const text = size === "lg" ? "text-base sm:text-[18px]" : "text-base";
   return (
     <div className="flex shrink-0 items-center gap-2.5">

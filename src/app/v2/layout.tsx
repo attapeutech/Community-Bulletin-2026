@@ -33,7 +33,7 @@ export const metadata: Metadata = {
 export default function CastEZLayout({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className={`${manrope.variable} ${spaceGrotesk.variable} ${ibmPlexMono.variable} font-ce-body bg-ce-ground text-ce-text min-h-screen overflow-x-hidden`}
+      className={`${manrope.variable} ${spaceGrotesk.variable} ${ibmPlexMono.variable} font-ce-body bg-ce-ground text-ce-text min-h-screen`}
     >
       {children}
     </div>

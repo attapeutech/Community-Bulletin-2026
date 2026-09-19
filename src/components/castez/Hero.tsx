@@ -12,14 +12,14 @@ export function Hero() {
     <section className="relative border-b border-ce-line">
       {/* Teal/indigo bloom bleeding down from above the fold */}
       <div
-        className="pointer-events-none absolute -top-[180px] left-1/2 h-[520px] w-[900px] -translate-x-1/2"
+        className="pointer-events-none absolute -top-[180px] left-1/2 h-[520px] w-[min(900px,100vw)] -translate-x-1/2"
         style={{
           background:
             "radial-gradient(50% 50% at 50% 50%, rgba(62,230,209,.16), rgba(79,124,255,.06) 55%, transparent 75%)",
         }}
       />
 
-      <div className="relative mx-auto grid max-w-[1200px] grid-cols-[repeat(auto-fit,minmax(340px,1fr))] items-center gap-14 px-6 pb-24 pt-[88px]">
+      <div className="relative mx-auto grid max-w-[1200px] grid-cols-[repeat(auto-fit,minmax(min(340px,100%),1fr))] items-center gap-14 px-6 pb-24 pt-[88px]">
         <div className="min-w-0">
           <div className="mb-[26px] inline-flex items-center gap-[9px] rounded-full border border-ce-accent/[0.28] bg-ce-accent/[0.07] px-[13px] py-1.5">
             <span className="h-[5px] w-[5px] rounded-full bg-ce-accent" />

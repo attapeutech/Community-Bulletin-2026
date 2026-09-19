@@ -6,12 +6,12 @@ import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Logo, StatusPill } from "./Brand";
 import { NavAuth } from "./NavAuth";
+import { FranchiseDemoLink, NAV_LINKS } from "./NavItems";
+import { ICON_BUTTON } from "./navStyles";
 import { CeThemeToggle } from "./ThemeToggle";
-import { FranchiseDemoLink, HostScreenLink, LaunchCampaignLink, NAV_LINKS } from "./NavItems";
 
 export function MobileMenu({ showThemeToggle = true }: { showThemeToggle?: boolean }) {
   const [open, setOpen] = useState(false);
-
   const router = useRouter();
   const pathname = usePathname();
 
@@ -31,17 +31,13 @@ export function MobileMenu({ showThemeToggle = true }: { showThemeToggle?: boole
   }
 
   const itemCls =
-    "border-b border-ce-line2 py-3.5 text-left font-ce-body text-[15px] font-medium text-ce-muted transition-colors hover:text-ce-text";
+    "border-b border-ce-line2 py-3 text-left font-ce-body text-[15px] font-semibold text-ce-text3 transition-colors hover:text-ce-text";
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <button
-          type="button"
-          aria-label="Open menu"
-          className="rounded-lg p-2 text-ce-text3 transition-colors hover:bg-white/5"
-        >
-          <Menu size={22} />
+        <button type="button" aria-label="Open menu" className={ICON_BUTTON}>
+          <Menu size={18} strokeWidth={1.9} />
         </button>
       </SheetTrigger>
 
@@ -57,20 +53,18 @@ export function MobileMenu({ showThemeToggle = true }: { showThemeToggle?: boole
 
           <StatusPill />
 
-          <div className="flex flex-col gap-2.5">
-            <LaunchCampaignLink className="text-center" />
-            <HostScreenLink className="text-center" />
-          </div>
-
           <nav className="flex flex-col">
             {NAV_LINKS.map((l) => (
               <button key={l.label} type="button" onClick={() => goTo(l.href)} className={itemCls}>
                 {l.label}
               </button>
             ))}
+            <button type="button" onClick={() => goTo("/live-ads")} className={itemCls}>
+              Live Ads
+            </button>
             <FranchiseDemoLink
               onClick={() => setOpen(false)}
-              className="border-b border-ce-line2 py-3.5 text-left font-ce-body text-[15px]"
+              className="border-b border-ce-line2 py-3 text-left font-ce-body text-[15px]"
             />
           </nav>
 

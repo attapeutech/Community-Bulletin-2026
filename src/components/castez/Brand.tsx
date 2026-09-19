@@ -2,29 +2,44 @@ import Link from "next/link";
 
 // Shared by Nav, MobileMenu and Footer. Kept in its own module so Nav and
 // MobileMenu don't import each other.
+// Mark and wordmark follow castez-package/design-components/CastEZ Landing.dc.html:
+// a three-stop teal-to-blue gradient, a white hairline and a layered neon glow,
+// with the CE in the dark on-accent ink rather than white.
+
+const MARK_GLOW =
+  "0 0 0 1px rgba(62,230,209,.35), 0 0 16px rgba(62,230,209,.6), 0 0 40px rgba(62,230,209,.35), inset 0 1px 0 rgba(255,255,255,.6)";
 
 export function Logo({ size = "lg" }: { size?: "lg" | "sm" }) {
-  const box = size === "lg" ? "w-[32px] h-[32px] rounded-[9px]" : "w-[26px] h-[26px] rounded-[7px]";
-  const mark = size === "lg" ? "text-[14px]" : "text-[11px]";
-  const text = size === "lg" ? "text-base sm:text-[18px]" : "text-base";
+  const lg = size === "lg";
   return (
     <Link
       href="/"
       aria-label="CastEasy.io home"
-      className="flex shrink-0 items-center gap-2.5 transition-opacity hover:opacity-85"
+      className="flex shrink-0 items-center gap-2.5 transition-opacity hover:opacity-90"
     >
-      <div
-        className={`${box} flex shrink-0 items-center justify-center bg-[linear-gradient(140deg,#3ee6d1,#4f7cff)]`}
-        style={size === "lg" ? { boxShadow: "0 0 18px rgba(62,230,209,.45)" } : undefined}
+      <span
+        className={`flex shrink-0 items-center justify-center border border-white/40 ${
+          lg ? "h-8 w-8 rounded-[10px]" : "h-[26px] w-[26px] rounded-lg"
+        }`}
+        style={{
+          background: "linear-gradient(150deg,#7df3e2,#2ad3bf 45%,#35b7f5)",
+          boxShadow: MARK_GLOW,
+        }}
       >
         <span
           aria-hidden="true"
-          className={`font-ce-display font-bold leading-none tracking-[0.02em] text-white ${mark}`}
+          className={`font-ce-display font-bold leading-none tracking-[-0.02em] text-ce-onAccent ${
+            lg ? "text-sm" : "text-[12px]"
+          }`}
         >
           CE
         </span>
-      </div>
-      <span className={`font-ce-display font-bold ${text} tracking-[-0.03em]`}>
+      </span>
+      <span
+        className={`font-ce-display font-bold tracking-[-0.03em] ${
+          lg ? "text-[17px] sm:text-[19px]" : "text-base"
+        }`}
+      >
         CastEasy<span className="text-ce-muted4">.io</span>
       </span>
     </Link>

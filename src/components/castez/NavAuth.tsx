@@ -1,18 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSession } from "@/lib/auth/client";
-
-function initialsOf(name?: string | null) {
-  if (!name) return "?";
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
+import { UserMenu } from "./UserMenu";
 
 /**
  * Session-aware nav tail. Kept as its own client island so the surrounding
@@ -28,22 +18,7 @@ export function NavAuth({ stacked = false }: { stacked?: boolean }) {
   }
 
   if (user) {
-    return (
-      <Link
-        href="/dashboard"
-        className={`flex items-center gap-2.5 rounded-full border border-ce-line4 bg-ce-surface py-1 pl-1 pr-4 text-sm font-semibold text-ce-text transition-colors hover:border-ce-accent/40 ${
-          stacked ? "w-full" : ""
-        }`}
-      >
-        <Avatar className="h-7 w-7 shrink-0">
-          <AvatarImage src={user.image ?? ""} alt="" className="object-cover" />
-          <AvatarFallback className="bg-[linear-gradient(140deg,#3ee6d1,#4f7cff)] text-[11px] font-bold text-white">
-            {initialsOf(user.name)}
-          </AvatarFallback>
-        </Avatar>
-        Dashboard
-      </Link>
-    );
+    return <UserMenu user={user} stacked={stacked} />;
   }
 
   return (

@@ -60,6 +60,7 @@ module.exports = {
           card: "hsl(var(--ce-card) / <alpha-value>)",
           panel: "hsl(var(--ce-panel) / <alpha-value>)",
           raised: "hsl(var(--ce-raised) / <alpha-value>)",
+          header: "hsl(var(--ce-header) / <alpha-value>)",
           screen: "hsl(var(--ce-screen) / <alpha-value>)",
           slot: "hsl(var(--ce-slot) / <alpha-value>)",
           line: "hsl(var(--ce-line) / <alpha-value>)",

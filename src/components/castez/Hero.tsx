@@ -30,7 +30,7 @@ export function Hero() {
 
           <h1 className="m-0 mb-[22px] text-balance font-ce-display text-[clamp(38px,5vw,62px)] font-bold leading-[1.03] tracking-[-0.045em]">
             Trade paper window clutter for{" "}
-            <span className="bg-[linear-gradient(100deg,#5cf0dd,#7c9dff)] bg-clip-text text-transparent">
+            <span className="ce-grad">
               high-impact digital billboards.
             </span>
           </h1>

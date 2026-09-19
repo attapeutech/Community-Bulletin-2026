@@ -19,7 +19,7 @@ import { CeThemeToggle } from "./ThemeToggle";
  */
 export function Nav({ showThemeToggle = true }: { showThemeToggle?: boolean }) {
   return (
-    <header className="sticky top-0 z-50 border-b border-ce-line8 bg-ce-ground/[0.72] backdrop-blur-[18px]">
+    <header className="sticky top-0 z-50 border-b border-ce-line8 bg-ce-header/80 backdrop-blur-[18px]">
       <div className="mx-auto flex h-[68px] max-w-[1200px] items-center gap-4 px-4 sm:gap-7 sm:px-6">
         <Logo />
 

@@ -4,8 +4,9 @@ import { MobileMenu } from "./MobileMenu";
 import { NavAuth } from "./NavAuth";
 import { FranchiseDemoLink, LiveAdsPill, NAV_LINKS, PostAdPill } from "./NavItems";
 import { NavSearch } from "./NavSearch";
+import { CeThemeToggle } from "./ThemeToggle";
 
-export function Nav() {
+export function Nav({ showThemeToggle = true }: { showThemeToggle?: boolean }) {
   return (
     <header className="sticky top-0 z-50 border-b border-ce-line8 bg-ce-ground/[0.72] backdrop-blur-[18px]">
       {/* Row 1 */}
@@ -35,6 +36,7 @@ export function Nav() {
         </nav>
 
         <div className="ml-auto hidden shrink-0 items-center gap-2 lg:flex">
+          {showThemeToggle && <CeThemeToggle />}
           <NavAuth />
         </div>
 

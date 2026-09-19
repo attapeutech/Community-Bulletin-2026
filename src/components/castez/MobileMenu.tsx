@@ -1,7 +1,7 @@
 "use client";
 
 import { Menu } from "lucide-react";
-import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Logo, StatusPill } from "./Brand";
@@ -11,12 +11,21 @@ import { FranchiseDemoLink, LiveAdsPill, NAV_LINKS, PostAdPill } from "./NavItem
 export function MobileMenu() {
   const [open, setOpen] = useState(false);
 
-  // Radix holds a scroll lock until the close animation finishes. Jumping to the
-  // hash while that lock is active gets swallowed, so close first and scroll after.
-  function goTo(hash: string) {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Radix holds a scroll lock until the close animation finishes, so both the
+  // in-page scroll and the route change wait for it. Anchors are absolute
+  // ("/#flow"), so away from the landing page they navigate instead of scroll.
+  function goTo(href: string) {
     setOpen(false);
+    const hash = href.startsWith("/#") ? href.slice(1) : null;
     window.setTimeout(() => {
-      document.querySelector(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (hash && pathname === "/") {
+        document.querySelector(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else {
+        router.push(href);
+      }
     }, 260);
   }
 
@@ -53,22 +62,11 @@ export function MobileMenu() {
           </div>
 
           <nav className="flex flex-col">
-            {NAV_LINKS.map((l) =>
-              l.href.startsWith("#") ? (
-                <button key={l.label} type="button" onClick={() => goTo(l.href)} className={itemCls}>
-                  {l.label}
-                </button>
-              ) : (
-                <Link
-                  key={l.label}
-                  href={l.href}
-                  onClick={() => setOpen(false)}
-                  className={itemCls}
-                >
-                  {l.label}
-                </Link>
-              )
-            )}
+            {NAV_LINKS.map((l) => (
+              <button key={l.label} type="button" onClick={() => goTo(l.href)} className={itemCls}>
+                {l.label}
+              </button>
+            ))}
             <FranchiseDemoLink
               onClick={() => setOpen(false)}
               className="border-b border-ce-line2 py-3.5 text-left font-ce-body text-[15px]"

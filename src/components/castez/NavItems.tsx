@@ -3,13 +3,12 @@ import Link from "next/link";
 // Shared by Nav and MobileMenu. Kept in its own module so the two don't
 // import each other.
 
-// While this nav lives only on /v2 the section anchors stay relative, so they
-// resolve on the preview. At promotion they become "/#audiences" / "/#flow" so
-// they work from /help, /live-ads and the rest of the public pages.
+// Absolute so they resolve from anywhere the nav appears -- /help, /live-ads,
+// the dashboard -- not just from the landing page.
 export const NAV_LINKS = [
-  { label: "Platform", href: "#audiences" },
-  { label: "How it works", href: "#flow" },
-  { label: "Pricing", href: "#audiences" },
+  { label: "Platform", href: "/#audiences" },
+  { label: "How it works", href: "/#flow" },
+  { label: "Pricing", href: "/#audiences" },
   { label: "Help", href: "/help" },
 ];
 

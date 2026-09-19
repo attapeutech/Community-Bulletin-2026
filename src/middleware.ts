@@ -16,7 +16,6 @@ const PUBLIC_ROUTES = [
   "/privacy",
   "/terms",
   "/contact",
-  "/v2", // CastEZ redesign preview — remove when the new landing replaces "/"
 ];
 
 export async function middleware(request: NextRequest) {

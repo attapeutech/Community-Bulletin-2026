@@ -6,9 +6,10 @@ import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Logo, StatusPill } from "./Brand";
 import { NavAuth } from "./NavAuth";
-import { FranchiseDemoLink, LiveAdsPill, NAV_LINKS, PostAdPill } from "./NavItems";
+import { CeThemeToggle } from "./ThemeToggle";
+import { FranchiseDemoLink, HostScreenLink, LaunchCampaignLink, NAV_LINKS } from "./NavItems";
 
-export function MobileMenu() {
+export function MobileMenu({ showThemeToggle = true }: { showThemeToggle?: boolean }) {
   const [open, setOpen] = useState(false);
 
   const router = useRouter();
@@ -56,9 +57,9 @@ export function MobileMenu() {
 
           <StatusPill />
 
-          <div className="flex flex-wrap gap-2">
-            <LiveAdsPill className="!px-4 !py-2.5 !text-sm" />
-            <PostAdPill className="!px-4 !py-2.5 !text-sm" />
+          <div className="flex flex-col gap-2.5">
+            <LaunchCampaignLink className="text-center" />
+            <HostScreenLink className="text-center" />
           </div>
 
           <nav className="flex flex-col">
@@ -73,8 +74,14 @@ export function MobileMenu() {
             />
           </nav>
 
-          <div className="mt-auto">
+          <div className="mt-auto flex flex-col gap-4">
             <NavAuth stacked />
+            {showThemeToggle && (
+              <div className="flex items-center justify-between border-t border-ce-line2 pt-4">
+                <span className="text-[13px] text-ce-muted">Appearance</span>
+                <CeThemeToggle />
+              </div>
+            )}
           </div>
         </div>
       </SheetContent>

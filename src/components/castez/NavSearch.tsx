@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Search } from "lucide-react";
+import { ChevronDown, MapPin, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import LocationPickerDialog from "@/components/marketing/LocationPickerDialog";
@@ -13,9 +13,11 @@ import {
 const DEBOUNCE_MS = 400;
 
 /**
- * Location filter + live-ads search, ported from PublicLayout's navbar.
- * Behaviour is unchanged: the location persists to localStorage and both
- * controls push to /live-ads with query params.
+ * Location filter + live-ads search as one segmented control, per
+ * castez-package/nextjs/components/Navbar.tsx.
+ *
+ * Behaviour is the old PublicLayout navbar's: the location persists to
+ * localStorage and both controls push to /live-ads with query params.
  */
 export function NavSearch({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
@@ -62,69 +64,41 @@ export function NavSearch({ compact = false }: { compact?: boolean }) {
     ? location.cityName
       ? `${location.cityName}, ${location.stateCode}`
       : location.stateName || location.stateCode
-    : null;
+    : "All locations";
 
   return (
     <>
-      <div className={`flex items-center gap-1.5 ${compact ? "w-full" : "mx-2 max-w-[160px] flex-1 lg:mx-4 lg:max-w-sm"}`}>
+      <div
+        className={`flex min-w-0 items-stretch overflow-hidden rounded-full border border-ce-line3 bg-ce-panel transition focus-within:border-ce-accent focus-within:ring-[3px] focus-within:ring-ce-accent/15 ${
+          compact
+            ? "w-full"
+            : "max-w-[430px] flex-1 max-[1000px]:max-w-[300px] max-[860px]:max-w-none max-[860px]:flex-none"
+        }`}
+      >
         <button
           type="button"
           onClick={() => setPickerOpen(true)}
-          aria-label={label ? `Location: ${label}. Change location` : "Choose a location"}
-          className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors ${
-            label
-              ? "border border-ce-accent/40 bg-ce-accent/10 text-ce-accentLight"
-              : "border border-ce-line4 bg-ce-panel text-ce-muted hover:text-ce-text4"
-          }`}
+          aria-label={`Location: ${label}. Change location`}
+          className="flex shrink-0 items-center gap-2 whitespace-nowrap border-r border-ce-line3 px-3.5 text-[13px] font-semibold text-ce-muted transition hover:bg-ce-text/[0.04] hover:text-ce-text max-[860px]:px-2.5"
         >
-          <MapPin size={12} />
-          <span className={compact ? "inline" : "hidden lg:inline"}>{label ?? "All locations"}</span>
-          {label && (
-            <span
-              role="button"
-              tabIndex={0}
-              aria-label="Clear location"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleLocationSave(null);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleLocationSave(null);
-                }
-              }}
-              className="ml-0.5 text-sm font-normal leading-none text-ce-muted3 hover:text-ce-text"
-            >
-              ×
-            </span>
-          )}
+          <MapPin size={15} className="text-ce-accent" />
+          <span className={compact ? "inline" : "max-[860px]:hidden"}>{label}</span>
+          <ChevronDown size={13} className="text-ce-muted3" />
         </button>
 
-        <div className="relative flex-1">
+        <div className={`relative min-w-0 flex-1 ${compact ? "" : "max-[860px]:hidden"}`}>
           <Search
-            size={13}
-            className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-ce-muted4"
+            size={15}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ce-muted3"
           />
           <input
-            type="text"
+            type="search"
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
-            placeholder={compact ? "Search live ads…" : "Search…"}
-            aria-label="Search live ads"
-            className="w-full rounded-lg border border-ce-line4 bg-ce-surface py-1.5 pl-7 pr-6 text-sm text-ce-text outline-none transition-colors placeholder:text-ce-muted4 focus:border-ce-accent/60"
+            aria-label="Search screens in this location"
+            placeholder="Search screens in this location"
+            className="h-full w-full bg-transparent py-2.5 pl-[34px] pr-3.5 text-[13px] text-ce-text outline-none placeholder:text-ce-muted4"
           />
-          {search && (
-            <button
-              type="button"
-              onClick={() => handleSearch("")}
-              aria-label="Clear search"
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 text-base leading-none text-ce-muted4 hover:text-ce-text"
-            >
-              ×
-            </button>
-          )}
         </div>
       </div>
 

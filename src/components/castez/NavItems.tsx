@@ -9,37 +9,41 @@ export const NAV_LINKS = [
   { label: "Platform", href: "/#audiences" },
   { label: "How it works", href: "/#flow" },
   { label: "Pricing", href: "/#audiences" },
-  { label: "Help", href: "/help" },
+  { label: "Live Ads", href: "/live-ads" },
 ];
 
-export function LiveAdsPill({ className = "" }: { className?: string }) {
+/** Secondary CTA: the host side of the marketplace. */
+export function HostScreenLink({ className = "" }: { className?: string }) {
   return (
     <Link
-      href="/live-ads"
-      className={`flex items-center gap-1.5 whitespace-nowrap rounded-full border border-ce-accent/30 bg-ce-accent/10 px-3 py-1.5 text-xs font-bold text-ce-accentLight transition-colors hover:bg-ce-accent/20 ${className}`}
+      href="/register"
+      className={`whitespace-nowrap rounded-[9px] border border-ce-line4 bg-ce-raised px-3.5 py-2.5 text-sm font-semibold text-ce-text3 transition-colors hover:border-ce-line5 ${className}`}
     >
-      <span className="relative flex h-2 w-2">
-        <span className="absolute inline-flex h-full w-full animate-ce-pulse rounded-full bg-ce-accent" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-ce-accent" />
-      </span>
-      Live Ads
+      Host a Screen
     </Link>
   );
 }
 
-export function PostAdPill({ className = "" }: { className?: string }) {
+/** Primary CTA: starts the ad submission flow. */
+export function LaunchCampaignLink({ className = "" }: { className?: string }) {
   return (
     <Link
       href="/ads/new"
-      className={`flex items-center gap-1 whitespace-nowrap rounded-full bg-[linear-gradient(180deg,#5cf0dd,#2ad3bf)] px-3 py-1.5 text-xs font-bold text-ce-onAccent ${className}`}
-      style={{ boxShadow: "0 0 20px rgba(62,230,209,.28)" }}
+      className={`whitespace-nowrap rounded-[9px] bg-[linear-gradient(180deg,#5cf0dd,#2ad3bf)] px-4 py-2.5 text-sm font-bold text-ce-onAccent ${className}`}
+      style={{ boxShadow: "0 0 24px rgba(62,230,209,.32)" }}
     >
-      + Post an Ad
+      Launch Campaign
     </Link>
   );
 }
 
-export function FranchiseDemoLink({ className = "", onClick }: { className?: string; onClick?: () => void }) {
+export function FranchiseDemoLink({
+  className = "",
+  onClick,
+}: {
+  className?: string;
+  onClick?: () => void;
+}) {
   return (
     <a
       href="/demo"

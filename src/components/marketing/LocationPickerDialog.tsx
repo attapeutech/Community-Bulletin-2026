@@ -2,6 +2,7 @@
 
 import { MapPin, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 type Country = { id: string; name: string; code: string };
 type StateRow = { id: string; name: string; code: string };
@@ -38,6 +39,9 @@ export default function LocationPickerDialog({ open, onClose, onSave, initial }:
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingCities, setLoadingCities] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   // Fetch countries on open
   useEffect(() => {
@@ -106,7 +110,10 @@ export default function LocationPickerDialog({ open, onClose, onSave, initial }:
     };
   }, [open, handleClose]);
 
-  if (!open) return null;
+  // Portalled to document.body: this dialog renders inside the nav, whose
+  // backdrop-filter makes the header a containing block for fixed-position
+  // descendants, so top/left percentages would resolve against the header.
+  if (!open || !mounted) return null;
 
   const handleStateChange = (id: string) => {
     setStateId(id);
@@ -132,7 +139,7 @@ export default function LocationPickerDialog({ open, onClose, onSave, initial }:
 
   const selectStyle = { backgroundImage: CHEVRON, colorScheme: "dark" as const };
 
-  return (
+  return createPortal(
     <>
       <div
         onClick={handleClose}
@@ -252,6 +259,7 @@ export default function LocationPickerDialog({ open, onClose, onSave, initial }:
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }

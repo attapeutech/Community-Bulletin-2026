@@ -25,7 +25,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "casteasy.io - The Digital Billboard Marketplace",
+  title: "CastEasy.io - The Digital Billboard Marketplace",
   description:
     "Advertisers book merchant-approved screens in local store windows. Store owners turn dead window space into a street-facing ad rotation that pays out every month.",
 };

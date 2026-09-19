@@ -42,7 +42,7 @@ export function Footer() {
           </p>
           <div className="inline-flex items-center gap-2 rounded-lg border border-ce-line3 bg-ce-panel px-[11px] py-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-ce-accent" />
-            <span className="font-ce-mono text-[11px] text-ce-muted2">castez.io → casteasy.io</span>
+            <span className="font-ce-mono text-[11px] text-ce-muted2">castez.io → CastEasy.io</span>
           </div>
         </div>
 
@@ -67,8 +67,8 @@ export function Footer() {
       <div className="border-t border-ce-line">
         <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-3 px-6 py-5">
           <span className="text-xs text-ce-muted5">
-            © 2026 CastEZ, Inc. — casteasy.io. &ldquo;CastEZ&rdquo; and &ldquo;castez.io&rdquo; are
-            branding of casteasy.io.
+            © 2026 CastEZ, Inc. — CastEasy.io. &ldquo;CastEZ&rdquo; and &ldquo;castez.io&rdquo; are
+            branding of CastEasy.io.
           </span>
           <span className="font-ce-mono text-[11px] text-ce-muted5">
             ALL SCREENS MERCHANT-APPROVED

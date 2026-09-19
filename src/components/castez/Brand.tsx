@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 // Shared by Nav, MobileMenu and Footer. Kept in its own module so Nav and
 // MobileMenu don't import each other.
 
@@ -6,7 +8,11 @@ export function Logo({ size = "lg" }: { size?: "lg" | "sm" }) {
   const mark = size === "lg" ? "text-[14px]" : "text-[11px]";
   const text = size === "lg" ? "text-base sm:text-[18px]" : "text-base";
   return (
-    <div className="flex shrink-0 items-center gap-2.5">
+    <Link
+      href="/"
+      aria-label="CastEasy.io home"
+      className="flex shrink-0 items-center gap-2.5 transition-opacity hover:opacity-85"
+    >
       <div
         className={`${box} flex shrink-0 items-center justify-center bg-[linear-gradient(140deg,#3ee6d1,#4f7cff)]`}
         style={size === "lg" ? { boxShadow: "0 0 18px rgba(62,230,209,.45)" } : undefined}
@@ -21,7 +27,7 @@ export function Logo({ size = "lg" }: { size?: "lg" | "sm" }) {
       <span className={`font-ce-display font-bold ${text} tracking-[-0.03em]`}>
         CastEasy<span className="text-ce-muted4">.io</span>
       </span>
-    </div>
+    </Link>
   );
 }
 

@@ -1,45 +1,51 @@
 import Link from "next/link";
+import { Logo } from "./Brand";
 import { MobileMenu } from "./MobileMenu";
-import { Logo, StatusPill } from "./Brand";
+import { NavAuth } from "./NavAuth";
+import { FranchiseDemoLink, LiveAdsPill, NAV_LINKS, PostAdPill } from "./NavItems";
+import { NavSearch } from "./NavSearch";
 
 export function Nav() {
   return (
     <header className="sticky top-0 z-50 border-b border-ce-line8 bg-ce-ground/[0.72] backdrop-blur-[18px]">
-      <div className="mx-auto flex h-[68px] max-w-[1200px] items-center gap-3 px-4 sm:gap-7 sm:px-6">
+      {/* Row 1 */}
+      <div className="mx-auto flex h-[68px] max-w-[1200px] items-center gap-3 px-4 sm:px-6">
         <Logo />
 
-        <div className="hidden lg:block">
-          <StatusPill />
+        <div className="hidden md:flex md:flex-1">
+          <NavSearch />
         </div>
 
-        <nav className="ml-auto hidden items-center gap-[26px] md:flex">
-          <Link href="#audiences" className="text-sm font-medium text-ce-muted hover:text-ce-text">
-            Platform
-          </Link>
-          <Link href="#flow" className="text-sm font-medium text-ce-muted hover:text-ce-text">
-            How it works
-          </Link>
-          <Link href="#audiences" className="text-sm font-medium text-ce-muted hover:text-ce-text">
-            Pricing
-          </Link>
+        <div className="hidden shrink-0 items-center gap-2 md:flex">
+          <LiveAdsPill />
+          <PostAdPill />
+        </div>
+
+        <nav className="hidden items-center gap-5 lg:flex">
+          {NAV_LINKS.map((l) => (
+            <Link
+              key={l.label}
+              href={l.href}
+              className="whitespace-nowrap text-sm font-medium text-ce-muted transition-colors hover:text-ce-text"
+            >
+              {l.label}
+            </Link>
+          ))}
+          <FranchiseDemoLink className="text-sm" />
         </nav>
 
-        <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-2.5 md:ml-0">
-          <Link
-            href="#audiences"
-            className="hidden rounded-[9px] border border-ce-line4 bg-ce-raised px-3.5 py-[9px] text-sm font-semibold text-ce-text3 md:inline-block"
-          >
-            Host a Screen
-          </Link>
-          <Link
-            href="#audiences"
-            className="whitespace-nowrap rounded-[9px] bg-[linear-gradient(180deg,#5cf0dd,#2ad3bf)] px-3 py-2 text-[13px] font-bold text-ce-onAccent sm:px-4 sm:py-2.5 sm:text-sm"
-            style={{ boxShadow: "0 0 24px rgba(62,230,209,.32)" }}
-          >
-            Launch Campaign
-          </Link>
+        <div className="ml-auto hidden shrink-0 items-center gap-2 lg:flex">
+          <NavAuth />
+        </div>
+
+        <div className="ml-auto shrink-0 lg:hidden">
           <MobileMenu />
         </div>
+      </div>
+
+      {/* Row 2 — search moves to its own row below md, as in the old navbar */}
+      <div className="flex h-11 items-center gap-2 border-t border-ce-line2 px-4 md:hidden">
+        <NavSearch compact />
       </div>
     </header>
   );

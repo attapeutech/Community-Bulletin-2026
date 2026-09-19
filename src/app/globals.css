@@ -54,7 +54,10 @@
   * { @apply border-border; }
   body { @apply bg-background text-foreground; background-color: #F4F7FB; }
   .dark body { background-color: #0B1A27; }
-  html, body { overflow-x: hidden; max-width: 100%; }
+  /* Only on html: the root element's overflow propagates to the viewport, so this
+     still clips horizontal overflow. Setting it on body too would make body a
+     scroll container and silently break every position:sticky on the page. */
+  html { overflow-x: hidden; max-width: 100%; }
 }
 
 /* Skeleton shimmer */

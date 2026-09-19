@@ -144,6 +144,10 @@
      still clips horizontal overflow. Setting it on body too would make body a
      scroll container and silently break every position:sticky on the page. */
   html { overflow-x: hidden; max-width: 100%; }
+  /* Native controls -- select popups, scrollbars, date pickers -- follow the
+     theme. Without this a dark select renders a light dropdown list. */
+  :root { color-scheme: light; }
+  .dark { color-scheme: dark; }
 }
 
 /* Skeleton shimmer */

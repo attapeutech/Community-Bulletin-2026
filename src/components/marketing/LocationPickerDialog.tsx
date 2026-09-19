@@ -17,15 +17,30 @@ type Props = {
   initial?: SelectedLocation | null;
 };
 
-const LABEL = "mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-ce-muted3";
+// Styling from castez-package/nextjs/components/ChooseLocationDialog.tsx,
+// translated onto the ce-* tokens so it follows the theme. Native <option>
+// popups follow it too via the color-scheme rule in globals.css.
+const LABEL = "mb-2 block font-ce-mono text-[11px] tracking-[0.14em] text-ce-muted";
 
-// colorScheme tells the browser to paint the native <option> popup dark;
-// without it the dropdown list renders light against a dark control.
-const SELECT =
-  "w-full appearance-none rounded-lg border border-ce-line4 bg-ce-surface px-3.5 py-2.5 text-sm text-ce-text outline-none transition-colors focus:border-ce-accent/60 disabled:opacity-50 bg-[length:12px] bg-[right_12px_center] bg-no-repeat";
+const FIELD =
+  "w-full appearance-none rounded-xl border border-ce-line4 bg-ce-card px-4 py-3 text-[15px] text-ce-text outline-none transition focus:border-ce-accent focus:ring-[3px] focus:ring-ce-accent/15 disabled:cursor-not-allowed disabled:text-ce-muted4";
 
-const CHEVRON =
-  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239aa3b2' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")";
+function Chevron() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ce-muted3"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
 
 export default function LocationPickerDialog({ open, onClose, onSave, initial }: Props) {
   const [countries, setCountries] = useState<Country[]>([]);
@@ -43,7 +58,6 @@ export default function LocationPickerDialog({ open, onClose, onSave, initial }:
 
   useEffect(() => setMounted(true), []);
 
-  // Fetch countries on open
   useEffect(() => {
     if (!open) return;
     fetch("/api/geo/countries")
@@ -58,7 +72,6 @@ export default function LocationPickerDialog({ open, onClose, onSave, initial }:
       .catch(() => {});
   }, [open]);
 
-  // Fetch states when country is selected
   useEffect(() => {
     if (!countryId) return;
     setLoadingStates(true);
@@ -68,7 +81,7 @@ export default function LocationPickerDialog({ open, onClose, onSave, initial }:
     setStateName("");
     setCityList([]);
     setCityName("");
-    fetch(`/api/geo/states?countryId=${countryId}`)
+    fetch("/api/geo/states?countryId=" + countryId)
       .then((r) => r.json())
       .then((j) => {
         if (j.success) setStateList(j.data);
@@ -77,13 +90,12 @@ export default function LocationPickerDialog({ open, onClose, onSave, initial }:
       .finally(() => setLoadingStates(false));
   }, [countryId]);
 
-  // Fetch cities when state is selected
   useEffect(() => {
     if (!stateId) return;
     setLoadingCities(true);
     setCityList([]);
     setCityName("");
-    fetch(`/api/geo/cities?stateId=${stateId}`)
+    fetch("/api/geo/cities?stateId=" + stateId)
       .then((r) => r.json())
       .then((j) => {
         if (j.success) setCityList(j.data);
@@ -110,9 +122,9 @@ export default function LocationPickerDialog({ open, onClose, onSave, initial }:
     };
   }, [open, handleClose]);
 
-  // Portalled to document.body: this dialog renders inside the nav, whose
+  // Portalled to document.body: this renders inside the nav, whose
   // backdrop-filter makes the header a containing block for fixed-position
-  // descendants, so top/left percentages would resolve against the header.
+  // descendants, so the overlay would otherwise be trapped under the nav.
   if (!open || !mounted) return null;
 
   const handleStateChange = (id: string) => {
@@ -137,57 +149,52 @@ export default function LocationPickerDialog({ open, onClose, onSave, initial }:
     onClose();
   };
 
-  const selectStyle = { backgroundImage: CHEVRON, colorScheme: "dark" as const };
-
   return createPortal(
-    <>
-      <div
-        onClick={handleClose}
-        className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-[3px]"
-        aria-hidden="true"
-      />
-
+    <div
+      onClick={handleClose}
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 p-6 backdrop-blur-sm"
+    >
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="location-picker-title"
+        aria-labelledby="choose-location-title"
         tabIndex={-1}
-        className="fixed left-1/2 top-1/2 z-[201] flex max-h-[min(90vh,640px)] w-[min(92vw,420px)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border border-ce-line4 bg-ce-ground outline-none"
-        style={{ boxShadow: "0 40px 80px -30px rgba(0,0,0,.9)" }}
+        onClick={(e) => e.stopPropagation()}
+        className="flex max-h-[min(90vh,640px)] w-full max-w-[420px] flex-col overflow-hidden rounded-2xl border border-ce-line4 bg-ce-surface/95 outline-none backdrop-blur-xl"
+        style={{ boxShadow: "0 40px 80px -40px rgba(0,0,0,0.9)" }}
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-ce-line3 bg-ce-panel px-6 py-4">
+        <header className="flex shrink-0 items-center justify-between gap-4 border-b border-ce-line3 bg-ce-text/[0.02] px-6 py-4">
           <div className="flex items-center gap-2.5">
-            <MapPin size={17} className="text-ce-accent" />
-            <span
-              id="location-picker-title"
-              className="font-ce-display text-[17px] font-bold tracking-[-0.02em] text-ce-text"
+            <MapPin size={20} strokeWidth={1.8} className="text-ce-accent" />
+            <h2
+              id="choose-location-title"
+              className="font-ce-display text-lg font-bold tracking-tight text-ce-text"
             >
               Choose Location
-            </span>
+            </h2>
           </div>
           <button
             type="button"
             onClick={handleClose}
-            aria-label="Close"
-            className="rounded-md p-1 text-ce-muted3 transition-colors hover:text-ce-text"
+            aria-label="Close dialog"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-ce-muted3 transition hover:bg-ce-text/5 hover:text-ce-text"
           >
-            <X size={18} />
+            <X size={16} strokeWidth={1.9} />
           </button>
-        </div>
+        </header>
 
         {/* Scrolls when the viewport is too short for the whole form */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="mb-4">
-            <label className={LABEL} htmlFor="lp-country">
-              Country
-            </label>
+        <div className="flex-1 overflow-y-auto px-6 py-6">
+          <label htmlFor="cl-country" className={LABEL}>
+            COUNTRY
+          </label>
+          <div className="relative mb-5">
             <select
-              id="lp-country"
+              id="cl-country"
+              className={FIELD}
               value={countryId}
               onChange={(e) => setCountryId(e.target.value)}
-              className={SELECT}
-              style={selectStyle}
             >
               <option value="">Select country…</option>
               {countries.map((c) => (
@@ -196,19 +203,19 @@ export default function LocationPickerDialog({ open, onClose, onSave, initial }:
                 </option>
               ))}
             </select>
+            <Chevron />
           </div>
 
-          <div className="mb-4">
-            <label className={LABEL} htmlFor="lp-state">
-              State
-            </label>
+          <label htmlFor="cl-state" className={LABEL}>
+            STATE
+          </label>
+          <div className="relative mb-5">
             <select
-              id="lp-state"
+              id="cl-state"
+              className={FIELD}
               value={stateId}
-              onChange={(e) => handleStateChange(e.target.value)}
               disabled={!countryId || loadingStates}
-              className={SELECT}
-              style={selectStyle}
+              onChange={(e) => handleStateChange(e.target.value)}
             >
               <option value="">{loadingStates ? "Loading…" : "All states"}</option>
               {stateList.map((s) => (
@@ -217,19 +224,19 @@ export default function LocationPickerDialog({ open, onClose, onSave, initial }:
                 </option>
               ))}
             </select>
+            <Chevron />
           </div>
 
-          <div className="mb-6">
-            <label className={LABEL} htmlFor="lp-city">
-              City
-            </label>
+          <label htmlFor="cl-city" className={LABEL}>
+            CITY
+          </label>
+          <div className="relative mb-7">
             <select
-              id="lp-city"
+              id="cl-city"
+              className={FIELD}
               value={cityName}
-              onChange={(e) => setCityName(e.target.value)}
               disabled={!stateId || loadingCities}
-              className={SELECT}
-              style={selectStyle}
+              onChange={(e) => setCityName(e.target.value)}
             >
               <option value="">{loadingCities ? "Loading…" : "All cities"}</option>
               {cityList.map((c) => (
@@ -238,28 +245,29 @@ export default function LocationPickerDialog({ open, onClose, onSave, initial }:
                 </option>
               ))}
             </select>
+            <Chevron />
           </div>
 
-          <div className="flex gap-2.5">
+          <div className="flex gap-3">
             <button
               type="button"
               onClick={handleClear}
-              className="flex-1 rounded-lg border border-ce-line4 bg-ce-raised px-4 py-2.5 text-[13px] font-semibold text-ce-muted transition-colors hover:text-ce-text"
+              className="flex-1 rounded-xl border border-ce-line4 bg-ce-text/[0.02] px-4 py-3.5 text-[15px] font-semibold text-ce-text2 transition hover:border-ce-line5 hover:bg-ce-text/5"
             >
               Clear filter
             </button>
             <button
               type="button"
               onClick={handleSave}
-              className="flex-[2] rounded-lg bg-[linear-gradient(180deg,#5cf0dd,#2ad3bf)] px-4 py-2.5 text-sm font-bold text-ce-onAccent"
-              style={{ boxShadow: "0 8px 24px -8px rgba(62,230,209,.5)" }}
+              className="flex-[1.6] rounded-xl bg-[linear-gradient(180deg,#5cf0dd,#2ad3bf)] px-4 py-3.5 text-[15px] font-bold text-ce-onAccent transition hover:brightness-110"
+              style={{ boxShadow: "0 14px 40px -12px rgba(62,230,209,0.55)" }}
             >
-              Show ads{stateCode ? ` in ${cityName || stateName}` : ""}
+              Show ads
             </button>
           </div>
         </div>
       </div>
-    </>,
+    </div>,
     document.body
   );
 }

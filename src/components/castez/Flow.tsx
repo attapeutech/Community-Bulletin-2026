@@ -25,7 +25,7 @@ const STEPS = [
 
 export function Flow() {
   return (
-    <section id="flow" className="border-b border-ce-line">
+    <section id="flow" className="scroll-mt-[68px] border-b border-ce-line">
       <div className="mx-auto max-w-[1200px] px-6 py-[84px]">
         <div className="mb-[42px] max-w-[640px]">
           <div className="mb-3.5 font-ce-mono text-[11px] tracking-[0.16em] text-ce-accent">

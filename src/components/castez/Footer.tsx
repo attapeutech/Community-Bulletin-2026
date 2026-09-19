@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Logo } from "./Nav";
+import { Logo } from "./Brand";
 
 const COLUMNS = [
   {

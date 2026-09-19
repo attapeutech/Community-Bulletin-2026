@@ -55,7 +55,7 @@ export function Audiences({ defaultTab = "advertisers" }: { defaultTab?: Tab }) 
   const [tab, setTab] = useState<Tab>(defaultTab);
 
   return (
-    <section id="audiences" className="border-b border-ce-line">
+    <section id="audiences" className="scroll-mt-[68px] border-b border-ce-line">
       <div className="mx-auto max-w-[1200px] px-6 py-[84px]">
         <div className="mb-[34px] flex flex-wrap items-end justify-between gap-6">
           <div className="max-w-[620px]">

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin:0; padding:0; background:#07080b; }
+  body { font-family:'Manrope', system-ui, sans-serif; -webkit-font-smoothing:antialiased; }
+  a { color:#3ee6d1; text-decoration:none; }
+  a:hover { color:#8ef6e9; }
+  * { box-sizing:border-box; }
+  select:focus { outline:none; border-color:#3ee6d1 !important; box-shadow:0 0 0 3px rgba(62,230,209,.14) !important; }
+</style>
+</helmet>
+
+<div style="min-height:100vh; background:#07080b; display:flex; align-items:center; justify-content:center; padding:40px 24px; font-family:'Manrope',system-ui,sans-serif; color:#f2f4f7;">
+  <div style="position:absolute; inset:0; background:radial-gradient(60% 50% at 50% 20%, rgba(62,230,209,.1), transparent 70%); pointer-events:none;"></div>
+
+  <div role="dialog" aria-modal="true" style="position:relative; width:100%; max-width:420px; border:1px solid #1e2128; border-radius:18px; overflow:hidden; background:rgba(13,15,19,.85); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); box-shadow:0 40px 80px -40px rgba(0,0,0,.9);">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 22px; border-bottom:1px solid #1e2128; background:rgba(255,255,255,.02);">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3ee6d1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        <h2 style="font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; letter-spacing:-.03em; margin:0;">Choose Location</h2>
+      </div>
+      <button type="button" aria-label="Close dialog" style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:0; border-radius:8px; background:transparent; color:#6b7382; cursor:pointer;" style-hover="background:rgba(255,255,255,.05); color:#e4e8ee;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+      </button>
+    </div>
+
+    <div style="padding:24px 22px;">
+      <label for="cl-country" style="display:block; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#8b93a1; margin-bottom:9px;">COUNTRY</label>
+      <div style="position:relative; margin-bottom:20px;">
+        <select id="cl-country" value="{{ country }}" onChange="{{ onCountry }}" style="width:100%; appearance:none; padding:13px 40px 13px 15px; border:1px solid #23262e; border-radius:11px; background:#0b0d11; color:#f2f4f7; font-family:'Manrope',sans-serif; font-size:15px; cursor:pointer; transition:border-color .16s ease, box-shadow .16s ease;">
+          <option>United States</option>
+          <option>Canada</option>
+        </select>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7382" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="position:absolute; right:14px; top:50%; transform:translateY(-50%); pointer-events:none;" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+      </div>
+
+      <label for="cl-state" style="display:block; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#8b93a1; margin-bottom:9px;">STATE</label>
+      <div style="position:relative; margin-bottom:20px;">
+        <select id="cl-state" value="{{ stateVal }}" onChange="{{ onState }}" style="width:100%; appearance:none; padding:13px 40px 13px 15px; border:1px solid #23262e; border-radius:11px; background:#0b0d11; color:#f2f4f7; font-family:'Manrope',sans-serif; font-size:15px; cursor:pointer; transition:border-color .16s ease, box-shadow .16s ease;">
+          <option>All states</option>
+          <sc-for list="{{ states }}" as="s" hint-placeholder-count="4">
+            <option>{{ s }}</option>
+          </sc-for>
+        </select>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7382" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="position:absolute; right:14px; top:50%; transform:translateY(-50%); pointer-events:none;" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+      </div>
+
+      <label for="cl-city" style="display:block; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#8b93a1; margin-bottom:9px;">CITY</label>
+      <div style="position:relative; margin-bottom:26px;">
+        <select id="cl-city" value="{{ city }}" onChange="{{ onCity }}" disabled="{{ cityDisabled }}" style="width:100%; appearance:none; padding:13px 40px 13px 15px; border:1px solid #23262e; border-radius:11px; background:#0b0d11; color:{{ cityColor }}; font-family:'Manrope',sans-serif; font-size:15px; cursor:{{ cityCursor }}; transition:border-color .16s ease, box-shadow .16s ease;">
+          <option>All cities</option>
+          <sc-for list="{{ cities }}" as="c" hint-placeholder-count="0">
+            <option>{{ c }}</option>
+          </sc-for>
+        </select>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4d545f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="position:absolute; right:14px; top:50%; transform:translateY(-50%); pointer-events:none;" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+      </div>
+
+      <div style="display:flex; gap:12px;">
+        <button type="button" onClick="{{ clearFilter }}" style="flex:1; padding:14px; border:1px solid #23262e; border-radius:11px; background:rgba(255,255,255,.02); color:#e8ecf2; font-family:'Manrope',sans-serif; font-weight:600; font-size:15px; cursor:pointer; transition:background .16s ease, border-color .16s ease;" style-hover="background:rgba(255,255,255,.05); border-color:#2f333d;">Clear filter</button>
+        <button type="button" style="flex:1.6; padding:14px; border:0; border-radius:11px; font-family:'Manrope',sans-serif; font-weight:700; font-size:15px; color:#04100e; background:linear-gradient(180deg,#5cf0dd,#26cdb9); box-shadow:0 14px 40px -12px rgba(62,230,209,.55), inset 0 1px 0 rgba(255,255,255,.4); cursor:pointer;">Show ads</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:620,&quot;height&quot;:640}}">
+const DATA = {
+  "United States": {
+    California: ["Los Angeles", "San Diego", "San Francisco", "San Jose"],
+    Illinois: ["Chicago", "Naperville", "Springfield"],
+    "New York": ["Brooklyn", "Buffalo", "New York City", "Queens"],
+    Texas: ["Austin", "Dallas", "Houston", "San Antonio"]
+  },
+  Canada: {
+    "British Columbia": ["Surrey", "Vancouver", "Victoria"],
+    Ontario: ["Mississauga", "Ottawa", "Toronto"]
+  }
+};
+
+class Component extends DCLogic {
+  state = { country: "United States", stateVal: "All states", city: "All cities" };
+  renderVals() {
+    const { country, stateVal, city } = this.state;
+    const disabled = stateVal === "All states";
+    return {
+      country, stateVal, city,
+      states: Object.keys(DATA[country] || {}),
+      cities: disabled ? [] : (DATA[country] || {})[stateVal] || [],
+      cityDisabled: disabled,
+      cityColor: disabled ? "#5f6774" : "#f2f4f7",
+      cityCursor: disabled ? "not-allowed" : "pointer",
+      onCountry: e => this.setState({ country: e.target.value, stateVal: "All states", city: "All cities" }),
+      onState: e => this.setState({ stateVal: e.target.value, city: "All cities" }),
+      onCity: e => this.setState({ city: e.target.value }),
+      clearFilter: () => this.setState({ country: "United States", stateVal: "All states", city: "All cities" })
+    };
+  }
+}
+</script>
+</body>
+</html>

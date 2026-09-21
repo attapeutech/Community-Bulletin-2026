@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin:0; padding:0; background:#0a0b0f; }
+  body { font-family:'Manrope', system-ui, sans-serif; -webkit-font-smoothing:antialiased; }
+  a { color:#3ee6d1; text-decoration:none; }
+  a:hover { color:#8ef6e9; }
+  * { box-sizing:border-box; }
+</style>
+</helmet>
+
+<div style="min-height:100vh; background:#0a0b0f; color:#f2f4f7; padding:36px 24px 56px; font-family:'Manrope',system-ui,sans-serif;">
+  <div style="max-width:1320px; margin:0 auto;">
+    <div style="margin-bottom:28px;">
+      <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.16em; color:#3ee6d1; margin-bottom:10px;">RESPONSIVE CHECK</div>
+      <h1 style="font-family:'Space Grotesk',sans-serif; font-size:30px; font-weight:700; letter-spacing:-.04em; margin:0 0 8px;">CastEasy.io at device widths</h1>
+      <p style="margin:0; font-size:15px; color:#8b93a1; max-width:640px;">Each frame loads the live landing page at a real device width — scroll inside any frame independently. Edits to the landing page show up here on reload.</p>
+    </div>
+
+    <div style="display:flex; flex-wrap:wrap; gap:26px; align-items:flex-start;">
+      <sc-for list="{{ devices }}" as="d" hint-placeholder-count="4">
+        <div style="flex:0 0 auto;">
+          <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:10px;">
+            <span style="font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:700; letter-spacing:-.02em;">{{ d.name }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#6b7382;">{{ d.spec }}</span>
+          </div>
+          <div style="padding:{{ d.bezel }}; border-radius:{{ d.outerRadius }}; background:#16181d; border:1px solid #2a2e37; box-shadow:0 30px 60px -30px rgba(0,0,0,.9);">
+            <iframe src="./CastEZ Landing.dc.html" title="{{ d.name }} preview" style="display:block; width:{{ d.w }}; height:{{ d.h }}; border:0; border-radius:{{ d.innerRadius }}; background:#07080b;"></iframe>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="margin-top:34px; border:1px solid #1e2128; border-radius:16px; background:rgba(13,15,19,.6); padding:22px 24px;">
+      <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#8b93a1; margin-bottom:14px;">BREAKPOINTS IN PLAY</div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr)); gap:14px;">
+        <sc-for list="{{ breakpoints }}" as="b" hint-placeholder-count="6">
+          <div style="border-left:2px solid #3ee6d1; padding-left:12px;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#3ee6d1; margin-bottom:3px;">{{ b.at }}</div>
+            <div style="font-size:13px; color:#c6ccd6; line-height:1.5;">{{ b.what }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+class Component extends DCLogic {
+  renderVals() {
+    const phone = { bezel: "12px", outerRadius: "42px", innerRadius: "30px" };
+    const tablet = { bezel: "14px", outerRadius: "30px", innerRadius: "16px" };
+    return {
+      devices: [
+        { name: "iPhone SE", spec: "375 × 667", w: "375px", h: "667px", ...phone },
+        { name: "iPhone 15 Pro", spec: "393 × 852", w: "393px", h: "780px", ...phone },
+        { name: "Pixel 8", spec: "412 × 915", w: "412px", h: "780px", ...phone },
+        { name: "iPad mini", spec: "768 × 1024", w: "768px", h: "780px", ...tablet }
+      ],
+      breakpoints: [
+        { at: "≤ 1180px", what: "Center nav links (Platform / How it works / Pricing) hide" },
+        { at: "≤ 1040px", what: "Flow steps go 4-up → 2-up" },
+        { at: "≤ 1000px", what: "Location + search control narrows to 300px" },
+        { at: "≤ 860px", what: "Search hides; location collapses to the pin icon" },
+        { at: "≤ 720px", what: "Bento panels stack 1-up; Log in hides" },
+        { at: "≤ 640px", what: "Nav padding/gap tighten; neon CTA shrinks" },
+        { at: "≤ 560px", what: "Flow steps go 1-up" },
+        { at: "≤ 520px", what: "CastEasy.io wordmark hides, CE pill stays" },
+        { at: "≤ 420px", what: "Notification bell hides" }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

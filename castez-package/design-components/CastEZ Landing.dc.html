@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin:0; padding:0; background:#07080b; }
+  body { font-family:'Manrope', system-ui, sans-serif; -webkit-font-smoothing:antialiased; }
+  a { color:#3ee6d1; text-decoration:none; }
+  a:hover { color:#8ef6e9; }
+  * { box-sizing:border-box; }
+  @keyframes ce-pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.35; transform:scale(1.5); } }
+  @keyframes ce-drift { 0% { transform:translateY(0); } 100% { transform:translateY(-50%); } }
+  header input::placeholder { color:#5f6774; }
+  .ce-light { background:#f4f6f9 !important; color:#111720 !important; }
+  .ce-light header { background:rgba(255,255,255,.85) !important; border-bottom-color:#e2e6ec !important; }
+  .ce-light h1, .ce-light h2, .ce-light h3 { color:#111720 !important; }
+  .ce-light section, .ce-light footer, .ce-light .ce-hairline { border-color:#dfe4ea !important; }
+  .ce-light .ce-surface { background:#ffffff !important; }
+  .ce-light .ce-ink { color:#111720 !important; }
+  .ce-light .ce-muted, .ce-light p, .ce-light dd { color:#5a6371 !important; }
+  .ce-light .ce-divider { background:#e2e6ec !important; }
+  .ce-light .ce-accent { color:#07655a !important; }
+  .ce-light a { color:#0a7d70 !important; }
+  .ce-light a:hover { color:#064f47 !important; }
+  .ce-light a.ce-btn, .ce-light a.ce-btn:hover { color:#04100e !important; }
+  .ce-light a.ce-neon { box-shadow:0 0 0 1px rgba(20,160,143,.4), 0 6px 18px -6px rgba(34,211,189,.7), inset 0 1px 0 rgba(255,255,255,.6) !important; }
+  .ce-light .ce-accent-indigo { color:#3f5bd6 !important; }
+  .ce-light .ce-grad { background-image:linear-gradient(100deg,#0a7d70,#3f5bd6) !important; }
+  .ce-light .ce-wash-a { background:linear-gradient(160deg,rgba(62,230,209,.16),rgba(255,255,255,.92)) !important; }
+  .ce-light .ce-wash-b { background:linear-gradient(160deg,rgba(79,124,255,.16),rgba(255,255,255,.92)) !important; }
+  .ce-light header input::placeholder { color:#96a0ad; }
+  .ce-light .ce-sim, .ce-light .ce-sim h1, .ce-light .ce-sim h2, .ce-light .ce-sim h3, .ce-light .ce-sim div, .ce-light .ce-sim span { color:#f2f4f7; }
+  .ce-light .ce-loc svg, .ce-light .ce-search svg { stroke:#0d8f7f; }
+  header input:focus { outline:none; }
+  header .ce-find:focus-within { border-color:#3ee6d1; box-shadow:0 0 0 3px rgba(62,230,209,.14); }
+  @media (min-width:1040px) { .ce-step { flex-basis:calc(25% - 1px) !important; } }
+  @media (max-width:560px) { .ce-step { flex-basis:100% !important; padding:26px 20px 28px !important; } }
+  @media (max-width:1180px) { .ce-nav-links { display:none !important; } }
+  @media (max-width:1000px) { .ce-find { max-width:300px !important; } }
+  @media (max-width:860px) { .ce-find { max-width:none !important; flex:0 0 auto !important; } }
+  @media (max-width:860px) { .ce-loc-label { display:none; } .ce-loc { padding:0 10px !important; } .ce-search { display:none !important; } }
+  @media (max-width:720px) { .ce-login { display:none !important; } }
+  .ce-burger { display:none; }
+  @media (max-width:640px) {
+    .ce-navrow { flex-wrap:wrap; height:auto !important; gap:10px !important; padding:10px 16px !important; align-items:center; }
+    .ce-find { order:3; flex:1 0 100% !important; max-width:none !important; }
+    .ce-search { display:block !important; }
+    .ce-loc { padding:0 12px !important; }
+    .ce-loc-label { display:inline !important; }
+    .ce-neon { display:none !important; }
+    .ce-burger { display:flex !important; }
+    .ce-navcta { margin-left:auto; gap:8px !important; }
+    .ce-navrow.ce-menu-open .ce-find { display:none !important; }
+  }
+  @media (min-width:720px) { .ce-bento { grid-template-columns:repeat(2,minmax(0,1fr)) !important; } .ce-bento > .ce-wide, .ce-bento > .ce-last { grid-column:span 2; } }
+</style>
+</helmet>
+
+<div class="{{ themeClass }} ce-ink" style="background:#07080b; color:#f2f4f7; min-height:100vh; overflow-x:clip; font-family:'Manrope',system-ui,sans-serif;">
+
+  <!-- NAV -->
+  <header style="position:sticky; top:0; z-index:50; backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); background:rgba(7,8,11,.72); border-bottom:1px solid #191c22;">
+    <div class="ce-navrow {{ menuClass }}" style="max-width:1200px; margin:0 auto; padding:0 24px; height:68px; display:flex; align-items:center; gap:28px;">
+      <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+        <div style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:10px; background:linear-gradient(150deg,#7df3e2,#2ad3bf 45%,#35b7f5); border:1px solid rgba(255,255,255,.4); box-shadow:0 0 0 1px rgba(62,230,209,.35), 0 0 16px rgba(62,230,209,.6), 0 0 40px rgba(62,230,209,.35), inset 0 1px 0 rgba(255,255,255,.6);"><span style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; letter-spacing:-.02em; color:#04100e;">CE</span></div>
+        <span class="ce-word" style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:19px; letter-spacing:-.03em;">CastEasy<span class="ce-muted" style="color:#6b7382;">.io</span></span>
+      </div>
+      <div class="ce-find ce-surface ce-hairline" style="display:flex; align-items:stretch; flex:1 1 auto; min-width:0; max-width:430px; border:1px solid #1e2128; border-radius:999px; background:#0c0e12; overflow:hidden;">
+        <button type="button" onClick="{{ openLocation }}" class="ce-loc ce-hairline ce-ink" style="display:flex; align-items:center; gap:8px; padding:0 14px; border:0; border-right:1px solid #1e2128; background:transparent; color:#c6ccd6; font-family:'Manrope',sans-serif; font-size:13px; font-weight:600; white-space:nowrap; cursor:pointer; flex-shrink:0; transition:color .16s ease, background .16s ease;" style-hover="color:#f2f4f7; background:rgba(255,255,255,.04);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3ee6d1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          <span class="ce-loc-label">{{ locationLabel }}</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7382" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+        </button>
+        <div class="ce-search" style="position:relative; flex:1 1 auto; min-width:0;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6b7382" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); pointer-events:none;" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg>
+          <input type="search" aria-label="Search screens in this location" placeholder="Search screens in this location" class="ce-ink" style="width:100%; height:100%; padding:9px 14px 9px 34px; border:0; background:transparent; color:#f2f4f7; font-family:'Manrope',sans-serif; font-size:13px;" />
+        </div>
+      </div>
+      <nav class="ce-nav-links" style="display:flex; gap:26px; margin-left:auto; align-items:center;">
+        <a href="#audiences" class="ce-muted" style="font-size:14px; color:#9aa3b2; font-weight:500;">Platform</a>
+        <a href="#flow" class="ce-muted" style="font-size:14px; color:#9aa3b2; font-weight:500;">How it works</a>
+        <a href="#audiences" class="ce-muted" style="font-size:14px; color:#9aa3b2; font-weight:500;">Pricing</a>
+      </nav>
+      <div class="ce-navcta" style="display:flex; gap:10px; align-items:center; flex-shrink:0; margin-left:auto;">
+        <div class="ce-bell" style="position:relative; flex-shrink:0;">
+          <button type="button" onClick="{{ toggleBell }}" aria-label="Notifications" class="ce-surface ce-hairline ce-ink" style="width:34px; height:34px; display:flex; align-items:center; justify-content:center; border:1px solid #1e2128; border-radius:9px; background:#0c0e12; cursor:pointer; flex-shrink:0; transition:border-color .16s ease, color .16s ease; color:#c6ccd6;" style-hover="border-color:#3ee6d1; color:#f2f4f7;">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"></path><path d="M10.3 20a2 2 0 0 0 3.4 0"></path></svg>
+            <span style="position:absolute; top:6px; right:7px; width:7px; height:7px; border-radius:999px; background:#3ee6d1; box-shadow:0 0 0 2px #0c0e12;"></span>
+          </button>
+          <sc-if value="{{ bellOpen }}" hint-placeholder-val="{{ false }}">
+            <div class="ce-surface ce-hairline" style="position:absolute; top:44px; right:0; width:296px; border:1px solid #1e2128; border-radius:14px; background:rgba(13,15,19,.94); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); box-shadow:0 30px 60px -30px rgba(0,0,0,.9); overflow:hidden; z-index:60;">
+              <div class="ce-hairline" style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid #1e2128;">
+                <span class="ce-muted" style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#8b93a1;">NOTIFICATIONS</span>
+                <span class="ce-accent" style="font-size:11px; font-weight:700; color:#3ee6d1;">3 new</span>
+              </div>
+              <div style="display:flex; flex-direction:column;">
+                <div class="ce-hairline" style="padding:12px 14px; border-bottom:1px solid #16191f;">
+                  <div class="ce-ink" style="font-size:13px; font-weight:600; color:#f2f4f7; margin-bottom:3px;">Ad approved — Screen #0412</div>
+                  <div class="ce-muted" style="font-size:12px; color:#7d8593;">7th &amp; Market · live in rotation · 2m ago</div>
+                </div>
+                <div class="ce-hairline" style="padding:12px 14px; border-bottom:1px solid #16191f;">
+                  <div class="ce-ink" style="font-size:13px; font-weight:600; color:#f2f4f7; margin-bottom:3px;">Payout sent · $184.20</div>
+                  <div class="ce-muted" style="font-size:12px; color:#7d8593;">Stripe Connect · arrives Friday · 1h ago</div>
+                </div>
+                <div style="padding:12px 14px;">
+                  <div class="ce-ink" style="font-size:13px; font-weight:600; color:#f2f4f7; margin-bottom:3px;">New creative awaiting review</div>
+                  <div class="ce-muted" style="font-size:12px; color:#7d8593;">Northside Dental · queued for your screen · 3h ago</div>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+        <button type="button" onClick="{{ toggleTheme }}" aria-label="Toggle dark and light mode" class="ce-surface ce-hairline ce-ink" style="width:34px; height:34px; display:flex; align-items:center; justify-content:center; border:1px solid #1e2128; border-radius:9px; background:#0c0e12; cursor:pointer; flex-shrink:0; transition:border-color .16s ease, color .16s ease; color:#c6ccd6;" style-hover="border-color:#3ee6d1; color:#f2f4f7;">
+          <sc-if value="{{ isDark }}" hint-placeholder-val="{{ true }}">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"></path></svg>
+          </sc-if>
+          <sc-if value="{{ isLight }}" hint-placeholder-val="{{ false }}">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+          </sc-if>
+        </button>
+        <button type="button" onClick="{{ toggleMenu }}" class="ce-burger ce-surface ce-hairline ce-ink" aria-label="Open menu" style="width:36px; height:36px; align-items:center; justify-content:center; border:1px solid #1e2128; border-radius:9px; background:#0c0e12; color:#c6ccd6; cursor:pointer; flex-shrink:0;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+        </button>
+        <a href="./CastEZ Login.dc.html" class="ce-login ce-muted" style="font-size:14px; font-weight:600; color:#9aa3b2; padding:9px 4px;">Log in</a>
+        <a href="#audiences" class="ce-neon ce-btn" style="font-size:14px; font-weight:700; color:#04100e; padding:10px 18px; border-radius:9px; background:linear-gradient(180deg,#6ff7e5,#22d3bd); border:1px solid rgba(255,255,255,.35); box-shadow:0 0 0 1px rgba(62,230,209,.35), 0 0 18px rgba(62,230,209,.55), 0 0 44px rgba(62,230,209,.35), inset 0 1px 0 rgba(255,255,255,.55); white-space:nowrap; transition:box-shadow .2s ease, transform .2s ease;" style-hover="box-shadow:0 0 0 1px rgba(62,230,209,.5), 0 0 26px rgba(62,230,209,.75), 0 0 64px rgba(62,230,209,.45), inset 0 1px 0 rgba(255,255,255,.6); transform:translateY(-1px);">Get started free</a>
+      </div>
+    </div>
+      <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+        <div class="ce-surface ce-hairline" style="border-top:1px solid #1e2128; background:#0c0e12; padding:14px 16px 18px; display:flex; flex-direction:column; gap:4px;">
+          <a href="#audiences" onClick="{{ closeMenu }}" class="ce-ink" style="padding:11px 4px; font-size:15px; font-weight:600; color:#e4e8ee;">Platform</a>
+          <a href="#flow" onClick="{{ closeMenu }}" class="ce-ink" style="padding:11px 4px; font-size:15px; font-weight:600; color:#e4e8ee;">How it works</a>
+          <a href="#audiences" onClick="{{ closeMenu }}" class="ce-ink" style="padding:11px 4px; font-size:15px; font-weight:600; color:#e4e8ee;">Pricing</a>
+          <a href="./CastEZ Login.dc.html" class="ce-ink" style="padding:11px 4px; font-size:15px; font-weight:600; color:#e4e8ee; border-bottom:1px solid #1e2128; margin-bottom:12px;">Log in</a>
+          <a href="#audiences" onClick="{{ closeMenu }}" class="ce-btn" style="text-align:center; font-size:15px; font-weight:700; color:#04100e; padding:13px 18px; border-radius:10px; background:linear-gradient(180deg,#6ff7e5,#22d3bd); box-shadow:0 0 0 1px rgba(62,230,209,.35), 0 0 18px rgba(62,230,209,.5), inset 0 1px 0 rgba(255,255,255,.55);">Get started free</a>
+        </div>
+      </sc-if>
+  </header>
+
+  <!-- LOCATION DIALOG -->
+  <sc-if value="{{ locationOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeLocation }}" style="position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(0,0,0,.72); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);">
+      <div role="dialog" aria-modal="true" onClick="{{ stopClose }}" class="ce-surface ce-hairline" style="width:100%; max-width:420px; border:1px solid #1e2128; border-radius:18px; overflow:hidden; background:rgba(13,15,19,.92); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); box-shadow:0 40px 80px -40px rgba(0,0,0,.9);">
+        <div class="ce-surface ce-hairline" style="display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 22px; border-bottom:1px solid #1e2128; background:rgba(255,255,255,.02);">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3ee6d1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            <h2 style="font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; letter-spacing:-.03em; margin:0;">Choose Location</h2>
+          </div>
+          <button type="button" onClick="{{ closeLocation }}" aria-label="Close dialog" class="ce-muted" style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:0; border-radius:8px; background:transparent; color:#6b7382; cursor:pointer;" style-hover="background:rgba(255,255,255,.05); color:#e4e8ee;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+          </button>
+        </div>
+        <div style="padding:24px 22px;">
+          <label for="nav-country" class="ce-muted" style="display:block; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#8b93a1; margin-bottom:9px;">COUNTRY</label>
+          <div style="position:relative; margin-bottom:20px;">
+            <select id="nav-country" value="{{ country }}" onChange="{{ onCountry }}" class="ce-surface ce-hairline ce-ink" style="width:100%; appearance:none; padding:13px 40px 13px 15px; border:1px solid #23262e; border-radius:11px; background:#0b0d11; color:#f2f4f7; font-family:'Manrope',sans-serif; font-size:15px; cursor:pointer;">
+              <option>United States</option>
+              <option>Canada</option>
+            </select>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7382" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="position:absolute; right:14px; top:50%; transform:translateY(-50%); pointer-events:none;" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+          </div>
+          <label for="nav-state" class="ce-muted" style="display:block; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#8b93a1; margin-bottom:9px;">STATE</label>
+          <div style="position:relative; margin-bottom:20px;">
+            <select id="nav-state" value="{{ stateVal }}" onChange="{{ onState }}" class="ce-surface ce-hairline ce-ink" style="width:100%; appearance:none; padding:13px 40px 13px 15px; border:1px solid #23262e; border-radius:11px; background:#0b0d11; color:#f2f4f7; font-family:'Manrope',sans-serif; font-size:15px; cursor:pointer;">
+              <option>All states</option>
+              <sc-for list="{{ states }}" as="s" hint-placeholder-count="4">
+                <option>{{ s }}</option>
+              </sc-for>
+            </select>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7382" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="position:absolute; right:14px; top:50%; transform:translateY(-50%); pointer-events:none;" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+          </div>
+          <label for="nav-city" class="ce-muted" style="display:block; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#8b93a1; margin-bottom:9px;">CITY</label>
+          <div style="position:relative; margin-bottom:26px;">
+            <select id="nav-city" value="{{ city }}" onChange="{{ onCity }}" disabled="{{ cityDisabled }}" class="ce-surface ce-hairline" style="width:100%; appearance:none; padding:13px 40px 13px 15px; border:1px solid #23262e; border-radius:11px; background:#0b0d11; color:{{ cityColor }}; font-family:'Manrope',sans-serif; font-size:15px; cursor:{{ cityCursor }};">
+              <option>All cities</option>
+              <sc-for list="{{ cities }}" as="c" hint-placeholder-count="0">
+                <option>{{ c }}</option>
+              </sc-for>
+            </select>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4d545f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="position:absolute; right:14px; top:50%; transform:translateY(-50%); pointer-events:none;" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+          </div>
+          <div style="display:flex; gap:12px;">
+            <button type="button" onClick="{{ clearFilter }}" class="ce-surface ce-hairline ce-ink" style="flex:1; padding:14px; border:1px solid #23262e; border-radius:11px; background:rgba(255,255,255,.02); color:#e8ecf2; font-family:'Manrope',sans-serif; font-weight:600; font-size:15px; cursor:pointer;" style-hover="background:rgba(255,255,255,.05); border-color:#2f333d;">Clear filter</button>
+            <button type="button" onClick="{{ applyLocation }}" style="flex:1.6; padding:14px; border:0; border-radius:11px; font-family:'Manrope',sans-serif; font-weight:700; font-size:15px; color:#04100e; background:linear-gradient(180deg,#5cf0dd,#26cdb9); box-shadow:0 14px 40px -12px rgba(62,230,209,.55), inset 0 1px 0 rgba(255,255,255,.4); cursor:pointer;">Show ads</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- HERO -->
+  <section style="position:relative; border-bottom:1px solid #14171c;">
+    <div style="position:absolute; top:-180px; left:50%; width:900px; height:520px; transform:translateX(-50%); background:radial-gradient(50% 50% at 50% 50%, rgba(62,230,209,.16), rgba(79,124,255,.06) 55%, transparent 75%); pointer-events:none;"></div>
+    <div style="position:relative; max-width:1200px; margin:0 auto; padding:88px 24px 96px; display:grid; grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr)); gap:56px; align-items:center;">
+      <div style="min-width:0;">
+        <div style="display:inline-flex; align-items:center; gap:9px; padding:6px 13px; border:1px solid rgba(62,230,209,.28); border-radius:999px; background:rgba(62,230,209,.07); margin-bottom:26px;">
+          <span style="width:5px; height:5px; border-radius:999px; background:#3ee6d1;"></span>
+          <span class="ce-accent" style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#7ef0e0;">THE DIGITAL BILLBOARD MARKETPLACE</span>
+        </div>
+        <h1 style="font-family:'Space Grotesk',sans-serif; font-weight:700; letter-spacing:-.045em; line-height:1.03; font-size:clamp(38px,5vw,62px); margin:0 0 22px; text-wrap:balance;">
+          Trade paper window clutter for <span class="ce-grad" style="background:linear-gradient(100deg,#5cf0dd,#7c9dff); -webkit-background-clip:text; background-clip:text; color:transparent;">high-impact digital billboards.</span>
+        </h1>
+        <p class="ce-muted" style="font-size:18px; line-height:1.6; color:#9aa3b2; margin:0 0 34px; max-width:560px; text-wrap:pretty;">
+          Advertisers skip the design studio, the print shop and the tape — upload a graphic, pick your blocks, go live. Store owners turn dead window space into a street-facing ad rotation that pays out every month. No printing fees. No stale flyers. One network.
+        </p>
+        <div style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:34px;">
+          <a href="#audiences" class="ce-btn" style="display:inline-flex; align-items:center; gap:9px; padding:15px 24px; border-radius:11px; font-weight:700; font-size:15px; color:#04100e; background:linear-gradient(180deg,#5cf0dd,#26cdb9); box-shadow:0 14px 40px -10px rgba(62,230,209,.55), inset 0 1px 0 rgba(255,255,255,.4);">Launch Your Ad Campaign →</a>
+          <a href="#audiences" class="ce-surface ce-ink" style="display:inline-flex; align-items:center; gap:9px; padding:15px 24px; border-radius:11px; font-weight:600; font-size:15px; color:#e8ecf2; border:1px solid #2a2e37; background:rgba(255,255,255,.02);">Host a Screen &amp; Earn</a>
+        </div>
+        <div class="ce-hairline" style="display:flex; flex-wrap:wrap; gap:0; border-top:1px solid #1a1d23; padding-top:22px;">
+          <div style="padding-right:28px; margin-right:28px; border-right:1px solid #1a1d23;">
+            <div style="font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; letter-spacing:-.03em;">$0</div>
+            <div class="ce-muted" style="font-size:12px; color:#7d8593; font-weight:500;">printing &amp; design spend</div>
+          </div>
+          <div style="padding-right:28px; margin-right:28px; border-right:1px solid #1a1d23;">
+            <div style="font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; letter-spacing:-.03em;">&lt;2s</div>
+            <div class="ce-muted" style="font-size:12px; color:#7d8593; font-weight:500;">approval to on-screen</div>
+          </div>
+          <div>
+            <div style="font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; letter-spacing:-.03em;">100%</div>
+            <div class="ce-muted" style="font-size:12px; color:#7d8593; font-weight:500;">merchant-approved inventory</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE NETWORK SIMULATION -->
+      <div class="ce-sim" style="min-width:0; position:relative; color:#f2f4f7;">
+        <div style="position:absolute; inset:14px; border-radius:26px; background:linear-gradient(140deg,rgba(62,230,209,.35),rgba(79,124,255,.25)); filter:blur(40px);"></div>
+        <div style="position:relative; border:1px solid #23262e; border-radius:22px; background:rgba(13,15,19,.72); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); padding:16px; box-shadow:0 40px 80px -40px rgba(0,0,0,.9);">
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:4px 6px 14px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="width:6px; height:6px; border-radius:999px; background:#3ee6d1; box-shadow:0 0 10px #3ee6d1;"></span>
+              <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#9aa3b2; letter-spacing:.06em;">SCREEN #0412 · 7TH &amp; MARKET</span>
+            </div>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#6b7382;">1080p · 24/7</span>
+          </div>
+
+          <div style="border:1px solid #2c3039; border-radius:14px; background:#05060a; padding:9px;">
+            <div style="position:relative; border-radius:9px; overflow:hidden; aspect-ratio:16/10; background:#0a0c11;">
+              <div style="position:absolute; inset:0; transition:transform .85s cubic-bezier(.65,.05,.36,1); transform:translateY({{ trackOffset }});">
+
+                <div style="height:100%; padding:26px; display:flex; flex-direction:column; justify-content:space-between; background:linear-gradient(150deg,#0f2f2b,#08131b);">
+                  <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.16em; color:#5cf0dd;">MARIA'S TAQUERIA · 200 FT AWAY</div>
+                  <div>
+                    <div style="font-family:'Space Grotesk',sans-serif; font-size:clamp(22px,3.4vw,36px); font-weight:700; letter-spacing:-.035em; line-height:1.05;">2 tacos + horchata<br />$7 til 4pm today</div>
+                    <div style="margin-top:12px; display:inline-block; padding:6px 12px; border-radius:7px; background:#5cf0dd; color:#04100e; font-weight:700; font-size:13px;">Show this screen at the counter</div>
+                  </div>
+                </div>
+
+                <div style="height:100%; padding:26px; display:flex; flex-direction:column; justify-content:space-between; background:linear-gradient(150deg,#141a3a,#0a0b16);">
+                  <div class="ce-accent-indigo" style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.16em; color:#9db0ff;">NORTHSIDE DENTAL · NOW BOOKING</div>
+                  <div>
+                    <div style="font-family:'Space Grotesk',sans-serif; font-size:clamp(22px,3.4vw,36px); font-weight:700; letter-spacing:-.035em; line-height:1.05;">New patient cleaning<br />$59 this month</div>
+                    <div style="margin-top:12px; display:inline-block; padding:6px 12px; border-radius:7px; background:#8ea6ff; color:#0a0b16; font-weight:700; font-size:13px;">Walk-ins after 5pm</div>
+                  </div>
+                </div>
+
+                <div style="height:100%; padding:26px; display:flex; flex-direction:column; justify-content:space-between; background:linear-gradient(150deg,#2a1c10,#150c08);">
+                  <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.16em; color:#f0b07e;">RIDGE HOME SERVICES · LICENSED</div>
+                  <div>
+                    <div style="font-family:'Space Grotesk',sans-serif; font-size:clamp(22px,3.4vw,36px); font-weight:700; letter-spacing:-.035em; line-height:1.05;">Gutter cleanout<br />before the rain hits</div>
+                    <div style="margin-top:12px; display:inline-block; padding:6px 12px; border-radius:7px; background:#f0b07e; color:#150c08; font-weight:700; font-size:13px;">Same-week slots open</div>
+                  </div>
+                </div>
+
+              </div>
+              <div style="position:absolute; left:0; right:0; bottom:0; height:3px; background:#141821;">
+                <div style="height:100%; background:linear-gradient(90deg,#3ee6d1,#7c9dff); width:{{ progressWidth }}; transition:width .3s linear;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:14px; display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;">
+            <div style="display:flex; align-items:center; gap:9px; padding:8px 12px; border:1px solid rgba(62,230,209,.3); border-radius:9px; background:rgba(62,230,209,.08);">
+              <span style="width:14px; height:14px; border-radius:999px; background:#3ee6d1; color:#04100e; font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center;">✓</span>
+              <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8ef6e9; letter-spacing:.03em;">Approved by Store Manager • Active via Socket.io</span>
+            </div>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#6b7382;">SLOT {{ slotLabel }} / 03</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DUAL AUDIENCE -->
+  <section id="audiences" style="border-bottom:1px solid #14171c;">
+    <div style="max-width:1200px; margin:0 auto; padding:84px 24px;">
+      <div style="display:flex; flex-wrap:wrap; gap:24px; align-items:flex-end; justify-content:space-between; margin-bottom:34px;">
+        <div style="max-width:620px;">
+          <div class="ce-accent" style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.16em; color:#3ee6d1; margin-bottom:14px;">TWO SIDES, ONE MARKETPLACE</div>
+          <h2 style="font-family:'Space Grotesk',sans-serif; font-size:clamp(28px,3.6vw,42px); font-weight:700; letter-spacing:-.04em; line-height:1.08; margin:0;">Built for the business buying the window — and the one that owns it.</h2>
+        </div>
+        <div class="ce-surface ce-hairline" style="display:inline-flex; padding:4px; border:1px solid #23262e; border-radius:12px; background:#0c0e12;">
+          <button type="button" onClick="{{ pickAdvertisers }}" style="padding:10px 18px; border:0; border-radius:9px; font-family:'Manrope',sans-serif; font-weight:700; font-size:14px; cursor:pointer; transition:all .18s ease; background:{{ tabABg }}; color:{{ tabAFg }}; box-shadow:{{ tabAGlow }};">For Advertisers</button>
+          <button type="button" onClick="{{ pickHosts }}" style="padding:10px 18px; border:0; border-radius:9px; font-family:'Manrope',sans-serif; font-weight:700; font-size:14px; cursor:pointer; transition:all .18s ease; background:{{ tabBBg }}; color:{{ tabBFg }}; box-shadow:{{ tabBGlow }};">For Host Locations</button>
+        </div>
+      </div>
+
+      <sc-if value="{{ showAdvertisers }}" hint-placeholder-val="{{ true }}">
+        <div class="ce-bento" style="display:grid; grid-template-columns:minmax(0,1fr); gap:16px;">
+          <div class="ce-wide ce-hairline ce-wash-a" style="min-width:0; border:1px solid #1e2128; border-radius:18px; padding:30px; background:linear-gradient(160deg,rgba(62,230,209,.09),rgba(13,15,19,.5)); backdrop-filter:blur(14px);">
+            <div class="ce-accent" style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#3ee6d1; margin-bottom:16px;">HYPER-LOCAL TARGETING</div>
+            <h3 style="font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; letter-spacing:-.035em; margin:0 0 12px; line-height:1.15;">Buy the exact corner your customers walk past.</h3>
+            <p class="ce-muted" style="margin:0 0 20px; color:#9aa3b2; font-size:15px; line-height:1.6; max-width:520px;">Browse screens by neighborhood, foot traffic and store type. Book one window for a weekend special or forty across a metro — priced per screen, per day, no agency in the middle.</p>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              <span class="ce-surface ce-hairline ce-ink" style="padding:7px 12px; border:1px solid #23262e; border-radius:8px; font-size:13px; color:#c6ccd6; background:#0d0f14;">Convenience stores</span>
+              <span class="ce-surface ce-hairline ce-ink" style="padding:7px 12px; border:1px solid #23262e; border-radius:8px; font-size:13px; color:#c6ccd6; background:#0d0f14;">Laundromats</span>
+              <span class="ce-surface ce-hairline ce-ink" style="padding:7px 12px; border:1px solid #23262e; border-radius:8px; font-size:13px; color:#c6ccd6; background:#0d0f14;">Barber shops</span>
+              <span class="ce-surface ce-hairline ce-ink" style="padding:7px 12px; border:1px solid #23262e; border-radius:8px; font-size:13px; color:#c6ccd6; background:#0d0f14;">Cafés</span>
+            </div>
+          </div>
+          <div class="ce-surface ce-hairline" style="min-width:0; border:1px solid #1e2128; border-radius:18px; padding:30px; background:rgba(13,15,19,.6);">
+            <div class="ce-muted" style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#6b7382; margin-bottom:16px;">ZERO PRINT FRICTION</div>
+            <h3 style="font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700; letter-spacing:-.03em; margin:0 0 10px;">Drop a PNG. That's the whole workflow.</h3>
+            <p class="ce-muted" style="margin:0; color:#9aa3b2; font-size:15px; line-height:1.6;">No designer retainer, no 500-flyer minimum, no walking a stack of paper down the block asking for counter space.</p>
+          </div>
+          <div class="ce-surface ce-hairline" style="min-width:0; border:1px solid #1e2128; border-radius:18px; padding:30px; background:rgba(13,15,19,.6);">
+            <div class="ce-muted" style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#6b7382; margin-bottom:16px;">INSTANT LIVE EDITS</div>
+            <h3 style="font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700; letter-spacing:-.03em; margin:0 0 10px;">Change the price at 2pm, it's on glass by 2:01.</h3>
+            <p class="ce-muted" style="margin:0; color:#9aa3b2; font-size:15px; line-height:1.6;">Swap creative, pause a slow block or push a flash offer — every screen updates over a live socket, not a print run.</p>
+          </div>
+          <div class="ce-last ce-surface ce-hairline" style="min-width:0; border:1px solid #1e2128; border-radius:18px; padding:30px; background:rgba(13,15,19,.6); display:flex; flex-direction:column; justify-content:space-between; gap:20px;">
+            <div>
+              <div class="ce-muted" style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#6b7382; margin-bottom:16px;">TRANSPARENT BILLING</div>
+              <h3 style="font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700; letter-spacing:-.03em; margin:0 0 10px;">Card in, campaign out.</h3>
+              <p class="ce-muted" style="margin:0; color:#9aa3b2; font-size:15px; line-height:1.6;">Stripe checkout, itemized by screen and day. Cancel a block and the unused days come back.</p>
+            </div>
+            <a href="#flow" style="font-weight:700; font-size:14px;">See the 4-step flow →</a>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showHosts }}" hint-placeholder-val="{{ false }}">
+        <div class="ce-bento" style="display:grid; grid-template-columns:minmax(0,1fr); gap:16px;">
+          <div class="ce-wide ce-hairline ce-wash-b" style="min-width:0; border:1px solid #1e2128; border-radius:18px; padding:30px; background:linear-gradient(160deg,rgba(79,124,255,.11),rgba(13,15,19,.5)); backdrop-filter:blur(14px);">
+            <div class="ce-accent-indigo" style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#9db0ff; margin-bottom:16px;">PASSIVE REVENUE VIA STRIPE</div>
+            <h3 style="font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; letter-spacing:-.035em; margin:0 0 12px; line-height:1.15;">Your window is already the best-trafficked ad space on the block.</h3>
+            <p class="ce-muted" style="margin:0 0 20px; color:#9aa3b2; font-size:15px; line-height:1.6; max-width:520px;">Every booked slot pays out to your bank on a Stripe Connect schedule you control. No invoicing advertisers, no chasing checks, no negotiating with the guy who wants to tape a flyer to your door.</p>
+            <div style="display:flex; flex-wrap:wrap; gap:14px;">
+              <div class="ce-surface ce-hairline" style="padding:14px 18px; border:1px solid #23262e; border-radius:12px; background:#0d0f14;">
+                <div style="font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; letter-spacing:-.03em;">Weekly</div>
+                <div class="ce-muted" style="font-size:12px; color:#7d8593;">automatic payouts</div>
+              </div>
+              <div class="ce-surface ce-hairline" style="padding:14px 18px; border:1px solid #23262e; border-radius:12px; background:#0d0f14;">
+                <div style="font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; letter-spacing:-.03em;">Per-slot</div>
+                <div class="ce-muted" style="font-size:12px; color:#7d8593;">revenue share, itemized</div>
+              </div>
+            </div>
+          </div>
+          <div class="ce-surface ce-hairline" style="min-width:0; border:1px solid #1e2128; border-radius:18px; padding:30px; background:rgba(13,15,19,.6);">
+            <div class="ce-muted" style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#6b7382; margin-bottom:16px;">AUTOMATED QUEUE CONTROL</div>
+            <h3 style="font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700; letter-spacing:-.03em; margin:0 0 10px;">Nothing hits your glass without your tap.</h3>
+            <p class="ce-muted" style="margin:0; color:#9aa3b2; font-size:15px; line-height:1.6;">Review every creative in one queue. Approve, reject, or block a category — competitors stay off your window permanently.</p>
+          </div>
+          <div class="ce-surface ce-hairline" style="min-width:0; border:1px solid #1e2128; border-radius:18px; padding:30px; background:rgba(13,15,19,.6);">
+            <div class="ce-muted" style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#6b7382; margin-bottom:16px;">FREE HARDWARE PLACEMENT</div>
+            <h3 style="font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700; letter-spacing:-.03em; margin:0 0 10px;">We ship the screen. You plug it in.</h3>
+            <p class="ce-muted" style="margin:0; color:#9aa3b2; font-size:15px; line-height:1.6;">Commercial panel, mount and media stick at no cost. One outlet, one Wi-Fi code, and the window runs itself.</p>
+          </div>
+          <div class="ce-last ce-surface ce-hairline" style="min-width:0; border:1px solid #1e2128; border-radius:18px; padding:30px; background:rgba(13,15,19,.6); display:flex; flex-direction:column; justify-content:space-between; gap:20px;">
+            <div>
+              <div class="ce-muted" style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#6b7382; margin-bottom:16px;">CLUTTER, GONE</div>
+              <h3 style="font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700; letter-spacing:-.03em; margin:0 0 10px;">Clear the tape and the sun-bleached paper.</h3>
+              <p class="ce-muted" style="margin:0; color:#9aa3b2; font-size:15px; line-height:1.6;">One clean panel replaces a decade of flyers — and it earns.</p>
+            </div>
+            <a href="#flow" class="ce-accent-indigo" style="font-weight:700; font-size:14px; color:#9db0ff;">Apply as a host location →</a>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </section>
+
+  <!-- FLOW -->
+  <section id="flow" style="border-bottom:1px solid #14171c;">
+    <div style="max-width:1200px; margin:0 auto; padding:84px 24px;">
+      <div style="max-width:640px; margin-bottom:42px;">
+        <div class="ce-accent" style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.16em; color:#3ee6d1; margin-bottom:14px;">LIFECYCLE</div>
+        <h2 style="font-family:'Space Grotesk',sans-serif; font-size:clamp(28px,3.6vw,42px); font-weight:700; letter-spacing:-.04em; line-height:1.08; margin:0;">Graphic to glass in four moves.</h2>
+      </div>
+      <div class="ce-hairline ce-divider" style="display:flex; flex-wrap:wrap; gap:1px; background:#1a1d23; border:1px solid #1a1d23; border-radius:18px; overflow:hidden;">
+        <div class="ce-step ce-surface" style="flex:1 1 calc(50% - 1px); min-width:0; background:#0b0d11; padding:30px 26px 34px;">
+          <div class="ce-accent" style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#3ee6d1; margin-bottom:26px;">01</div>
+          <h3 style="font-family:'Space Grotesk',sans-serif; font-size:19px; font-weight:700; letter-spacing:-.03em; margin:0 0 9px;">Drop the ad graphic</h3>
+          <p class="ce-muted" style="margin:0; font-size:14px; line-height:1.6; color:#8b93a1;">Upload a PNG, JPG or MP4. Auto-fit templates handle sizing for every panel in the network.</p>
+        </div>
+        <div class="ce-step ce-surface" style="flex:1 1 calc(50% - 1px); min-width:0; background:#0b0d11; padding:30px 26px 34px;">
+          <div class="ce-accent" style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#3ee6d1; margin-bottom:26px;">02</div>
+          <h3 style="font-family:'Space Grotesk',sans-serif; font-size:19px; font-weight:700; letter-spacing:-.03em; margin:0 0 9px;">Pick screens on the map</h3>
+          <p class="ce-muted" style="margin:0; font-size:14px; line-height:1.6; color:#8b93a1;">Filter by radius, daily footfall and store category. See the nightly rate before you commit.</p>
+        </div>
+        <div class="ce-step ce-surface" style="flex:1 1 calc(50% - 1px); min-width:0; background:#0b0d11; padding:30px 26px 34px;">
+          <div class="ce-accent" style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#3ee6d1; margin-bottom:26px;">03</div>
+          <h3 style="font-family:'Space Grotesk',sans-serif; font-size:19px; font-weight:700; letter-spacing:-.03em; margin:0 0 9px;">Merchant approves</h3>
+          <p class="ce-muted" style="margin:0; font-size:14px; line-height:1.6; color:#8b93a1;">The host gets a push, reviews your creative and taps approve. Most clear in under ten minutes.</p>
+        </div>
+        <div class="ce-step ce-surface" style="flex:1 1 calc(50% - 1px); min-width:0; background:#0b0d11; padding:30px 26px 34px;">
+          <div class="ce-accent" style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#3ee6d1; margin-bottom:26px;">04</div>
+          <h3 style="font-family:'Space Grotesk',sans-serif; font-size:19px; font-weight:700; letter-spacing:-.03em; margin:0 0 9px;">Real-time TV push</h3>
+          <p class="ce-muted" style="margin:0; font-size:14px; line-height:1.6; color:#8b93a1;">A socket event slots you into the live rotation. Your ad is on the street before the queue reloads.</p>
+        </div>
+      </div>
+
+      <div class="ce-hairline" style="margin-top:56px; position:relative; border:1px solid #23262e; border-radius:20px; padding:44px 36px; text-align:center; background:linear-gradient(160deg,rgba(62,230,209,.1),rgba(79,124,255,.07)); overflow:hidden;">
+        <h2 style="font-family:'Space Grotesk',sans-serif; font-size:clamp(26px,3.2vw,36px); font-weight:700; letter-spacing:-.04em; margin:0 0 12px; line-height:1.1;">Every window on your block is inventory.</h2>
+        <p class="ce-muted" style="margin:0 auto 26px; max-width:520px; color:#9aa3b2; font-size:16px; line-height:1.6;">Claim the screens, or claim the revenue. Both sides onboard in a single sitting.</p>
+        <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center;">
+          <a href="#audiences" class="ce-btn" style="padding:14px 24px; border-radius:11px; font-weight:700; font-size:15px; color:#04100e; background:linear-gradient(180deg,#5cf0dd,#26cdb9); box-shadow:0 14px 40px -12px rgba(62,230,209,.5);">Launch Your Ad Campaign</a>
+          <a href="#audiences" class="ce-ink" style="padding:14px 24px; border-radius:11px; font-weight:600; font-size:15px; color:#e8ecf2; border:1px solid #2f333d; background:rgba(255,255,255,.03);">Host a Screen &amp; Earn</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div style="max-width:1200px; margin:0 auto; padding:56px 24px 36px; display:grid; grid-template-columns:repeat(auto-fit,minmax(min(180px,100%),1fr)); gap:36px;">
+      <div style="min-width:0;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+          <div style="width:26px; height:26px; display:flex; align-items:center; justify-content:center; border-radius:8px; background:linear-gradient(150deg,#7df3e2,#2ad3bf 45%,#35b7f5); box-shadow:0 0 14px rgba(62,230,209,.4);"><span style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:12px; color:#04100e;">CE</span></div>
+          <span style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px; letter-spacing:-.03em;">CastEasy<span class="ce-muted" style="color:#6b7382;">.io</span></span>
+        </div>
+        <p class="ce-muted" style="margin:0 0 14px; font-size:13px; line-height:1.6; color:#7d8593; max-width:280px;">The hyper-local digital billboard marketplace. Merchant-approved screens, live in seconds.</p>
+        <div class="ce-surface ce-hairline" style="display:inline-flex; align-items:center; gap:8px; padding:6px 11px; border:1px solid #1e2128; border-radius:8px; background:#0c0e12;">
+          <span style="width:6px; height:6px; border-radius:999px; background:#3ee6d1;"></span>
+          <span class="ce-muted" style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8b93a1;">castez.io → casteasy.io</span>
+        </div>
+      </div>
+      <div style="min-width:0; display:flex; flex-direction:column; gap:10px;">
+        <div class="ce-muted" style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#5f6774; margin-bottom:4px;">ADVERTISERS</div>
+        <a href="#audiences" class="ce-muted" style="font-size:14px; color:#9aa3b2;">Browse screens</a>
+        <a href="#flow" class="ce-muted" style="font-size:14px; color:#9aa3b2;">Creative specs</a>
+        <a href="#audiences" class="ce-muted" style="font-size:14px; color:#9aa3b2;">Pricing by block</a>
+      </div>
+      <div style="min-width:0; display:flex; flex-direction:column; gap:10px;">
+        <div class="ce-muted" style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#5f6774; margin-bottom:4px;">HOSTS</div>
+        <a href="#audiences" class="ce-muted" style="font-size:14px; color:#9aa3b2;">Apply a location</a>
+        <a href="#audiences" class="ce-muted" style="font-size:14px; color:#9aa3b2;">Payouts &amp; Stripe</a>
+        <a href="#audiences" class="ce-muted" style="font-size:14px; color:#9aa3b2;">Approval controls</a>
+      </div>
+      <div style="min-width:0; display:flex; flex-direction:column; gap:10px;">
+        <div class="ce-muted" style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#5f6774; margin-bottom:4px;">COMPANY</div>
+        <a href="#flow" class="ce-muted" style="font-size:14px; color:#9aa3b2;">Network status</a>
+        <a href="#flow" class="ce-muted" style="font-size:14px; color:#9aa3b2;">Support</a>
+        <a href="#flow" class="ce-muted" style="font-size:14px; color:#9aa3b2;">Privacy</a>
+      </div>
+    </div>
+    <div style="border-top:1px solid #14171c;">
+      <div style="max-width:1200px; margin:0 auto; padding:20px 24px; display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between; align-items:center;">
+        <span class="ce-muted" style="font-size:12px; color:#5f6774;">© 2026 CastEZ, Inc. — casteasy.io. "CastEZ" and "castez.io" are branding of casteasy.io.</span>
+        <span class="ce-muted" style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#5f6774;">ALL SCREENS MERCHANT-APPROVED</span>
+      </div>
+    </div>
+  </footer>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;defaultAudience&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;For Advertisers&quot;,&quot;For Host Locations&quot;],&quot;default&quot;:&quot;For Advertisers&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Audience toggle&quot;},&quot;liveRotation&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Screen simulation&quot;},&quot;rotationSeconds&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:2,&quot;max&quot;:10,&quot;step&quot;:1,&quot;unit&quot;:&quot;s&quot;,&quot;default&quot;:4,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Screen simulation&quot;}}">
+const GEO = {
+  "United States": {
+    California: ["Los Angeles", "San Diego", "San Francisco", "San Jose"],
+    Illinois: ["Chicago", "Naperville", "Springfield"],
+    "New York": ["Brooklyn", "Buffalo", "New York City", "Queens"],
+    Texas: ["Austin", "Dallas", "Houston", "San Antonio"]
+  },
+  Canada: {
+    "British Columbia": ["Surrey", "Vancouver", "Victoria"],
+    Ontario: ["Mississauga", "Ottawa", "Toronto"]
+  }
+};
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      tab: props.defaultAudience === "For Host Locations" ? "hosts" : "advertisers",
+      slot: 0,
+      locationOpen: false,
+      locationLabel: "All locations",
+      country: "United States",
+      stateVal: "All states",
+      city: "All cities",
+      bellOpen: false,
+      menuOpen: false,
+      theme: "dark"
+    };
+  }
+  componentDidMount() {
+    if (this.props.liveRotation === false) return;
+    const ms = (this.props.rotationSeconds ?? 4) * 1000;
+    this.timer = setInterval(() => this.setState(s => ({ slot: (s.slot + 1) % 3 })), ms);
+  }
+  componentWillUnmount() { clearInterval(this.timer); }
+  renderVals() {
+    const t = this.state.tab;
+    const on = { bg: "linear-gradient(180deg,#5cf0dd,#2ad3bf)", fg: "#04100e", glow: "0 6px 20px -6px rgba(62,230,209,.6)" };
+    const off = { bg: "transparent", fg: this.state.theme === "dark" ? "#8b93a1" : "#4a5261", glow: "none" };
+    const a = t === "advertisers" ? on : off, b = t === "hosts" ? on : off;
+    const { country, stateVal, city, locationOpen, locationLabel } = this.state;
+    const cityDisabled = stateVal === "All states";
+    const dark = this.state.theme === "dark";
+    return {
+      isDark: dark,
+      isLight: !dark,
+      themeClass: dark ? "" : "ce-light",
+      bellOpen: this.state.bellOpen,
+      menuOpen: this.state.menuOpen,
+      menuClass: this.state.menuOpen ? "ce-menu-open" : "",
+      toggleMenu: () => this.setState(s2 => ({ menuOpen: !s2.menuOpen, bellOpen: false })),
+      closeMenu: () => this.setState({ menuOpen: false }),
+      toggleBell: () => this.setState(s2 => ({ bellOpen: !s2.bellOpen })),
+      toggleTheme: () => this.setState(s2 => ({ theme: s2.theme === "dark" ? "light" : "dark" })),
+      locationOpen, locationLabel, country, stateVal, city, cityDisabled,
+      states: Object.keys(GEO[country] || {}),
+      cities: cityDisabled ? [] : (GEO[country] || {})[stateVal] || [],
+      cityColor: cityDisabled ? "#5f6774" : "#f2f4f7",
+      cityCursor: cityDisabled ? "not-allowed" : "pointer",
+      openLocation: () => this.setState({ locationOpen: true }),
+      closeLocation: () => this.setState({ locationOpen: false }),
+      stopClose: e => e.stopPropagation(),
+      onCountry: e => this.setState({ country: e.target.value, stateVal: "All states", city: "All cities" }),
+      onState: e => this.setState({ stateVal: e.target.value, city: "All cities" }),
+      onCity: e => this.setState({ city: e.target.value }),
+      clearFilter: () => this.setState({ country: "United States", stateVal: "All states", city: "All cities" }),
+      applyLocation: () => this.setState(s => ({
+        locationOpen: false,
+        locationLabel: s.city !== "All cities" ? s.city
+          : s.stateVal !== "All states" ? s.stateVal
+          : s.country === "United States" ? "All locations" : s.country
+      })),
+      showAdvertisers: t === "advertisers",
+      showHosts: t === "hosts",
+      pickAdvertisers: () => this.setState({ tab: "advertisers" }),
+      pickHosts: () => this.setState({ tab: "hosts" }),
+      tabABg: a.bg, tabAFg: a.fg, tabAGlow: a.glow,
+      tabBBg: b.bg, tabBFg: b.fg, tabBGlow: b.glow,
+      trackOffset: `-${this.state.slot * 100}%`,
+      progressWidth: `${((this.state.slot + 1) / 3) * 100}%`,
+      slotLabel: `0${this.state.slot + 1}`
+    };
+  }
+}
+</script>
+</body>
+</html>

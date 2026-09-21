@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin:0; padding:0; background:#07080b; }
+  body { font-family:'Manrope', system-ui, sans-serif; -webkit-font-smoothing:antialiased; }
+  a { color:#3ee6d1; text-decoration:none; }
+  a:hover { color:#8ef6e9; }
+  * { box-sizing:border-box; }
+  @keyframes ce-pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.35; transform:scale(1.5); } }
+  @keyframes ce-drift { 0% { transform:translateY(0); } 100% { transform:translateY(-50%); } }
+  @media (min-width:1040px) { .ce-step { flex-basis:calc(25% - 1px) !important; } }
+  @media (min-width:720px) { .ce-bento { grid-template-columns:repeat(2,minmax(0,1fr)) !important; } .ce-bento > .ce-wide, .ce-bento > .ce-last { grid-column:span 2; } }
+</style>
+</helmet>
+
+<div style="background:#07080b; color:#f2f4f7; min-height:100vh; overflow-x:hidden; font-family:'Manrope',system-ui,sans-serif;">
+
+  <!-- NAV -->
+  <header style="position:sticky; top:0; z-index:50; backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); background:rgba(7,8,11,.72); border-bottom:1px solid #191c22;">
+    <div style="max-width:1200px; margin:0 auto; padding:0 24px; height:68px; display:flex; align-items:center; gap:28px;">
+      <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+        <div style="width:26px; height:26px; border-radius:7px; background:linear-gradient(140deg,#3ee6d1,#4f7cff); box-shadow:0 0 18px rgba(62,230,209,.45);"></div>
+        <span style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px; letter-spacing:-.03em;">casteasy<span style="color:#6b7382;">.io</span></span>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px; padding:5px 11px 5px 9px; border:1px solid #1e2128; border-radius:999px; background:#0c0e12;">
+        <span style="position:relative; display:flex; width:7px; height:7px;">
+          <span style="position:absolute; inset:0; border-radius:999px; background:#3ee6d1; animation:ce-pulse 2s ease-in-out infinite;"></span>
+          <span style="position:relative; width:7px; height:7px; border-radius:999px; background:#3ee6d1;"></span>
+        </span>
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.06em; color:#9aa3b2;">NETWORK ONLINE</span>
+      </div>
+      <nav style="display:flex; gap:26px; margin-left:auto; align-items:center;">
+        <a href="#audiences" style="font-size:14px; color:#9aa3b2; font-weight:500;">Platform</a>
+        <a href="#flow" style="font-size:14px; color:#9aa3b2; font-weight:500;">How it works</a>
+        <a href="#audiences" style="font-size:14px; color:#9aa3b2; font-weight:500;">Pricing</a>
+      </nav>
+      <div style="display:flex; gap:10px; align-items:center; flex-shrink:0;">
+        <a href="#audiences" style="font-size:14px; font-weight:600; color:#e4e8ee; padding:9px 14px; border:1px solid #23262e; border-radius:9px; background:#0e1116;">Host a Screen</a>
+        <a href="#audiences" style="font-size:14px; font-weight:700; color:#04100e; padding:10px 16px; border-radius:9px; background:linear-gradient(180deg,#5cf0dd,#2ad3bf); box-shadow:0 0 24px rgba(62,230,209,.32);">Launch Campaign</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section style="position:relative; border-bottom:1px solid #14171c;">
+    <div style="position:absolute; top:-180px; left:50%; width:900px; height:520px; transform:translateX(-50%); background:radial-gradient(50% 50% at 50% 50%, rgba(62,230,209,.16), rgba(79,124,255,.06) 55%, transparent 75%); pointer-events:none;"></div>
+    <div style="position:relative; max-width:1200px; margin:0 auto; padding:88px 24px 96px; display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:56px; align-items:center;">
+      <div style="min-width:0;">
+        <div style="display:inline-flex; align-items:center; gap:9px; padding:6px 13px; border:1px solid rgba(62,230,209,.28); border-radius:999px; background:rgba(62,230,209,.07); margin-bottom:26px;">
+          <span style="width:5px; height:5px; border-radius:999px; background:#3ee6d1;"></span>
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#7ef0e0;">THE DIGITAL BILLBOARD MARKETPLACE</span>
+        </div>
+        <h1 style="font-family:'Space Grotesk',sans-serif; font-weight:700; letter-spacing:-.045em; line-height:1.03; font-size:clamp(38px,5vw,62px); margin:0 0 22px; text-wrap:balance;">
+          Trade paper window clutter for <span style="background:linear-gradient(100deg,#5cf0dd,#7c9dff); -webkit-background-clip:text; background-clip:text; color:transparent;">high-impact digital billboards.</span>
+        </h1>
+        <p style="font-size:18px; line-height:1.6; color:#9aa3b2; margin:0 0 34px; max-width:560px; text-wrap:pretty;">
+          Advertisers skip the design studio, the print shop and the tape — upload a graphic, pick your blocks, go live. Store owners turn dead window space into a street-facing ad rotation that pays out every month. No printing fees. No stale flyers. One network.
+        </p>
+        <div style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:34px;">
+          <a href="#audiences" style="display:inline-flex; align-items:center; gap:9px; padding:15px 24px; border-radius:11px; font-weight:700; font-size:15px; color:#04100e; background:linear-gradient(180deg,#5cf0dd,#26cdb9); box-shadow:0 14px 40px -10px rgba(62,230,209,.55), inset 0 1px 0 rgba(255,255,255,.4);">Launch Your Ad Campaign →</a>
+          <a href="#audiences" style="display:inline-flex; align-items:center; gap:9px; padding:15px 24px; border-radius:11px; font-weight:600; font-size:15px; color:#e8ecf2; border:1px solid #2a2e37; background:rgba(255,255,255,.02);">Host a Screen &amp; Earn</a>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:0; border-top:1px solid #1a1d23; padding-top:22px;">
+          <div style="padding-right:28px; margin-right:28px; border-right:1px solid #1a1d23;">
+            <div style="font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; letter-spacing:-.03em;">$0</div>
+            <div style="font-size:12px; color:#7d8593; font-weight:500;">printing &amp; design spend</div>
+          </div>
+          <div style="padding-right:28px; margin-right:28px; border-right:1px solid #1a1d23;">
+            <div style="font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; letter-spacing:-.03em;">&lt;2s</div>
+            <div style="font-size:12px; color:#7d8593; font-weight:500;">approval to on-screen</div>
+          </div>
+          <div>
+            <div style="font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; letter-spacing:-.03em;">100%</div>
+            <div style="font-size:12px; color:#7d8593; font-weight:500;">merchant-approved inventory</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE NETWORK SIMULATION -->
+      <div style="min-width:0; position:relative;">
+        <div style="position:absolute; inset:14px; border-radius:26px; background:linear-gradient(140deg,rgba(62,230,209,.35),rgba(79,124,255,.25)); filter:blur(40px);"></div>
+        <div style="position:relative; border:1px solid #23262e; border-radius:22px; background:rgba(13,15,19,.72); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); padding:16px; box-shadow:0 40px 80px -40px rgba(0,0,0,.9);">
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:4px 6px 14px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="width:6px; height:6px; border-radius:999px; background:#3ee6d1; box-shadow:0 0 10px #3ee6d1;"></span>
+              <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#9aa3b2; letter-spacing:.06em;">SCREEN #0412 · 7TH &amp; MARKET</span>
+            </div>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#6b7382;">1080p · 24/7</span>
+          </div>
+
+          <div style="border:1px solid #2c3039; border-radius:14px; background:#05060a; padding:9px;">
+            <div style="position:relative; border-radius:9px; overflow:hidden; aspect-ratio:16/10; background:#0a0c11;">
+              <div style="position:absolute; inset:0; transition:transform .85s cubic-bezier(.65,.05,.36,1); transform:translateY({{ trackOffset }});">
+
+                <div style="height:100%; padding:26px; display:flex; flex-direction:column; justify-content:space-between; background:linear-gradient(150deg,#0f2f2b,#08131b);">
+                  <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.16em; color:#5cf0dd;">MARIA'S TAQUERIA · 200 FT AWAY</div>
+                  <div>
+                    <div style="font-family:'Space Grotesk',sans-serif; font-size:clamp(22px,3.4vw,36px); font-weight:700; letter-spacing:-.035em; line-height:1.05;">2 tacos + horchata<br />$7 til 4pm today</div>
+                    <div style="margin-top:12px; display:inline-block; padding:6px 12px; border-radius:7px; background:#5cf0dd; color:#04100e; font-weight:700; font-size:13px;">Show this screen at the counter</div>
+                  </div>
+                </div>
+
+                <div style="height:100%; padding:26px; display:flex; flex-direction:column; justify-content:space-between; background:linear-gradient(150deg,#141a3a,#0a0b16);">
+                  <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.16em; color:#9db0ff;">NORTHSIDE DENTAL · NOW BOOKING</div>
+                  <div>
+                    <div style="font-family:'Space Grotesk',sans-serif; font-size:clamp(22px,3.4vw,36px); font-weight:700; letter-spacing:-.035em; line-height:1.05;">New patient cleaning<br />$59 this month</div>
+                    <div style="margin-top:12px; display:inline-block; padding:6px 12px; border-radius:7px; background:#8ea6ff; color:#0a0b16; font-weight:700; font-size:13px;">Walk-ins after 5pm</div>
+                  </div>
+                </div>
+
+                <div style="height:100%; padding:26px; display:flex; flex-direction:column; justify-content:space-between; background:linear-gradient(150deg,#2a1c10,#150c08);">
+                  <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.16em; color:#f0b07e;">RIDGE HOME SERVICES · LICENSED</div>
+                  <div>
+                    <div style="font-family:'Space Grotesk',sans-serif; font-size:clamp(22px,3.4vw,36px); font-weight:700; letter-spacing:-.035em; line-height:1.05;">Gutter cleanout<br />before the rain hits</div>
+                    <div style="margin-top:12px; display:inline-block; padding:6px 12px; border-radius:7px; background:#f0b07e; color:#150c08; font-weight:700; font-size:13px;">Same-week slots open</div>
+                  </div>
+                </div>
+
+              </div>
+              <div style="position:absolute; left:0; right:0; bottom:0; height:3px; background:#141821;">
+                <div style="height:100%; background:linear-gradient(90deg,#3ee6d1,#7c9dff); width:{{ progressWidth }}; transition:width .3s linear;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:14px; display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;">
+            <div style="display:flex; align-items:center; gap:9px; padding:8px 12px; border:1px solid rgba(62,230,209,.3); border-radius:9px; background:rgba(62,230,209,.08);">
+              <span style="width:14px; height:14px; border-radius:999px; background:#3ee6d1; color:#04100e; font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center;">✓</span>
+              <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8ef6e9; letter-spacing:.03em;">Approved by Store Manager • Active via Socket.io</span>
+            </div>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#6b7382;">SLOT {{ slotLabel }} / 03</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DUAL AUDIENCE -->
+  <section id="audiences" style="border-bottom:1px solid #14171c;">
+    <div style="max-width:1200px; margin:0 auto; padding:84px 24px;">
+      <div style="display:flex; flex-wrap:wrap; gap:24px; align-items:flex-end; justify-content:space-between; margin-bottom:34px;">
+        <div style="max-width:620px;">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.16em; color:#3ee6d1; margin-bottom:14px;">TWO SIDES, ONE MARKETPLACE</div>
+          <h2 style="font-family:'Space Grotesk',sans-serif; font-size:clamp(28px,3.6vw,42px); font-weight:700; letter-spacing:-.04em; line-height:1.08; margin:0;">Built for the business buying the window — and the one that owns it.</h2>
+        </div>
+        <div style="display:inline-flex; padding:4px; border:1px solid #23262e; border-radius:12px; background:#0c0e12;">
+          <button type="button" onClick="{{ pickAdvertisers }}" style="padding:10px 18px; border:0; border-radius:9px; font-family:'Manrope',sans-serif; font-weight:700; font-size:14px; cursor:pointer; transition:all .18s ease; background:{{ tabABg }}; color:{{ tabAFg }}; box-shadow:{{ tabAGlow }};">For Advertisers</button>
+          <button type="button" onClick="{{ pickHosts }}" style="padding:10px 18px; border:0; border-radius:9px; font-family:'Manrope',sans-serif; font-weight:700; font-size:14px; cursor:pointer; transition:all .18s ease; background:{{ tabBBg }}; color:{{ tabBFg }}; box-shadow:{{ tabBGlow }};">For Host Locations</button>
+        </div>
+      </div>
+
+      <sc-if value="{{ showAdvertisers }}" hint-placeholder-val="{{ true }}">
+        <div class="ce-bento" style="display:grid; grid-template-columns:minmax(0,1fr); gap:16px;">
+          <div class="ce-wide" style="min-width:0; border:1px solid #1e2128; border-radius:18px; padding:30px; background:linear-gradient(160deg,rgba(62,230,209,.09),rgba(13,15,19,.5)); backdrop-filter:blur(14px);">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#3ee6d1; margin-bottom:16px;">HYPER-LOCAL TARGETING</div>
+            <h3 style="font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; letter-spacing:-.035em; margin:0 0 12px; line-height:1.15;">Buy the exact corner your customers walk past.</h3>
+            <p style="margin:0 0 20px; color:#9aa3b2; font-size:15px; line-height:1.6; max-width:520px;">Browse screens by neighborhood, foot traffic and store type. Book one window for a weekend special or forty across a metro — priced per screen, per day, no agency in the middle.</p>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              <span style="padding:7px 12px; border:1px solid #23262e; border-radius:8px; font-size:13px; color:#c6ccd6; background:#0d0f14;">Convenience stores</span>
+              <span style="padding:7px 12px; border:1px solid #23262e; border-radius:8px; font-size:13px; color:#c6ccd6; background:#0d0f14;">Laundromats</span>
+              <span style="padding:7px 12px; border:1px solid #23262e; border-radius:8px; font-size:13px; color:#c6ccd6; background:#0d0f14;">Barber shops</span>
+              <span style="padding:7px 12px; border:1px solid #23262e; border-radius:8px; font-size:13px; color:#c6ccd6; background:#0d0f14;">Cafés</span>
+            </div>
+          </div>
+          <div style="min-width:0; border:1px solid #1e2128; border-radius:18px; padding:30px; background:rgba(13,15,19,.6);">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#6b7382; margin-bottom:16px;">ZERO PRINT FRICTION</div>
+            <h3 style="font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700; letter-spacing:-.03em; margin:0 0 10px;">Drop a PNG. That's the whole workflow.</h3>
+            <p style="margin:0; color:#9aa3b2; font-size:15px; line-height:1.6;">No designer retainer, no 500-flyer minimum, no walking a stack of paper down the block asking for counter space.</p>
+          </div>
+          <div style="min-width:0; border:1px solid #1e2128; border-radius:18px; padding:30px; background:rgba(13,15,19,.6);">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#6b7382; margin-bottom:16px;">INSTANT LIVE EDITS</div>
+            <h3 style="font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700; letter-spacing:-.03em; margin:0 0 10px;">Change the price at 2pm, it's on glass by 2:01.</h3>
+            <p style="margin:0; color:#9aa3b2; font-size:15px; line-height:1.6;">Swap creative, pause a slow block or push a flash offer — every screen updates over a live socket, not a print run.</p>
+          </div>
+          <div class="ce-last" style="min-width:0; border:1px solid #1e2128; border-radius:18px; padding:30px; background:rgba(13,15,19,.6); display:flex; flex-direction:column; justify-content:space-between; gap:20px;">
+            <div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#6b7382; margin-bottom:16px;">TRANSPARENT BILLING</div>
+              <h3 style="font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700; letter-spacing:-.03em; margin:0 0 10px;">Card in, campaign out.</h3>
+              <p style="margin:0; color:#9aa3b2; font-size:15px; line-height:1.6;">Stripe checkout, itemized by screen and day. Cancel a block and the unused days come back.</p>
+            </div>
+            <a href="#flow" style="font-weight:700; font-size:14px;">See the 4-step flow →</a>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showHosts }}" hint-placeholder-val="{{ false }}">
+        <div class="ce-bento" style="display:grid; grid-template-columns:minmax(0,1fr); gap:16px;">
+          <div class="ce-wide" style="min-width:0; border:1px solid #1e2128; border-radius:18px; padding:30px; background:linear-gradient(160deg,rgba(79,124,255,.11),rgba(13,15,19,.5)); backdrop-filter:blur(14px);">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#9db0ff; margin-bottom:16px;">PASSIVE REVENUE VIA STRIPE</div>
+            <h3 style="font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; letter-spacing:-.035em; margin:0 0 12px; line-height:1.15;">Your window is already the best-trafficked ad space on the block.</h3>
+            <p style="margin:0 0 20px; color:#9aa3b2; font-size:15px; line-height:1.6; max-width:520px;">Every booked slot pays out to your bank on a Stripe Connect schedule you control. No invoicing advertisers, no chasing checks, no negotiating with the guy who wants to tape a flyer to your door.</p>
+            <div style="display:flex; flex-wrap:wrap; gap:14px;">
+              <div style="padding:14px 18px; border:1px solid #23262e; border-radius:12px; background:#0d0f14;">
+                <div style="font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; letter-spacing:-.03em;">Weekly</div>
+                <div style="font-size:12px; color:#7d8593;">automatic payouts</div>
+              </div>
+              <div style="padding:14px 18px; border:1px solid #23262e; border-radius:12px; background:#0d0f14;">
+                <div style="font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; letter-spacing:-.03em;">Per-slot</div>
+                <div style="font-size:12px; color:#7d8593;">revenue share, itemized</div>
+              </div>
+            </div>
+          </div>
+          <div style="min-width:0; border:1px solid #1e2128; border-radius:18px; padding:30px; background:rgba(13,15,19,.6);">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#6b7382; margin-bottom:16px;">AUTOMATED QUEUE CONTROL</div>
+            <h3 style="font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700; letter-spacing:-.03em; margin:0 0 10px;">Nothing hits your glass without your tap.</h3>
+            <p style="margin:0; color:#9aa3b2; font-size:15px; line-height:1.6;">Review every creative in one queue. Approve, reject, or block a category — competitors stay off your window permanently.</p>
+          </div>
+          <div style="min-width:0; border:1px solid #1e2128; border-radius:18px; padding:30px; background:rgba(13,15,19,.6);">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#6b7382; margin-bottom:16px;">FREE HARDWARE PLACEMENT</div>
+            <h3 style="font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700; letter-spacing:-.03em; margin:0 0 10px;">We ship the screen. You plug it in.</h3>
+            <p style="margin:0; color:#9aa3b2; font-size:15px; line-height:1.6;">Commercial panel, mount and media stick at no cost. One outlet, one Wi-Fi code, and the window runs itself.</p>
+          </div>
+          <div class="ce-last" style="min-width:0; border:1px solid #1e2128; border-radius:18px; padding:30px; background:rgba(13,15,19,.6); display:flex; flex-direction:column; justify-content:space-between; gap:20px;">
+            <div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#6b7382; margin-bottom:16px;">CLUTTER, GONE</div>
+              <h3 style="font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700; letter-spacing:-.03em; margin:0 0 10px;">Clear the tape and the sun-bleached paper.</h3>
+              <p style="margin:0; color:#9aa3b2; font-size:15px; line-height:1.6;">One clean panel replaces a decade of flyers — and it earns.</p>
+            </div>
+            <a href="#flow" style="font-weight:700; font-size:14px; color:#9db0ff;">Apply as a host location →</a>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </section>
+
+  <!-- FLOW -->
+  <section id="flow" style="border-bottom:1px solid #14171c;">
+    <div style="max-width:1200px; margin:0 auto; padding:84px 24px;">
+      <div style="max-width:640px; margin-bottom:42px;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.16em; color:#3ee6d1; margin-bottom:14px;">LIFECYCLE</div>
+        <h2 style="font-family:'Space Grotesk',sans-serif; font-size:clamp(28px,3.6vw,42px); font-weight:700; letter-spacing:-.04em; line-height:1.08; margin:0;">Graphic to glass in four moves.</h2>
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap:1px; background:#1a1d23; border:1px solid #1a1d23; border-radius:18px; overflow:hidden;">
+        <div class="ce-step" style="flex:1 1 calc(50% - 1px); min-width:0; background:#0b0d11; padding:30px 26px 34px;">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#3ee6d1; margin-bottom:26px;">01</div>
+          <h3 style="font-family:'Space Grotesk',sans-serif; font-size:19px; font-weight:700; letter-spacing:-.03em; margin:0 0 9px;">Drop the ad graphic</h3>
+          <p style="margin:0; font-size:14px; line-height:1.6; color:#8b93a1;">Upload a PNG, JPG or MP4. Auto-fit templates handle sizing for every panel in the network.</p>
+        </div>
+        <div class="ce-step" style="flex:1 1 calc(50% - 1px); min-width:0; background:#0b0d11; padding:30px 26px 34px;">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#3ee6d1; margin-bottom:26px;">02</div>
+          <h3 style="font-family:'Space Grotesk',sans-serif; font-size:19px; font-weight:700; letter-spacing:-.03em; margin:0 0 9px;">Pick screens on the map</h3>
+          <p style="margin:0; font-size:14px; line-height:1.6; color:#8b93a1;">Filter by radius, daily footfall and store category. See the nightly rate before you commit.</p>
+        </div>
+        <div class="ce-step" style="flex:1 1 calc(50% - 1px); min-width:0; background:#0b0d11; padding:30px 26px 34px;">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#3ee6d1; margin-bottom:26px;">03</div>
+          <h3 style="font-family:'Space Grotesk',sans-serif; font-size:19px; font-weight:700; letter-spacing:-.03em; margin:0 0 9px;">Merchant approves</h3>
+          <p style="margin:0; font-size:14px; line-height:1.6; color:#8b93a1;">The host gets a push, reviews your creative and taps approve. Most clear in under ten minutes.</p>
+        </div>
+        <div class="ce-step" style="flex:1 1 calc(50% - 1px); min-width:0; background:#0b0d11; padding:30px 26px 34px;">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#3ee6d1; margin-bottom:26px;">04</div>
+          <h3 style="font-family:'Space Grotesk',sans-serif; font-size:19px; font-weight:700; letter-spacing:-.03em; margin:0 0 9px;">Real-time TV push</h3>
+          <p style="margin:0; font-size:14px; line-height:1.6; color:#8b93a1;">A socket event slots you into the live rotation. Your ad is on the street before the queue reloads.</p>
+        </div>
+      </div>
+
+      <div style="margin-top:56px; position:relative; border:1px solid #23262e; border-radius:20px; padding:44px 36px; text-align:center; background:linear-gradient(160deg,rgba(62,230,209,.1),rgba(79,124,255,.07)); overflow:hidden;">
+        <h2 style="font-family:'Space Grotesk',sans-serif; font-size:clamp(26px,3.2vw,36px); font-weight:700; letter-spacing:-.04em; margin:0 0 12px; line-height:1.1;">Every window on your block is inventory.</h2>
+        <p style="margin:0 auto 26px; max-width:520px; color:#9aa3b2; font-size:16px; line-height:1.6;">Claim the screens, or claim the revenue. Both sides onboard in a single sitting.</p>
+        <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center;">
+          <a href="#audiences" style="padding:14px 24px; border-radius:11px; font-weight:700; font-size:15px; color:#04100e; background:linear-gradient(180deg,#5cf0dd,#26cdb9); box-shadow:0 14px 40px -12px rgba(62,230,209,.5);">Launch Your Ad Campaign</a>
+          <a href="#audiences" style="padding:14px 24px; border-radius:11px; font-weight:600; font-size:15px; color:#e8ecf2; border:1px solid #2f333d; background:rgba(255,255,255,.03);">Host a Screen &amp; Earn</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div style="max-width:1200px; margin:0 auto; padding:56px 24px 36px; display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:36px;">
+      <div style="min-width:0;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+          <div style="width:22px; height:22px; border-radius:6px; background:linear-gradient(140deg,#3ee6d1,#4f7cff);"></div>
+          <span style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px; letter-spacing:-.03em;">casteasy<span style="color:#6b7382;">.io</span></span>
+        </div>
+        <p style="margin:0 0 14px; font-size:13px; line-height:1.6; color:#7d8593; max-width:280px;">The hyper-local digital billboard marketplace. Merchant-approved screens, live in seconds.</p>
+        <div style="display:inline-flex; align-items:center; gap:8px; padding:6px 11px; border:1px solid #1e2128; border-radius:8px; background:#0c0e12;">
+          <span style="width:6px; height:6px; border-radius:999px; background:#3ee6d1;"></span>
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8b93a1;">castez.io → casteasy.io</span>
+        </div>
+      </div>
+      <div style="min-width:0; display:flex; flex-direction:column; gap:10px;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#5f6774; margin-bottom:4px;">ADVERTISERS</div>
+        <a href="#audiences" style="font-size:14px; color:#9aa3b2;">Browse screens</a>
+        <a href="#flow" style="font-size:14px; color:#9aa3b2;">Creative specs</a>
+        <a href="#audiences" style="font-size:14px; color:#9aa3b2;">Pricing by block</a>
+      </div>
+      <div style="min-width:0; display:flex; flex-direction:column; gap:10px;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#5f6774; margin-bottom:4px;">HOSTS</div>
+        <a href="#audiences" style="font-size:14px; color:#9aa3b2;">Apply a location</a>
+        <a href="#audiences" style="font-size:14px; color:#9aa3b2;">Payouts &amp; Stripe</a>
+        <a href="#audiences" style="font-size:14px; color:#9aa3b2;">Approval controls</a>
+      </div>
+      <div style="min-width:0; display:flex; flex-direction:column; gap:10px;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#5f6774; margin-bottom:4px;">COMPANY</div>
+        <a href="#flow" style="font-size:14px; color:#9aa3b2;">Network status</a>
+        <a href="#flow" style="font-size:14px; color:#9aa3b2;">Support</a>
+        <a href="#flow" style="font-size:14px; color:#9aa3b2;">Privacy</a>
+      </div>
+    </div>
+    <div style="border-top:1px solid #14171c;">
+      <div style="max-width:1200px; margin:0 auto; padding:20px 24px; display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between; align-items:center;">
+        <span style="font-size:12px; color:#5f6774;">© 2026 CastEZ, Inc. — casteasy.io. "CastEZ" and "castez.io" are branding of casteasy.io.</span>
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#5f6774;">ALL SCREENS MERCHANT-APPROVED</span>
+      </div>
+    </div>
+  </footer>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;defaultAudience&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;For Advertisers&quot;,&quot;For Host Locations&quot;],&quot;default&quot;:&quot;For Advertisers&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Audience toggle&quot;},&quot;liveRotation&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Screen simulation&quot;},&quot;rotationSeconds&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:2,&quot;max&quot;:10,&quot;step&quot;:1,&quot;unit&quot;:&quot;s&quot;,&quot;default&quot;:4,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Screen simulation&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: props.defaultAudience === "For Host Locations" ? "hosts" : "advertisers", slot: 0 };
+  }
+  componentDidMount() {
+    if (this.props.liveRotation === false) return;
+    const ms = (this.props.rotationSeconds ?? 4) * 1000;
+    this.timer = setInterval(() => this.setState(s => ({ slot: (s.slot + 1) % 3 })), ms);
+  }
+  componentWillUnmount() { clearInterval(this.timer); }
+  renderVals() {
+    const t = this.state.tab;
+    const on = { bg: "linear-gradient(180deg,#5cf0dd,#2ad3bf)", fg: "#04100e", glow: "0 6px 20px -6px rgba(62,230,209,.6)" };
+    const off = { bg: "transparent", fg: "#8b93a1", glow: "none" };
+    const a = t === "advertisers" ? on : off, b = t === "hosts" ? on : off;
+    return {
+      showAdvertisers: t === "advertisers",
+      showHosts: t === "hosts",
+      pickAdvertisers: () => this.setState({ tab: "advertisers" }),
+      pickHosts: () => this.setState({ tab: "hosts" }),
+      tabABg: a.bg, tabAFg: a.fg, tabAGlow: a.glow,
+      tabBBg: b.bg, tabBFg: b.fg, tabBGlow: b.glow,
+      trackOffset: `-${this.state.slot * 100}%`,
+      progressWidth: `${((this.state.slot + 1) / 3) * 100}%`,
+      slotLabel: `0${this.state.slot + 1}`
+    };
+  }
+}
+</script>
+</body>
+</html>

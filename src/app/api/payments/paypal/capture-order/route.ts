@@ -8,6 +8,7 @@ import { capturePayPalOrder } from "@/lib/paypal";
 import { AD_PRICE_CENTS } from "@/types";
 import { sendAdSubmittedEmail, sendPaymentReceiptEmail, sendAdReviewNotificationEmail } from "@/lib/email/templates";
 import { recordEarning } from "@/lib/earnings";
+import { notifyPaymentRecorded } from "@/lib/notifications";
 
 const schema = z.object({
   adId: z.string().uuid(),
@@ -81,6 +82,7 @@ export async function POST(req: NextRequest) {
     }).returning({ id: payments.id });
 
     await recordEarning(payment.id);
+    await notifyPaymentRecorded(payment.id);
 
     // Mark ad as paid
     await db

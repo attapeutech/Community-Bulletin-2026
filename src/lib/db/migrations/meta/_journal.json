@@ -43,6 +43,13 @@
       "when": 1792770271292,
       "tag": "0005_owner_earnings",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792773853227,
+      "tag": "0006_notifications_inbox",
+      "breakpoints": true
     }
   ]
 }

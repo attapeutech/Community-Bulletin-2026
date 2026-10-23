@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import { db } from "@/lib/db/client";
 import { ads, locations, payments, users, ownerEarnings } from "@/lib/db/schema";
 import { eq, and, inArray, isNull, isNotNull, lte, or, sql } from "drizzle-orm";
+import { notifyEarningsAvailable } from "@/lib/notifications";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-12-18.acacia" as any });
@@ -102,6 +103,7 @@ export async function releaseEarnings(now = new Date()) {
   const due = await db
     .select({
       id:            ownerEarnings.id,
+      ownerId:       ownerEarnings.ownerId,
       grossCents:    ownerEarnings.grossCents,
       shareRateBps:  ownerEarnings.shareRateBps,
       paymentId:     payments.id,
@@ -120,6 +122,7 @@ export async function releaseEarnings(now = new Date()) {
 
   let released = 0;
   const failed: string[] = [];
+  const releasedByOwner = new Map<string, { cents: number; count: number }>();
 
   for (const e of due) {
     let fee = e.feeCents;
@@ -145,6 +148,12 @@ export async function releaseEarnings(now = new Date()) {
       .set({ status: "available", feeCents: fee, amountCents, releasedAt: now, updatedAt: now })
       .where(and(eq(ownerEarnings.id, e.id), eq(ownerEarnings.status, "pending")));
     released++;
+    const t = releasedByOwner.get(e.ownerId) ?? { cents: 0, count: 0 };
+    releasedByOwner.set(e.ownerId, { cents: t.cents + amountCents, count: t.count + 1 });
+  }
+
+  for (const [ownerId, t] of releasedByOwner) {
+    await notifyEarningsAvailable(ownerId, t.cents, t.count);
   }
 
   return { released, voided: voided.length, retryLater: failed.length };

@@ -28,3 +28,10 @@ export function notifyDashboard(payload: {
     io.to("dashboard").emit("ad:status_changed", payload);
   }
 }
+
+export function notifyUserSocket(userId: string, payload: unknown) {
+  const io = getIO();
+  if (io) {
+    io.of("/notifications").to(`user:${userId}`).emit("notification:new", payload);
+  }
+}

@@ -4,6 +4,7 @@ import { ads, locations } from "@/lib/db/schema";
 import { eq, and, lt, inArray } from "drizzle-orm";
 import { pushDisplayRefresh } from "@/lib/socket/notify";
 import { releaseEarnings } from "@/lib/earnings";
+import { notifyAdsExpired, notifyAdsExpiringSoon } from "@/lib/notifications";
 
 // POST /api/cron/expire-ads
 // Called by Coolify scheduled task:
@@ -29,6 +30,9 @@ export async function POST(req: NextRequest) {
     console.log(`[cron/expire-ads] Earnings: ${earnings.released} released, ${earnings.voided} voided, ${earnings.retryLater} retry later`);
   }
 
+  // Warn advertisers whose ads end within 24 hours (once per run)
+  const expiringSoon = await notifyAdsExpiringSoon(now);
+
   // Find all approved ads whose run window has ended
   const expired = await db
     .select({ id: ads.id, locationId: ads.locationId })
@@ -36,7 +40,7 @@ export async function POST(req: NextRequest) {
     .where(and(eq(ads.status, "approved"), lt(ads.endedAt, now)));
 
   if (expired.length === 0) {
-    return NextResponse.json({ success: true, expired: 0, earnings });
+    return NextResponse.json({ success: true, expired: 0, expiringSoon, earnings });
   }
 
   const adIds = expired.map(a => a.id);
@@ -47,6 +51,8 @@ export async function POST(req: NextRequest) {
     .update(ads)
     .set({ status: "expired", updatedAt: now })
     .where(inArray(ads.id, adIds));
+
+  await notifyAdsExpired(adIds);
 
   // Push display refresh for each affected location
   const affectedLocations = await db
@@ -59,5 +65,5 @@ export async function POST(req: NextRequest) {
   }
 
   console.log(`[cron/expire-ads] Expired ${adIds.length} ad(s) across ${affectedLocations.length} location(s)`);
-  return NextResponse.json({ success: true, expired: adIds.length, locations: affectedLocations.map(l => l.slug), earnings });
+  return NextResponse.json({ success: true, expired: adIds.length, locations: affectedLocations.map(l => l.slug), expiringSoon, earnings });
 }

@@ -30,7 +30,7 @@ export default function TermsPage() {
           },
           {
             title: "Payments and Refunds",
-            body: "Ad campaigns are billed at $100 per week per location at the time of submission. If your ad is denied after review, you will receive a full refund within 3–5 business days. Approved ads cancelled before the run start date may be eligible for a refund — contact support for details.",
+            body: "Ad campaigns are billed per location at that location's weekly price, which is shown to you before payment and charged at the time of submission. If your ad is denied after review, you will receive a full refund within 3–5 business days. Approved ads cancelled before the run start date may be eligible for a refund — contact support for details.",
           },
           {
             title: "Intellectual Property",

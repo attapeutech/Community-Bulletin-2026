@@ -8,11 +8,13 @@ export default function AdActions({
   status,
   isOwner,
   isAdmin,
+  renewPriceCents,
 }: {
   adId: string;
   status: string;
   isOwner: boolean;
   isAdmin: boolean;
+  renewPriceCents: number;
 }) {
   const router = useRouter();
   const [confirmEnd, setConfirmEnd] = useState(false);
@@ -101,7 +103,7 @@ export default function AdActions({
       {canRenew && (
         confirmRenew ? (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 8, padding: "8px 12px" }}>
-            <span style={{ fontSize: 13, color: "#166534", fontWeight: 600 }}>Renew for another 7 days? ($100 payment required)</span>
+            <span style={{ fontSize: 13, color: "#166534", fontWeight: 600 }}>Renew for another 7 days? (${(renewPriceCents / 100).toFixed(2)} payment required)</span>
             <button
               onClick={() => callAction("renew")}
               disabled={loading}

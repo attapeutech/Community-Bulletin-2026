@@ -26,6 +26,7 @@ type LocationInfo = {
   name: string;
   storeName: string;
   storeNumber: string | null;
+  pricePerWeekCents?: number;
   address: string;
   address2: string | null;
   city: string;
@@ -209,7 +210,7 @@ export default function DisplayPage() {
           <p style={{ fontSize: 22, color: "#4A90C4", letterSpacing: "0.05em" }}>No active ads at this time</p>
           <p style={{ fontSize: 14, color: "#2A4A6C" }}>Ads will appear here once approved</p>
         </div>
-        <FooterBar />
+        <FooterBar priceCents={location?.pricePerWeekCents} />
       </div>
     );
   }
@@ -288,7 +289,7 @@ export default function DisplayPage() {
         </div>
       )}
 
-      <FooterBar />
+      <FooterBar priceCents={location?.pricePerWeekCents} />
     </div>
   );
 }
@@ -599,7 +600,8 @@ function FullscreenOverlay({ show, isFullscreen, onToggle }: { show: boolean; is
   );
 }
 
-function FooterBar() {
+function FooterBar({ priceCents }: { priceCents?: number }) {
+  const price = priceCents ? `$${(priceCents / 100).toFixed(priceCents % 100 === 0 ? 0 : 2)}` : null;
   return (
     <div style={{
       padding: "10px 32px",
@@ -614,7 +616,7 @@ function FooterBar() {
       <p style={{ fontSize: 12, color: "#2A4A6C" }}>
         Advertise at this location — <span style={{ color: "#4A90C4" }}>communitybulletin.com</span>
       </p>
-      <p style={{ fontSize: 11, color: "#1A2A3C" }}>$100 · 1 week · No contracts</p>
+      <p style={{ fontSize: 11, color: "#1A2A3C" }}>{price ? `${price} · ` : ""}1 week · No contracts</p>
     </div>
   );
 }

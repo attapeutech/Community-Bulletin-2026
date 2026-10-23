@@ -4,19 +4,24 @@ import Link from "next/link";
 import { useSession } from "@/lib/auth/client";
 import LiveAdsSection from "./LiveAdsSection";
 
-const FEATURES = [
+// Prices come from the server (lowest active store price); every store may differ
+export type LandingPrice = { amount: string; label: string; uniform: boolean };
+
+const FEATURES = (price: LandingPrice) => [
   { icon: "📍", title: "Location-targeted ads", desc: "Choose exactly which store locations display your ad. Target by city, state, or specific address." },
   { icon: "📺", title: "Beautiful display screens", desc: "Your ad displays on modern digital screens inside stores — responsive from mobile to large TV." },
   { icon: "⚡", title: "Goes live instantly", desc: "Once approved, your ad pushes live to the display screen in real-time via Socket.io — no delays." },
   { icon: "🔄", title: "Carousel slideshow", desc: "Multiple approved ads rotate in a smooth carousel so every advertiser gets equal screen time." },
   { icon: "✅", title: "Human review process", desc: "Every ad is reviewed by our team before going live, keeping the platform trusted and high quality." },
-  { icon: "💳", title: "Simple flat pricing", desc: "One simple price — $100 for 1 week. No hidden fees. Full refund if your ad is not approved." },
+  price.uniform
+    ? { icon: "💳", title: "Simple flat pricing", desc: `One simple price — ${price.amount} for 1 week. No hidden fees. Full refund if your ad is not approved.` }
+    : { icon: "💳", title: "Simple, upfront pricing", desc: `Priced per store, from ${price.amount} for 1 week — you see the exact price before you pay. Full refund if your ad is not approved.` },
 ];
 
 const HOW_IT_WORKS = [
   { step: "01", title: "Pick a location", desc: "Browse store locations near you and select where you want your ad to display." },
   { step: "02", title: "Upload your ad", desc: "Upload your poster or image. We support all formats and sizes — we handle the rest." },
-  { step: "03", title: "Pay & submit", desc: "Secure $100 payment via Stripe or PayPal. Your ad is submitted for review instantly." },
+  { step: "03", title: "Pay & submit", desc: "Secure payment via Stripe or PayPal at the store's weekly price. Your ad is submitted for review instantly." },
   { step: "04", title: "Go live", desc: "Once approved you get an email with a link to see your ad live on the display screen." },
 ];
 
@@ -27,7 +32,7 @@ const STATS = [
   { value: "1 week", label: "Per campaign" },
 ];
 
-export default function LandingPage() {
+export default function LandingPage({ price }: { price: LandingPrice }) {
   const { data: session } = useSession();
 
   return (
@@ -56,7 +61,7 @@ export default function LandingPage() {
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href={session ? "/ads/new" : "/register"} className="no-underline bg-[#E8563A] text-white px-8 py-3.5 rounded-xl text-base font-bold tracking-wide hover:bg-[#D14A30] transition-colors">
-              Post your first ad — $100
+              Post your first ad — {price.label}
             </Link>
             <a href="#how-it-works" className="no-underline bg-white/10 border border-white/20 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-white/20 transition-colors">
               See how it works
@@ -137,7 +142,7 @@ export default function LandingPage() {
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {FEATURES.map(({ icon, title, desc }) => (
+            {FEATURES(price).map(({ icon, title, desc }) => (
               <div key={title} className="bg-[#F4F7FB] dark:bg-[#0B1A27] rounded-2xl p-6 border border-[#D8E4EE] dark:border-[#1E3550]">
                 <div className="text-3xl mb-3">{icon}</div>
                 <h3 className="text-base font-bold text-[#1A3A5C] dark:text-white mb-2">{title}</h3>
@@ -162,7 +167,8 @@ export default function LandingPage() {
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#E8563A] text-white text-[11px] font-bold px-4 py-1 rounded-full tracking-wide uppercase">
                 Most Popular
               </div>
-              <div className="font-serif text-5xl font-bold text-[#1A3A5C] dark:text-white">$100</div>
+              {!price.uniform && <div className="text-sm font-semibold text-[#4A6B82] dark:text-[#7AA8C4] -mb-1">Starting at</div>}
+              <div className="font-serif text-5xl font-bold text-[#1A3A5C] dark:text-white">{price.amount}</div>
               <div className="text-sm text-[#4A6B82] dark:text-[#7AA8C4] mb-6">per location / 1 week</div>
               <ul className="text-left mb-8 space-y-2">
                 {["1 store location", "1-week display period", "Full carousel rotation", "Real-time approval status", "Email notifications", "Full refund if denied"].map((item) => (

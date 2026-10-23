@@ -18,7 +18,7 @@ const STATUS_COLORS: Record<string, { bg: string; color: string; label: string }
 
 const PAY_COLORS: Record<string, { bg: string; color: string; label: string }> = {
   unpaid:        { bg: "#fff7ed", color: "#c2410c", label: "Unpaid" },
-  paid:          { bg: "#dcfce7", color: "#166534", label: "Paid — $100.00" },
+  paid:          { bg: "#dcfce7", color: "#166534", label: "Paid" },
   refunded:      { bg: "#e0e7ff", color: "#3730a3", label: "Refunded" },
   refund_pending:{ bg: "#fef9c3", color: "#854d0e", label: "Refund Pending" },
   failed:        { bg: "#fee2e2", color: "#991b1b", label: "Payment Failed" },
@@ -80,6 +80,7 @@ export default async function AdDetailPage({
         id: locations.id,
         storeName: locations.storeName,
         slug: locations.slug,
+        pricePerWeekCents: locations.pricePerWeekCents,
         addressLine1: locations.addressLine1,
         addressLine2: locations.addressLine2,
         cityName: cities.name,
@@ -105,7 +106,14 @@ export default async function AdDetailPage({
 
   const { ad, location } = row;
   const adStatus = STATUS_COLORS[ad.status] ?? STATUS_COLORS.pending;
-  const payStatus = PAY_COLORS[ad.paymentStatus] ?? PAY_COLORS.unpaid;
+  const basePayStatus = PAY_COLORS[ad.paymentStatus] ?? PAY_COLORS.unpaid;
+  // Show the amount actually charged for the current run (latest paid payment)
+  const latestPaid = [...adPayments]
+    .filter(p => p.status === "paid")
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+  const payStatus = ad.paymentStatus === "paid" && latestPaid
+    ? { ...basePayStatus, label: `Paid — $${(latestPaid.amountCents / 100).toFixed(2)}` }
+    : basePayStatus;
 
   const isOwner = row.user.id === userId;
   const needsPayment = ad.paymentStatus === "unpaid";
@@ -170,6 +178,7 @@ export default async function AdDetailPage({
           status={ad.status}
           isOwner={isOwner}
           isAdmin={role === "admin"}
+          renewPriceCents={location.pricePerWeekCents}
         />
       </div>
 

@@ -883,7 +883,14 @@ export default function AdminPanelClient({
                             {u.twoFactorEnabled && <span title="2FA enabled" className="text-[10px] text-green-700 font-semibold">2FA</span>}
                             {u.banned && <span className="text-[10px] font-semibold text-white bg-red-500 rounded px-1.5 py-0.5">Banned</span>}
                           </div>
-                          <div className="text-xs text-[#4A6B82] truncate">{u.email}</div>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="text-xs text-[#4A6B82] truncate">{u.email}</span>
+                            {u.emailVerified ? (
+                              <span title="Email confirmed" className="shrink-0 text-[10px] font-semibold text-green-800 bg-green-50 border border-green-200 rounded-full px-1.5 py-px">✓ Confirmed</span>
+                            ) : (
+                              <span title="Email not confirmed yet" className="shrink-0 text-[10px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-px">Unconfirmed</span>
+                            )}
+                          </div>
                           <div className="text-[11px] text-[#9DB8CC] mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
                             <span>Joined {new Date(u.createdAt).toLocaleDateString()}</span>
                             {u.lastLoginAt && <span>Login {new Date(u.lastLoginAt).toLocaleString()}</span>}

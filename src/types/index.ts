@@ -69,4 +69,9 @@ export const PAYMENT_STATUS_LABELS: Record<Ad["paymentStatus"], string> = {
 
 export const AD_PRICE_CENTS = 10000; // $100.00
 export const AD_DURATION_DAYS = 7;
+// Location pricing and revenue share — admin-controlled, enforced by the locations API
+export const MIN_PRICE_PER_WEEK_CENTS = 1000;    // $10
+export const MAX_PRICE_PER_WEEK_CENTS = 100000;  // $1,000
+export const DEFAULT_SHARE_RATE_BPS = 2500;      // 25%
+export const MAX_SHARE_RATE_BPS = 9000;          // 90%
 export const MIN_PAYOUT_CENTS = 2500; // $25 — smaller owner balances roll over to next month

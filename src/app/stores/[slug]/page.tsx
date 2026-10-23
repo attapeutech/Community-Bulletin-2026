@@ -57,7 +57,6 @@ export default async function PublicStorePage({
   const displayName = loc.displayName || loc.storeName;
   const address = [loc.addressLine1, loc.addressLine2].filter(Boolean).join(", ");
   const cityLine = `${loc.city.name}, ${loc.state.code} ${loc.postalCode.code}`;
-  const shareRate = loc.equipmentProvided ? "50%" : "25%";
 
   return (
     <div className="min-h-screen bg-[#F4F7FB]">

@@ -6,6 +6,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
+import { useSession } from "@/lib/auth/client";
+import { AD_PRICE_CENTS, DEFAULT_SHARE_RATE_BPS, MIN_PRICE_PER_WEEK_CENTS, MAX_PRICE_PER_WEEK_CENTS, MAX_SHARE_RATE_BPS } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,7 +32,10 @@ const schema = z.object({
   cityId:            z.string().min(1,  "Select a city"),
   postalCodeId:      z.string().min(1,  "Select a postal code"),
   currency:          z.enum(["USD", "CAD", "GBP", "EUR"]),
-  pricePerWeekCents: z.number().int().min(100, "Minimum $1/week").max(1000000),
+  pricePerWeekCents: z.number().int()
+    .min(MIN_PRICE_PER_WEEK_CENTS, `Minimum $${MIN_PRICE_PER_WEEK_CENTS / 100}/week`)
+    .max(MAX_PRICE_PER_WEEK_CENTS, `Maximum $${(MAX_PRICE_PER_WEEK_CENTS / 100).toLocaleString()}/week`),
+  shareRateBps:      z.number().int().min(0, "Cannot be negative").max(MAX_SHARE_RATE_BPS, `Maximum ${MAX_SHARE_RATE_BPS / 100}%`),
   equipmentProvided: z.boolean(),
   description:       z.string().max(1000).optional(),
   category:          z.string().max(100).optional(),
@@ -47,6 +52,8 @@ function FieldError({ msg }: { msg?: string }) {
 type Option = { id: string; name: string };
 
 export default function NewLocationPage() {
+  const { data: session } = useSession();
+  const isAdmin = (session?.user as any)?.role === "admin";
   const router = useRouter();
   const logoRef = useRef<HTMLInputElement>(null);
 
@@ -60,7 +67,8 @@ export default function NewLocationPage() {
     resolver: zodResolver(schema),
     defaultValues: {
       currency: "USD",
-      pricePerWeekCents: 10000,
+      pricePerWeekCents: AD_PRICE_CENTS,
+      shareRateBps: DEFAULT_SHARE_RATE_BPS,
       equipmentProvided: false,
     },
   });
@@ -76,8 +84,8 @@ export default function NewLocationPage() {
   const watchedCountry    = watch("countryId");
   const watchedState      = watch("stateId");
   const watchedCity       = watch("cityId");
-  const equipmentProvided = watch("equipmentProvided");
   const priceWatch        = watch("pricePerWeekCents");
+  const shareWatch        = watch("shareRateBps");
 
   useEffect(() => {
     fetch("/api/geo/countries").then(r => r.json()).then(j => j.success && setCountries(j.data));
@@ -303,52 +311,88 @@ export default function NewLocationPage() {
           </CardContent>
         </Card>
 
-        {/* ── Pricing & Equipment ── */}
+        {/* ── Pricing & Revenue Share — set by CommunityBulletin admins ── */}
         <Card className="border-[#D8E4EE]">
           <CardContent className="pt-6 flex flex-col gap-5">
             <p className="text-[11px] font-semibold text-[#4A6B82] uppercase tracking-wider -mb-2">Pricing &amp; Revenue Share</p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div>
-                <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
-                  Ad price per week *
-                </Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4A6B82] text-sm">$</span>
-                  <Input
-                    type="number"
-                    min={1}
-                    step={1}
-                    value={Math.round(priceWatch / 100)}
-                    onChange={(e) => setValue("pricePerWeekCents", Math.round(Number(e.target.value) * 100), { shouldValidate: true })}
-                    className={cn("h-10 pl-6 text-sm bg-[#F7F9FC] border-[#D1DDE8]", errors.pricePerWeekCents && "border-red-300 bg-red-50")}
-                  />
-                </div>
-                <FieldError msg={errors.pricePerWeekCents?.message} />
-                <p className="text-[10px] text-[#5B7D96] mt-1">This is what advertisers pay per week to display their ad here.</p>
-              </div>
+            {isAdmin ? (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div>
+                    <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
+                      Ad price per week *
+                    </Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4A6B82] text-sm">$</span>
+                      <Input
+                        type="number"
+                        min={MIN_PRICE_PER_WEEK_CENTS / 100}
+                        max={MAX_PRICE_PER_WEEK_CENTS / 100}
+                        step={1}
+                        value={Math.round(priceWatch / 100)}
+                        onChange={(e) => setValue("pricePerWeekCents", Math.round(Number(e.target.value) * 100), { shouldValidate: true })}
+                        className={cn("h-10 pl-6 text-sm bg-[#F7F9FC] border-[#D1DDE8]", errors.pricePerWeekCents && "border-red-300 bg-red-50")}
+                      />
+                    </div>
+                    <FieldError msg={errors.pricePerWeekCents?.message} />
+                    <p className="text-[10px] text-[#5B7D96] mt-1">What advertisers pay per week to display their ad here.</p>
+                  </div>
 
-              <div>
-                <Label className="mb-2 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
-                  Equipment &amp; Setup
-                </Label>
+                  <div>
+                    <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
+                      Store owner share (%) *
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <div className="relative w-28">
+                        <Input
+                          type="number"
+                          min={0}
+                          max={MAX_SHARE_RATE_BPS / 100}
+                          step={0.5}
+                          value={shareWatch / 100}
+                          onChange={(e) => setValue("shareRateBps", Math.round(Number(e.target.value) * 100), { shouldValidate: true })}
+                          className={cn("h-10 pr-7 text-sm bg-[#F7F9FC] border-[#D1DDE8]", errors.shareRateBps && "border-red-300 bg-red-50")}
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4A6B82] text-sm">%</span>
+                      </div>
+                      {[25, 50].map(pct => (
+                        <button
+                          key={pct}
+                          type="button"
+                          onClick={() => setValue("shareRateBps", pct * 100, { shouldValidate: true })}
+                          className={cn(
+                            "px-3 py-1.5 rounded-full border text-xs",
+                            shareWatch === pct * 100
+                              ? "bg-[#1A3A5C] border-[#1A3A5C] text-white font-semibold"
+                              : "bg-white border-[#D8E4EE] text-[#4A6B82] hover:border-[#1A3A5C]"
+                          )}
+                        >
+                          {pct}%
+                        </button>
+                      ))}
+                    </div>
+                    <FieldError msg={errors.shareRateBps?.message} />
+                    <p className="text-[10px] text-[#5B7D96] mt-1">Owner earns this % of each ad price after card fees.</p>
+                  </div>
+                </div>
+
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     {...register("equipmentProvided")}
                     className="mt-0.5 w-4 h-4 rounded border-[#D1DDE8] accent-[#1A3A5C]"
                   />
-                  <span className="text-sm text-[#1A3A5C]">
-                    I provide TV screen, Wi-Fi &amp; hardware installation
-                  </span>
+                  <span className="text-sm text-[#1A3A5C]">Store owner provides the TV screen, Wi-Fi &amp; hardware</span>
                 </label>
-                <div className={cn("mt-3 rounded-lg p-3 text-[12px]", equipmentProvided ? "bg-green-50 text-green-800" : "bg-amber-50 text-amber-800")}>
-                  {equipmentProvided
-                    ? "You earn 50% of ad revenue — thank you for providing the equipment!"
-                    : "You earn 25% of ad revenue. Check the box above if you also provide the display equipment to earn 50%."}
-                </div>
+              </>
+            ) : (
+              <div className="rounded-lg p-3 text-[13px] bg-[#F7F9FC] border border-[#D8E4EE] text-[#4A6B82]">
+                New locations start at <strong className="text-[#1A3A5C]">${AD_PRICE_CENTS / 100}/week</strong> with a{" "}
+                <strong className="text-[#1A3A5C]">{DEFAULT_SHARE_RATE_BPS / 100}% revenue share</strong> for you.
+                CommunityBulletin confirms final pricing and your share with you, for example if you provide the screen and hardware.
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 

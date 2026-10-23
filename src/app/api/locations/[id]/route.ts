@@ -4,6 +4,7 @@ import { db } from "@/lib/db/client";
 import { locations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth/session";
+import { MIN_PRICE_PER_WEEK_CENTS, MAX_PRICE_PER_WEEK_CENTS, MAX_SHARE_RATE_BPS } from "@/types";
 
 const updateSchema = z.object({
   storeName: z.string().min(2).max(120).optional(),
@@ -13,7 +14,9 @@ const updateSchema = z.object({
   displayName: z.string().max(120).nullable().optional(),
   currency: z.string().length(3).optional(),
   isActive: z.boolean().optional(),
-  pricePerWeekCents: z.number().int().min(100).max(1000000).optional(),
+  // Admin-only fields (stripped for store owners below)
+  pricePerWeekCents: z.number().int().min(MIN_PRICE_PER_WEEK_CENTS).max(MAX_PRICE_PER_WEEK_CENTS).optional(),
+  shareRateBps: z.number().int().min(0).max(MAX_SHARE_RATE_BPS).optional(),
   equipmentProvided: z.boolean().optional(),
   description: z.string().max(1000).nullable().optional(),
   category: z.string().max(100).nullable().optional(),
@@ -43,6 +46,13 @@ export async function PATCH(
 
     const body = await req.json();
     const data = updateSchema.parse(body);
+
+    // Pricing and revenue share are set by CommunityBulletin, not the store owner
+    if (role !== "admin") {
+      delete data.pricePerWeekCents;
+      delete data.shareRateBps;
+      delete data.equipmentProvided;
+    }
 
     const [updated] = await db
       .update(locations)

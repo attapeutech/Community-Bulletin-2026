@@ -9,6 +9,7 @@ type Location = {
   id: string;
   storeName: string;
   storeNumber?: string | null;
+  pricePerWeekCents: number;
   slug: string;
   addressLine1: string;
   addressLine2?: string | null;
@@ -18,6 +19,10 @@ type Location = {
 };
 
 type Step = 1 | 2 | 3 | 4;
+
+function formatPrice(cents: number) {
+  return `$${(cents / 100).toFixed(cents % 100 === 0 ? 0 : 2)}`;
+}
 
 function StoreNumber({ value }: { value: string }) {
   return (
@@ -333,7 +338,7 @@ export default function NewAdPage() {
           Post a New Ad
         </h1>
         <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 32 }}>
-          $100 / 1 week · Displayed on in-store screens at your chosen location.
+          {selectedLocation ? `${formatPrice(selectedLocation.pricePerWeekCents)} / 1 week` : "Priced per store · 1 week"} · Displayed on in-store screens at your chosen location.
         </p>
 
         <StepBar current={step} />
@@ -388,7 +393,10 @@ export default function NewAdPage() {
                         fontSize: 14,
                       }}
                     >
-                      <div style={{ fontWeight: 600, color: ACCENT }}>{loc.storeName}</div>
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                        <span style={{ fontWeight: 600, color: ACCENT }}>{loc.storeName}</span>
+                        <span style={{ fontWeight: 700, color: "#E8563A", whiteSpace: "nowrap" }}>{formatPrice(loc.pricePerWeekCents)}<span style={{ fontWeight: 400, fontSize: 12, color: "#4A6B82" }}> / week</span></span>
+                      </div>
                       <div style={{ fontSize: 12, color: "#4A6B82" }}>
                         {loc.addressLine1}, {loc.city.name}, {loc.state.code} {loc.postalCode?.code}
                         {loc.storeNumber && <StoreNumber value={loc.storeNumber} />}
@@ -553,7 +561,7 @@ export default function NewAdPage() {
             <div>
               <h2 style={{ fontFamily: "Georgia,serif", fontSize: 20, color: ACCENT, marginBottom: 4 }}>Review & submit</h2>
               <p style={{ fontSize: 13, color: "#4A6B82", marginBottom: 24 }}>
-                Confirm your ad details. Payment of <strong>$100.00</strong> is collected on the next step.
+                Confirm your ad details. Payment of <strong>{selectedLocation ? `$${(selectedLocation.pricePerWeekCents / 100).toFixed(2)}` : ""}</strong> is collected on the next step.
               </p>
 
               {/* Summary */}
@@ -617,7 +625,7 @@ export default function NewAdPage() {
                   <div><span style={{ color: "#4A6B82" }}>Title:</span> <strong>{title}</strong></div>
                   {description && <div><span style={{ color: "#4A6B82" }}>Description:</span> {description}</div>}
                   <div><span style={{ color: "#4A6B82" }}>Duration:</span> 1 week</div>
-                  <div><span style={{ color: "#4A6B82" }}>Price:</span> <strong style={{ color: RED }}>$100.00</strong></div>
+                  <div><span style={{ color: "#4A6B82" }}>Price:</span> <strong style={{ color: RED }}>{selectedLocation ? `$${(selectedLocation.pricePerWeekCents / 100).toFixed(2)}` : ""}</strong> <span style={{ color: "#4A6B82" }}>/ 1 week</span></div>
                   {(showPhone || showAddress || showWebsite) && (
                     <div style={{ marginTop: 8, borderTop: "1px solid #D8E4EE", paddingTop: 8 }}>
                       <div style={{ fontSize: 12, color: "#4A6B82", marginBottom: 4, fontWeight: 600 }}>Shown on display:</div>

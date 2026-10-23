@@ -9,10 +9,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-12
 
 export { MIN_PAYOUT_CENTS } from "@/types";
 
-export function shareRateBps(equipmentProvided: boolean) {
-  return equipmentProvided ? 5000 : 2500;
-}
-
 /**
  * Creates a pending earnings row for a new payment.
  * Skipped for locations owned by an admin (platform-owned stores earn nothing).
@@ -25,7 +21,7 @@ export async function recordEarning(paymentId: string) {
       currency:          payments.currency,
       adTitle:           ads.title,
       locationId:        locations.id,
-      equipmentProvided: locations.equipmentProvided,
+      shareRateBps:      locations.shareRateBps,
       ownerId:           users.id,
       ownerRole:         users.role,
     })
@@ -46,7 +42,7 @@ export async function recordEarning(paymentId: string) {
       locationId:   row.locationId,
       adTitle:      row.adTitle,
       grossCents:   row.amountCents,
-      shareRateBps: shareRateBps(row.equipmentProvided),
+      shareRateBps: row.shareRateBps,
       currency:     row.currency,
     })
     .onConflictDoNothing({ target: ownerEarnings.paymentId });

@@ -1,6 +1,6 @@
 import { requireAuth } from "@/lib/auth/session";
 import Link from "next/link";
-import { Icon } from "@/components/layout/Icon";
+import { BrandMark } from "@/components/layout/BrandMark";
 import { SignOutButton } from "@/components/layout/SignOutButton";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { Badge } from "@/components/ui/badge";
@@ -34,9 +34,7 @@ export default async function DashboardLayout({
         {/* Logo */}
         <Link href="/" className="no-underline">
           <div className="flex items-center gap-2.5 mb-8 pl-2">
-            <div className="bg-[#E8EFF6] rounded-[10px] p-1.5">
-              <Icon size={28} />
-            </div>
+            <BrandMark size={40} className="shrink-0 ring-1 ring-white/15 rounded-[9px]" />
             <div>
               <div className="font-serif font-bold text-white text-[13px] leading-tight">Community</div>
               <div className="font-serif font-bold text-[#E8563A] text-[13px] leading-tight">
@@ -79,9 +77,7 @@ export default async function DashboardLayout({
           role={role}
         />
         <Link href="/" className="no-underline flex items-center gap-2">
-          <div className="bg-[#E8EFF6] rounded-lg p-1">
-            <Icon size={22} />
-          </div>
+          <BrandMark size={30} className="shrink-0" />
           <div className="font-serif font-bold text-[13px] text-[#1A3A5C] leading-tight">
             Community<span className="text-[#E8563A]">Bulletin</span>
           </div>

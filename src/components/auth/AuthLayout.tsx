@@ -1,4 +1,4 @@
-import { Icon } from "@/components/layout/Icon";
+import { BrandMark } from "@/components/layout/BrandMark";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -10,9 +10,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
       <div className="hidden lg:flex lg:w-[42%] lg:min-w-[340px] bg-primary px-9 py-8 flex-col justify-between items-center">
         {/* Logo hero */}
         <Link href="/" className="flex flex-col items-center gap-5 flex-1 justify-center no-underline">
-          <div className="bg-[#E8EFF6] rounded-[22px] p-4 flex w-28 h-28 items-center justify-center">
-            <Icon size={80} />
-          </div>
+          <BrandMark size={112} className="ring-1 ring-white/15 rounded-[25px]" />
           <div className="text-center">
             <div className="font-serif font-bold text-[38px] text-white leading-[1.05]">Community</div>
             <div className="font-serif font-bold text-[38px] text-destructive leading-[1.05]">
@@ -52,9 +50,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
         <div className="w-full max-w-[400px] flex flex-col items-center gap-6">
           {/* Mobile-only logo */}
           <Link href="/" className="lg:hidden flex items-center gap-3 no-underline">
-            <div className="bg-[#E8EFF6] rounded-xl p-2 flex items-center justify-center">
-              <Icon size={36} />
-            </div>
+            <BrandMark size={52} />
             <div className="flex flex-col leading-none">
               <span className="font-serif font-bold text-[17px] text-[#1A3A5C]">Community</span>
               <span className="font-serif font-bold text-[17px] leading-none">

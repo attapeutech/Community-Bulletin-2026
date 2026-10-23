@@ -12,4 +12,5 @@ export * from "./users";
 export * from "./locations";
 export * from "./ads";
 export * from "./payments";
+export * from "./earnings";
 export * from "./notifications";

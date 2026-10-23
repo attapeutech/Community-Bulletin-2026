@@ -1,13 +1,31 @@
 import { requireStoreOwner } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
-import { locations, ads, payments, users } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { locations, users, ownerEarnings, payouts } from "@/lib/db/schema";
+import { eq, desc, ne, and } from "drizzle-orm";
 import Link from "next/link";
+import { MIN_PAYOUT_CENTS } from "@/types";
+import PayoutDetailsForm from "./PayoutDetailsForm";
 
 const ACCENT = "#1A3A5C";
 
 function formatCents(cents: number, currency = "USD") {
   return new Intl.NumberFormat("en-US", { style: "currency", currency, minimumFractionDigits: 2 }).format(cents / 100);
+}
+
+const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
+  pending:   { bg: "#FEF3C7", color: "#92400E", label: "Pending" },
+  available: { bg: "#DBEAFE", color: "#1E40AF", label: "Available" },
+  paid:      { bg: "#DCFCE7", color: "#166534", label: "Paid out" },
+};
+
+function Card({ label, value, sub, color = ACCENT }: { label: string; value: string; sub: string; color?: string }) {
+  return (
+    <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "16px 20px" }}>
+      <div style={{ fontSize: 10, fontWeight: 600, color: "#4A6B82", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 22, fontWeight: 700, color }}>{value}</div>
+      <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 2 }}>{sub}</div>
+    </div>
+  );
 }
 
 export default async function EarningsPage() {
@@ -16,201 +34,176 @@ export default async function EarningsPage() {
   const userId = (session.user as any).id as string;
   const isAdmin = role === "admin";
 
-  // Build where clause — admin sees all, store_owner sees own locations only
+  // Admin sees every owner's ledger; store owners see their own
   const whereClause = isAdmin
-    ? eq(payments.status, "paid")
-    : and(eq(locations.storeOwnerId, userId), eq(payments.status, "paid"));
+    ? ne(ownerEarnings.status, "void")
+    : and(eq(ownerEarnings.ownerId, userId), ne(ownerEarnings.status, "void"));
 
   const rows = await db
     .select({
-      paymentId:         payments.id,
-      amountCents:       payments.amountCents,
-      currency:          payments.currency,
-      paymentCreatedAt:  payments.createdAt,
-      adTitle:           ads.title,
-      adStartedAt:       ads.startedAt,
-      adEndedAt:         ads.endedAt,
-      locationId:        locations.id,
-      locationName:      locations.storeName,
-      locationSlug:      locations.slug,
-      equipmentProvided: locations.equipmentProvided,
-      advertiserName:    users.name,
+      id:           ownerEarnings.id,
+      adTitle:      ownerEarnings.adTitle,
+      grossCents:   ownerEarnings.grossCents,
+      feeCents:     ownerEarnings.feeCents,
+      shareRateBps: ownerEarnings.shareRateBps,
+      amountCents:  ownerEarnings.amountCents,
+      currency:     ownerEarnings.currency,
+      status:       ownerEarnings.status,
+      availableAt:  ownerEarnings.availableAt,
+      createdAt:    ownerEarnings.createdAt,
+      locationName: locations.storeName,
+      ownerName:    users.name,
     })
-    .from(payments)
-    .innerJoin(ads,       eq(payments.adId,  ads.id))
-    .innerJoin(locations, eq(ads.locationId, locations.id))
-    .innerJoin(users,     eq(payments.userId, users.id))
+    .from(ownerEarnings)
+    .innerJoin(locations, eq(ownerEarnings.locationId, locations.id))
+    .innerJoin(users, eq(ownerEarnings.ownerId, users.id))
     .where(whereClause)
-    .orderBy(desc(payments.createdAt));
+    .orderBy(desc(ownerEarnings.createdAt));
 
-  // Compute totals
-  const totalRevenueCents = rows.reduce((s, r) => s + r.amountCents, 0);
-  const totalEarningsCents = rows.reduce((s, r) => {
-    const rate = r.equipmentProvided ? 0.5 : 0.25;
-    return s + Math.round(r.amountCents * rate);
-  }, 0);
+  const payoutRows = await db
+    .select({
+      id: payouts.id, amountCents: payouts.amountCents, currency: payouts.currency,
+      method: payouts.method, reference: payouts.reference, paidAt: payouts.paidAt, ownerName: users.name,
+    })
+    .from(payouts)
+    .innerJoin(users, eq(payouts.ownerId, users.id))
+    .where(isAdmin ? undefined : eq(payouts.ownerId, userId))
+    .orderBy(desc(payouts.paidAt));
 
-  // Group by location
-  const byLocation = new Map<string, {
-    name: string; slug: string; equipmentProvided: boolean;
-    revenueCents: number; earningsCents: number; count: number;
-  }>();
-  for (const r of rows) {
-    const entry = byLocation.get(r.locationId) ?? {
-      name: r.locationName, slug: r.locationSlug,
-      equipmentProvided: r.equipmentProvided,
-      revenueCents: 0, earningsCents: 0, count: 0,
-    };
-    const rate = r.equipmentProvided ? 0.5 : 0.25;
-    entry.revenueCents  += r.amountCents;
-    entry.earningsCents += Math.round(r.amountCents * rate);
-    entry.count         += 1;
-    byLocation.set(r.locationId, entry);
-  }
+  const [me] = isAdmin ? [] : await db
+    .select({ payoutMethod: users.payoutMethod, payoutZelle: users.payoutZelle, payoutMailingAddress: users.payoutMailingAddress })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  // Pending amounts are estimates until the run ends and the processor fee is known
+  const estimate = (r: typeof rows[number]) => Math.round((r.grossCents * r.shareRateBps) / 10000);
+  const pending   = rows.filter(r => r.status === "pending");
+  const available = rows.filter(r => r.status === "available");
+  const pendingCents   = pending.reduce((s, r) => s + estimate(r), 0);
+  const availableCents = available.reduce((s, r) => s + (r.amountCents ?? 0), 0);
+  const paidOutCents   = payoutRows.reduce((s, p) => s + p.amountCents, 0);
 
   return (
     <div>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6, gap: 12, flexWrap: "wrap" }}>
         <div>
           <h1 style={{ fontFamily: "Georgia,serif", fontSize: 26, fontWeight: 700, color: ACCENT }}>
             {isAdmin ? "All Earnings" : "My Earnings"}
           </h1>
           <p style={{ color: "#4A6B82", fontSize: 14, marginTop: 4 }}>
-            Revenue from paid ads across {byLocation.size > 0 ? byLocation.size : "your"} location{byLocation.size !== 1 ? "s" : ""}.
+            Your share of ad revenue, after card processing fees.
           </p>
         </div>
-        <Link
-          href="/dashboard/store-owner"
-          style={{ fontSize: 13, color: "#4A6B82", textDecoration: "none" }}
-        >
-          ← Back to Locations
-        </Link>
+        {isAdmin ? (
+          <Link href="/dashboard/admin/payouts" style={{ fontSize: 13, color: "#fff", background: ACCENT, padding: "8px 16px", borderRadius: 8, textDecoration: "none", fontWeight: 600 }}>
+            Manage Payouts →
+          </Link>
+        ) : (
+          <Link href="/dashboard/store-owner" style={{ fontSize: 13, color: "#4A6B82", textDecoration: "none" }}>
+            ← Back to Locations
+          </Link>
+        )}
       </div>
 
       {/* Summary cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 28, marginTop: 20 }}>
-        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "16px 20px" }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: "#4A6B82", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Total Ad Revenue</div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: ACCENT }}>{formatCents(totalRevenueCents)}</div>
-          <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 2 }}>gross from advertisers</div>
-        </div>
-        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "16px 20px" }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: "#4A6B82", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Your Earnings</div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: "#166534" }}>{formatCents(totalEarningsCents)}</div>
-          <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 2 }}>your revenue share</div>
-        </div>
-        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "16px 20px" }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: "#4A6B82", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Paid Ads</div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: ACCENT }}>{rows.length}</div>
-          <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 2 }}>completed payments</div>
-        </div>
-        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "16px 20px" }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: "#4A6B82", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Payout Status</div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: "#92400E" }}>Pending</div>
-          <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 2 }}>payouts processed manually</div>
-        </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 24, marginTop: 20 }}>
+        <Card label="Pending" value={`≈ ${formatCents(pendingCents)}`} sub={`${pending.length} ad run${pending.length !== 1 ? "s" : ""} in progress`} color="#92400E" />
+        <Card label="Available" value={formatCents(availableCents)} sub="included in the next payout" color="#1E40AF" />
+        <Card label="Paid Out" value={formatCents(paidOutCents)} sub={`${payoutRows.length} payout${payoutRows.length !== 1 ? "s" : ""}`} color="#166534" />
+        <Card label="Payout Schedule" value="Monthly" sub={`minimum ${formatCents(MIN_PAYOUT_CENTS)}; smaller balances roll over`} />
       </div>
 
-      {rows.length === 0 ? (
-        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: 48, textAlign: "center" }}>
-          <div style={{ fontSize: 36, marginBottom: 12 }}>💰</div>
-          <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: ACCENT, marginBottom: 8 }}>No earnings yet</h2>
-          <p style={{ color: "#4A6B82", fontSize: 14 }}>Earnings will appear here once advertisers pay for ads at your locations.</p>
-        </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-          {/* Per-location summary */}
-          {byLocation.size > 1 && (
-            <div>
-              <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, fontWeight: 700, color: ACCENT, marginBottom: 12 }}>
-                By Location
-              </h2>
-              <div style={{ display: "grid", gap: 10 }}>
-                {Array.from(byLocation.entries()).map(([locId, loc]) => (
-                  <div key={locId} style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "16px 20px", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: ACCENT }}>{loc.name}</div>
-                      <div style={{ fontSize: 12, color: "#4A6B82", marginTop: 2 }}>
-                        {loc.count} paid ad{loc.count !== 1 ? "s" : ""} · {loc.equipmentProvided ? "50%" : "25%"} revenue share
-                      </div>
-                    </div>
-                    <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: 13, color: "#4A6B82" }}>Ad revenue: <strong style={{ color: ACCENT }}>{formatCents(loc.revenueCents)}</strong></div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: "#166534", marginTop: 2 }}>Your share: {formatCents(loc.earningsCents)}</div>
-                    </div>
-                    <Link
-                      href={`/dashboard/store-owner/locations/${locId}`}
-                      style={{ fontSize: 12, color: "#4A90C4", textDecoration: "none", border: "1px solid #4A90C4", padding: "5px 12px", borderRadius: 6, whiteSpace: "nowrap" }}
-                    >
-                      Manage ↗
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+      {/* How it works */}
+      <div style={{ background: "#F7F9FC", border: "1px solid #D8E4EE", borderRadius: 12, padding: "14px 18px", fontSize: 13, color: "#4A6B82", marginBottom: 24, lineHeight: 1.6 }}>
+        <strong style={{ color: ACCENT }}>How earnings work:</strong> when an advertiser pays for an ad at your store, it shows here as
+        <strong> pending</strong>. Once the ad&apos;s run ends, it becomes <strong>available</strong>: your share
+        (25%, or 50% if you provided the screen) of the ad price after card processing fees. Available earnings are paid out monthly.
+      </div>
 
-          {/* Per-ad breakdown */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+        {!isAdmin && (
+          <PayoutDetailsForm
+            initialMethod={me?.payoutMethod ?? null}
+            initialZelle={me?.payoutZelle ?? null}
+            initialAddress={me?.payoutMailingAddress ?? null}
+          />
+        )}
+
+        {/* Payout history */}
+        {payoutRows.length > 0 && (
           <div>
             <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, fontWeight: 700, color: ACCENT, marginBottom: 12 }}>
-              All Transactions
+              Payout History
             </h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {rows.map((row) => {
-                const rate = row.equipmentProvided ? 0.5 : 0.25;
-                const earningsCents = Math.round(row.amountCents * rate);
+              {payoutRows.map(p => (
+                <div key={p.id} style={{ background: "#fff", borderRadius: 10, border: "1px solid #D8E4EE", padding: "12px 16px", display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: ACCENT }}>
+                      {new Date(p.paidAt).toLocaleDateString("en-US", { dateStyle: "medium" })}
+                      {isAdmin && <span style={{ fontWeight: 400, color: "#4A6B82" }}> · {p.ownerName}</span>}
+                    </div>
+                    <div style={{ fontSize: 12, color: "#4A6B82", marginTop: 2 }}>
+                      {p.method === "zelle" ? "Zelle" : "Check"}{p.reference ? ` · ref ${p.reference}` : ""}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: "#166534" }}>{formatCents(p.amountCents, p.currency)}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Ledger */}
+        <div>
+          <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, fontWeight: 700, color: ACCENT, marginBottom: 12 }}>
+            Earnings by Ad
+          </h2>
+          {rows.length === 0 ? (
+            <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: 48, textAlign: "center" }}>
+              <div style={{ fontSize: 36, marginBottom: 12 }}>💰</div>
+              <h3 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: ACCENT, marginBottom: 8 }}>No earnings yet</h3>
+              <p style={{ color: "#4A6B82", fontSize: 14 }}>Earnings will appear here once advertisers pay for ads at your locations.</p>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {rows.map(r => {
+                const st = STATUS_STYLE[r.status] ?? STATUS_STYLE.pending;
+                const rate = `${r.shareRateBps / 100}%`;
                 return (
-                  <div
-                    key={row.paymentId}
-                    style={{
-                      background: "#fff",
-                      borderRadius: 10,
-                      border: "1px solid #D8E4EE",
-                      padding: "14px 16px",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
-                      gap: 12,
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    {/* Left: ad + meta */}
+                  <div key={r.id} style={{ background: "#fff", borderRadius: 10, border: "1px solid #D8E4EE", padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
                     <div style={{ flex: "1 1 180px", minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: ACCENT, marginBottom: 2 }}>
-                        {row.adTitle}
-                      </div>
-                      <div style={{ fontSize: 12, color: "#4A6B82" }}>
-                        by {row.advertiserName}
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 2 }}>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: ACCENT }}>{r.adTitle}</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: st.bg, color: st.color }}>{st.label}</span>
                       </div>
                       <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 4 }}>
-                        {row.locationName} · {new Date(row.paymentCreatedAt).toLocaleDateString()}
+                        {r.locationName}{isAdmin && ` · ${r.ownerName}`} · paid {new Date(r.createdAt).toLocaleDateString()}
+                        {r.status === "pending" && r.availableAt && ` · available ${new Date(r.availableAt).toLocaleDateString()}`}
+                        {r.status === "pending" && !r.availableAt && " · awaiting ad approval"}
                       </div>
                     </div>
-                    {/* Right: amounts */}
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
                       <div style={{ fontSize: 11, color: "#4A6B82", marginBottom: 2 }}>
-                        Ad revenue: <span style={{ fontWeight: 600, color: ACCENT }}>{formatCents(row.amountCents, row.currency)}</span>
+                        Ad price: <span style={{ fontWeight: 600, color: ACCENT }}>{formatCents(r.grossCents, r.currency)}</span>
+                        {r.feeCents !== null && <> · fee {formatCents(r.feeCents, r.currency)}</>}
                       </div>
                       <div style={{ fontSize: 15, fontWeight: 700, color: "#166534" }}>
-                        {formatCents(earningsCents, row.currency)}
+                        {r.amountCents !== null ? formatCents(r.amountCents, r.currency) : `≈ ${formatCents(estimate(r), r.currency)}`}
                       </div>
                       <div style={{ fontSize: 10, color: "#5B7D96" }}>
-                        your {(rate * 100).toFixed(0)}% share
+                        {r.amountCents !== null ? `your ${rate} share` : `your ${rate} share, before fees`}
                       </div>
                     </div>
                   </div>
                 );
               })}
             </div>
-          </div>
-
-          {/* Payout notice */}
-          <div style={{ background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 12, padding: "16px 20px", fontSize: 13, color: "#92400E" }}>
-            <strong>Payout notice:</strong> Earnings are accumulated and paid out manually on a monthly basis. Contact us if you have questions about your balance.
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

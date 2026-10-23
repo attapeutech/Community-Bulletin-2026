@@ -5,6 +5,7 @@ import { ads, payments, users, locations, cities, states, postalCodes } from "@/
 import { eq, and } from "drizzle-orm";
 import { requireAuth } from "@/lib/auth/session";
 import { sendAdSubmittedEmail, sendPaymentReceiptEmail, sendAdReviewNotificationEmail } from "@/lib/email/templates";
+import { recordEarning } from "@/lib/earnings";
 
 export const dynamic = "force-dynamic";
 
@@ -49,18 +50,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, alreadyPaid: true });
     }
 
+    const paymentIntentId = checkoutSession.payment_intent as string;
+
+    // The webhook may have recorded this payment already
+    const [alreadyRecorded] = await db
+      .select({ id: payments.id })
+      .from(payments)
+      .where(eq(payments.providerTxId, paymentIntentId))
+      .limit(1);
+    if (alreadyRecorded) {
+      return NextResponse.json({ success: true, alreadyPaid: true });
+    }
+
     const now = new Date();
 
     // Record payment
-    await db.insert(payments).values({
+    const [payment] = await db.insert(payments).values({
       adId,
       userId,
       provider: "stripe",
-      providerTxId: checkoutSession.payment_intent as string,
+      providerTxId: paymentIntentId,
       status: "paid",
       amountCents: checkoutSession.amount_total ?? 10000,
       currency: (checkoutSession.currency ?? "usd").toUpperCase(),
-    });
+    }).returning({ id: payments.id });
+
+    await recordEarning(payment.id);
 
     // Mark ad as paid
     await db.update(ads).set({ paymentStatus: "paid", updatedAt: now }).where(eq(ads.id, adId));

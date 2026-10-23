@@ -3,6 +3,7 @@ import { db } from "@/lib/db/client";
 import { ads, locations } from "@/lib/db/schema";
 import { eq, and, lt, inArray } from "drizzle-orm";
 import { pushDisplayRefresh } from "@/lib/socket/notify";
+import { releaseEarnings } from "@/lib/earnings";
 
 // POST /api/cron/expire-ads
 // Called by Coolify scheduled task:
@@ -22,6 +23,12 @@ export async function POST(req: NextRequest) {
 
   const now = new Date();
 
+  // Release store-owner earnings for finished runs
+  const earnings = await releaseEarnings(now);
+  if (earnings.released || earnings.voided || earnings.retryLater) {
+    console.log(`[cron/expire-ads] Earnings: ${earnings.released} released, ${earnings.voided} voided, ${earnings.retryLater} retry later`);
+  }
+
   // Find all approved ads whose run window has ended
   const expired = await db
     .select({ id: ads.id, locationId: ads.locationId })
@@ -29,7 +36,7 @@ export async function POST(req: NextRequest) {
     .where(and(eq(ads.status, "approved"), lt(ads.endedAt, now)));
 
   if (expired.length === 0) {
-    return NextResponse.json({ success: true, expired: 0 });
+    return NextResponse.json({ success: true, expired: 0, earnings });
   }
 
   const adIds = expired.map(a => a.id);
@@ -52,5 +59,5 @@ export async function POST(req: NextRequest) {
   }
 
   console.log(`[cron/expire-ads] Expired ${adIds.length} ad(s) across ${affectedLocations.length} location(s)`);
-  return NextResponse.json({ success: true, expired: adIds.length, locations: affectedLocations.map(l => l.slug) });
+  return NextResponse.json({ success: true, expired: adIds.length, locations: affectedLocations.map(l => l.slug), earnings });
 }

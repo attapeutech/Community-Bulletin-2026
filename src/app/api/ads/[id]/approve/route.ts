@@ -7,6 +7,7 @@ import { addDays } from "date-fns";
 import { AD_DURATION_DAYS } from "@/types";
 import { sendAdApprovedEmail } from "@/lib/email/templates";
 import { pushDisplayRefresh, pushDashboardUpdate } from "@/lib/socket/notify";
+import { setEarningsAvailableAt } from "@/lib/earnings";
 
 // PATCH /api/ads/[id]/approve
 export async function PATCH(
@@ -71,6 +72,8 @@ export async function PATCH(
       })
       .where(eq(ads.id, id))
       .returning();
+
+    await setEarningsAvailableAt(id, endedAt);
 
     // Send approval email (non-blocking)
     const { storeName, addressLine1, cityName, stateCode, postalCode } = row.location;

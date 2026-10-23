@@ -32,6 +32,10 @@ export const users = pgTable("users", {
   defaultPhone:   text("default_phone"),
   defaultAddress: text("default_address"),
   defaultWebsite: text("default_website"),
+  // Store owner payout details (Phase 1: manual Zelle or check, no bank numbers stored)
+  payoutMethod:         text("payout_method"),           // "zelle" | "check"
+  payoutZelle:          text("payout_zelle"),            // Zelle email or phone
+  payoutMailingAddress: text("payout_mailing_address"),  // for checks
 });
 
 export const usersRelations = relations(users, ({ many }) => ({

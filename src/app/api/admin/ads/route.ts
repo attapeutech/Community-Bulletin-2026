@@ -9,6 +9,7 @@ import { AD_DURATION_DAYS } from "@/types";
 import { pushDisplayRefresh, pushDashboardUpdate } from "@/lib/socket/notify";
 import { sendAdApprovedEmail, sendAdDeniedEmail, sendAdCancelledEmail } from "@/lib/email/templates";
 import { processAdRefund } from "@/lib/refund";
+import { setEarningsAvailableAt } from "@/lib/earnings";
 
 // GET /api/admin/ads — all ads with optional status filter
 export async function GET(req: NextRequest) {
@@ -120,6 +121,8 @@ export async function PATCH(req: NextRequest) {
       })
       .where(eq(ads.id, adId))
       .returning();
+
+    if (isApproving && endedAt) await setEarningsAvailableAt(adId, endedAt);
 
     // Push real-time updates
     pushDisplayRefresh(row.location.slug).catch(console.error);

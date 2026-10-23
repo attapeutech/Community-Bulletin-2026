@@ -69,3 +69,4 @@ export const PAYMENT_STATUS_LABELS: Record<Ad["paymentStatus"], string> = {
 
 export const AD_PRICE_CENTS = 10000; // $100.00
 export const AD_DURATION_DAYS = 7;
+export const MIN_PAYOUT_CENTS = 2500; // $25 — smaller owner balances roll over to next month

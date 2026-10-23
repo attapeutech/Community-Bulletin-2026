@@ -7,6 +7,7 @@ import { eq, and } from "drizzle-orm";
 import { capturePayPalOrder } from "@/lib/paypal";
 import { AD_PRICE_CENTS } from "@/types";
 import { sendAdSubmittedEmail, sendPaymentReceiptEmail, sendAdReviewNotificationEmail } from "@/lib/email/templates";
+import { recordEarning } from "@/lib/earnings";
 
 const schema = z.object({
   adId: z.string().uuid(),
@@ -62,11 +63,13 @@ export async function POST(req: NextRequest) {
     const captureUnit = capture.purchase_units?.[0]?.payments?.captures?.[0];
     const captureId = captureUnit?.id ?? orderId;
     const captureStatus = captureUnit?.status ?? capture.status;
+    const paypalFee = captureUnit?.seller_receivable_breakdown?.paypal_fee?.value;
+    const feeCents = paypalFee ? Math.round(parseFloat(paypalFee) * 100) : null;
 
     const now = new Date();
 
     // Record payment
-    await db.insert(payments).values({
+    const [payment] = await db.insert(payments).values({
       adId,
       userId,
       provider: "paypal",
@@ -74,7 +77,10 @@ export async function POST(req: NextRequest) {
       status: captureStatus,
       amountCents: AD_PRICE_CENTS,
       currency: "USD",
-    });
+      feeCents,
+    }).returning({ id: payments.id });
+
+    await recordEarning(payment.id);
 
     // Mark ad as paid
     await db

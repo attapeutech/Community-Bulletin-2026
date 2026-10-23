@@ -9,6 +9,7 @@ import { AD_DURATION_DAYS } from "@/types";
 import { pushDisplayRefresh, pushDashboardUpdate } from "@/lib/socket/notify";
 import { sendAdApprovedEmail, sendAdDeniedEmail, sendAdCancelledEmail } from "@/lib/email/templates";
 import { processAdRefund } from "@/lib/refund";
+import { setEarningsAvailableAt } from "@/lib/earnings";
 
 // GET /api/admin/ads — all ads with optional status filter
 export async function GET(req: NextRequest) {
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest) {
         viewCount: ads.viewCount,
         websiteClickCount: ads.websiteClickCount,
         user: { id: users.id, name: users.name, email: users.email },
-        location: { id: locations.id, storeName: locations.storeName, slug: locations.slug },
+        location: { id: locations.id, storeName: locations.storeName, storeNumber: locations.storeNumber, slug: locations.slug },
       })
       .from(ads)
       .innerJoin(users, eq(ads.userId, users.id))
@@ -120,6 +121,8 @@ export async function PATCH(req: NextRequest) {
       })
       .where(eq(ads.id, adId))
       .returning();
+
+    if (isApproving && endedAt) await setEarningsAvailableAt(adId, endedAt);
 
     // Push real-time updates
     pushDisplayRefresh(row.location.slug).catch(console.error);

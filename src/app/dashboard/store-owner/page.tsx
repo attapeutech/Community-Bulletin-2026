@@ -1,7 +1,7 @@
 import { requireStoreOwner, getSession } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
-import { locations, ads, users, countries, states, cities, postalCodes, payments } from "@/lib/db/schema";
-import { eq, and, count, sum, desc } from "drizzle-orm";
+import { locations, ads, users, countries, states, cities, postalCodes, ownerEarnings } from "@/lib/db/schema";
+import { eq, and, count, sum, desc, inArray } from "drizzle-orm";
 import Link from "next/link";
 
 const ACCENT = "#1A3A5C";
@@ -63,13 +63,12 @@ export default async function StoreOwnerPage() {
     .groupBy(ads.locationId);
   const adCountMap = Object.fromEntries(adCounts.map((r) => [r.locationId, r.total]));
 
-  // Total paid revenue per location (from payments)
+  // Owner earnings per location (from the earnings ledger: released or paid out)
   const earningsRows = await db
-    .select({ locationId: ads.locationId, totalCents: sum(payments.amountCents) })
-    .from(payments)
-    .innerJoin(ads, eq(payments.adId, ads.id))
-    .where(eq(payments.status, "paid"))
-    .groupBy(ads.locationId);
+    .select({ locationId: ownerEarnings.locationId, totalCents: sum(ownerEarnings.amountCents) })
+    .from(ownerEarnings)
+    .where(inArray(ownerEarnings.status, ["available", "paid"]))
+    .groupBy(ownerEarnings.locationId);
   const earningsMap = Object.fromEntries(
     earningsRows.map((r) => [r.locationId, Number(r.totalCents ?? 0)])
   );
@@ -103,9 +102,7 @@ export default async function StoreOwnerPage() {
       ) : (
         <div style={{ display: "grid", gap: 16 }}>
           {locs.map((loc) => {
-            const totalRevCents = earningsMap[loc.id] ?? 0;
-            const shareRate = loc.equipmentProvided ? 0.5 : 0.25;
-            const earningsCents = Math.round(totalRevCents * shareRate);
+            const earningsCents = earningsMap[loc.id] ?? 0;
             const activeAds = adCountMap[loc.id] ?? 0;
 
             return (
@@ -149,7 +146,7 @@ export default async function StoreOwnerPage() {
                           ({loc.equipmentProvided ? "equipment provided" : "platform equipment"})
                         </span>
                       </div>
-                      {totalRevCents > 0 && (
+                      {earningsCents > 0 && (
                         <div style={{ fontSize: 13 }}>
                           <span style={{ color: "#4A6B82" }}>Your earnings: </span>
                           <span style={{ fontWeight: 600, color: "#166534" }}>{formatCents(earningsCents, loc.currency)}</span>

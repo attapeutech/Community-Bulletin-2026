@@ -22,6 +22,7 @@ export const payments = pgTable("payments", {
   status: text("status").notNull(),                     // stripe/paypal native status
   amountCents: integer("amount_cents").notNull(),       // e.g. 10000 = $100.00
   currency: text("currency").default("USD").notNull(),  // ISO 4217
+  feeCents: integer("fee_cents"),                       // processor fee; null until known
   refundedAt: timestamp("refunded_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

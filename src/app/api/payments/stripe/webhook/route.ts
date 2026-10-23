@@ -4,6 +4,7 @@ import { db } from "@/lib/db/client";
 import { ads, payments, users, locations, cities, states, postalCodes } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { sendAdSubmittedEmail, sendPaymentReceiptEmail, sendAdReviewNotificationEmail } from "@/lib/email/templates";
+import { recordEarning } from "@/lib/earnings";
 
 export const dynamic = "force-dynamic";
 
@@ -44,17 +45,30 @@ export async function POST(req: NextRequest) {
     }
 
     const now = new Date();
+    const paymentIntentId = session.payment_intent as string;
+
+    // The success-page confirm route may have recorded this payment already
+    const [alreadyRecorded] = await db
+      .select({ id: payments.id })
+      .from(payments)
+      .where(eq(payments.providerTxId, paymentIntentId))
+      .limit(1);
+    if (alreadyRecorded) {
+      return NextResponse.json({ received: true });
+    }
 
     // Record payment
-    await db.insert(payments).values({
+    const [payment] = await db.insert(payments).values({
       adId,
       userId,
       provider: "stripe",
-      providerTxId: session.payment_intent as string,
+      providerTxId: paymentIntentId,
       status: session.payment_status ?? "paid",
       amountCents: session.amount_total ?? 10000,
       currency: (session.currency ?? "usd").toUpperCase(),
-    });
+    }).returning({ id: payments.id });
+
+    await recordEarning(payment.id);
 
     // Mark ad as paid
     await db

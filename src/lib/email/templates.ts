@@ -237,3 +237,27 @@ export async function sendAdDeniedEmail({
     `),
   });
 }
+
+// ─── Store Owner Emails ──────────────────────────────────────────────────────
+
+export async function sendPayoutSentEmail({
+  to, ownerName, amountFormatted, method, reference, adCount,
+}: {
+  to: string; ownerName: string; amountFormatted: string; method: "zelle" | "check"; reference: string | null; adCount: number;
+}) {
+  return sendEmail({
+    to,
+    subject: `Your CommunityBulletin payout of ${amountFormatted} is on its way`,
+    html: emailWrapper(`
+      <h2 style="margin:0 0 8px;color:#16a34a;font-size:20px">Payout sent ✓</h2>
+      <p style="color:#4A6B82;font-size:14px;margin:0 0 20px">Hi ${ownerName}, we've sent your earnings from ads shown at your store.</p>
+      ${detailTable([
+        { label: "Amount", value: `<strong style="color:${CORAL_COLOR}">${amountFormatted}</strong>` },
+        { label: "Method", value: method === "zelle" ? "Zelle" : "Mailed check" },
+        ...(reference ? [{ label: method === "zelle" ? "Confirmation" : "Check number", value: reference }] : []),
+        { label: "Ad runs included", value: String(adCount) },
+      ])}
+      ${primaryButton(`${APP_URL}/dashboard/store-owner/earnings`, "View Earnings")}
+    `),
+  });
+}

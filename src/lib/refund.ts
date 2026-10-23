@@ -1,7 +1,8 @@
 import Stripe from "stripe";
 import { db } from "@/lib/db/client";
 import { ads, payments } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
+import { voidEarningForPayment } from "./earnings";
 import { refundPayPalCapture } from "./paypal";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,10 +23,12 @@ export type RefundResult = {
 export async function processAdRefund(adId: string): Promise<RefundResult> {
   const now = new Date();
 
+  // Most recent payment — a renewed ad has one payment per run
   const [payment] = await db
     .select()
     .from(payments)
     .where(eq(payments.adId, adId))
+    .orderBy(desc(payments.createdAt))
     .limit(1);
 
   if (!payment) {
@@ -47,6 +50,7 @@ export async function processAdRefund(adId: string): Promise<RefundResult> {
         updatedAt: now,
       }).where(eq(payments.id, payment.id));
       await db.update(ads).set({ paymentStatus: "refunded", updatedAt: now }).where(eq(ads.id, adId));
+      await voidEarningForPayment(payment.id);
       return { attempted: true, status: "refunded", amountCents: payment.amountCents, provider: "stripe" };
     } catch (err) {
       console.error("[Stripe refund error]", err);
@@ -65,6 +69,7 @@ export async function processAdRefund(adId: string): Promise<RefundResult> {
         updatedAt: now,
       }).where(eq(payments.id, payment.id));
       await db.update(ads).set({ paymentStatus: "refunded", updatedAt: now }).where(eq(ads.id, adId));
+      await voidEarningForPayment(payment.id);
       return { attempted: true, status: "refunded", amountCents: payment.amountCents, provider: "paypal" };
     } catch (err) {
       console.error("[PayPal refund error]", err);

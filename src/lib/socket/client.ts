@@ -7,18 +7,14 @@ let socketInstance: Socket | null = null;
 
 function getSocket(): Socket {
   if (!socketInstance) {
-    socketInstance = io(process.env.NEXT_PUBLIC_SOCKET_URL!, {
-      transports: ["websocket", "polling"],
+    socketInstance = io({
+      transports: ["polling", "websocket"],
       autoConnect: true,
     });
   }
   return socketInstance;
 }
 
-/**
- * useDisplaySocket — used by the display screen page.
- * Joins the location's room and fires onRefresh when new ads are pushed.
- */
 export function useDisplaySocket(slug: string, onRefresh: () => void) {
   const socketRef = useRef<Socket | null>(null);
 
@@ -26,19 +22,25 @@ export function useDisplaySocket(slug: string, onRefresh: () => void) {
     const socket = getSocket();
     socketRef.current = socket;
 
-    socket.emit("join:display", slug);
+    function joinRoom() {
+      socket.emit("join:display", slug);
+      // Fetch latest ads immediately on every (re)connect — don't rely on
+      // socket event delivery which can be lost during polling reconnects
+      onRefresh();
+    }
+
+    // Re-join on every connect/reconnect so we're always in the room
+    if (socket.connected) joinRoom();
+    socket.on("connect", joinRoom);
     socket.on("ads:refresh", onRefresh);
 
     return () => {
+      socket.off("connect", joinRoom);
       socket.off("ads:refresh", onRefresh);
     };
   }, [slug, onRefresh]);
 }
 
-/**
- * useDashboardSocket — used by admin/approver dashboards.
- * Fires onAdStatusChanged when any ad status updates.
- */
 export function useDashboardSocket(
   onAdStatusChanged: (payload: {
     adId: string;
@@ -48,10 +50,17 @@ export function useDashboardSocket(
 ) {
   useEffect(() => {
     const socket = getSocket();
-    socket.emit("join:dashboard");
+
+    function joinRoom() {
+      socket.emit("join:dashboard");
+    }
+
+    if (socket.connected) joinRoom();
+    socket.on("connect", joinRoom);
     socket.on("ad:status_changed", onAdStatusChanged);
 
     return () => {
+      socket.off("connect", joinRoom);
       socket.off("ad:status_changed", onAdStatusChanged);
     };
   }, [onAdStatusChanged]);

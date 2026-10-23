@@ -24,6 +24,14 @@ export const users = pgTable("users", {
   image: text("image"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  lastLoginAt: timestamp("last_login_at"),
+  lastLogoutAt: timestamp("last_logout_at"),
+  banned: boolean("banned").default(false).notNull(),
+  banReason: text("ban_reason"),
+  // Default contact info pre-filled on new ad submissions
+  defaultPhone:   text("default_phone"),
+  defaultAddress: text("default_address"),
+  defaultWebsite: text("default_website"),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({

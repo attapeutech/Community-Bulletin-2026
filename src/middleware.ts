@@ -10,14 +10,26 @@ const PUBLIC_ROUTES = [
   "/verify-email",
   "/two-factor",
   "/display",
+  "/ad",
+  "/live-ads",
+  "/help",
+  "/privacy",
+  "/terms",
+  "/contact",
 ];
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (
     PUBLIC_ROUTES.some((r) => pathname === r || pathname.startsWith(r + "/")) ||
     pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/cron") ||
+    pathname.startsWith("/api/display") ||
+    pathname.startsWith("/api/ads/live") ||
+    pathname.startsWith("/api/geo") ||
+    pathname.startsWith("/api/support") ||
+    pathname.startsWith("/api/auth/verify-recaptcha") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
     pathname.startsWith("/public")

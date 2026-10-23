@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
-import { ads, users, locations, payments, cities, states, postalCodes } from "@/lib/db/schema";
+import { ads, users, locations, payments } from "@/lib/db/schema";
 import { eq, desc, count, sum } from "drizzle-orm";
 import AdminPanelClient from "./AdminPanelClient";
 
@@ -17,6 +17,8 @@ export default async function AdminDashboard() {
     totalUsersRow,
     totalLocationsRow,
     revenueRow,
+    viewsRow,
+    clicksRow,
   ] = await Promise.all([
     db.select({ count: count() }).from(ads),
     db.select({ count: count() }).from(ads).where(eq(ads.status, "pending")),
@@ -25,6 +27,8 @@ export default async function AdminDashboard() {
     db.select({ count: count() }).from(users),
     db.select({ count: count() }).from(locations),
     db.select({ total: sum(payments.amountCents) }).from(payments).where(eq(payments.status, "paid")),
+    db.select({ total: sum(ads.viewCount) }).from(ads),
+    db.select({ total: sum(ads.websiteClickCount) }).from(ads),
   ]);
 
   const stats = {
@@ -35,6 +39,8 @@ export default async function AdminDashboard() {
     totalUsers: totalUsersRow[0].count,
     totalLocations: totalLocationsRow[0].count,
     totalRevenueCents: Number(revenueRow[0].total ?? 0),
+    totalViews: Number(viewsRow[0].total ?? 0),
+    totalWebsiteClicks: Number(clicksRow[0].total ?? 0),
   };
 
   // Fetch all users
@@ -47,6 +53,10 @@ export default async function AdminDashboard() {
       emailVerified: users.emailVerified,
       twoFactorEnabled: users.twoFactorEnabled,
       createdAt: users.createdAt,
+      lastLoginAt: users.lastLoginAt,
+      lastLogoutAt: users.lastLogoutAt,
+      banned: users.banned,
+      banReason: users.banReason,
     })
     .from(users)
     .orderBy(desc(users.createdAt));
@@ -56,6 +66,7 @@ export default async function AdminDashboard() {
     .select({
       id: ads.id,
       title: ads.title,
+      description: ads.description,
       imageUrl: ads.imageUrl,
       status: ads.status,
       paymentStatus: ads.paymentStatus,
@@ -63,23 +74,20 @@ export default async function AdminDashboard() {
       startedAt: ads.startedAt,
       endedAt: ads.endedAt,
       createdAt: ads.createdAt,
+      contactPhone: ads.contactPhone,
+      contactAddress: ads.contactAddress,
+      contactWebsite: ads.contactWebsite,
+      showPhone: ads.showPhone,
+      showAddress: ads.showAddress,
+      showWebsite: ads.showWebsite,
+      viewCount: ads.viewCount,
+      websiteClickCount: ads.websiteClickCount,
       user: { id: users.id, name: users.name, email: users.email },
-      location: {
-        id: locations.id,
-        storeName: locations.storeName,
-        slug: locations.slug,
-        addressLine1: locations.addressLine1,
-        cityName: cities.name,
-        stateCode: states.code,
-        postalCode: postalCodes.code,
-      },
+      location: { id: locations.id, storeName: locations.storeName, slug: locations.slug },
     })
     .from(ads)
     .innerJoin(users, eq(ads.userId, users.id))
     .innerJoin(locations, eq(ads.locationId, locations.id))
-    .innerJoin(cities, eq(locations.cityId, cities.id))
-    .innerJoin(states, eq(locations.stateId, states.id))
-    .innerJoin(postalCodes, eq(locations.postalCodeId, postalCodes.id))
     .orderBy(desc(ads.createdAt))
     .limit(300);
 
@@ -87,6 +95,8 @@ export default async function AdminDashboard() {
   const serializedUsers = allUsers.map(u => ({
     ...u,
     createdAt: u.createdAt.toISOString(),
+    lastLoginAt: u.lastLoginAt?.toISOString() ?? null,
+    lastLogoutAt: u.lastLogoutAt?.toISOString() ?? null,
   }));
 
   const serializedAds = allAds.map(a => ({

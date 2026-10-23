@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
@@ -12,12 +12,19 @@ type Ad = {
   description: string | null;
   imageUrl: string;
   displayOrder: number;
+  contactPhone:   string | null;
+  contactAddress: string | null;
+  contactWebsite: string | null;
+  showPhone:   boolean;
+  showAddress: boolean;
+  showWebsite: boolean;
 };
 
 type LocationInfo = {
   slug: string;
   name: string;
   storeName: string;
+  storeNumber: string | null;
   address: string;
   address2: string | null;
   city: string;
@@ -69,6 +76,32 @@ export default function DisplayPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Fullscreen
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showControls, setShowControls] = useState(false);
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    document.documentElement.requestFullscreen?.().catch(() => {});
+    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
+
+  function handleMouseMove() {
+    setShowControls(true);
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    hideTimerRef.current = setTimeout(() => setShowControls(false), 3000);
+  }
+
+  function toggleFullscreen() {
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.();
+    } else {
+      document.documentElement.requestFullscreen?.().catch(() => {});
+    }
+  }
+
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { loop: true, duration: 40 },
     [Autoplay({ delay: 8000, stopOnInteraction: false })]
@@ -82,6 +115,7 @@ export default function DisplayPage() {
         setError(json.error || "Location not found");
         return;
       }
+      setError(""); // clear any prior error on success
       setLocation(json.data.location);
       setAds(json.data.ads);
     } catch {
@@ -95,10 +129,45 @@ export default function DisplayPage() {
     fetchAds();
   }, [fetchAds]);
 
+  // Polling fallback — refreshes every 10 seconds regardless of Socket.io
+  useEffect(() => {
+    const id = setInterval(fetchAds, 10_000);
+    return () => clearInterval(id);
+  }, [fetchAds]);
+
+  // Refresh when tab/screen becomes visible (TV kiosks throttle hidden tabs)
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") fetchAds();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [fetchAds]);
+
   // Reinitialise Embla after ads change
   useEffect(() => {
     emblaApi?.reInit();
   }, [ads, emblaApi]);
+
+  // Track view whenever carousel settles on a slide
+  useEffect(() => {
+    if (!emblaApi || ads.length === 0) return;
+    function trackCurrentSlide() {
+      const idx = emblaApi!.selectedScrollSnap();
+      const ad = ads[idx];
+      if (ad) {
+        fetch(`/api/ads/${ad.id}/track`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ event: "view" }),
+        }).catch(() => {});
+      }
+    }
+    // Track initial slide
+    trackCurrentSlide();
+    emblaApi.on("select", trackCurrentSlide);
+    return () => { emblaApi.off("select", trackCurrentSlide); };
+  }, [emblaApi, ads]);
 
   // Socket.io: join location room, refresh ads on push
   useDisplaySocket(slug, fetchAds);
@@ -130,9 +199,10 @@ export default function DisplayPage() {
   // ── No ads ───────────────────────────────────────────────────────────────────
   if (ads.length === 0) {
     return (
-      <div style={fullscreen("#0A1A2E")}>
+      <div style={fullscreen("#0A1A2E")} onMouseMove={handleMouseMove}>
+        <FullscreenOverlay show={showControls} isFullscreen={isFullscreen} onToggle={toggleFullscreen} />
         {/* Header bar */}
-        <HeaderBar locationName={location?.name ?? slug} />
+        <HeaderBar locationName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} />
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
           <div style={{ fontSize: 64 }}>📋</div>
           <p style={{ fontSize: 22, color: "#4A90C4", letterSpacing: "0.05em" }}>No active ads at this time</p>
@@ -145,85 +215,45 @@ export default function DisplayPage() {
 
   // ── Carousel ─────────────────────────────────────────────────────────────────
   return (
-    <div style={fullscreen("#0A1A2E")}>
-      <HeaderBar locationName={location?.name ?? slug} />
+    <div style={fullscreen("#0A1A2E")} onMouseMove={handleMouseMove}>
+      <FullscreenOverlay show={showControls} isFullscreen={isFullscreen} onToggle={toggleFullscreen} />
+      <HeaderBar locationName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} />
 
       {/* Carousel */}
       <div style={{ flex: 1, overflow: "hidden", position: "relative" }} ref={emblaRef}>
         <div style={{ display: "flex", height: "100%" }}>
-          {ads.map((ad, idx) => (
-            <div
-              key={ad.id}
-              style={{
-                flex: "0 0 100%",
-                minWidth: 0,
-                height: "100%",
-                position: "relative",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              {/* Full image — dark background, no crop */}
-              <div style={{ flex: 1, position: "relative", overflow: "hidden", background: "#0A1A2E", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <img
-                  src={ad.imageUrl}
-                  alt={ad.title}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "contain",
-                    display: "block",
-                  }}
-                />
-                {/* Subtle bottom gradient for the info bar */}
-                <div style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: "linear-gradient(to top, rgba(10,26,46,0.75) 0%, transparent 18%)",
-                }} />
-
-                {/* Location info bar */}
-                <div style={{
-                  position: "absolute",
-                  bottom: 0, left: 0, right: 0,
-                  padding: "16px 32px",
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
-                }}>
-                  <span style={{
-                    fontSize: "clamp(11px, 1.4vw, 18px)",
-                    color: "rgba(255,255,255,0.9)",
-                    fontWeight: 500,
-                    letterSpacing: "0.01em",
-                  }}>
-                    {location?.storeName} — {location?.address}{location?.address2 ? `, ${location.address2}` : ""}, {location?.city}, {location?.stateCode} {location?.postalCode}
-                  </span>
-                  <span style={{
-                    fontSize: "clamp(10px, 1.2vw, 15px)",
-                    color: "rgba(255,255,255,0.6)",
-                    whiteSpace: "nowrap",
-                    marginLeft: 24,
-                  }}>
-                    Ad #{ad.id.slice(-6).toUpperCase()}
-                  </span>
-                </div>
+          {ads.map((ad, idx) => {
+            const hasSplit = !!(ad.contactPhone || ad.contactAddress || ad.contactWebsite);
+            return (
+              <div
+                key={ad.id}
+                style={{ flex: "0 0 100%", minWidth: 0, height: "100%", position: "relative", display: "flex", flexDirection: "column" }}
+              >
+                {hasSplit ? (
+                  <SplitAdSlide ad={ad} idx={idx} total={ads.length} />
+                ) : (
+                  /* Full-screen image layout */
+                  <div style={{ flex: 1, position: "relative", overflow: "hidden", background: "#0A1A2E", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <img
+                      src={ad.imageUrl}
+                      alt={ad.title}
+                      style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+                    />
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,26,46,0.7) 0%, transparent 18%)" }} />
+                    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "10px 32px", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                      <span style={{ fontSize: "clamp(10px, 1.2vw, 15px)", color: "rgba(255,255,255,0.6)", whiteSpace: "nowrap" }}>
+                        Ad #{ad.id.slice(-6).toUpperCase()}
+                      </span>
+                    </div>
+                    {/* Slide counter */}
+                    <div style={{ position: "absolute", top: 20, right: 24, background: "rgba(10,26,46,0.6)", color: "rgba(255,255,255,0.7)", fontSize: 13, padding: "4px 12px", borderRadius: 20, backdropFilter: "blur(4px)" }}>
+                      {idx + 1} / {ads.length}
+                    </div>
+                  </div>
+                )}
               </div>
-
-              {/* Slide counter */}
-              <div style={{
-                position: "absolute",
-                top: 20,
-                right: 24,
-                background: "rgba(10,26,46,0.6)",
-                color: "rgba(255,255,255,0.7)",
-                fontSize: 13,
-                padding: "4px 12px",
-                borderRadius: 20,
-                backdropFilter: "blur(4px)",
-              }}>
-                {idx + 1} / {ads.length}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -276,7 +306,7 @@ function fullscreen(bg: string): React.CSSProperties {
   };
 }
 
-function HeaderBar({ locationName }: { locationName: string }) {
+function HeaderBar({ locationName, storeNumber }: { locationName: string; storeNumber: string | null }) {
   return (
     <div style={{
       display: "flex",
@@ -290,18 +320,28 @@ function HeaderBar({ locationName }: { locationName: string }) {
     }}>
       {/* Logo */}
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{
-          fontFamily: "Georgia,serif",
-          fontSize: 16,
-          fontWeight: 700,
-          color: "#fff",
-          letterSpacing: "0.02em",
-        }}>
-          Community <span style={{ color: "#E8563A" }}>Bulletin</span>
-          <span style={{ color: "#4A90C4", fontSize: 12 }}>.com</span>
-        </div>
+        <a href="/" style={{ textDecoration: "none" }}>
+          <div style={{
+            fontFamily: "Georgia,serif",
+            fontSize: 16,
+            fontWeight: 700,
+            color: "#fff",
+            letterSpacing: "0.02em",
+          }}>
+            Community <span style={{ color: "#E8563A" }}>Bulletin</span>
+            <span style={{ color: "#4A90C4", fontSize: 12 }}>.com</span>
+          </div>
+        </a>
         <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.15)" }} />
-        <div style={{ fontSize: 13, color: "#9DC4E0" }}>{locationName}</div>
+        <div style={{ fontSize: 13, color: "#9DC4E0", display: "flex", alignItems: "center", gap: 6 }}>
+          {locationName}
+          {storeNumber && (
+            <>
+              <span style={{ color: "#E8563A", fontWeight: 700 }}>#</span>
+              <span style={{ color: "#E8563A", fontWeight: 700 }}>{storeNumber}</span>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Clock */}
@@ -312,6 +352,215 @@ function HeaderBar({ locationName }: { locationName: string }) {
         <div style={{ fontSize: 11, color: "#4A90C4" }}>
           <DateDisplay />
         </div>
+      </div>
+    </div>
+  );
+}
+
+function SplitAdSlide({ ad, idx, total }: { ad: Ad; idx: number; total: number }) {
+  const len = ad.title.length;
+  const titleSize = len <= 20
+    ? "clamp(30px, 4.5vw, 66px)"
+    : len <= 40
+    ? "clamp(22px, 3.2vw, 48px)"
+    : "clamp(17px, 2.4vw, 36px)";
+
+  return (
+    <div style={{ height: "100%", display: "flex", position: "relative" }}>
+      {/* Left panel */}
+      <div style={{
+        width: "42%",
+        background: "#0A1A2E",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        padding: "clamp(20px, 4vw, 56px)",
+        position: "relative",
+        flexShrink: 0,
+        borderRight: "1px solid rgba(74,144,196,0.15)",
+      }}>
+        {/* Title */}
+        <div style={{
+          fontFamily: "Georgia, serif",
+          fontSize: titleSize,
+          fontWeight: 700,
+          color: "#fff",
+          lineHeight: 1.15,
+          marginBottom: "clamp(10px, 1.8vw, 22px)",
+        }}>
+          {ad.title}
+        </div>
+
+        {/* Description */}
+        {ad.description && (
+          <div style={{
+            fontSize: "clamp(12px, 1.3vw, 18px)",
+            color: "rgba(255,255,255,0.65)",
+            lineHeight: 1.6,
+            marginBottom: "clamp(14px, 2vw, 28px)",
+          }}>
+            {ad.description}
+          </div>
+        )}
+
+        {/* Accent divider + Contact Info label */}
+        {(ad.showPhone || ad.showAddress || ad.showWebsite) && (
+          <>
+            <div style={{ width: 44, height: 3, background: "#E8563A", borderRadius: 2, marginBottom: "clamp(10px, 1.4vw, 18px)" }} />
+            <div style={{ fontSize: "clamp(9px, 0.85vw, 12px)", fontWeight: 700, letterSpacing: "0.12em", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: "clamp(8px, 1vw, 14px)" }}>
+              Contact Info
+            </div>
+          </>
+        )}
+
+        {/* Contact fields */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "clamp(8px, 1.2vw, 16px)" }}>
+          {ad.showPhone && ad.contactPhone && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: "clamp(14px, 1.5vw, 22px)" }}>📞</span>
+              <span style={{ fontSize: "clamp(12px, 1.4vw, 20px)", color: "#fff", fontWeight: 600 }}>{ad.contactPhone}</span>
+            </div>
+          )}
+          {ad.showAddress && ad.contactAddress && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: "clamp(14px, 1.5vw, 22px)" }}>📍</span>
+              <span style={{ fontSize: "clamp(12px, 1.4vw, 20px)", color: "#fff", fontWeight: 600 }}>{ad.contactAddress}</span>
+            </div>
+          )}
+          {ad.showWebsite && ad.contactWebsite && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: "clamp(14px, 1.5vw, 22px)" }}>🌐</span>
+              <a
+                href={ad.contactWebsite.startsWith("http") ? ad.contactWebsite : `https://${ad.contactWebsite}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => {
+                  fetch(`/api/ads/${ad.id}/track`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ event: "website_click" }),
+                  }).catch(() => {});
+                }}
+                style={{ fontSize: "clamp(12px, 1.4vw, 20px)", color: "#4A90C4", fontWeight: 600, textDecoration: "underline" }}
+              >
+                {ad.contactWebsite}
+              </a>
+            </div>
+          )}
+        </div>
+
+      </div>
+
+      {/* Right panel — image */}
+      <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
+        <img
+          src={ad.imageUrl}
+          alt={ad.title}
+          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        />
+      </div>
+
+      {/* Slide counter */}
+      <div style={{
+        position: "absolute", top: 16, right: 20,
+        background: "rgba(10,26,46,0.7)", color: "rgba(255,255,255,0.7)",
+        fontSize: 13, padding: "4px 12px", borderRadius: 20, backdropFilter: "blur(4px)",
+      }}>
+        {idx + 1} / {total}
+      </div>
+
+      {/* Ad # */}
+      <div style={{
+        position: "absolute", bottom: 10, right: 20,
+        fontSize: "clamp(10px, 0.9vw, 13px)", color: "rgba(255,255,255,0.35)",
+      }}>
+        Ad #{ad.id.slice(-6).toUpperCase()}
+      </div>
+    </div>
+  );
+}
+
+function FullscreenOverlay({ show, isFullscreen, onToggle }: { show: boolean; isFullscreen: boolean; onToggle: () => void }) {
+  return (
+    <div style={{
+      position: "absolute",
+      top: 0, left: 0, right: 0, bottom: 0,
+      zIndex: 100,
+      pointerEvents: "none",
+    }}>
+      <div style={{
+        position: "absolute",
+        top: 16,
+        right: 16,
+        display: "flex",
+        gap: 8,
+        opacity: show ? 1 : 0,
+        transition: "opacity 0.3s ease",
+        pointerEvents: show ? "auto" : "none",
+      }}>
+        {/* Home */}
+        <a
+          href="/"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "7px 14px",
+            borderRadius: 8,
+            background: "rgba(10,26,46,0.85)",
+            border: "1px solid rgba(74,144,196,0.4)",
+            backdropFilter: "blur(8px)",
+            color: "#9DC4E0",
+            textDecoration: "none",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: "pointer",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          Home
+        </a>
+
+        {/* Fullscreen toggle */}
+        <button
+          onClick={onToggle}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "7px 14px",
+            borderRadius: 8,
+            background: "rgba(10,26,46,0.85)",
+            border: "1px solid rgba(232,86,58,0.4)",
+            backdropFilter: "blur(8px)",
+            color: "#E8A09D",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: "pointer",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {isFullscreen ? (
+            <>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+              Exit Fullscreen
+            </>
+          ) : (
+            <>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
+                <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+              </svg>
+              Enter Fullscreen
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

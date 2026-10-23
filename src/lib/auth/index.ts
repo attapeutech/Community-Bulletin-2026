@@ -1,8 +1,11 @@
 import { betterAuth } from "better-auth";
+import { createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { randomUUID } from "node:crypto";
 import { db } from "@/lib/db/client";
 import * as schema from "@/lib/db/schema";
+import { users, sessions } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { sendVerificationEmail, sendPasswordResetEmail } from "@/lib/email/templates";
 
 export const auth = betterAuth({
@@ -53,10 +56,54 @@ export const auth = betterAuth({
     },
   },
 
-  trustedOrigins: [process.env.NEXT_PUBLIC_APP_URL!],
+  trustedOrigins: [
+    process.env.NEXT_PUBLIC_APP_URL!,
+    "https://communitybulletin.com",
+    "https://www.communitybulletin.com",
+  ],
 
   advanced: {
     generateId: () => randomUUID(),
+  },
+
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === "/sign-out") {
+        try {
+          const session = await getSessionFromCtx(ctx);
+          const userId = session?.session?.userId;
+          if (userId) {
+            await db.update(users)
+              .set({ lastLogoutAt: new Date() })
+              .where(eq(users.id, userId));
+          }
+        } catch { /* non-blocking */ }
+      }
+    }),
+  },
+
+  databaseHooks: {
+    session: {
+      create: {
+        before: async (session) => {
+          const [user] = await db
+            .select({ banned: users.banned, banReason: users.banReason })
+            .from(users)
+            .where(eq(users.id, session.userId as string))
+            .limit(1);
+          if (user?.banned) {
+            throw new Error(user.banReason || "Your account has been suspended. Please contact support.");
+          }
+          return { data: session };
+        },
+        after: async (session) => {
+          await db.update(users)
+            .set({ lastLoginAt: new Date() })
+            .where(eq(users.id, session.userId as string))
+            .catch(console.error);
+        },
+      },
+    },
   },
 });
 

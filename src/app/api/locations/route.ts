@@ -84,6 +84,7 @@ export async function GET(req: NextRequest) {
 // ─── POST /api/locations ──────────────────────────────────────────────────────
 const createSchema = z.object({
   storeName: z.string().min(2).max(120),
+  storeNumber: z.string().max(50).optional(),
   addressLine1: z.string().min(5).max(200),
   addressLine2: z.string().max(100).optional(),
   displayName: z.string().max(120).optional(),
@@ -92,6 +93,12 @@ const createSchema = z.object({
   cityId: z.string().uuid(),
   postalCodeId: z.string().uuid(),
   currency: z.string().length(3).default("USD"),
+  pricePerWeekCents: z.number().int().min(100).max(1000000).default(10000),
+  equipmentProvided: z.boolean().default(false),
+  description: z.string().max(1000).optional(),
+  category: z.string().max(100).optional(),
+  logoUrl: z.string().url().optional(),
+  businessHours: z.string().max(500).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -114,6 +121,7 @@ export async function POST(req: NextRequest) {
     const [location] = await db.insert(locations).values({
       storeOwnerId: userId,
       storeName: data.storeName,
+      storeNumber: data.storeNumber ?? null,
       addressLine1: data.addressLine1,
       addressLine2: data.addressLine2 ?? null,
       displayName: data.displayName ?? null,
@@ -124,6 +132,12 @@ export async function POST(req: NextRequest) {
       currency: data.currency,
       slug,
       isActive: true,
+      pricePerWeekCents: data.pricePerWeekCents,
+      equipmentProvided: data.equipmentProvided,
+      description: data.description ?? null,
+      category: data.category ?? null,
+      logoUrl: data.logoUrl ?? null,
+      businessHours: data.businessHours ?? null,
     }).returning();
 
     return NextResponse.json({ success: true, data: location }, { status: 201 });

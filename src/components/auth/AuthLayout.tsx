@@ -7,7 +7,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen font-sans">
 
       {/* ── LEFT PANEL ── */}
-      <div className="hidden lg:flex w-[42%] min-w-[340px] bg-primary px-9 py-8 flex-col justify-between items-center">
+      <div className="hidden lg:flex lg:w-[42%] lg:min-w-[340px] bg-primary px-9 py-8 flex-col justify-between items-center">
         {/* Logo hero */}
         <Link href="/" className="flex flex-col items-center gap-5 flex-1 justify-center no-underline">
           <div className="bg-[#E8EFF6] rounded-[22px] p-4 flex w-28 h-28 items-center justify-center">
@@ -48,26 +48,28 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* ── RIGHT PANEL ── */}
-      <div className="flex-1 bg-secondary flex flex-col items-center justify-center px-6 sm:px-8 py-10">
-        {/* Mobile logo — only shown below lg where the left panel is hidden */}
-        <Link href="/" className="lg:hidden flex items-center gap-3 mb-8 no-underline">
-          <div className="bg-[#E8EFF6] rounded-[14px] p-2.5 flex">
-            <Icon size={40} />
-          </div>
-          <div>
-            <div className="font-serif font-bold text-[22px] text-[#1A3A5C] leading-[1.05]">Community</div>
-            <div className="font-serif font-bold text-[22px] leading-[1.05]">
-              <span className="text-[#E8563A]">Bulletin</span>
-              <span className="text-[#4A90C4] text-[14px] font-sans font-normal">.com</span>
+      <div className="flex-1 bg-secondary flex items-center justify-center px-4 sm:px-8 py-10">
+        <div className="w-full max-w-[400px] flex flex-col items-center gap-6">
+          {/* Mobile-only logo */}
+          <Link href="/" className="lg:hidden flex items-center gap-3 no-underline">
+            <div className="bg-[#E8EFF6] rounded-xl p-2 flex items-center justify-center">
+              <Icon size={36} />
             </div>
-          </div>
-        </Link>
+            <div className="flex flex-col leading-none">
+              <span className="font-serif font-bold text-[17px] text-[#1A3A5C]">Community</span>
+              <span className="font-serif font-bold text-[17px] leading-none">
+                <span style={{ color: "#E8563A" }}>Bulletin</span>
+                <span className="text-[#4A90C4] text-[11px] font-sans font-normal">.com</span>
+              </span>
+            </div>
+          </Link>
 
-        <Card className="w-full max-w-[400px] border-border/50 shadow-none rounded-2xl">
-          <CardContent className="px-8 py-9">
-            {children}
-          </CardContent>
-        </Card>
+          <Card className="w-full border-border/50 shadow-none rounded-2xl">
+            <CardContent className="px-5 sm:px-8 py-7 sm:py-9">
+              {children}
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
     </div>

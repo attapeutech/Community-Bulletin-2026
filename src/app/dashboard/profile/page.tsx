@@ -9,13 +9,14 @@ export default async function ProfilePage() {
 
   const user = await db.query.users.findFirst({
     where: eq(users.id, session.user.id as string),
-    columns: { name: true, email: true, twoFactorEnabled: true },
+    columns: { name: true, email: true, twoFactorEnabled: true, image: true },
   });
 
   return (
     <ProfileClient
       name={user?.name ?? session.user.name ?? ""}
       email={user?.email ?? session.user.email ?? ""}
+      image={user?.image ?? null}
       twoFactorEnabled={user?.twoFactorEnabled ?? false}
     />
   );

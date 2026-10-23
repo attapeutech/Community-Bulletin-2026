@@ -1,16 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AuthLayout } from "@/components/auth/AuthLayout";
-import { signIn, sendVerificationEmail } from "@/lib/auth/client";
+import { signIn, sendVerificationEmail, useSession } from "@/lib/auth/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -48,7 +49,12 @@ const GoogleIcon = () => (
 
 export default function LoginPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [formError, setFormError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (session) router.replace("/dashboard");
+  }, [session, router]);
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
@@ -70,20 +76,23 @@ export default function LoginPage() {
         return;
       }
 
-      const result = await signIn.email({ email: data.email, password: data.password, callbackURL: "/dashboard" });
-      if (result.error) {
-        const msg = result.error.message ?? "";
-        if (msg.toLowerCase().includes("email not verified") || msg.toLowerCase().includes("email_not_verified")) {
-          setUnverifiedEmail(data.email);
-          return;
-        }
-        setFormError(msg || "Incorrect password. Please try again.");
-        return;
-      }
-      // Check if this user has 2FA enabled; if so send OTP and redirect
-      const twoFaRes = await fetch("/api/auth/2fa/send", { method: "POST" });
-      const twoFaJson = await twoFaRes.json();
-      router.push(twoFaJson.required ? "/two-factor" : "/dashboard");
+      await signIn.email({
+        email: data.email,
+        password: data.password,
+        fetchOptions: {
+          onSuccess: () => {
+            window.location.href = "/dashboard";
+          },
+          onError: (ctx) => {
+            const msg = ctx.error?.message ?? "";
+            if (msg.toLowerCase().includes("email not verified") || msg.toLowerCase().includes("email_not_verified")) {
+              setUnverifiedEmail(data.email);
+            } else {
+              setFormError(msg || "Incorrect password. Please try again.");
+            }
+          },
+        },
+      });
     } catch {
       setFormError("Something went wrong. Please try again.");
     }
@@ -110,11 +119,6 @@ export default function LoginPage() {
       <p className="text-[13px] text-muted-foreground mt-0 mb-5">
         Sign in to your CommunityBulletin account
       </p>
-
-      <div className="flex items-center gap-2 bg-accent/10 border border-accent/30 rounded-lg px-3 py-2 mb-5 text-xs text-accent">
-        <span className="w-2 h-2 rounded-full bg-accent shrink-0 inline-block" />
-        Two-factor authentication is enabled for your security.
-      </div>
 
       {unverifiedEmail && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg px-3.5 py-3 mb-5">
@@ -174,8 +178,7 @@ export default function LoginPage() {
           <Label className="block mb-1.5 text-[11px] font-semibold text-foreground/70 uppercase tracking-[0.04em]">
             Password
           </Label>
-          <Input
-            type="password"
+          <PasswordInput
             placeholder="••••••••"
             {...register("password")}
             className={errors.password ? "border-destructive bg-destructive/5" : ""}

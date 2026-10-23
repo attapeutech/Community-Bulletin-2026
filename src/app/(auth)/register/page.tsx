@@ -1,19 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { GoogleReCaptchaProvider, useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { AuthLayout } from "@/components/auth/AuthLayout";
-import { signIn, signUp } from "@/lib/auth/client";
+import { signIn, signUp, useSession } from "@/lib/auth/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 const schema = z.object({
@@ -42,6 +44,16 @@ function FormError({ msg }: { msg: string | null }) {
   );
 }
 
+function FormSuccess({ msg }: { msg: string | null }) {
+  if (!msg) return null;
+  return (
+    <Alert className="mb-4 border-green-500 bg-green-50 text-green-800 [&>svg]:text-green-600">
+      <CheckCircle2 className="h-4 w-4" />
+      <AlertDescription>{msg}</AlertDescription>
+    </Alert>
+  );
+}
+
 const GoogleIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" className="shrink-0">
     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -51,16 +63,40 @@ const GoogleIcon = () => (
   </svg>
 );
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const { data: session } = useSession();
+  if (session) { router.replace("/dashboard"); return null; }
+
   const [formError, setFormError] = useState<string | null>(null);
+  const [formSuccess, setFormSuccess] = useState<string | null>(null);
+  const { executeRecaptcha } = useGoogleReCaptcha();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
-  async function onSubmit(data: FormData) {
+  const onSubmit = useCallback(async (data: FormData) => {
     setFormError(null);
+    setFormSuccess(null);
+
+    if (!executeRecaptcha) {
+      setFormError("reCAPTCHA not ready. Please try again.");
+      return;
+    }
+
     try {
+      const token = await executeRecaptcha("register");
+      const captchaRes = await fetch("/api/auth/verify-recaptcha", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+      const { success: captchaOk } = await captchaRes.json();
+      if (!captchaOk) {
+        setFormError("reCAPTCHA verification failed. Please try again.");
+        return;
+      }
+
       const check = await fetch("/api/auth/check-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -82,12 +118,12 @@ export default function RegisterPage() {
         setFormError(result.error.message ?? "Registration failed. Please try again.");
         return;
       }
+      setFormSuccess("Account created! Please check your email to verify your account.");
       toast.success("Account created! Please check your email to verify your account.");
-      router.push("/login");
     } catch {
       setFormError("Something went wrong. Please try again.");
     }
-  }
+  }, [executeRecaptcha]);
 
   return (
     <AuthLayout>
@@ -119,7 +155,7 @@ export default function RegisterPage() {
           <Label className="block mb-1.5 text-[11px] font-semibold text-foreground/70 uppercase tracking-[0.04em]">
             Password
           </Label>
-          <Input type="password" placeholder="Min. 8 characters" {...register("password")} className={errors.password ? "border-destructive bg-destructive/5" : ""} />
+          <PasswordInput placeholder="Min. 8 characters" {...register("password")} className={errors.password ? "border-destructive bg-destructive/5" : ""} />
           <FieldError msg={errors.password?.message} />
         </div>
 
@@ -127,7 +163,7 @@ export default function RegisterPage() {
           <Label className="block mb-1.5 text-[11px] font-semibold text-foreground/70 uppercase tracking-[0.04em]">
             Confirm password
           </Label>
-          <Input type="password" placeholder="Re-enter password" {...register("confirm")} className={errors.confirm ? "border-destructive bg-destructive/5" : ""} />
+          <PasswordInput placeholder="Re-enter password" {...register("confirm")} className={errors.confirm ? "border-destructive bg-destructive/5" : ""} />
           <FieldError msg={errors.confirm?.message} />
         </div>
 
@@ -138,6 +174,7 @@ export default function RegisterPage() {
           <Link href="/privacy" className="text-accent no-underline">Privacy Policy</Link>.
         </p>
 
+        <FormSuccess msg={formSuccess} />
         <FormError msg={formError} />
 
         <Button
@@ -172,5 +209,13 @@ export default function RegisterPage() {
         </Link>
       </p>
     </AuthLayout>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <GoogleReCaptchaProvider reCaptchaKey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}>
+      <RegisterForm />
+    </GoogleReCaptchaProvider>
   );
 }

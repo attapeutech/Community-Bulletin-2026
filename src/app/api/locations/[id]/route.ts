@@ -7,11 +7,18 @@ import { getSession } from "@/lib/auth/session";
 
 const updateSchema = z.object({
   storeName: z.string().min(2).max(120).optional(),
+  storeNumber: z.string().max(50).nullable().optional(),
   addressLine1: z.string().min(5).max(200).optional(),
   addressLine2: z.string().max(100).nullable().optional(),
   displayName: z.string().max(120).nullable().optional(),
   currency: z.string().length(3).optional(),
   isActive: z.boolean().optional(),
+  pricePerWeekCents: z.number().int().min(100).max(1000000).optional(),
+  equipmentProvided: z.boolean().optional(),
+  description: z.string().max(1000).nullable().optional(),
+  category: z.string().max(100).nullable().optional(),
+  logoUrl: z.string().url().nullable().optional(),
+  businessHours: z.string().max(500).nullable().optional(),
 });
 
 // PATCH /api/locations/[id]

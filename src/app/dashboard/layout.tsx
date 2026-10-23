@@ -2,8 +2,8 @@ import { requireAuth } from "@/lib/auth/session";
 import Link from "next/link";
 import { Icon } from "@/components/layout/Icon";
 import { SignOutButton } from "@/components/layout/SignOutButton";
-import { Badge } from "@/components/ui/badge";
 import { MobileNav } from "@/components/layout/MobileNav";
+import { Badge } from "@/components/ui/badge";
 
 export default async function DashboardLayout({
   children,
@@ -17,26 +17,21 @@ export default async function DashboardLayout({
 
   const navItems = [
     { href: "/dashboard/user",        label: "My Ads",        roles: ["user", "store_owner", "approver", "admin"] },
-    { href: "/dashboard/store-owner", label: role === "admin" ? "All Locations" : "My Locations", roles: ["store_owner", "admin"] },
-    { href: "/dashboard/approver",    label: "Review Ads",    roles: ["approver", "admin"] },
+    { href: "/dashboard/store-owner",          label: role === "admin" ? "All Locations" : "My Locations", roles: ["store_owner", "admin"] },
+    { href: "/dashboard/store-owner/earnings", label: "Earnings",        roles: ["store_owner", "admin"] },
+    { href: "/dashboard/approver",             label: "Review Ads",      roles: ["approver", "admin"] },
     { href: "/dashboard/admin",       label: "Admin Panel",   roles: ["admin"] },
+    { href: "/dashboard/admin/geo",   label: "Geography",     roles: ["admin"] },
     { href: "/dashboard/profile",     label: "Account",       roles: ["user", "store_owner", "approver", "admin"] },
+    { href: "/help",                   label: "Help & Support", roles: ["user", "store_owner", "approver", "admin"] },
   ].filter((item) => item.roles.includes(role));
 
   return (
     <div className="flex min-h-screen bg-[#F4F7FB]">
-      {/* Mobile header */}
-      <MobileNav
-        navItems={navItems}
-        userName={user.name}
-        userEmail={user.email}
-        role={role}
-      />
-
-      {/* Sidebar — hidden on mobile, visible md+ */}
+      {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-60 bg-[#1A3A5C] flex-col shrink-0 px-4 py-6 gap-2">
         {/* Logo */}
-        <Link href="/dashboard/user" className="no-underline">
+        <Link href="/" className="no-underline">
           <div className="flex items-center gap-2.5 mb-8 pl-2">
             <div className="bg-[#E8EFF6] rounded-[10px] p-1.5">
               <Icon size={28} />
@@ -74,8 +69,27 @@ export default async function DashboardLayout({
         </div>
       </aside>
 
-      {/* Main content — pt accounts for fixed mobile header */}
-      <main className="flex-1 p-4 pt-[72px] md:p-8 overflow-y-auto">
+      {/* Mobile header bar */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-white border-b border-[#D8E4EE] flex items-center justify-between px-4 shadow-sm">
+        <MobileNav
+          navItems={navItems}
+          userName={user.name}
+          userEmail={user.email}
+          role={role}
+        />
+        <Link href="/" className="no-underline flex items-center gap-2">
+          <div className="bg-[#E8EFF6] rounded-lg p-1">
+            <Icon size={22} />
+          </div>
+          <div className="font-serif font-bold text-[13px] text-[#1A3A5C] leading-tight">
+            Community<span className="text-[#E8563A]">Bulletin</span>
+          </div>
+        </Link>
+        <div className="w-8" /> {/* spacer to center logo */}
+      </div>
+
+      {/* Main content */}
+      <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto mt-14 md:mt-0">
         {children}
       </main>
     </div>

@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Check, X, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
+import { useDashboardSocket } from "@/lib/socket/client";
+import { Check, X, RefreshCw, Trash2, MonitorPlay, Pencil } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +46,8 @@ type Stats = {
   totalUsers: number;
   totalLocations: number;
   totalRevenueCents: number;
+  totalViews: number;
+  totalWebsiteClicks: number;
 };
 
 type User = {
@@ -54,11 +58,16 @@ type User = {
   emailVerified: boolean;
   twoFactorEnabled: boolean;
   createdAt: string;
+  lastLoginAt: string | null;
+  lastLogoutAt: string | null;
+  banned: boolean;
+  banReason: string | null;
 };
 
 type Ad = {
   id: string;
   title: string;
+  description: string | null;
   imageUrl: string;
   status: string;
   paymentStatus: string;
@@ -66,19 +75,389 @@ type Ad = {
   startedAt: string;
   endedAt: string;
   createdAt: string;
+  contactPhone: string | null;
+  contactAddress: string | null;
+  contactWebsite: string | null;
+  showPhone: boolean;
+  showAddress: boolean;
+  showWebsite: boolean;
+  viewCount: number;
+  websiteClickCount: number;
   user: { id: string; name: string; email: string };
-  location: { id: string; storeName: string; slug: string; addressLine1: string; cityName: string; stateCode: string; postalCode: string };
+  location: { id: string; storeName: string; slug: string };
 };
 
-function StatCard({ label, value, sub, accentClass }: { label: string; value: string | number; sub?: string; accentClass?: string }) {
+const PAGE_SIZE = 10;
+
+function Paginator({ page, total, onChange }: { page: number; total: number; onChange: (p: number) => void }) {
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  if (totalPages <= 1) return null;
+
+  const pages = Array.from({ length: totalPages }, (_, i) => i + 1)
+    .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+    .reduce<(number | "…")[]>((acc, p, i, arr) => {
+      if (i > 0 && (p as number) - (arr[i - 1] as number) > 1) acc.push("…");
+      acc.push(p);
+      return acc;
+    }, []);
+
   return (
-    <div className="flex-1 basis-40 bg-white rounded-xl border border-[#D8E4EE] px-6 py-5">
-      <div className="text-[11px] font-semibold text-[#6B8FA8] uppercase tracking-[0.05em] mb-2">{label}</div>
-      <div className={cn("text-[28px] font-bold leading-none", accentClass ?? "text-[#1A3A5C]")}>{value}</div>
-      {sub && <div className="text-xs text-[#6B8FA8] mt-1">{sub}</div>}
+    <div className="flex items-center justify-between px-5 py-3 border-t border-[#D8E4EE] bg-[#F7F9FC]">
+      <span className="text-[11px] text-[#4A6B82]">
+        {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total}
+      </span>
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => onChange(page - 1)} disabled={page === 1}
+          className="px-2.5 py-1 rounded border text-[11px] disabled:opacity-35 disabled:cursor-not-allowed border-[#D8E4EE] text-[#4A6B82] hover:border-[#4A90C4] hover:text-[#1A3A5C] bg-white cursor-pointer"
+        >← Prev</button>
+        {pages.map((p, i) =>
+          p === "…"
+            ? <span key={`d${i}`} className="px-1 text-[11px] text-[#9DB8CC]">…</span>
+            : <button key={p} onClick={() => onChange(p as number)}
+                className={cn("min-w-[28px] h-7 rounded border text-[11px] font-semibold",
+                  page === p
+                    ? "bg-[#1A3A5C] border-[#1A3A5C] text-white"
+                    : "border-[#D8E4EE] text-[#4A6B82] hover:border-[#4A90C4] hover:text-[#1A3A5C] bg-white cursor-pointer"
+                )}>{p}</button>
+        )}
+        <button
+          onClick={() => onChange(page + 1)} disabled={page === totalPages}
+          className="px-2.5 py-1 rounded border text-[11px] disabled:opacity-35 disabled:cursor-not-allowed border-[#D8E4EE] text-[#4A6B82] hover:border-[#4A90C4] hover:text-[#1A3A5C] bg-white cursor-pointer"
+        >Next →</button>
+      </div>
     </div>
   );
 }
+
+function StatCard({ label, value, sub, accentClass, onClick }: { label: string; value: string | number; sub?: string; accentClass?: string; onClick?: () => void }) {
+  return (
+    <div
+      onClick={onClick}
+      className={cn(
+        "flex-1 basis-40 bg-white rounded-xl border border-[#D8E4EE] px-6 py-5 transition-colors",
+        onClick && "cursor-pointer hover:border-[#4A90C4] hover:bg-[#F7FAFD]"
+      )}
+    >
+      <div className="text-[11px] font-semibold text-[#4A6B82] uppercase tracking-[0.05em] mb-2">{label}</div>
+      <div className={cn("text-[28px] font-bold leading-none", accentClass ?? "text-[#1A3A5C]")}>{value}</div>
+      {sub && <div className="text-xs text-[#4A6B82] mt-1">{sub}</div>}
+      {onClick && <div className="text-[10px] text-[#5B7D96] mt-2">Click to view →</div>}
+    </div>
+  );
+}
+
+// ─── Admin Edit Dialog ────────────────────────────────────────────────────────────────────────────────
+
+type EditDraft = {
+  title: string;
+  description: string;
+  status: string;
+  paymentStatus: string;
+  startedAt: string;
+  endedAt: string;
+  displayOrder: number;
+  contactPhone: string;
+  contactAddress: string;
+  contactWebsite: string;
+  showPhone: boolean;
+  showAddress: boolean;
+  showWebsite: boolean;
+};
+
+function toDatetimeLocal(iso: string) {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function AdminEditAdDialog({
+  ad,
+  onClose,
+  onSaved,
+}: {
+  ad: Ad;
+  onClose: () => void;
+  onSaved: (updated: Partial<Ad>) => void;
+}) {
+  const [draft, setDraft] = useState<EditDraft>({
+    title:          ad.title,
+    description:    ad.description    ?? "",
+    status:         ad.status,
+    paymentStatus:  ad.paymentStatus,
+    startedAt:      toDatetimeLocal(ad.startedAt),
+    endedAt:        toDatetimeLocal(ad.endedAt),
+    displayOrder:   0,
+    contactPhone:   ad.contactPhone   ?? "",
+    contactAddress: ad.contactAddress ?? "",
+    contactWebsite: ad.contactWebsite ?? "",
+    showPhone:      ad.showPhone,
+    showAddress:    ad.showAddress,
+    showWebsite:    ad.showWebsite,
+  });
+  const [saving,      setSaving]      = useState(false);
+  const [error,       setError]       = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [newImageUrl, setNewImageUrl] = useState<string | null>(null);
+  const [uploading,   setUploading]   = useState(false);
+  const [uploadErr,   setUploadErr]   = useState<string | null>(null);
+
+  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setUploadErr(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("folder", "ads");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error ?? "Upload failed");
+      setNewImageUrl(json.data.publicUrl);
+    } catch (e: any) {
+      setUploadErr(e.message ?? "Upload failed");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }
+
+  const set = (k: keyof EditDraft, v: string | number | boolean) => {
+    setDraft(d => ({ ...d, [k]: v }));
+    setFieldErrors(e => { const n = { ...e }; delete n[k as string]; return n; });
+  };
+
+  const fe = (k: string) => fieldErrors[k]
+    ? <p className="text-[11px] text-red-600 mt-1">{fieldErrors[k]}</p>
+    : null;
+
+  async function save() {
+    setSaving(true);
+    setError(null);
+    setFieldErrors({});
+    try {
+      const res = await fetch(`/api/admin/ads/${ad.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title:          draft.title.trim(),
+          description:    draft.description.trim() || null,
+          status:         draft.status,
+          paymentStatus:  draft.paymentStatus,
+          startedAt:      new Date(draft.startedAt).toISOString(),
+          endedAt:        new Date(draft.endedAt).toISOString(),
+          displayOrder:   Number(draft.displayOrder),
+          ...(newImageUrl ? { imageUrl: newImageUrl } : {}),
+          contactPhone:   draft.contactPhone.trim()   || null,
+          contactAddress: draft.contactAddress.trim() || null,
+          contactWebsite: draft.contactWebsite.trim() || null,
+          showPhone:      draft.showPhone,
+          showAddress:    draft.showAddress,
+          showWebsite:    draft.showWebsite,
+        }),
+      });
+      const json = await res.json();
+      if (!json.success) {
+        if (json.details?.length) {
+          const fe: Record<string, string> = {};
+          for (const d of json.details) {
+            const field = d.path?.[0] as string | undefined;
+            if (field) fe[field] = d.message;
+          }
+          setFieldErrors(fe);
+          throw new Error("Please fix the highlighted fields.");
+        }
+        throw new Error(json.error ?? "Save failed");
+      }
+      toast.success("Ad updated successfully");
+      onSaved({
+        title:          draft.title.trim(),
+        description:    draft.description.trim() || null,
+        status:         draft.status as Ad["status"],
+        paymentStatus:  draft.paymentStatus as Ad["paymentStatus"],
+        startedAt:      new Date(draft.startedAt).toISOString(),
+        endedAt:        new Date(draft.endedAt).toISOString(),
+        ...(newImageUrl ? { imageUrl: newImageUrl } : {}),
+        contactPhone:   draft.contactPhone.trim()   || null,
+        contactAddress: draft.contactAddress.trim() || null,
+        contactWebsite: draft.contactWebsite.trim() || null,
+        showPhone:      draft.showPhone,
+        showAddress:    draft.showAddress,
+        showWebsite:    draft.showWebsite,
+      });
+      onClose();
+    } catch (e: any) {
+      setError(e.message ?? "Unknown error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const labelCls = "text-[11px] font-semibold text-[#4A6B82] uppercase tracking-wide mb-1 block";
+  const inputCls = "w-full border border-[#D8E4EE] rounded-lg px-3 py-2 text-sm text-[#1A3A5C] bg-[#FAFCFF] outline-none focus:border-[#4A90C4]";
+  const selectCls = `${inputCls} appearance-none cursor-pointer`;
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div onClick={onClose} className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
+
+      {/* Dialog */}
+      <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(96vw,520px)] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        {/* Header */}
+        <div className="bg-[#1A3A5C] px-6 py-4 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2">
+            <Pencil size={15} className="text-white/70" />
+            <span className="font-serif font-bold text-white text-[16px]">Edit Ad (Admin)</span>
+          </div>
+          <button onClick={onClose} className="text-white/50 hover:text-white text-xl leading-none bg-transparent border-none cursor-pointer">×</button>
+        </div>
+
+        {/* Ad thumbnail + id */}
+        <div className="flex items-center gap-3 px-6 py-3 border-b border-[#EDF2F7] bg-[#F7FAFC] shrink-0">
+          <label className="relative group cursor-pointer shrink-0" title="Click to replace image">
+            <img src={newImageUrl ?? ad.imageUrl} alt="" className="w-12 h-9 object-cover rounded-md" />
+            <div className="absolute inset-0 bg-black/50 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              {uploading
+                ? <span className="text-white text-[9px] font-bold">…</span>
+                : <span className="text-white text-[9px] font-bold leading-tight text-center">Replace</span>
+              }
+            </div>
+            <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={handleImageChange} disabled={uploading} />
+          </label>
+          <div className="min-w-0">
+            <div className="text-xs font-semibold text-[#1A3A5C] truncate max-w-[280px]">{ad.title}</div>
+            <div className="text-[10px] text-[#9DB8CC] font-mono">ID: {ad.id}</div>
+            {newImageUrl && <div className="text-[10px] text-green-600 font-semibold mt-0.5">✓ New image ready to save</div>}
+            {uploadErr  && <div className="text-[10px] text-red-600 mt-0.5">{uploadErr}</div>}
+          </div>
+          <span className="ml-auto text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-0.5 font-semibold shrink-0">Testing only — no emails sent</span>
+        </div>
+
+        {/* Form */}
+        <div className="overflow-y-auto p-6 flex flex-col gap-4">
+          {error && (
+            <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</div>
+          )}
+
+          {/* Title */}
+          <div>
+            <label className={labelCls}>Title</label>
+            <input className={`${inputCls} ${fieldErrors.title ? "border-red-400" : ""}`} value={draft.title} onChange={e => set("title", e.target.value)} />
+            {fe("title")}
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className={labelCls}>Description <span className="normal-case text-[#9DB8CC] font-normal">(optional)</span></label>
+            <textarea className={`${inputCls} resize-none ${fieldErrors.description ? "border-red-400" : ""}`} rows={2} value={draft.description} onChange={e => set("description", e.target.value)} />
+            {fe("description")}
+          </div>
+
+          {/* Contact fields */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className={labelCls + " mb-0"}>Phone <span className="normal-case text-[#9DB8CC] font-normal">(optional)</span></label>
+              <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-[#4A6B82]">
+                <input type="checkbox" checked={draft.showPhone} onChange={e => set("showPhone", e.target.checked)} className="accent-[#4A90C4]" />
+                Show on display
+              </label>
+            </div>
+            <input className={`${inputCls} ${fieldErrors.contactPhone ? "border-red-400" : ""}`} placeholder="e.g. (555) 123-4567" value={draft.contactPhone} onChange={e => {
+              set("contactPhone", e.target.value);
+              if (e.target.value.trim()) setDraft(d => ({ ...d, showPhone: true }));
+            }} />
+            {fe("contactPhone")}
+          </div>
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className={labelCls + " mb-0"}>Address <span className="normal-case text-[#9DB8CC] font-normal">(optional)</span></label>
+              <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-[#4A6B82]">
+                <input type="checkbox" checked={draft.showAddress} onChange={e => set("showAddress", e.target.checked)} className="accent-[#4A90C4]" />
+                Show on display
+              </label>
+            </div>
+            <input className={`${inputCls} ${fieldErrors.contactAddress ? "border-red-400" : ""}`} placeholder="e.g. 123 Main St, City, State" value={draft.contactAddress} onChange={e => {
+              set("contactAddress", e.target.value);
+              if (e.target.value.trim()) setDraft(d => ({ ...d, showAddress: true }));
+            }} />
+            {fe("contactAddress")}
+          </div>
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className={labelCls + " mb-0"}>Website URL <span className="normal-case text-[#9DB8CC] font-normal">(optional)</span></label>
+              <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-[#4A6B82]">
+                <input type="checkbox" checked={draft.showWebsite} onChange={e => set("showWebsite", e.target.checked)} className="accent-[#4A90C4]" />
+                Show on display
+              </label>
+            </div>
+            <input className={`${inputCls} ${fieldErrors.contactWebsite ? "border-red-400" : ""}`} placeholder="https://example.com" value={draft.contactWebsite} onChange={e => {
+              set("contactWebsite", e.target.value);
+              if (e.target.value.trim()) setDraft(d => ({ ...d, showWebsite: true }));
+            }} />
+            {fe("contactWebsite")}
+          </div>
+
+          {/* Status + Payment status */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelCls}>Status</label>
+              <select className={`${selectCls} ${fieldErrors.status ? "border-red-400" : ""}`} value={draft.status} onChange={e => set("status", e.target.value)}>
+                {["pending","approved","denied","expired","cancelled"].map(s => (
+                  <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                ))}
+              </select>
+              {fe("status")}
+            </div>
+            <div>
+              <label className={labelCls}>Payment Status</label>
+              <select className={`${selectCls} ${fieldErrors.paymentStatus ? "border-red-400" : ""}`} value={draft.paymentStatus} onChange={e => set("paymentStatus", e.target.value)}>
+                {["unpaid","paid","refunded","refund_pending","failed"].map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+              {fe("paymentStatus")}
+            </div>
+          </div>
+
+          {/* Dates */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelCls}>Start date</label>
+              <input type="datetime-local" className={`${inputCls} ${fieldErrors.startedAt ? "border-red-400" : ""}`} value={draft.startedAt} onChange={e => set("startedAt", e.target.value)} />
+              {fe("startedAt")}
+            </div>
+            <div>
+              <label className={labelCls}>End date</label>
+              <input type="datetime-local" className={`${inputCls} ${fieldErrors.endedAt ? "border-red-400" : ""}`} value={draft.endedAt} onChange={e => set("endedAt", e.target.value)} />
+              {fe("endedAt")}
+            </div>
+          </div>
+
+          {/* Display order */}
+          <div className="w-32">
+            <label className={labelCls}>Display order</label>
+            <input type="number" min={0} className={`${inputCls} ${fieldErrors.displayOrder ? "border-red-400" : ""}`} value={draft.displayOrder} onChange={e => set("displayOrder", Number(e.target.value))} />
+            {fe("displayOrder")}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-[#EDF2F7] flex justify-end gap-3 shrink-0 bg-[#FAFCFF]">
+          <Button variant="outline" size="sm" onClick={onClose} className="h-auto px-4 py-2 text-sm font-semibold border-[#D8E4EE] text-[#4A6B82]">
+            Cancel
+          </Button>
+          <Button size="sm" disabled={saving} onClick={save} className="h-auto px-5 py-2 text-sm font-semibold bg-[#1A3A5C] hover:bg-[#14304d] text-white">
+            {saving ? "Saving…" : "Save changes"}
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────────
 
 export default function AdminPanelClient({
   initialStats,
@@ -98,13 +477,30 @@ export default function AdminPanelClient({
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [roleChanging, setRoleChanging] = useState<string | null>(null);
   const [userToast, setUserToast] = useState<{ msg: string; ok: boolean } | null>(null);
+  const [banning, setBanning] = useState<string | null>(null);
+  const [banReasonInput, setBanReasonInput] = useState<Record<string, string>>({});
+  const [confirmBan, setConfirmBan] = useState<string | null>(null);
+  const [confirmDeleteUser, setConfirmDeleteUser] = useState<string | null>(null);
+  const [deletingUser, setDeletingUser] = useState<string | null>(null);
+
+  // Pagination
+  const [userPage, setUserPage] = useState(1);
+  const [adPage,   setAdPage]   = useState(1);
 
   // Ads state
   const [ads, setAds] = useState<Ad[]>(initialAds);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [userSearch, setUserSearch] = useState<string>("");
   const [overriding, setOverriding] = useState<string | null>(null);
   const [adToast, setAdToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [overrideNote, setOverrideNote] = useState<Record<string, string>>({});
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [editingAd, setEditingAd] = useState<Ad | null>(null);
+
+  // Force-refresh display screens
+  const [refreshingSlug, setRefreshingSlug] = useState<string | null>(null);
+  const uniqueLocations = [...new Map(ads.map(a => [a.location.slug, a.location])).values()];
 
   function showUserToast(msg: string, ok: boolean) {
     setUserToast({ msg, ok });
@@ -135,6 +531,47 @@ export default function AdminPanelClient({
     }
   }
 
+  async function banUser(userId: string, banned: boolean) {
+    setBanning(userId);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/ban`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ banned, banReason: banReasonInput[userId] ?? "" }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      setUsers(prev => prev.map(u => u.id === userId
+        ? { ...u, banned, banReason: banned ? (banReasonInput[userId] ?? null) : null }
+        : u
+      ));
+      showUserToast(banned ? "User banned" : "User unbanned", true);
+    } catch (e: any) {
+      showUserToast(e.message || "Failed to update ban status", false);
+    } finally {
+      setBanning(null);
+      setConfirmBan(null);
+      setBanReasonInput(r => { const n = { ...r }; delete n[userId]; return n; });
+    }
+  }
+
+  async function deleteUser(userId: string) {
+    setDeletingUser(userId);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, { method: "DELETE" });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      setUsers(prev => prev.filter(u => u.id !== userId));
+      setAds(prev => prev.filter(a => a.user.id !== userId));
+      showUserToast("User and all related data deleted", true);
+    } catch (e: any) {
+      showUserToast(e.message || "Failed to delete user", false);
+    } finally {
+      setDeletingUser(null);
+      setConfirmDeleteUser(null);
+    }
+  }
+
   async function overrideAdStatus(adId: string, status: string) {
     if ((status === "denied" || status === "cancelled") && !(overrideNote[adId] ?? "").trim()) {
       showAdToast(`A review note is required when ${status === "denied" ? "denying" : "cancelling"} an ad.`, false);
@@ -158,10 +595,107 @@ export default function AdminPanelClient({
     }
   }
 
-  const filteredAds = statusFilter === "all" ? ads : ads.filter(a => a.status === statusFilter);
+  async function endAd(adId: string) {
+    try {
+      const res = await fetch(`/api/ads/${adId}/end`, { method: "PATCH" });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      setAds(prev => prev.map(a => a.id === adId ? { ...a, status: "cancelled" } : a));
+      showAdToast("Ad ended", true);
+    } catch (e: any) {
+      showAdToast(e.message || "Failed to end ad", false);
+    }
+  }
+
+  async function renewAd(adId: string) {
+    try {
+      const res = await fetch(`/api/ads/${adId}/renew`, { method: "PATCH" });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      setAds(prev => prev.map(a => a.id === adId
+        ? { ...a, status: "pending", paymentStatus: "unpaid", reviewNote: null }
+        : a
+      ));
+      showAdToast("Ad renewed — owner must complete payment to go live", true);
+    } catch (e: any) {
+      showAdToast(e.message || "Failed to renew ad", false);
+    }
+  }
+
+  async function deleteAd(adId: string) {
+    setDeleting(adId);
+    try {
+      const res = await fetch(`/api/ads/${adId}`, { method: "DELETE" });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      setAds(prev => prev.filter(a => a.id !== adId));
+      showAdToast("Ad deleted", true);
+    } catch (e: any) {
+      showAdToast(e.message || "Failed to delete ad", false);
+    } finally {
+      setDeleting(null);
+      setConfirmDelete(null);
+    }
+  }
+
+  const fetchAllAds = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/ads");
+      const json = await res.json();
+      if (json.success) setAds(json.data);
+    } catch { }
+  }, []);
+
+  // Auto-poll every 30s when the Ads tab is open
+  useEffect(() => {
+    if (activeTab !== "ads") return;
+    const id = setInterval(fetchAllAds, 30_000);
+    return () => clearInterval(id);
+  }, [activeTab, fetchAllAds]);
+
+  // Socket: when a new ad arrives (unknown adId) refresh the full list
+  useDashboardSocket(useCallback(({ adId }: { adId: string; status: string; locationSlug: string }) => {
+    setAds(prev => {
+      if (prev.some(a => a.id === adId)) return prev; // existing ad — status change handled elsewhere
+      fetchAllAds(); // new submission — reload list
+      return prev;
+    });
+  }, [fetchAllAds]));
+
+  async function forceRefresh(slug: string) {
+    setRefreshingSlug(slug);
+    try {
+      const res = await fetch("/api/admin/display/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      showAdToast(`Refresh sent to display:${slug}`, true);
+    } catch (e: any) {
+      showAdToast(e.message || "Failed to send refresh", false);
+    } finally {
+      setRefreshingSlug(null);
+    }
+  }
+
+  const filteredAds = ads.filter(a => {
+    const matchStatus = statusFilter === "all" || a.status === statusFilter;
+    const q = userSearch.trim().toLowerCase();
+    const matchUser = !q || a.user.name.toLowerCase().includes(q) || a.user.email.toLowerCase().includes(q);
+    return matchStatus && matchUser;
+  });
+
+  // Reset pages when filters/data change
+  useEffect(() => { setAdPage(1);   }, [statusFilter, userSearch]);
+  useEffect(() => { setUserPage(1); }, [users.length]);
+
+  const pagedUsers = users.slice((userPage - 1) * PAGE_SIZE, userPage * PAGE_SIZE);
+  const pagedAds   = filteredAds.slice((adPage - 1) * PAGE_SIZE, adPage * PAGE_SIZE);
 
   return (
-    <div className="max-w-[920px]">
+    <div className="w-full">
       {/* Toasts */}
       {userToast && (
         <Alert
@@ -187,7 +721,7 @@ export default function AdminPanelClient({
       {/* Header */}
       <div className="mb-7">
         <h1 className="font-serif text-[26px] font-bold text-[#1A3A5C] mb-1.5">Admin Panel</h1>
-        <p className="text-[#6B8FA8] text-sm">Platform-wide oversight — users, ads, and revenue.</p>
+        <p className="text-[#4A6B82] text-sm">Platform-wide oversight — users, ads, and revenue.</p>
       </div>
 
       {/* Tabs */}
@@ -195,19 +729,19 @@ export default function AdminPanelClient({
         <TabsList className="mb-7 bg-[#F0F5FA] rounded-[10px] p-1 h-auto gap-1.5">
           <TabsTrigger
             value="overview"
-            className="rounded-lg text-[13px] px-[18px] py-2 data-[state=active]:bg-[#1A3A5C] data-[state=active]:text-white data-[state=active]:shadow-none data-[state=inactive]:text-[#6B8FA8] data-[state=inactive]:bg-transparent"
+            className="rounded-lg text-[13px] px-[18px] py-2 data-[state=active]:bg-[#1A3A5C] data-[state=active]:text-white data-[state=active]:shadow-none data-[state=inactive]:text-[#4A6B82] data-[state=inactive]:bg-transparent"
           >
             Overview
           </TabsTrigger>
           <TabsTrigger
             value="users"
-            className="rounded-lg text-[13px] px-[18px] py-2 data-[state=active]:bg-[#1A3A5C] data-[state=active]:text-white data-[state=active]:shadow-none data-[state=inactive]:text-[#6B8FA8] data-[state=inactive]:bg-transparent"
+            className="rounded-lg text-[13px] px-[18px] py-2 data-[state=active]:bg-[#1A3A5C] data-[state=active]:text-white data-[state=active]:shadow-none data-[state=inactive]:text-[#4A6B82] data-[state=inactive]:bg-transparent"
           >
             Users ({stats.totalUsers})
           </TabsTrigger>
           <TabsTrigger
             value="ads"
-            className="rounded-lg text-[13px] px-[18px] py-2 data-[state=active]:bg-[#1A3A5C] data-[state=active]:text-white data-[state=active]:shadow-none data-[state=inactive]:text-[#6B8FA8] data-[state=inactive]:bg-transparent"
+            className="rounded-lg text-[13px] px-[18px] py-2 data-[state=active]:bg-[#1A3A5C] data-[state=active]:text-white data-[state=active]:shadow-none data-[state=inactive]:text-[#4A6B82] data-[state=inactive]:bg-transparent"
           >
             All Ads ({stats.totalAds})
           </TabsTrigger>
@@ -218,12 +752,14 @@ export default function AdminPanelClient({
           {/* Stat cards */}
           <div className="flex flex-wrap gap-4 mb-8">
             <StatCard label="Total Revenue" value={`$${(stats.totalRevenueCents / 100).toFixed(2)}`} sub="from paid ads" accentClass="text-green-800" />
-            <StatCard label="Total Ads" value={stats.totalAds} />
-            <StatCard label="Pending Review" value={stats.pendingAds} accentClass={stats.pendingAds > 0 ? "text-yellow-800" : "text-[#1A3A5C]"} />
-            <StatCard label="Approved" value={stats.approvedAds} accentClass="text-green-800" />
-            <StatCard label="Denied" value={stats.deniedAds} accentClass="text-red-800" />
-            <StatCard label="Users" value={stats.totalUsers} />
-            <StatCard label="Locations" value={stats.totalLocations} />
+            <StatCard label="Total Ads" value={stats.totalAds} onClick={() => { setStatusFilter("all"); setUserSearch(""); setActiveTab("ads"); }} />
+            <StatCard label="Pending Review" value={stats.pendingAds} accentClass={stats.pendingAds > 0 ? "text-yellow-800" : "text-[#1A3A5C]"} onClick={() => { setStatusFilter("pending"); setUserSearch(""); setActiveTab("ads"); }} />
+            <StatCard label="Approved" value={stats.approvedAds} accentClass="text-green-800" onClick={() => { setStatusFilter("approved"); setUserSearch(""); setActiveTab("ads"); }} />
+            <StatCard label="Denied" value={stats.deniedAds} accentClass="text-red-800" onClick={() => { setStatusFilter("denied"); setUserSearch(""); setActiveTab("ads"); }} />
+            <StatCard label="Users" value={stats.totalUsers} onClick={() => setActiveTab("users")} />
+            <StatCard label="Locations" value={stats.totalLocations} onClick={() => { window.location.href = "/dashboard/store-owner"; }} />
+            <StatCard label="Total Ad Views" value={stats.totalViews.toLocaleString()} sub="detail page opens" />
+            <StatCard label="Website Clicks" value={stats.totalWebsiteClicks.toLocaleString()} sub="clicked through to site" accentClass="text-[#4A90C4]" />
           </div>
 
           {/* Quick links */}
@@ -254,6 +790,44 @@ export default function AdminPanelClient({
               </Button>
             </CardContent>
           </Card>
+
+          {/* Display screen force-refresh */}
+          {uniqueLocations.length > 0 && (
+            <Card className="rounded-xl border-[#D8E4EE] overflow-hidden mt-5">
+              <CardHeader className="px-6 py-4 border-b border-[#D8E4EE]">
+                <CardTitle className="font-serif text-[17px] text-[#1A3A5C] flex items-center gap-2">
+                  <MonitorPlay size={17} className="text-[#4A90C4]" />
+                  Display Screens
+                </CardTitle>
+                <p className="text-xs text-[#4A6B82] mt-1">Force-push a refresh to all display screens at a location.</p>
+              </CardHeader>
+              <CardContent className="p-5 flex flex-wrap gap-3">
+                {uniqueLocations.map(loc => (
+                  <div key={loc.slug} className="flex items-center gap-2 bg-[#F7F9FC] border border-[#D8E4EE] rounded-lg px-4 py-2.5">
+                    <span className="text-[13px] font-semibold text-[#1A3A5C]">{loc.storeName}</span>
+                    <span className="text-[11px] text-[#4A6B82]">{loc.slug}</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={refreshingSlug === loc.slug}
+                      onClick={() => forceRefresh(loc.slug)}
+                      className="ml-2 h-auto px-3 py-1 text-[11px] font-semibold border-[#4A90C4] text-[#4A90C4] bg-blue-50 hover:bg-blue-100"
+                    >
+                      <RefreshCw size={11} className={cn("mr-1", refreshingSlug === loc.slug && "animate-spin")} />
+                      {refreshingSlug === loc.slug ? "Sending…" : "Force Refresh"}
+                    </Button>
+                    <Link
+                      href={`/display/${loc.slug}`}
+                      target="_blank"
+                      className="text-[11px] text-[#4A90C4] no-underline hover:underline"
+                    >
+                      Preview ↗
+                    </Link>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* USERS TAB */}
@@ -261,68 +835,118 @@ export default function AdminPanelClient({
           <Card className="rounded-xl border-[#D8E4EE] overflow-hidden">
             <CardHeader className="px-6 py-4 border-b border-[#D8E4EE]">
               <CardTitle className="font-serif text-[18px] text-[#1A3A5C]">All Users</CardTitle>
-              <p className="text-xs text-[#6B8FA8] mt-1">{users.length} registered accounts</p>
+              <p className="text-xs text-[#4A6B82] mt-1">{users.length} registered accounts</p>
             </CardHeader>
-            <CardContent className="p-0 overflow-x-auto">
-              <table className="w-full border-collapse text-[13px]">
-                <thead>
-                  <tr className="bg-[#F7F9FC]">
-                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Name</th>
-                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Email</th>
-                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Role</th>
-                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Joined</th>
-                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B8FA8] text-[11px] uppercase tracking-[0.04em]">Change Role</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((u, idx) => {
-                    const badgeClass = ROLE_BADGE_CLASS[u.role] ?? ROLE_BADGE_CLASS.user;
-                    const isSelf = u.id === currentUserId;
-                    return (
-                      <tr key={u.id} className={idx > 0 ? "border-t border-[#D8E4EE]" : ""}>
-                        <td className="px-4 py-3 text-[#1A3A5C] font-semibold">
-                          {u.name}
-                          {isSelf && <span className="ml-1.5 text-[10px] text-[#6B8FA8]">(you)</span>}
-                          {u.twoFactorEnabled && <span title="2FA enabled" className="ml-1.5 text-[10px] text-green-700">2FA</span>}
-                        </td>
-                        <td className="px-4 py-3 text-[#6B8FA8]">{u.email}</td>
-                        <td className="px-4 py-3">
-                          <Badge variant="outline" className={cn("text-[11px] font-semibold px-2.5 py-0.5 rounded-full", badgeClass)}>
-                            {ROLE_LABEL[u.role] ?? u.role}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3 text-[#6B8FA8] text-xs">
-                          {new Date(u.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-3">
-                          {isSelf ? (
-                            <span className="text-xs text-[#6B8FA8]">—</span>
-                          ) : (
-                            <Select
-                              value={u.role}
-                              disabled={roleChanging === u.id}
-                              onValueChange={(value) => changeRole(u.id, value)}
-                            >
-                              <SelectTrigger className={cn("h-8 w-36 text-xs text-[#1A3A5C] border-[#D8E4EE] bg-[#F7F9FC]", roleChanging === u.id && "opacity-60")}>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="user">User</SelectItem>
-                                <SelectItem value="store_owner">Store Owner</SelectItem>
-                                <SelectItem value="approver">Approver</SelectItem>
-                                <SelectItem value="admin">Admin</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              {users.length === 0 && (
-                <div className="py-8 text-center text-[#6B8FA8] text-sm">No users found.</div>
-              )}
+            <CardContent className="p-0">
+              <div className="divide-y divide-[#D8E4EE]">
+                {pagedUsers.map(u => {
+                  const badgeClass = ROLE_BADGE_CLASS[u.role] ?? ROLE_BADGE_CLASS.user;
+                  const isSelf = u.id === currentUserId;
+                  const adCount = ads.filter(a => a.user.id === u.id).length;
+                  return (
+                    <div key={u.id} className="px-5 py-4 flex flex-col gap-3">
+                      {/* Top row: identity + role */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
+                            <span className="font-semibold text-sm text-[#1A3A5C]">{u.name}</span>
+                            {isSelf && <span className="text-[10px] text-[#4A6B82]">(you)</span>}
+                            {u.twoFactorEnabled && <span title="2FA enabled" className="text-[10px] text-green-700 font-semibold">2FA</span>}
+                            {u.banned && <span className="text-[10px] font-semibold text-white bg-red-500 rounded px-1.5 py-0.5">Banned</span>}
+                          </div>
+                          <div className="text-xs text-[#4A6B82] truncate">{u.email}</div>
+                          <div className="text-[11px] text-[#9DB8CC] mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
+                            <span>Joined {new Date(u.createdAt).toLocaleDateString()}</span>
+                            {u.lastLoginAt && <span>Login {new Date(u.lastLoginAt).toLocaleString()}</span>}
+                            {u.lastLogoutAt && <span>Logout {new Date(u.lastLogoutAt).toLocaleString()}</span>}
+                          </div>
+                        </div>
+                        <Badge variant="outline" className={cn("text-[11px] font-semibold px-2.5 py-0.5 rounded-full shrink-0", badgeClass)}>
+                          {ROLE_LABEL[u.role] ?? u.role}
+                        </Badge>
+                      </div>
+
+                      {/* Bottom row: actions */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        {adCount > 0 && (
+                          <button
+                            onClick={() => { setUserSearch(u.name); setStatusFilter("all"); setActiveTab("ads"); }}
+                            className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-blue-100 text-blue-800 text-[11px] font-bold hover:bg-blue-200 cursor-pointer border-0"
+                          >
+                            {adCount} ad{adCount !== 1 ? "s" : ""}
+                          </button>
+                        )}
+                        {!isSelf && (
+                          <Select value={u.role} disabled={roleChanging === u.id} onValueChange={v => changeRole(u.id, v)}>
+                            <SelectTrigger className={cn("h-7 w-28 text-xs text-[#1A3A5C] border-[#D8E4EE] bg-[#F7F9FC]", roleChanging === u.id && "opacity-60")}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="user">User</SelectItem>
+                              <SelectItem value="store_owner">Store Owner</SelectItem>
+                              <SelectItem value="approver">Approver</SelectItem>
+                              <SelectItem value="admin">Admin</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
+                        {!isSelf && (u.banned ? (
+                          <div className="flex flex-col gap-1">
+                            {u.banReason && <span className="text-[11px] text-red-600 italic">"{u.banReason}"</span>}
+                            <Button variant="outline" size="sm" disabled={banning === u.id} onClick={() => banUser(u.id, false)}
+                              className="h-7 px-3 text-[11px] font-semibold border-green-300 text-green-700 bg-green-50 hover:bg-green-100">
+                              {banning === u.id ? "…" : "Unban"}
+                            </Button>
+                          </div>
+                        ) : confirmBan === u.id ? (
+                          <div className="flex flex-col gap-1.5">
+                            <Input placeholder="Reason (optional)" value={banReasonInput[u.id] ?? ""}
+                              onChange={e => setBanReasonInput(r => ({ ...r, [u.id]: e.target.value }))}
+                              className="h-7 text-xs border-[#D8E4EE] bg-[#F7F9FC] w-40" />
+                            <div className="flex gap-1">
+                              <Button variant="outline" size="sm" disabled={banning === u.id} onClick={() => banUser(u.id, true)}
+                                className="h-7 px-2.5 text-[11px] font-semibold border-red-300 text-red-700 bg-red-50 hover:bg-red-100">
+                                {banning === u.id ? "…" : "Confirm"}
+                              </Button>
+                              <Button variant="outline" size="sm" onClick={() => setConfirmBan(null)}
+                                className="h-7 px-2.5 text-[11px] font-semibold border-[#D8E4EE] text-[#4A6B82] bg-white">
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <Button variant="outline" size="sm" onClick={() => setConfirmBan(u.id)}
+                            className="h-7 px-3 text-[11px] font-semibold border-red-200 text-red-600 bg-red-50 hover:bg-red-100">
+                            Ban
+                          </Button>
+                        ))}
+                        {!isSelf && (confirmDeleteUser === u.id ? (
+                          <div className="flex items-center gap-1">
+                            <span className="text-[11px] text-red-700 font-semibold">Delete user + all data?</span>
+                            <Button variant="outline" size="sm" disabled={deletingUser === u.id}
+                              onClick={() => deleteUser(u.id)}
+                              className="h-7 px-2.5 text-[11px] font-semibold border-red-400 text-red-700 bg-red-100 hover:bg-red-200">
+                              {deletingUser === u.id ? "…" : "Confirm"}
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => setConfirmDeleteUser(null)}
+                              className="h-7 px-2.5 text-[11px] font-semibold border-[#D8E4EE] text-[#4A6B82] bg-white">
+                              Cancel
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button variant="outline" size="sm" onClick={() => setConfirmDeleteUser(u.id)}
+                            className="h-7 px-3 text-[11px] font-semibold border-red-300 text-red-700 bg-white hover:bg-red-50">
+                            Delete
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+                {users.length === 0 && (
+                  <div className="py-8 text-center text-[#4A6B82] text-sm">No users found.</div>
+                )}
+              </div>
+              <Paginator page={userPage} total={users.length} onChange={setUserPage} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -330,7 +954,7 @@ export default function AdminPanelClient({
         {/* ADS TAB */}
         <TabsContent value="ads" className="mt-0">
           {/* Filter bar */}
-          <div className="flex gap-2 mb-4 flex-wrap">
+          <div className="flex gap-2 mb-4 flex-wrap items-center">
             {["all", "pending", "approved", "denied", "expired", "cancelled"].map(s => (
               <button
                 key={s}
@@ -339,7 +963,7 @@ export default function AdminPanelClient({
                   "px-3.5 py-1.5 rounded-full border text-xs transition-colors",
                   statusFilter === s
                     ? "bg-[#1A3A5C] border-[#1A3A5C] text-white font-semibold"
-                    : "bg-white border-[#D8E4EE] text-[#6B8FA8] font-normal hover:border-[#1A3A5C] cursor-pointer"
+                    : "bg-white border-[#D8E4EE] text-[#4A6B82] font-normal hover:border-[#1A3A5C] cursor-pointer"
                 )}
               >
                 {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -350,16 +974,39 @@ export default function AdminPanelClient({
                 )}
               </button>
             ))}
+            <div className="relative">
+              <Input
+                placeholder="Filter by user…"
+                value={userSearch}
+                onChange={e => setUserSearch(e.target.value)}
+                className="h-[30px] w-40 text-xs border-[#D8E4EE] bg-white pl-3 pr-7"
+              />
+              {userSearch && (
+                <button
+                  onClick={() => setUserSearch("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[#4A6B82] hover:text-[#1A3A5C] text-xs leading-none"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+            <button
+              onClick={fetchAllAds}
+              className="ml-auto px-3.5 py-1.5 rounded-full border text-xs bg-white border-[#D8E4EE] text-[#4A6B82] hover:border-[#1A3A5C] hover:text-[#1A3A5C] flex items-center gap-1.5 cursor-pointer"
+            >
+              <RefreshCw size={11} />
+              Refresh
+            </button>
           </div>
 
           <Card className="rounded-xl border-[#D8E4EE] overflow-hidden">
             <div className="px-5 py-3.5 border-b border-[#D8E4EE]">
-              <span className="text-[13px] text-[#6B8FA8]">{filteredAds.length} ads</span>
+              <span className="text-[13px] text-[#4A6B82]">{filteredAds.length} ads</span>
             </div>
             {filteredAds.length === 0 ? (
-              <div className="py-8 text-center text-[#6B8FA8] text-sm">No ads match this filter.</div>
+              <div className="py-8 text-center text-[#4A6B82] text-sm">No ads match this filter.</div>
             ) : (
-              filteredAds.map((ad, idx) => {
+              pagedAds.map((ad, idx) => {
                 const statusClass = STATUS_BADGE_CLASS[ad.status] ?? STATUS_BADGE_CLASS.pending;
                 return (
                   <div key={ad.id} className={cn(idx > 0 && "border-t border-[#D8E4EE]", "px-5 py-3.5")}>
@@ -371,16 +1018,35 @@ export default function AdminPanelClient({
                           <Badge variant="outline" className={cn("text-[11px] font-semibold px-2.5 py-0.5 rounded-full", statusClass)}>
                             {ad.status.charAt(0).toUpperCase() + ad.status.slice(1)}
                           </Badge>
-                          <span className="text-[11px] text-[#9DC4E0] bg-blue-50 rounded px-1.5 py-0.5">{ad.paymentStatus}</span>
+                          <span className="text-[11px] text-[#5B7D96] bg-blue-50 rounded px-1.5 py-0.5">{ad.paymentStatus}</span>
                         </div>
-                        <div className="text-xs text-[#6B8FA8] mb-0.5">
-                          by {ad.user.name} · {ad.location.storeName} · {ad.location.addressLine1}, {ad.location.cityName}, {ad.location.stateCode} {ad.location.postalCode}
-                          {ad.status === "approved" && ad.startedAt && ad.endedAt && (
-                            <span> · {new Date(ad.startedAt).toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "numeric" })} – {new Date(ad.endedAt).toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "numeric" })}</span>
+                        <div className="text-xs text-[#4A6B82] mb-0.5 flex items-center gap-1 flex-wrap">
+                          <button
+                            onClick={() => setUserSearch(ad.user.name)}
+                            className="font-semibold text-[#4A90C4] hover:underline cursor-pointer bg-transparent border-0 p-0 text-xs"
+                            title={ad.user.email}
+                          >
+                            {ad.user.name}
+                          </button>
+                          <span>· {ad.location.storeName} · submitted {new Date(ad.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        {(ad.status === "approved" || ad.status === "expired" || ad.status === "cancelled") && (
+                          <div className="text-[11px] text-[#4A6B82] mb-0.5">
+                            {ad.status === "approved" ? "Runs" : "Ran"}{" "}
+                            {new Date(ad.startedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                            {" – "}
+                            {new Date(ad.endedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-3 mb-1">
+                          <span className="text-[11px] text-[#4A6B82]">
+                            👁 <span className="font-semibold text-[#1A3A5C]">{ad.viewCount.toLocaleString()}</span> views
+                          </span>
+                          {ad.showWebsite && ad.contactWebsite && (
+                            <span className="text-[11px] text-[#4A6B82]">
+                              🌐 <span className="font-semibold text-[#1A3A5C]">{ad.websiteClickCount.toLocaleString()}</span> site clicks
+                            </span>
                           )}
-                        </div>
-                        <div className="text-[11px] text-[#9DC4E0]">
-                          submitted {new Date(ad.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                         </div>
                         {ad.reviewNote && (
                           <div className="text-xs text-yellow-800 bg-yellow-50 rounded px-2 py-0.5 inline-block">
@@ -388,7 +1054,28 @@ export default function AdminPanelClient({
                           </div>
                         )}
                         {/* Override controls */}
-                        <div className="mt-2.5 flex gap-2 items-center flex-wrap">
+                        <div className="mt-2.5 flex gap-2 items-start flex-wrap">
+                          {/* End / Renew quick actions */}
+                          {ad.status === "approved" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => endAd(ad.id)}
+                              className="px-2.5 py-1 h-auto rounded-md text-[11px] font-semibold border-red-200 text-red-700 bg-red-50 hover:bg-red-100"
+                            >
+                              End Ad
+                            </Button>
+                          )}
+                          {(ad.status === "expired" || ad.status === "cancelled") && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => renewAd(ad.id)}
+                              className="px-2.5 py-1 h-auto rounded-md text-[11px] font-semibold border-green-200 text-green-700 bg-green-50 hover:bg-green-100"
+                            >
+                              Renew
+                            </Button>
+                          )}
                           <Input
                             placeholder="Review note (required to deny/cancel)"
                             value={overrideNote[ad.id] ?? ""}
@@ -419,6 +1106,50 @@ export default function AdminPanelClient({
                           <Link href={`/dashboard/user/ads/${ad.id}`} className="text-xs text-[#4A90C4] no-underline px-2 py-1">
                             Details ↗
                           </Link>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setEditingAd(ad)}
+                            className="px-2 py-0.5 h-auto rounded text-[11px] font-semibold border-[#4A90C4] text-[#4A90C4] bg-blue-50 hover:bg-blue-100"
+                            title="Edit ad (admin)"
+                          >
+                            <Pencil size={11} className="mr-1" />
+                            Edit
+                          </Button>
+                          {/* Delete — two-step inline confirmation */}
+                          {confirmDelete === ad.id ? (
+                            <span className="flex items-center gap-1 ml-1">
+                              <span className="text-[11px] text-red-700 font-semibold">Delete?</span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={deleting === ad.id}
+                                onClick={() => deleteAd(ad.id)}
+                                className="px-2 py-0.5 h-auto rounded text-[11px] font-semibold border-red-300 text-red-700 bg-red-50 hover:bg-red-100"
+                              >
+                                {deleting === ad.id ? "…" : "Yes"}
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={deleting === ad.id}
+                                onClick={() => setConfirmDelete(null)}
+                                className="px-2 py-0.5 h-auto rounded text-[11px] font-semibold border-[#D8E4EE] text-[#4A6B82] bg-white hover:bg-[#F0F5FA]"
+                              >
+                                No
+                              </Button>
+                            </span>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setConfirmDelete(ad.id)}
+                              className="ml-1 px-1.5 py-0.5 h-auto text-[#5B7D96] hover:text-red-600 hover:bg-red-50"
+                              title="Delete ad"
+                            >
+                              <Trash2 size={13} />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -426,9 +1157,21 @@ export default function AdminPanelClient({
                 );
               })
             )}
+            <Paginator page={adPage} total={filteredAds.length} onChange={setAdPage} />
           </Card>
         </TabsContent>
       </Tabs>
+
+      {editingAd && (
+        <AdminEditAdDialog
+          ad={editingAd}
+          onClose={() => setEditingAd(null)}
+          onSaved={(updated) => {
+            setAds(prev => prev.map(a => a.id === editingAd.id ? { ...a, ...updated } : a));
+            setEditingAd(null);
+          }}
+        />
+      )}
     </div>
   );
 }

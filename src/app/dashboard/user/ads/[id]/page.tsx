@@ -1,34 +1,42 @@
 import { requireAuth } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import { ads, locations, users, payments, cities, states, postalCodes } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import AdImagePreview from "./AdImagePreview";
+import AdActions from "./AdActions";
+import { TrackedWebsiteLink } from "@/components/ui/TrackedWebsiteLink";
 
-const STATUS: Record<string, { className: string; label: string }> = {
-  pending:   { className: "bg-yellow-50 text-yellow-800 border-yellow-200", label: "Pending Review" },
-  approved:  { className: "bg-green-50 text-green-800 border-green-200",   label: "Approved & Live" },
-  denied:    { className: "bg-red-50 text-red-800 border-red-200",         label: "Denied" },
-  expired:   { className: "bg-slate-100 text-slate-600 border-slate-200",  label: "Expired" },
-  cancelled: { className: "bg-slate-100 text-slate-600 border-slate-200",  label: "Cancelled" },
+const STATUS_COLORS: Record<string, { bg: string; color: string; label: string }> = {
+  pending:   { bg: "#fef9c3", color: "#854d0e", label: "Pending Review" },
+  approved:  { bg: "#dcfce7", color: "#166534", label: "Approved & Live" },
+  denied:    { bg: "#fee2e2", color: "#991b1b", label: "Denied" },
+  expired:   { bg: "#f1f5f9", color: "#475569", label: "Expired" },
+  cancelled: { bg: "#f1f5f9", color: "#475569", label: "Cancelled" },
 };
 
-const PAY: Record<string, { className: string; label: string }> = {
-  unpaid:         { className: "bg-orange-50 text-orange-800 border-orange-200",  label: "Unpaid" },
-  paid:           { className: "bg-green-50 text-green-800 border-green-200",    label: "Paid — $100.00" },
-  refunded:       { className: "bg-indigo-50 text-indigo-800 border-indigo-200", label: "Refunded" },
-  refund_pending: { className: "bg-yellow-50 text-yellow-800 border-yellow-200", label: "Refund Pending" },
-  failed:         { className: "bg-red-50 text-red-800 border-red-200",          label: "Payment Failed" },
+const PAY_COLORS: Record<string, { bg: string; color: string; label: string }> = {
+  unpaid:        { bg: "#fff7ed", color: "#c2410c", label: "Unpaid" },
+  paid:          { bg: "#dcfce7", color: "#166534", label: "Paid — $100.00" },
+  refunded:      { bg: "#e0e7ff", color: "#3730a3", label: "Refunded" },
+  refund_pending:{ bg: "#fef9c3", color: "#854d0e", label: "Refund Pending" },
+  failed:        { bg: "#fee2e2", color: "#991b1b", label: "Payment Failed" },
 };
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function Badge({ bg, color, label }: { bg: string; color: string; label: string }) {
   return (
-    <div className="flex flex-col sm:flex-row gap-1 sm:gap-4 py-3 border-b border-[#D8E4EE] last:border-0 text-sm">
-      <div className="w-full sm:w-40 shrink-0 text-[#6B8FA8] text-[13px]">{label}</div>
-      <div className="flex-1 text-[#1A3A5C]">{children}</div>
+    <span style={{ display: "inline-block", padding: "4px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600, background: bg, color }}>
+      {label}
+    </span>
+  );
+}
+
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div style={{ display: "flex", gap: 16, padding: "12px 0", borderBottom: "1px solid #D8E4EE", fontSize: 14 }}>
+      <div style={{ width: 160, flexShrink: 0, color: "#4A6B82", fontSize: 13 }}>{label}</div>
+      <div style={{ flex: 1, color: "#1A3A5C" }}>{value}</div>
     </div>
   );
 }
@@ -41,8 +49,29 @@ export default async function AdDetailPage({
   const { id } = await params;
   const session = await requireAuth();
   const userId = (session.user as any).id as string;
-  const role   = (session.user as any).role as string;
+  const role = (session.user as any).role as string;
 
+  // Quick auth check before incrementing — just verify ad exists and user has access
+  const [quickCheck] = await db
+    .select({ userId: ads.userId })
+    .from(ads)
+    .where(eq(ads.id, id))
+    .limit(1);
+
+  if (!quickCheck) notFound();
+
+  if (
+    quickCheck.userId !== userId &&
+    role !== "approver" &&
+    role !== "admin"
+  ) {
+    redirect("/dashboard");
+  }
+
+  // Increment view count now that access is confirmed
+  await db.update(ads).set({ viewCount: sql`${ads.viewCount} + 1` }).where(eq(ads.id, id)).catch(() => {});
+
+  // Main query — will reflect the just-incremented viewCount
   const [row] = await db
     .select({
       ad: ads,
@@ -68,126 +97,168 @@ export default async function AdDetailPage({
     .limit(1);
 
   if (!row) notFound();
-  if (row.user.id !== userId && role !== "approver" && role !== "admin") redirect("/dashboard");
 
-  const adPayments = await db.select().from(payments).where(eq(payments.adId, id));
+  const adPayments = await db
+    .select()
+    .from(payments)
+    .where(eq(payments.adId, id));
 
   const { ad, location } = row;
-  const adStatus  = STATUS[ad.status]         ?? STATUS.pending;
-  const payStatus = PAY[ad.paymentStatus]     ?? PAY.unpaid;
-  const isOwner      = row.user.id === userId;
+  const adStatus = STATUS_COLORS[ad.status] ?? STATUS_COLORS.pending;
+  const payStatus = PAY_COLORS[ad.paymentStatus] ?? PAY_COLORS.unpaid;
+
+  const isOwner = row.user.id === userId;
   const needsPayment = ad.paymentStatus === "unpaid";
 
   return (
-    <div className="max-w-[720px]">
+    <div style={{ maxWidth: 720 }}>
       {/* Breadcrumb */}
-      <div className="mb-6 flex items-center gap-2 text-[13px] text-[#6B8FA8]">
-        <Link href="/dashboard/user" className="text-[#6B8FA8] no-underline hover:underline">My Ads</Link>
+      <div style={{ marginBottom: 24, display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#4A6B82" }}>
+        <Link href="/dashboard/user" style={{ color: "#4A6B82", textDecoration: "none" }}>My Ads</Link>
         <span>›</span>
-        <span className="text-[#1A3A5C]">{ad.title}</span>
+        <span style={{ color: "#1A3A5C" }}>{ad.title}</span>
       </div>
 
-      {/* Title + actions */}
-      <div className="flex items-start justify-between mb-6 gap-3 flex-wrap">
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h1 className="font-serif text-[24px] font-bold text-[#1A3A5C] mb-2">{ad.title}</h1>
-          <div className="flex gap-2 flex-wrap">
-            <Badge variant="outline" className={cn("text-[13px] font-semibold px-3.5 py-1", adStatus.className)}>
-              {adStatus.label}
-            </Badge>
-            <Badge variant="outline" className={cn("text-[13px] font-semibold px-3.5 py-1", payStatus.className)}>
-              {payStatus.label}
-            </Badge>
+          <h1 style={{ fontFamily: "Georgia,serif", fontSize: 24, fontWeight: 700, color: "#1A3A5C", marginBottom: 8 }}>
+            {ad.title}
+          </h1>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <Badge {...adStatus} />
+            <Badge {...payStatus} />
           </div>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          {isOwner && needsPayment && (
-            <Link
-              href={`/ads/${ad.id}/payment`}
-              className="no-underline text-sm font-semibold bg-[#E8563A] text-white px-5 py-2.5 rounded-lg hover:bg-[#d44e34] transition-colors"
-            >
-              Complete Payment →
-            </Link>
-          )}
-          {ad.status === "approved" && (
-            <Link
-              href={`/display/${location.slug}`}
-              target="_blank"
-              className="no-underline text-sm font-semibold text-[#4A90C4] border border-[#4A90C4] px-4 py-2.5 rounded-lg hover:bg-[#4A90C4]/10 transition-colors"
-            >
-              View Live Display ↗
-            </Link>
-          )}
-        </div>
+
+        {isOwner && needsPayment && (
+          <Link
+            href={`/ads/${ad.id}/payment`}
+            style={{
+              display: "inline-block",
+              background: "#E8563A",
+              color: "#fff",
+              padding: "10px 20px",
+              borderRadius: 8,
+              textDecoration: "none",
+              fontSize: 14,
+              fontWeight: 600,
+            }}
+          >
+            Complete Payment →
+          </Link>
+        )}
+        {ad.status === "approved" && (
+          <Link
+            href={`/display/${location.slug}`}
+            target="_blank"
+            style={{
+              display: "inline-block",
+              border: "1px solid #4A90C4",
+              color: "#4A90C4",
+              padding: "9px 18px",
+              borderRadius: 8,
+              textDecoration: "none",
+              fontSize: 14,
+              fontWeight: 600,
+            }}
+          >
+            View Live Display ↗
+          </Link>
+        )}
+        <AdActions
+          adId={ad.id}
+          status={ad.status}
+          isOwner={isOwner}
+          isAdmin={role === "admin"}
+        />
       </div>
 
-      {/* Ad image preview */}
+      {/* Ad image — display screen style with preview modal */}
       <AdImagePreview
         imageUrl={ad.imageUrl}
         title={ad.title}
+        description={ad.description}
         storeName={location.storeName}
-        addressLine1={location.addressLine1}
-        addressLine2={location.addressLine2}
-        cityName={location.cityName}
-        stateCode={location.stateCode}
-        postalCode={location.postalCode}
         adId={ad.id}
+        contactPhone={ad.contactPhone}
+        contactAddress={ad.contactAddress}
+        contactWebsite={ad.contactWebsite}
+        showPhone={ad.showPhone}
+        showAddress={ad.showAddress}
+        showWebsite={ad.showWebsite}
       />
 
-      {/* Details card */}
-      <div className="bg-white rounded-xl border border-[#D8E4EE] px-5 sm:px-6 mb-6">
-        <Row label="Location">
-          <span className="font-medium">{location.storeName}</span>
-          <br />
-          <span className="text-[12px] text-[#6B8FA8]">
-            {location.addressLine1}{location.addressLine2 ? `, ${location.addressLine2}` : ""}, {location.cityName}, {location.stateCode} {location.postalCode}
-          </span>
-        </Row>
-        <Row label="Title">{ad.title}</Row>
-        {ad.description && <Row label="Description">{ad.description}</Row>}
-        <Row label="Status">
-          <Badge variant="outline" className={cn("text-[12px] font-semibold", adStatus.className)}>
-            {adStatus.label}
-          </Badge>
-        </Row>
-        <Row label="Payment">
-          <Badge variant="outline" className={cn("text-[12px] font-semibold", payStatus.className)}>
-            {payStatus.label}
-          </Badge>
-        </Row>
-        <Row label="Run dates">
-          {ad.status === "approved"
-            ? `${new Date(ad.startedAt).toLocaleDateString("en-US", { dateStyle: "long" })} – ${new Date(ad.endedAt).toLocaleDateString("en-US", { dateStyle: "long" })}`
-            : <span className="text-[#9DC4E0]">Set upon approval</span>}
-        </Row>
-        <Row label="Submitted">
-          {new Date(ad.createdAt).toLocaleDateString("en-US", { dateStyle: "long" })}
-        </Row>
+      {/* Details */}
+      <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "0 24px", marginBottom: 24 }}>
+        <Row label="Location" value={<>{location.storeName}<br /><span style={{ fontSize: 12, color: "#4A6B82" }}>{location.addressLine1}{location.addressLine2 ? `, ${location.addressLine2}` : ""}, {location.cityName}, {location.stateCode} {location.postalCode}</span></>} />
+        <Row label="Title" value={ad.title} />
+        {ad.description && <Row label="Description" value={ad.description} />}
+        {ad.showWebsite && ad.contactWebsite && (
+          <Row label="Website" value={<TrackedWebsiteLink adId={ad.id} url={ad.contactWebsite} />} />
+        )}
+        <Row label="Status" value={<Badge {...adStatus} />} />
+        <Row label="Payment" value={<Badge {...payStatus} />} />
+        <Row
+          label="Run dates"
+          value={
+            ad.status === "approved"
+              ? `${new Date(ad.startedAt).toLocaleDateString("en-US", { dateStyle: "long" })} – ${new Date(ad.endedAt).toLocaleDateString("en-US", { dateStyle: "long" })}`
+              : "Set upon approval"
+          }
+        />
+        <Row
+          label="Submitted"
+          value={new Date(ad.createdAt).toLocaleDateString("en-US", { dateStyle: "long" })}
+        />
         {ad.reviewNote && (
-          <Row label="Reviewer note">
-            <div className="bg-red-50 border border-red-200 rounded-lg px-3.5 py-2.5 text-[13px] text-red-800">
+          <div style={{ padding: "16px 0" }}>
+            <div style={{ fontSize: 13, color: "#4A6B82", marginBottom: 8 }}>Reviewer note</div>
+            <div style={{ background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#991b1b" }}>
               {ad.reviewNote}
             </div>
-          </Row>
+          </div>
         )}
       </div>
 
-      {/* Payment history */}
-      {adPayments.length > 0 && (
-        <div className="bg-white rounded-xl border border-[#D8E4EE] overflow-hidden">
-          <div className="px-5 sm:px-6 py-4 border-b border-[#D8E4EE]">
-            <h2 className="font-serif text-base text-[#1A3A5C]">Payment History</h2>
+      {/* Analytics */}
+      <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "16px 24px", marginBottom: 24 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#4A6B82", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 14 }}>
+          Ad Performance
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: ad.showWebsite && ad.contactWebsite ? "1fr 1fr" : "1fr", gap: 16 }}>
+          <div style={{ background: "#F7F9FC", borderRadius: 10, padding: "14px 18px" }}>
+            <div style={{ fontSize: 28, fontWeight: 700, color: "#1A3A5C" }}>{ad.viewCount.toLocaleString()}</div>
+            <div style={{ fontSize: 12, color: "#4A6B82", marginTop: 2 }}>Total views</div>
+            <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 1 }}>detail page opens</div>
           </div>
-          <div className="divide-y divide-[#D8E4EE]">
+          {ad.showWebsite && ad.contactWebsite && (
+            <div style={{ background: "#F7F9FC", borderRadius: 10, padding: "14px 18px" }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: "#1A3A5C" }}>{ad.websiteClickCount.toLocaleString()}</div>
+              <div style={{ fontSize: 12, color: "#4A6B82", marginTop: 2 }}>Website visits</div>
+              <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 1 }}>clicked through to site</div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Payments */}
+      {adPayments.length > 0 && (
+        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", overflow: "hidden" }}>
+          <div style={{ padding: "16px 24px", borderBottom: "1px solid #D8E4EE" }}>
+            <h2 style={{ fontFamily: "Georgia,serif", fontSize: 16, color: "#1A3A5C" }}>Payment History</h2>
+          </div>
+          <div style={{ padding: "0 24px" }}>
             {adPayments.map((pmt) => (
-              <div key={pmt.id} className="flex justify-between items-start px-5 sm:px-6 py-3 text-[13px]">
+              <div key={pmt.id} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid #D8E4EE", fontSize: 13 }}>
                 <div>
-                  <div className="font-semibold text-[#1A3A5C] capitalize">{pmt.provider}</div>
-                  <div className="text-[11px] text-[#9DC4E0] font-mono mt-0.5 break-all">{pmt.providerTxId}</div>
+                  <div style={{ fontWeight: 600, color: "#1A3A5C", textTransform: "capitalize" }}>{pmt.provider}</div>
+                  <div style={{ color: "#4A6B82", fontSize: 11 }}>{pmt.providerTxId}</div>
                 </div>
-                <div className="text-right shrink-0 ml-4">
-                  <div className="font-semibold text-[#1A3A5C]">${(pmt.amountCents / 100).toFixed(2)} {pmt.currency}</div>
-                  <div className="text-[11px] text-[#6B8FA8] capitalize mt-0.5">{pmt.status}</div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontWeight: 600, color: "#1A3A5C" }}>
+                    ${(pmt.amountCents / 100).toFixed(2)} {pmt.currency}
+                  </div>
+                  <div style={{ color: "#4A6B82", fontSize: 11, textTransform: "capitalize" }}>{pmt.status}</div>
                 </div>
               </div>
             ))}

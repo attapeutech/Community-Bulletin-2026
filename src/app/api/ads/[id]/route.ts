@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { ads, locations, users, payments } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth/session";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 // GET /api/ads/[id] — get a single ad (owner or approver/admin)
 export async function GET(
@@ -76,6 +76,41 @@ export async function GET(
     return NextResponse.json({ success: true, data: { ...row, payments: adPayments } });
   } catch (error: any) {
     console.error("[GET /api/ads/[id]]", error);
+    return NextResponse.json(
+      { success: false, error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/ads/[id] — admin only, hard deletes ad and its payments
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await requireAuth();
+    const role = (session.user as any).role as string;
+    if (role !== "admin") {
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+    }
+
+    const { id } = await params;
+
+    const [ad] = await db.select({ id: ads.id }).from(ads).where(eq(ads.id, id)).limit(1);
+    if (!ad) {
+      return NextResponse.json({ success: false, error: "Ad not found" }, { status: 404 });
+    }
+
+    // Delete payments first (restrict FK)
+    await db.delete(payments).where(eq(payments.adId, id));
+    // Delete ad (notifications cascade automatically)
+    await db.delete(ads).where(eq(ads.id, id));
+
+    console.log(`[DELETE /api/ads/${id}] Deleted by admin ${(session.user as any).id}`);
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error("[DELETE /api/ads/[id]]", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }

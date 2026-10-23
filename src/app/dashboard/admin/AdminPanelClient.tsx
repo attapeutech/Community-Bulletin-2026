@@ -15,6 +15,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 
 const STATUS_BADGE_CLASS: Record<string, string> = {
   pending:   "bg-yellow-100 text-yellow-800 border-yellow-200",
@@ -478,6 +479,7 @@ export default function AdminPanelClient({
   const [roleChanging, setRoleChanging] = useState<string | null>(null);
   const [userToast, setUserToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [banning, setBanning] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState<string | null>(null);
   const [banReasonInput, setBanReasonInput] = useState<Record<string, string>>({});
   const [confirmBan, setConfirmBan] = useState<string | null>(null);
   const [confirmDeleteUser, setConfirmDeleteUser] = useState<string | null>(null);
@@ -529,6 +531,25 @@ export default function AdminPanelClient({
       showUserToast(e.message || "Failed to update role", false);
     } finally {
       setRoleChanging(null);
+    }
+  }
+
+  async function setEmailVerified(userId: string, emailVerified: boolean) {
+    setVerifying(userId);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/email-verified`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emailVerified }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, emailVerified } : u));
+      showUserToast(emailVerified ? "Email marked as confirmed" : "Email marked as unconfirmed", true);
+    } catch (e: any) {
+      showUserToast(e.message || "Failed to update email status", false);
+    } finally {
+      setVerifying(null);
     }
   }
 
@@ -912,6 +933,15 @@ export default function AdminPanelClient({
                             {adCount} ad{adCount !== 1 ? "s" : ""}
                           </button>
                         )}
+                        <label className={cn("inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full border border-[#D8E4EE] bg-[#F7F9FC] text-[11px] font-semibold text-[#4A6B82] cursor-pointer", verifying === u.id && "opacity-60")}>
+                          <Switch
+                            checked={u.emailVerified}
+                            disabled={verifying === u.id}
+                            onCheckedChange={v => setEmailVerified(u.id, v)}
+                            className="scale-75 -mx-1"
+                          />
+                          Email confirmed
+                        </label>
                         {!isSelf && (
                           <Select value={u.role} disabled={roleChanging === u.id} onValueChange={v => changeRole(u.id, v)}>
                             <SelectTrigger className={cn("h-7 w-28 text-xs text-[#1A3A5C] border-[#D8E4EE] bg-[#F7F9FC]", roleChanging === u.id && "opacity-60")}>

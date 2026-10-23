@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Icon } from "./Icon";
+import { BrandMark } from "./BrandMark";
 
 type LogoVariant = "full" | "icon-only" | "wordmark-only";
 type LogoTheme = "dark" | "light";
@@ -22,9 +22,7 @@ export function Logo({
   const content = (
     <span className={`flex items-center gap-3 ${className}`}>
       {variant !== "wordmark-only" && (
-        <span className="flex-shrink-0 rounded-xl bg-[#E8EFF6] p-2 flex items-center justify-center">
-          <Icon size={iconSize} />
-        </span>
+        <BrandMark size={iconSize + 16} className="flex-shrink-0" />
       )}
       {variant !== "icon-only" && (
         <span className="flex flex-col leading-none">

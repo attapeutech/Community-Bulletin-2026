@@ -3,7 +3,7 @@ import { locations, users, cities, states, postalCodes, ads, payments } from "@/
 import { eq, and, count, sum } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Icon } from "@/components/layout/Icon";
+import { BrandMark } from "@/components/layout/BrandMark";
 
 function formatCents(cents: number, currency = "USD") {
   return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(cents / 100);
@@ -65,9 +65,7 @@ export default async function PublicStorePage({
       <header className="bg-white border-b border-[#D8E4EE] sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 no-underline">
-            <div className="bg-[#E8EFF6] rounded-lg p-1">
-              <Icon size={22} />
-            </div>
+            <BrandMark size={30} className="shrink-0" />
             <span className="font-serif font-bold text-[13px] text-[#1A3A5C] leading-tight">
               Community<span className="text-[#E8563A]">Bulletin</span>
             </span>

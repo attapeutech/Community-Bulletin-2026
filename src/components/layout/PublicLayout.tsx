@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Icon } from "@/components/layout/Icon";
+import { BrandMark } from "@/components/layout/BrandMark";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Menu, X, Lightbulb, Sparkles, Tag, LifeBuoy, Store, Search, MapPin, LogIn, UserPlus, LayoutDashboard, Monitor, Mail, Shield, FileText } from "lucide-react";
@@ -89,7 +89,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
 
           {/* Logo */}
           <Link href="/" className="no-underline flex items-center gap-2.5 shrink-0">
-            <div className="bg-[#E8EFF6] dark:bg-[#1E3550] rounded-[10px] p-1.5 flex"><Icon size={28} /></div>
+            <BrandMark size={40} className="shrink-0 dark:ring-1 dark:ring-white/15 rounded-[9px]" />
             <div>
               <div className="font-serif font-bold text-[14px] text-[#1A3A5C] dark:text-white leading-tight">Community</div>
               <div className="font-serif font-bold text-[14px] leading-tight">
@@ -265,7 +265,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-8 mb-10">
             <div className="col-span-2 sm:col-span-1">
               <div className="flex items-center gap-2.5 mb-3.5">
-                <div className="bg-[#E8EFF6] rounded-lg p-1.5 flex"><Icon size={24} /></div>
+                <BrandMark size={36} className="shrink-0 ring-1 ring-white/15 rounded-[8px]" />
                 <div>
                   <div className="font-serif font-bold text-white text-[13px] leading-tight">Community</div>
                   <div className="font-serif font-bold text-[#E8563A] text-[13px] leading-tight">

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Menu } from "lucide-react";
-import { Icon } from "./Icon";
+import { BrandMark } from "./BrandMark";
 import { SignOutButton } from "./SignOutButton";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -32,9 +32,7 @@ export function MobileNav({
           {/* Logo */}
           <Link href="/dashboard/user" className="no-underline">
             <div className="flex items-center gap-2.5 mb-8 pl-2">
-              <div className="bg-[#E8EFF6] rounded-[10px] p-1.5">
-                <Icon size={28} />
-              </div>
+              <BrandMark size={40} className="shrink-0 ring-1 ring-white/15 rounded-[9px]" />
               <div>
                 <div className="font-serif font-bold text-white text-[13px] leading-tight">Community</div>
                 <div className="font-serif font-bold text-[#E8563A] text-[13px] leading-tight">

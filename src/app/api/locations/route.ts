@@ -40,6 +40,7 @@ export async function GET(req: NextRequest) {
       conditions.push(
         or(
           ilike(locations.storeName, term),
+          ilike(locations.storeNumber, term),
           ilike(locations.addressLine1, term),
           ilike(cities.name, term),
           ilike(states.name, term),
@@ -52,6 +53,7 @@ export async function GET(req: NextRequest) {
       .select({
         id: locations.id,
         storeName: locations.storeName,
+        storeNumber: locations.storeNumber,
         addressLine1: locations.addressLine1,
         addressLine2: locations.addressLine2,
         slug: locations.slug,

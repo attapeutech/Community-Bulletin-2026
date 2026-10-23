@@ -8,6 +8,7 @@ import { useDropzone } from "react-dropzone";
 type Location = {
   id: string;
   storeName: string;
+  storeNumber?: string | null;
   slug: string;
   addressLine1: string;
   addressLine2?: string | null;
@@ -17,6 +18,14 @@ type Location = {
 };
 
 type Step = 1 | 2 | 3 | 4;
+
+function StoreNumber({ value }: { value: string }) {
+  return (
+    <span style={{ color: "#E8563A", fontWeight: 600, marginLeft: 6 }}>
+      · Store #{value.replace(/^#/, "")}
+    </span>
+  );
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const ACCENT = "#1A3A5C";
@@ -382,6 +391,7 @@ export default function NewAdPage() {
                       <div style={{ fontWeight: 600, color: ACCENT }}>{loc.storeName}</div>
                       <div style={{ fontSize: 12, color: "#4A6B82" }}>
                         {loc.addressLine1}, {loc.city.name}, {loc.state.code} {loc.postalCode?.code}
+                        {loc.storeNumber && <StoreNumber value={loc.storeNumber} />}
                       </div>
                     </button>
                   ))}
@@ -393,6 +403,7 @@ export default function NewAdPage() {
                   <div style={{ fontSize: 13, fontWeight: 600, color: "#1A3A5C" }}>Selected: {selectedLocation.storeName}</div>
                   <div style={{ fontSize: 12, color: "#4A6B82" }}>
                     {selectedLocation.addressLine1}, {selectedLocation.city.name}, {selectedLocation.state.code} {selectedLocation.postalCode?.code}
+                    {selectedLocation.storeNumber && <StoreNumber value={selectedLocation.storeNumber} />}
                   </div>
                 </div>
               )}
@@ -602,7 +613,7 @@ export default function NewAdPage() {
                   );
                 })()}
                 <div style={{ display: "grid", gap: 10, fontSize: 14 }}>
-                  <div><span style={{ color: "#4A6B82" }}>Location:</span> <strong>{selectedLocation?.storeName}</strong></div>
+                  <div><span style={{ color: "#4A6B82" }}>Location:</span> <strong>{selectedLocation?.storeName}</strong>{selectedLocation?.storeNumber && <StoreNumber value={selectedLocation.storeNumber} />}</div>
                   <div><span style={{ color: "#4A6B82" }}>Title:</span> <strong>{title}</strong></div>
                   {description && <div><span style={{ color: "#4A6B82" }}>Description:</span> {description}</div>}
                   <div><span style={{ color: "#4A6B82" }}>Duration:</span> 1 week</div>

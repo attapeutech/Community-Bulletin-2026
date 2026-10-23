@@ -83,7 +83,7 @@ export default async function AdminDashboard() {
       viewCount: ads.viewCount,
       websiteClickCount: ads.websiteClickCount,
       user: { id: users.id, name: users.name, email: users.email },
-      location: { id: locations.id, storeName: locations.storeName, slug: locations.slug },
+      location: { id: locations.id, storeName: locations.storeName, storeNumber: locations.storeNumber, slug: locations.slug },
     })
     .from(ads)
     .innerJoin(users, eq(ads.userId, users.id))

@@ -84,7 +84,7 @@ type Ad = {
   viewCount: number;
   websiteClickCount: number;
   user: { id: string; name: string; email: string };
-  location: { id: string; storeName: string; slug: string };
+  location: { id: string; storeName: string; storeNumber: string | null; slug: string };
 };
 
 const PAGE_SIZE = 10;
@@ -490,7 +490,8 @@ export default function AdminPanelClient({
   // Ads state
   const [ads, setAds] = useState<Ad[]>(initialAds);
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [userSearch, setUserSearch] = useState<string>("");
+  const [userListSearch, setUserListSearch] = useState<string>("");
+  const [adSearch, setAdSearch] = useState<string>("");
   const [overriding, setOverriding] = useState<string | null>(null);
   const [adToast, setAdToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [overrideNote, setOverrideNote] = useState<Record<string, string>>({});
@@ -682,16 +683,22 @@ export default function AdminPanelClient({
 
   const filteredAds = ads.filter(a => {
     const matchStatus = statusFilter === "all" || a.status === statusFilter;
-    const q = userSearch.trim().toLowerCase();
-    const matchUser = !q || a.user.name.toLowerCase().includes(q) || a.user.email.toLowerCase().includes(q);
-    return matchStatus && matchUser;
+    const q = adSearch.trim().toLowerCase();
+    const matchSearch = !q || [a.title, a.id, a.location.storeName, a.location.storeNumber ?? "", a.user.name, a.user.email]
+      .some(v => v.toLowerCase().includes(q));
+    return matchStatus && matchSearch;
+  });
+
+  const filteredUsers = users.filter(u => {
+    const q = userListSearch.trim().toLowerCase();
+    return !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
   });
 
   // Reset pages when filters/data change
-  useEffect(() => { setAdPage(1);   }, [statusFilter, userSearch]);
-  useEffect(() => { setUserPage(1); }, [users.length]);
+  useEffect(() => { setAdPage(1);   }, [statusFilter, adSearch]);
+  useEffect(() => { setUserPage(1); }, [users.length, userListSearch]);
 
-  const pagedUsers = users.slice((userPage - 1) * PAGE_SIZE, userPage * PAGE_SIZE);
+  const pagedUsers = filteredUsers.slice((userPage - 1) * PAGE_SIZE, userPage * PAGE_SIZE);
   const pagedAds   = filteredAds.slice((adPage - 1) * PAGE_SIZE, adPage * PAGE_SIZE);
 
   return (
@@ -752,10 +759,10 @@ export default function AdminPanelClient({
           {/* Stat cards */}
           <div className="flex flex-wrap gap-4 mb-8">
             <StatCard label="Total Revenue" value={`$${(stats.totalRevenueCents / 100).toFixed(2)}`} sub="from paid ads" accentClass="text-green-800" />
-            <StatCard label="Total Ads" value={stats.totalAds} onClick={() => { setStatusFilter("all"); setUserSearch(""); setActiveTab("ads"); }} />
-            <StatCard label="Pending Review" value={stats.pendingAds} accentClass={stats.pendingAds > 0 ? "text-yellow-800" : "text-[#1A3A5C]"} onClick={() => { setStatusFilter("pending"); setUserSearch(""); setActiveTab("ads"); }} />
-            <StatCard label="Approved" value={stats.approvedAds} accentClass="text-green-800" onClick={() => { setStatusFilter("approved"); setUserSearch(""); setActiveTab("ads"); }} />
-            <StatCard label="Denied" value={stats.deniedAds} accentClass="text-red-800" onClick={() => { setStatusFilter("denied"); setUserSearch(""); setActiveTab("ads"); }} />
+            <StatCard label="Total Ads" value={stats.totalAds} onClick={() => { setStatusFilter("all"); setAdSearch(""); setActiveTab("ads"); }} />
+            <StatCard label="Pending Review" value={stats.pendingAds} accentClass={stats.pendingAds > 0 ? "text-yellow-800" : "text-[#1A3A5C]"} onClick={() => { setStatusFilter("pending"); setAdSearch(""); setActiveTab("ads"); }} />
+            <StatCard label="Approved" value={stats.approvedAds} accentClass="text-green-800" onClick={() => { setStatusFilter("approved"); setAdSearch(""); setActiveTab("ads"); }} />
+            <StatCard label="Denied" value={stats.deniedAds} accentClass="text-red-800" onClick={() => { setStatusFilter("denied"); setAdSearch(""); setActiveTab("ads"); }} />
             <StatCard label="Users" value={stats.totalUsers} onClick={() => setActiveTab("users")} />
             <StatCard label="Locations" value={stats.totalLocations} onClick={() => { window.location.href = "/dashboard/store-owner"; }} />
             <StatCard label="Total Ad Views" value={stats.totalViews.toLocaleString()} sub="detail page opens" />
@@ -832,10 +839,32 @@ export default function AdminPanelClient({
 
         {/* USERS TAB */}
         <TabsContent value="users" className="mt-0">
+          {/* Filter bar */}
+          <div className="flex gap-2 mb-4 flex-wrap items-center">
+            <div className="relative">
+              <Input
+                placeholder="Filter by name or email…"
+                value={userListSearch}
+                onChange={e => setUserListSearch(e.target.value)}
+                className="h-[30px] w-56 text-xs border-[#D8E4EE] bg-white pl-3 pr-7"
+              />
+              {userListSearch && (
+                <button
+                  onClick={() => setUserListSearch("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[#4A6B82] hover:text-[#1A3A5C] text-xs leading-none"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
           <Card className="rounded-xl border-[#D8E4EE] overflow-hidden">
             <CardHeader className="px-6 py-4 border-b border-[#D8E4EE]">
               <CardTitle className="font-serif text-[18px] text-[#1A3A5C]">All Users</CardTitle>
-              <p className="text-xs text-[#4A6B82] mt-1">{users.length} registered accounts</p>
+              <p className="text-xs text-[#4A6B82] mt-1">
+                {userListSearch ? `${filteredUsers.length} of ${users.length}` : users.length} registered accounts
+              </p>
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-[#D8E4EE]">
@@ -870,7 +899,7 @@ export default function AdminPanelClient({
                       <div className="flex flex-wrap items-center gap-2">
                         {adCount > 0 && (
                           <button
-                            onClick={() => { setUserSearch(u.name); setStatusFilter("all"); setActiveTab("ads"); }}
+                            onClick={() => { setAdSearch(u.email); setStatusFilter("all"); setActiveTab("ads"); }}
                             className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-blue-100 text-blue-800 text-[11px] font-bold hover:bg-blue-200 cursor-pointer border-0"
                           >
                             {adCount} ad{adCount !== 1 ? "s" : ""}
@@ -942,11 +971,11 @@ export default function AdminPanelClient({
                     </div>
                   );
                 })}
-                {users.length === 0 && (
+                {filteredUsers.length === 0 && (
                   <div className="py-8 text-center text-[#4A6B82] text-sm">No users found.</div>
                 )}
               </div>
-              <Paginator page={userPage} total={users.length} onChange={setUserPage} />
+              <Paginator page={userPage} total={filteredUsers.length} onChange={setUserPage} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -976,14 +1005,14 @@ export default function AdminPanelClient({
             ))}
             <div className="relative">
               <Input
-                placeholder="Filter by user…"
-                value={userSearch}
-                onChange={e => setUserSearch(e.target.value)}
-                className="h-[30px] w-40 text-xs border-[#D8E4EE] bg-white pl-3 pr-7"
+                placeholder="Filter by ad, store, store # or user…"
+                value={adSearch}
+                onChange={e => setAdSearch(e.target.value)}
+                className="h-[30px] w-64 text-xs border-[#D8E4EE] bg-white pl-3 pr-7"
               />
-              {userSearch && (
+              {adSearch && (
                 <button
-                  onClick={() => setUserSearch("")}
+                  onClick={() => setAdSearch("")}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-[#4A6B82] hover:text-[#1A3A5C] text-xs leading-none"
                 >
                   ✕
@@ -1022,13 +1051,13 @@ export default function AdminPanelClient({
                         </div>
                         <div className="text-xs text-[#4A6B82] mb-0.5 flex items-center gap-1 flex-wrap">
                           <button
-                            onClick={() => setUserSearch(ad.user.name)}
+                            onClick={() => setAdSearch(ad.user.email)}
                             className="font-semibold text-[#4A90C4] hover:underline cursor-pointer bg-transparent border-0 p-0 text-xs"
                             title={ad.user.email}
                           >
                             {ad.user.name}
                           </button>
-                          <span>· {ad.location.storeName} · submitted {new Date(ad.createdAt).toLocaleDateString()}</span>
+                          <span>· {ad.location.storeName}{ad.location.storeNumber && <span className="text-[#E8563A] ml-1">#{ad.location.storeNumber}</span>} · submitted {new Date(ad.createdAt).toLocaleDateString()}</span>
                         </div>
                         {(ad.status === "approved" || ad.status === "expired" || ad.status === "cancelled") && (
                           <div className="text-[11px] text-[#4A6B82] mb-0.5">

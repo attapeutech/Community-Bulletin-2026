@@ -24,11 +24,12 @@ const HOW_IT_WORKS = [
   { step: "04", title: "Go live", desc: "Once approved you get an email with a link to see your ad live on the display screen." },
 ];
 
-const STATS = [
-  { value: "500+", label: "Store locations" },
-  { value: "2,400+", label: "Ads displayed" },
-  { value: "48", label: "States covered" },
-  { value: "1 week", label: "Per campaign" },
+// Launch-stage selling points. Swap for live numbers (stores, cities, ads run) once they're worth showing.
+const HIGHLIGHTS = [
+  { icon: "📍", title: "Local stores", label: "Screens in stores near you" },
+  { icon: "📅", title: "1-week campaigns", label: "No contracts or subscriptions" },
+  { icon: "✅", title: "Human-reviewed", label: "Every ad checked before it goes live" },
+  { icon: "💸", title: "Full refund", label: "If your ad isn't approved" },
 ];
 
 export default function LandingPage({ price }: { price: LandingPrice }) {
@@ -72,12 +73,13 @@ export default function LandingPage({ price }: { price: LandingPrice }) {
         </div>
       </section>
 
-      {/* ── STATS BAR ── */}
+      {/* ── HIGHLIGHTS BAR ── */}
       <section className="bg-white dark:bg-[#0F1E2E] border-b border-[#D8E4EE] dark:border-[#1E3550]">
         <div className="max-w-4xl mx-auto px-4 sm:px-8 py-8 grid grid-cols-2 sm:grid-cols-4 gap-6">
-          {STATS.map(({ value, label }) => (
-            <div key={label} className="text-center px-4">
-              <div className="font-serif text-3xl sm:text-4xl font-bold text-[#E8563A]">{value}</div>
+          {HIGHLIGHTS.map(({ icon, title, label }) => (
+            <div key={title} className="text-center px-2">
+              <div className="text-2xl mb-1.5" aria-hidden="true">{icon}</div>
+              <div className="font-serif text-lg sm:text-xl font-bold text-[#E8563A] leading-tight">{title}</div>
               <div className="text-xs sm:text-sm text-[#4A6B82] dark:text-[#7AA8C4] mt-1">{label}</div>
             </div>
           ))}

@@ -16,6 +16,7 @@ const PUBLIC_ROUTES = [
   "/privacy",
   "/terms",
   "/contact",
+  "/go",          // QR code short links from display screens
 ];
 
 export async function middleware(request: NextRequest) {

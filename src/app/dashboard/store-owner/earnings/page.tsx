@@ -119,7 +119,7 @@ export default async function EarningsPage() {
       <div style={{ background: "#F7F9FC", border: "1px solid #D8E4EE", borderRadius: 12, padding: "14px 18px", fontSize: 13, color: "#4A6B82", marginBottom: 24, lineHeight: 1.6 }}>
         <strong style={{ color: ACCENT }}>How earnings work:</strong> when an advertiser pays for an ad at your store, it shows here as
         <strong> pending</strong>. Once the ad&apos;s run ends, it becomes <strong>available</strong>: your share
-        (25%, or 50% if you provided the screen) of the ad price after card processing fees. Available earnings are paid out monthly.
+        (the percentage agreed for each location, shown on every ad below) of the ad price after card processing fees. Available earnings are paid out monthly.
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>

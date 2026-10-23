@@ -5,7 +5,6 @@ import { ads, locations } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth/session";
 import { eq, and } from "drizzle-orm";
 import { createPayPalOrder } from "@/lib/paypal";
-import { AD_PRICE_CENTS } from "@/types";
 
 const schema = z.object({ adId: z.string().uuid() });
 
@@ -21,7 +20,7 @@ export async function POST(req: NextRequest) {
     const [row] = await db
       .select({
         ad: ads,
-        location: { storeName: locations.storeName },
+        location: { storeName: locations.storeName, pricePerWeekCents: locations.pricePerWeekCents },
       })
       .from(ads)
       .innerJoin(locations, eq(ads.locationId, locations.id))
@@ -43,7 +42,7 @@ export async function POST(req: NextRequest) {
     }
 
     const order = await createPayPalOrder(
-      AD_PRICE_CENTS,
+      row.location.pricePerWeekCents,
       `Community Bulletin Ad — ${row.ad.title} @ ${row.location.storeName}`
     );
 

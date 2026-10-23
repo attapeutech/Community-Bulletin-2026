@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MIN_PRICE_PER_WEEK_CENTS, MAX_PRICE_PER_WEEK_CENTS, MAX_SHARE_RATE_BPS } from "@/types";
 
 const editSchema = z.object({
   storeName:         z.string().min(2, "Store name must be at least 2 characters"),
@@ -20,7 +22,10 @@ const editSchema = z.object({
   displayName:       z.string().optional(),
   addressLine1:      z.string().min(5, "Enter a full street address"),
   addressLine2:      z.string().optional(),
-  pricePerWeekCents: z.number().int().min(100, "Minimum $1/week").max(1000000),
+  pricePerWeekCents: z.number().int()
+    .min(MIN_PRICE_PER_WEEK_CENTS, `Minimum $${MIN_PRICE_PER_WEEK_CENTS / 100}/week`)
+    .max(MAX_PRICE_PER_WEEK_CENTS, `Maximum $${(MAX_PRICE_PER_WEEK_CENTS / 100).toLocaleString()}/week`),
+  shareRateBps:      z.number().int().min(0, "Cannot be negative").max(MAX_SHARE_RATE_BPS, `Maximum ${MAX_SHARE_RATE_BPS / 100}%`),
   equipmentProvided: z.boolean(),
   description:       z.string().max(1000).optional(),
   category:          z.string().max(100).optional(),
@@ -40,7 +45,7 @@ type Location = {
   id: string; storeName: string; storeNumber: string | null;
   addressLine1: string; addressLine2: string | null; displayName: string | null;
   slug: string; currency: string; isActive: boolean;
-  pricePerWeekCents: number; equipmentProvided: boolean;
+  pricePerWeekCents: number; shareRateBps: number; equipmentProvided: boolean;
   description: string | null; category: string | null;
   logoUrl: string | null; businessHours: string | null;
   city: { name: string }; state: { code: string }; postalCode: { code: string };
@@ -122,6 +127,7 @@ export default function LocationDetailClient({
 }) {
   const [adList, setAdList] = useState<Ad[]>(initialAds);
   const [saving, setSaving] = useState(false);
+  const router = useRouter();
   const [editMode, setEditMode] = useState(false);
   const [logoUrl, setLogoUrl] = useState(location.logoUrl ?? "");
   const [uploading, setUploading] = useState(false);
@@ -136,6 +142,7 @@ export default function LocationDetailClient({
       addressLine1:      location.addressLine1,
       addressLine2:      location.addressLine2 ?? "",
       pricePerWeekCents: location.pricePerWeekCents,
+      shareRateBps:      location.shareRateBps,
       equipmentProvided: location.equipmentProvided,
       description:       location.description ?? "",
       category:          location.category ?? "",
@@ -144,9 +151,9 @@ export default function LocationDetailClient({
     },
   });
 
-  const equipmentProvided = watch("equipmentProvided");
-  // price in dollars for display in input
+  // price in dollars / share in percent for display in inputs
   const priceWatch = watch("pricePerWeekCents");
+  const shareWatch = watch("shareRateBps");
 
   async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -208,13 +215,14 @@ export default function LocationDetailClient({
       if (!json.success) throw new Error(json.error);
       toast.success("Location updated!");
       setEditMode(false);
+      router.refresh();
     } catch (e: any) {
       toast.error(e.message || "Update failed");
     }
   }
 
   const approvedAds = adList.filter((a) => a.status === "approved");
-  const shareRate = location.equipmentProvided ? "50%" : "25%";
+  const shareRate = `${location.shareRateBps / 100}%`;
 
   return (
     <div className="max-w-[800px]">
@@ -270,10 +278,10 @@ export default function LocationDetailClient({
           </div>
           <div className="bg-white rounded-xl border border-[#D8E4EE] p-4">
             <div className="text-[10px] font-semibold text-[#4A6B82] uppercase tracking-wider mb-1">Revenue Share</div>
-            <div className={cn("text-lg font-bold", location.equipmentProvided ? "text-green-700" : "text-amber-700")}>
+            <div className="text-lg font-bold text-green-700">
               {shareRate}
             </div>
-            <div className="text-[10px] text-[#5B7D96] mt-0.5">{location.equipmentProvided ? "equipment provided" : "platform equipment"}</div>
+            <div className="text-[10px] text-[#5B7D96] mt-0.5">{location.equipmentProvided ? "owner provides equipment" : "platform equipment"}</div>
           </div>
           <div className="bg-white rounded-xl border border-[#D8E4EE] p-4">
             <div className="text-[10px] font-semibold text-[#4A6B82] uppercase tracking-wider mb-1">Active Ads</div>
@@ -379,49 +387,85 @@ export default function LocationDetailClient({
                 />
               </div>
 
-              {/* Pricing */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#F7F9FC] rounded-xl p-4 border border-[#D8E4EE]">
-                <div>
-                  <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
-                    Price per week ($) *
-                  </Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4A6B82] text-sm">$</span>
-                    <Input
-                      type="number"
-                      min={1}
-                      step={1}
-                      value={Math.round(priceWatch / 100)}
-                      onChange={(e) => setValue("pricePerWeekCents", Math.round(Number(e.target.value) * 100), { shouldValidate: true })}
-                      className={cn("h-10 pl-6 text-sm bg-white border-[#D1DDE8]", errors.pricePerWeekCents && "border-red-300 bg-red-50")}
-                    />
+              {/* Pricing & revenue share — set by CommunityBulletin admins */}
+              {isAdmin ? (
+                <div className="bg-[#F7F9FC] rounded-xl p-4 border border-[#D8E4EE] flex flex-col gap-4">
+                  <div className="text-[11px] font-semibold text-[#4A6B82] uppercase tracking-[0.04em]">Pricing &amp; Revenue Share · admin only</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
+                        Price per week ($) *
+                      </Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4A6B82] text-sm">$</span>
+                        <Input
+                          type="number"
+                          min={MIN_PRICE_PER_WEEK_CENTS / 100}
+                          max={MAX_PRICE_PER_WEEK_CENTS / 100}
+                          step={1}
+                          value={Math.round(priceWatch / 100)}
+                          onChange={(e) => setValue("pricePerWeekCents", Math.round(Number(e.target.value) * 100), { shouldValidate: true })}
+                          className={cn("h-10 pl-6 text-sm bg-white border-[#D1DDE8]", errors.pricePerWeekCents && "border-red-300 bg-red-50")}
+                        />
+                      </div>
+                      <FieldError msg={errors.pricePerWeekCents?.message} />
+                      <p className="text-[10px] text-[#5B7D96] mt-1.5">What advertisers pay for one week at this store. Applies to new purchases and renewals.</p>
+                    </div>
+                    <div>
+                      <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
+                        Store owner share (%) *
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <div className="relative w-28">
+                          <Input
+                            type="number"
+                            min={0}
+                            max={MAX_SHARE_RATE_BPS / 100}
+                            step={0.5}
+                            value={shareWatch / 100}
+                            onChange={(e) => setValue("shareRateBps", Math.round(Number(e.target.value) * 100), { shouldValidate: true })}
+                            className={cn("h-10 pr-7 text-sm bg-white border-[#D1DDE8]", errors.shareRateBps && "border-red-300 bg-red-50")}
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4A6B82] text-sm">%</span>
+                        </div>
+                        {[25, 50].map(pct => (
+                          <button
+                            key={pct}
+                            type="button"
+                            onClick={() => setValue("shareRateBps", pct * 100, { shouldValidate: true })}
+                            className={cn(
+                              "px-3 py-1.5 rounded-full border text-xs",
+                              shareWatch === pct * 100
+                                ? "bg-[#1A3A5C] border-[#1A3A5C] text-white font-semibold"
+                                : "bg-white border-[#D8E4EE] text-[#4A6B82] hover:border-[#1A3A5C]"
+                            )}
+                          >
+                            {pct}%
+                          </button>
+                        ))}
+                      </div>
+                      <FieldError msg={errors.shareRateBps?.message} />
+                      <p className="text-[10px] text-[#5B7D96] mt-1.5">Owner earns this % of each ad price after card fees. Changes apply to new payments only.</p>
+                    </div>
                   </div>
-                  <FieldError msg={errors.pricePerWeekCents?.message} />
-                </div>
-                <div>
-                  <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
-                    Equipment & Setup
-                  </Label>
-                  <label className="flex items-center gap-3 cursor-pointer mt-2">
+                  <label className="flex items-center gap-3 cursor-pointer">
                     <input
                       type="checkbox"
                       {...register("equipmentProvided")}
                       className="w-4 h-4 rounded border-[#D1DDE8] accent-[#1A3A5C]"
                     />
-                    <span className="text-sm text-[#1A3A5C]">
-                      I provide TV, Wi-Fi &amp; hardware
-                      <span className={cn("ml-2 text-xs font-semibold", equipmentProvided ? "text-green-700" : "text-amber-700")}>
-                        ({equipmentProvided ? "50% share" : "25% share"})
-                      </span>
-                    </span>
+                    <span className="text-sm text-[#1A3A5C]">Store owner provides the TV, Wi-Fi &amp; hardware</span>
                   </label>
-                  <p className="text-[10px] text-[#5B7D96] mt-1.5">
-                    {equipmentProvided
-                      ? "Great — you earn 50% of all ad revenue at this location."
-                      : "Platform provides equipment — you earn 25% of ad revenue."}
-                  </p>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-[#F7F9FC] rounded-xl p-4 border border-[#D8E4EE] text-sm text-[#4A6B82]">
+                  <div className="flex flex-wrap gap-x-6 gap-y-1">
+                    <span>Price / week: <strong className="text-[#1A3A5C]">{formatCents(location.pricePerWeekCents, location.currency)}</strong></span>
+                    <span>Your share: <strong className="text-[#1A3A5C]">{location.shareRateBps / 100}%</strong></span>
+                  </div>
+                  <p className="text-[11px] text-[#5B7D96] mt-1.5 mb-0">Pricing and revenue share are set by CommunityBulletin. Contact us to discuss changes.</p>
+                </div>
+              )}
 
               <div className="flex justify-end">
                 <Button type="submit" disabled={isSubmitting} className="bg-green-700 text-white hover:bg-green-800">

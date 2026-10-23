@@ -5,7 +5,6 @@ import { ads, payments, users, locations, cities, states, postalCodes } from "@/
 import { requireAuth } from "@/lib/auth/session";
 import { eq, and } from "drizzle-orm";
 import { capturePayPalOrder } from "@/lib/paypal";
-import { AD_PRICE_CENTS } from "@/types";
 import { sendAdSubmittedEmail, sendPaymentReceiptEmail, sendAdReviewNotificationEmail } from "@/lib/email/templates";
 import { recordEarning } from "@/lib/earnings";
 import { notifyPaymentRecorded } from "@/lib/notifications";
@@ -30,6 +29,7 @@ export async function POST(req: NextRequest) {
         user: { id: users.id, name: users.name, email: users.email },
         location: {
           storeName: locations.storeName,
+          pricePerWeekCents: locations.pricePerWeekCents,
           addressLine1: locations.addressLine1,
           cityName: cities.name,
           stateCode: states.code,
@@ -66,6 +66,9 @@ export async function POST(req: NextRequest) {
     const captureStatus = captureUnit?.status ?? capture.status;
     const paypalFee = captureUnit?.seller_receivable_breakdown?.paypal_fee?.value;
     const feeCents = paypalFee ? Math.round(parseFloat(paypalFee) * 100) : null;
+    // Record what PayPal actually captured; fall back to the location's price
+    const capturedValue = captureUnit?.amount?.value;
+    const amountCents = capturedValue ? Math.round(parseFloat(capturedValue) * 100) : row.location.pricePerWeekCents;
 
     const now = new Date();
 
@@ -76,7 +79,7 @@ export async function POST(req: NextRequest) {
       provider: "paypal",
       providerTxId: captureId,
       status: captureStatus,
-      amountCents: AD_PRICE_CENTS,
+      amountCents,
       currency: "USD",
       feeCents,
     }).returning({ id: payments.id });
@@ -92,7 +95,7 @@ export async function POST(req: NextRequest) {
 
     const { storeName, addressLine1, cityName, stateCode, postalCode } = row.location;
     const locationName = `${storeName} — ${addressLine1}, ${cityName}, ${stateCode} ${postalCode}`;
-    const amount = `$${(AD_PRICE_CENTS / 100).toFixed(2)}`;
+    const amount = `$${(amountCents / 100).toFixed(2)}`;
 
     // Send emails (non-blocking)
     sendPaymentReceiptEmail({

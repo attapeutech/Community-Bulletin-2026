@@ -26,7 +26,8 @@
 ## Store owner earnings and payouts (Phase 1, added 2026-10-23)
 
 - **Ledger:** `owner_earnings` has one row per advertiser payment at a location owned by a `store_owner`. Admin-owned locations earn nothing. `payouts` has one row per manual payment sent.
-- **Rules:** the owner's share is 25%, or 50% if they provided the equipment, taken **after processor fees**. The rate is locked at payment time.
+- **Rules:** the owner's share is the location's `share_rate_bps` (admin-set; default 25%), taken **after processor fees**. The rate is locked at payment time.
+- **Pricing:** each location's `price_per_week_cents` is what Stripe and PayPal charge. Only admins can change price, share or `equipment_provided` (now informational only). The locations API strips those fields for store owners. Limits are $10–$1,000 a week and 0–90% share (`src/types`).
 - **Lifecycle:**
   - **pending:** created when the payment is recorded
   - **available date:** set to the run's end when the ad is approved

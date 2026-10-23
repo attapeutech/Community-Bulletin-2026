@@ -3,6 +3,7 @@ import { db } from "@/lib/db/client";
 import { locations, ads, users, countries, states, cities, postalCodes, ownerEarnings } from "@/lib/db/schema";
 import { eq, and, count, sum, desc, inArray } from "drizzle-orm";
 import Link from "next/link";
+import { AD_PRICE_CENTS, DEFAULT_SHARE_RATE_BPS, MIN_PRICE_PER_WEEK_CENTS, MAX_PRICE_PER_WEEK_CENTS, MAX_SHARE_RATE_BPS } from "@/types";
 
 const ACCENT = "#1A3A5C";
 
@@ -11,6 +12,44 @@ function Badge({ children, bg, color }: { children: React.ReactNode; bg: string;
     <span style={{ display: "inline-block", padding: "2px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: bg, color }}>
       {children}
     </span>
+  );
+}
+
+// Admin quick reference — keep in sync with the limits in src/types and the locations API
+function AdminPricingNotes() {
+  const h: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: ACCENT, textTransform: "uppercase", letterSpacing: "0.05em", margin: "14px 0 6px" };
+  const ul: React.CSSProperties = { margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 4 };
+  return (
+    <details style={{ background: "#F7F9FC", border: "1px solid #D8E4EE", borderRadius: 12, padding: "12px 18px", marginTop: -16, marginBottom: 28, fontSize: 13, color: "#4A6B82", lineHeight: 1.55 }}>
+      <summary style={{ cursor: "pointer", fontWeight: 700, color: ACCENT, fontSize: 14 }}>
+        📝 Admin notes: how pricing &amp; revenue share work
+      </summary>
+
+      <div style={h}>Admins</div>
+      <p style={{ margin: "0 0 6px" }}>
+        Go to <strong>Manage → Edit</strong> on any location. The <strong>Pricing &amp; Revenue Share · admin only</strong> section has:
+      </p>
+      <ul style={ul}>
+        <li><strong>Price per week:</strong> {formatCents(MIN_PRICE_PER_WEEK_CENTS)}–{formatCents(MAX_PRICE_PER_WEEK_CENTS)}</li>
+        <li><strong>Store owner share (%):</strong> 25% and 50% quick buttons, or any value from 0 to {MAX_SHARE_RATE_BPS / 100}%</li>
+        <li><strong>&ldquo;Store owner provides the TV, Wi-Fi &amp; hardware&rdquo;:</strong> for information only; it does not set the share</li>
+        <li>Changing a share affects <strong>new payments only</strong>; earnings already recorded keep their original rate</li>
+      </ul>
+
+      <div style={h}>Store owners</div>
+      <ul style={ul}>
+        <li>See price and share as read-only, with &ldquo;Set by CommunityBulletin. Contact us to discuss changes.&rdquo;</li>
+        <li>The server ignores any attempt to change them, even outside the form</li>
+        <li>New locations they create start at {formatCents(AD_PRICE_CENTS)}/week and {DEFAULT_SHARE_RATE_BPS / 100}%</li>
+      </ul>
+
+      <div style={h}>Advertisers</div>
+      <ul style={ul}>
+        <li>Post a New Ad shows each store&apos;s price in the search results, and &ldquo;Priced per store&rdquo; until one is picked</li>
+        <li>The heading, the Review step and the payment page show the chosen store&apos;s price, and Stripe and PayPal charge it</li>
+        <li>Renewals use the store&apos;s current price</li>
+      </ul>
+    </details>
   );
 }
 
@@ -40,6 +79,7 @@ export default async function StoreOwnerPage() {
       currency: locations.currency,
       pricePerWeekCents: locations.pricePerWeekCents,
       equipmentProvided: locations.equipmentProvided,
+      shareRateBps: locations.shareRateBps,
       category: locations.category,
       logoUrl: locations.logoUrl,
       storeOwner: { id: users.id, name: users.name },
@@ -90,6 +130,8 @@ export default async function StoreOwnerPage() {
         {isAdmin ? "Manage all store locations across the platform." : "Manage your store locations and their active ad displays."}
       </p>
 
+      {isAdmin && <AdminPricingNotes />}
+
       {locs.length === 0 ? (
         <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: 48, textAlign: "center" }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>🏪</div>
@@ -139,11 +181,11 @@ export default async function StoreOwnerPage() {
                       </div>
                       <div style={{ fontSize: 13 }}>
                         <span style={{ color: "#4A6B82" }}>Revenue share: </span>
-                        <span style={{ fontWeight: 600, color: loc.equipmentProvided ? "#166534" : "#92400E" }}>
-                          {loc.equipmentProvided ? "50%" : "25%"}
+                        <span style={{ fontWeight: 600, color: "#166534" }}>
+                          {loc.shareRateBps / 100}%
                         </span>
                         <span style={{ fontSize: 11, color: "#5B7D96", marginLeft: 4 }}>
-                          ({loc.equipmentProvided ? "equipment provided" : "platform equipment"})
+                          ({loc.equipmentProvided ? "owner provides equipment" : "platform equipment"})
                         </span>
                       </div>
                       {earningsCents > 0 && (

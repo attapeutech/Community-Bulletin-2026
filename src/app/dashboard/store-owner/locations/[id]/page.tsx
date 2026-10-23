@@ -30,6 +30,7 @@ export default async function LocationDetailPage({
       isActive: locations.isActive,
       storeOwnerId: locations.storeOwnerId,
       pricePerWeekCents: locations.pricePerWeekCents,
+      shareRateBps: locations.shareRateBps,
       equipmentProvided: locations.equipmentProvided,
       description: locations.description,
       category: locations.category,

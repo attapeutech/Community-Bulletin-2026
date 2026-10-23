@@ -5,7 +5,6 @@ import { db } from "@/lib/db/client";
 import { ads, locations } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth/session";
 import { eq, and } from "drizzle-orm";
-import { AD_PRICE_CENTS } from "@/types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-12-18.acacia" as any });
@@ -28,7 +27,7 @@ export async function POST(req: NextRequest) {
     const [row] = await db
       .select({
         ad: ads,
-        location: { storeName: locations.storeName, slug: locations.slug },
+        location: { storeName: locations.storeName, slug: locations.slug, pricePerWeekCents: locations.pricePerWeekCents },
       })
       .from(ads)
       .innerJoin(locations, eq(ads.locationId, locations.id))
@@ -57,7 +56,7 @@ export async function POST(req: NextRequest) {
         {
           price_data: {
             currency: "usd",
-            unit_amount: AD_PRICE_CENTS,
+            unit_amount: row.location.pricePerWeekCents,
             product_data: {
               name: `Community Bulletin Ad — ${row.ad.title}`,
               description: `1-week display at ${row.location.storeName}`,

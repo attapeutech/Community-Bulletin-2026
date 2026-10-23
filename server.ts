@@ -8,7 +8,7 @@ const app = next({ dev });
 const handle = app.getRequestHandler();
 const PORT = Number(process.env.PORT) || 3000;
 
-app.prepare().then(() => {
+app.prepare().then(async () => {
   const httpServer = createServer((req, res) => {
     const parsedUrl = parse(req.url!, true);
     handle(req, res, parsedUrl);
@@ -46,6 +46,35 @@ app.prepare().then(() => {
     socket.on("disconnect", () => {
       console.log(`[Socket] Client disconnected: ${socket.id}`);
     });
+  });
+
+  // ── /notifications namespace: per-user bell notifications ──────────────
+  // Isolated from the default namespace above (display screens + dashboard):
+  // its own auth middleware, rooms and events. Display screens never connect here.
+  // Auth is imported after app.prepare() so env vars (.env.local) are loaded first.
+  const { auth } = await import("./src/lib/auth");
+  const notificationsNs = io.of("/notifications");
+
+  notificationsNs.use(async (socket, nextFn) => {
+    try {
+      const headers = new Headers();
+      for (const [key, value] of Object.entries(socket.handshake.headers)) {
+        if (typeof value === "string") headers.set(key, value);
+        else if (Array.isArray(value)) headers.set(key, value.join(", "));
+      }
+      const session = await auth.api.getSession({ headers });
+      if (!session?.user) return nextFn(new Error("unauthorized"));
+      socket.data.userId = session.user.id;
+      nextFn();
+    } catch (err) {
+      console.error("[Socket] /notifications auth failed:", err);
+      nextFn(new Error("unauthorized"));
+    }
+  });
+
+  notificationsNs.on("connection", (socket) => {
+    // Room is chosen by the server from the verified session — clients can't pick it
+    socket.join(`user:${socket.data.userId}`);
   });
 
   (global as any).__lastRefresh = lastRefresh;

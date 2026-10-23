@@ -65,3 +65,37 @@ export function useDashboardSocket(
     };
   }, [onAdStatusChanged]);
 }
+
+// ── /notifications namespace ─────────────────────────────────────────────────
+// Separate from the default-namespace socket above (display screens + dashboard).
+// Shares the same underlying connection; the server authenticates it from the
+// session cookie and puts it in the user's private room.
+let notificationsSocket: Socket | null = null;
+
+function getNotificationsSocket(): Socket {
+  if (!notificationsSocket) {
+    notificationsSocket = io("/notifications", {
+      transports: ["polling", "websocket"],
+      autoConnect: true,
+    });
+  }
+  return notificationsSocket;
+}
+
+export function useNotificationsSocket(
+  onNotification: (payload: unknown) => void,
+  onConnect: () => void
+) {
+  useEffect(() => {
+    const socket = getNotificationsSocket();
+
+    if (socket.connected) onConnect();
+    socket.on("connect", onConnect);
+    socket.on("notification:new", onNotification);
+
+    return () => {
+      socket.off("connect", onConnect);
+      socket.off("notification:new", onNotification);
+    };
+  }, [onNotification, onConnect]);
+}

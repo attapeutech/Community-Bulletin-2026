@@ -5,6 +5,7 @@ import { users, ownerEarnings, payouts } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/auth/session";
 import { eq, and, inArray } from "drizzle-orm";
 import { sendPayoutSentEmail } from "@/lib/email/templates";
+import { notifyPayoutSent } from "@/lib/notifications";
 
 const schema = z.object({
   ownerId: z.string().uuid(),
@@ -58,6 +59,8 @@ export async function POST(req: NextRequest) {
 
       return { payout, count: rows.length };
     });
+
+    await notifyPayoutSent(ownerId, result.payout.amountCents, method);
 
     const [owner] = await db
       .select({ name: users.name, email: users.email })

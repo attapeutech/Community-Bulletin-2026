@@ -6,6 +6,7 @@ import { eq, and } from "drizzle-orm";
 import { requireAuth } from "@/lib/auth/session";
 import { sendAdSubmittedEmail, sendPaymentReceiptEmail, sendAdReviewNotificationEmail } from "@/lib/email/templates";
 import { recordEarning } from "@/lib/earnings";
+import { notifyPaymentRecorded } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -76,6 +77,7 @@ export async function POST(req: NextRequest) {
     }).returning({ id: payments.id });
 
     await recordEarning(payment.id);
+    await notifyPaymentRecorded(payment.id);
 
     // Mark ad as paid
     await db.update(ads).set({ paymentStatus: "paid", updatedAt: now }).where(eq(ads.id, adId));

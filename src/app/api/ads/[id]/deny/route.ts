@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import { sendAdDeniedEmail } from "@/lib/email/templates";
 import { pushDashboardUpdate } from "@/lib/socket/notify";
 import { processAdRefund } from "@/lib/refund";
+import { notifyAdDenied } from "@/lib/notifications";
 
 const denySchema = z.object({
   reviewNote: z.string().min(10).max(500),
@@ -76,6 +77,8 @@ export async function PATCH(
       const result = await processAdRefund(id);
       refundResult = { status: result.status as typeof refundResult.status, amountCents: result.amountCents };
     }
+
+    await notifyAdDenied(id, row.user.id, row.ad.title, refundResult.status === "refunded");
 
     // Send denial + refund email
     const amountFormatted = `$${(refundResult.amountCents / 100).toFixed(2)}`;

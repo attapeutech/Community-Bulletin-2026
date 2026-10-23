@@ -3,6 +3,7 @@ import Link from "next/link";
 import { BrandMark } from "@/components/layout/BrandMark";
 import { SignOutButton } from "@/components/layout/SignOutButton";
 import { MobileNav } from "@/components/layout/MobileNav";
+import { NotificationBell } from "@/components/layout/NotificationBell";
 import { Badge } from "@/components/ui/badge";
 
 export default async function DashboardLayout({
@@ -31,18 +32,21 @@ export default async function DashboardLayout({
     <div className="flex min-h-screen bg-[#F4F7FB]">
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-60 bg-[#1A3A5C] flex-col shrink-0 px-4 py-6 gap-2">
-        {/* Logo */}
-        <Link href="/" className="no-underline">
-          <div className="flex items-center gap-2.5 mb-8 pl-2">
-            <BrandMark size={40} className="shrink-0 ring-1 ring-white/15 rounded-[9px]" />
-            <div>
-              <div className="font-serif font-bold text-white text-[13px] leading-tight">Community</div>
-              <div className="font-serif font-bold text-[#E8563A] text-[13px] leading-tight">
-                Bulletin<span className="text-[#4A90C4] text-[10px] font-normal">.com</span>
+        {/* Logo + notifications */}
+        <div className="flex items-center justify-between gap-1 mb-8">
+          <Link href="/" className="no-underline">
+            <div className="flex items-center gap-2.5 pl-2">
+              <BrandMark size={40} className="shrink-0 ring-1 ring-white/15 rounded-[9px]" />
+              <div>
+                <div className="font-serif font-bold text-white text-[13px] leading-tight">Community</div>
+                <div className="font-serif font-bold text-[#E8563A] text-[13px] leading-tight">
+                  Bulletin<span className="text-[#4A90C4] text-[10px] font-normal">.com</span>
+                </div>
               </div>
             </div>
-          </div>
-        </Link>
+          </Link>
+          <NotificationBell variant="dark" align="left" />
+        </div>
 
         {/* Nav */}
         {navItems.map((item) => (
@@ -82,7 +86,7 @@ export default async function DashboardLayout({
             Community<span className="text-[#E8563A]">Bulletin</span>
           </div>
         </Link>
-        <div className="w-8" /> {/* spacer to center logo */}
+        <NotificationBell align="right" />
       </div>
 
       {/* Main content */}

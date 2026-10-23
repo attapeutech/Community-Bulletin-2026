@@ -38,6 +38,18 @@
 - **Requires** the Coolify scheduled task that calls the cron endpoint daily. Without it, earnings never leave *pending*.
 - **Phase 2 (later):** Stripe Connect Express, with transfers from the same ledger.
 
+## In-app notifications (bell), added 2026-10-23
+
+- **Separate Socket.io namespace `/notifications`** in `server.ts`:
+  - It has its own login check, which reads the better-auth session cookie when a user connects.
+  - Each user is placed in their own room, `user:<id>`, chosen by the server.
+  - The default namespace (`display:<slug>` and `dashboard` rooms, with the `ads:refresh` and `ad:status_changed` events) is unchanged and still needs no login. Display screens never connect to `/notifications`.
+- **The database is the source of truth:** `notifications` rows use `channel = 'socket'`, with `read_at` and `link`. The bell refetches `GET /api/notifications` on every connect or reconnect and when the browser tab regains focus. The socket `notification:new` event is only a nudge.
+- **Sending:** `notifyUser()` and the event helpers in `src/lib/notifications.ts`. They never throw.
+- **Hooked into:** payments (advertiser, reviewers, store owner), approve, deny, admin cancel, the cron job (expiring within 24h, expired), earnings release, and payouts.
+- **UI:** `src/components/layout/NotificationBell.tsx`, in the dashboard sidebar, the dashboard mobile header, and the public navbar when logged in.
+- **Limit:** pushes reach only users connected to this one server process. Running several app instances later would need the Socket.io Redis adapter.
+
 ## To do
 
 - [ ] **About 1 week after 2026-10-23:** if Neon is stable, delete the old Postgres resource in Coolify (`postgresql-database-gt2gswqg8jmybj5l2ydntnfg`). Until then, don't reuse its password; it's in git history.

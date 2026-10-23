@@ -10,6 +10,7 @@ import { pushDisplayRefresh, pushDashboardUpdate } from "@/lib/socket/notify";
 import { sendAdApprovedEmail, sendAdDeniedEmail, sendAdCancelledEmail } from "@/lib/email/templates";
 import { processAdRefund } from "@/lib/refund";
 import { setEarningsAvailableAt } from "@/lib/earnings";
+import { notifyAdApproved, notifyAdDenied, notifyAdCancelled } from "@/lib/notifications";
 
 // GET /api/admin/ads — all ads with optional status filter
 export async function GET(req: NextRequest) {
@@ -122,7 +123,10 @@ export async function PATCH(req: NextRequest) {
       .where(eq(ads.id, adId))
       .returning();
 
-    if (isApproving && endedAt) await setEarningsAvailableAt(adId, endedAt);
+    if (isApproving && endedAt) {
+      await setEarningsAvailableAt(adId, endedAt);
+      await notifyAdApproved(adId, row.user.id, row.ad.title, endedAt);
+    }
 
     // Push real-time updates
     pushDisplayRefresh(row.location.slug).catch(console.error);
@@ -153,6 +157,7 @@ export async function PATCH(req: NextRequest) {
       }
       const amountFormatted = `$${(refundResult.amountCents / 100).toFixed(2)}`;
       const noteToSend = reviewNote || "Your ad did not meet our content guidelines at this time.";
+      await notifyAdDenied(adId, row.user.id, row.ad.title, refundResult.status === "refunded");
       const emailResult = await sendAdDeniedEmail({
         to: row.user.email,
         userName: row.user.name,
@@ -173,6 +178,7 @@ export async function PATCH(req: NextRequest) {
       }
       const amountFormatted = `$${(refundResult.amountCents / 100).toFixed(2)}`;
       const cancelNote = reviewNote || "Your ad has been cancelled by our team.";
+      await notifyAdCancelled(adId, row.user.id, row.ad.title, refundResult.status === "refunded");
       const emailResult = await sendAdCancelledEmail({
         to: row.user.email,
         userName: row.user.name,

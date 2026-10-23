@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LocationPickerDialog from "@/components/marketing/LocationPickerDialog";
 import { readSavedLocation, writeSavedLocation } from "@/lib/location-preference";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { NotificationBell } from "@/components/layout/NotificationBell";
 
 type SelectedLocation = { stateCode: string; stateName: string; cityName: string };
 
@@ -158,6 +159,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
 
           {/* CTA + theme toggle — full desktop only (lg+) */}
           <div className="hidden lg:flex items-center gap-2 shrink-0">
+            {user && <NotificationBell />}
             <ThemeToggle />
             {user ? (
               <Link href="/dashboard" className="no-underline flex items-center gap-2.5 text-sm font-semibold text-white pl-1 pr-4 py-1 rounded-full bg-[#1A3A5C] hover:bg-[#0F2540] transition-colors">
@@ -177,6 +179,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
 
           {/* Mobile + landscape tablet: hamburger only in Row 1 */}
           <div className="lg:hidden flex items-center gap-1 ml-auto shrink-0">
+            {user && <NotificationBell />}
             <ThemeToggle />
             <button
               className="p-2 rounded-lg text-[#1A3A5C] dark:text-[#9DC4E0] hover:bg-[#F4F7FB] dark:hover:bg-[#1E3550] transition-colors"

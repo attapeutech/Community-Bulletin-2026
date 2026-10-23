@@ -10,7 +10,6 @@ export default async function HomePage() {
     <LandingPage
       price={{
         amount: formatPrice(range.minCents),
-        uniform: range.minCents === range.maxCents,
       }}
     />
   );

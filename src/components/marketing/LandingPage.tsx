@@ -5,7 +5,7 @@ import { useSession } from "@/lib/auth/client";
 import LiveAdsSection from "./LiveAdsSection";
 
 // Prices come from the server (lowest active store price); every store may differ
-export type LandingPrice = { amount: string; uniform: boolean };
+export type LandingPrice = { amount: string };
 
 const FEATURES = (price: LandingPrice) => [
   { icon: "📍", title: "Location-targeted ads", desc: "Choose exactly which store locations display your ad. Target by city, state, or specific address." },
@@ -13,9 +13,7 @@ const FEATURES = (price: LandingPrice) => [
   { icon: "⚡", title: "Goes live instantly", desc: "Once approved, your ad pushes live to the display screen in real-time via Socket.io — no delays." },
   { icon: "🔄", title: "Carousel slideshow", desc: "Multiple approved ads rotate in a smooth carousel so every advertiser gets equal screen time." },
   { icon: "✅", title: "Human review process", desc: "Every ad is reviewed by our team before going live, keeping the platform trusted and high quality." },
-  price.uniform
-    ? { icon: "💳", title: "Simple flat pricing", desc: `One simple price — ${price.amount} for 1 week. No hidden fees. Full refund if your ad is not approved.` }
-    : { icon: "💳", title: "Simple, upfront pricing", desc: `Priced per store, from ${price.amount} for 1 week — you see the exact price before you pay. Full refund if your ad is not approved.` },
+  { icon: "💳", title: "Simple, upfront pricing", desc: `Priced per store, from ${price.amount} for 1 week — you see the exact price before you pay. Full refund if your ad is not approved.` },
 ];
 
 const HOW_IT_WORKS = [
@@ -164,12 +162,12 @@ export default function LandingPage({ price }: { price: LandingPrice }) {
 
           <div className="flex justify-center">
             <div className="relative bg-white dark:bg-[#0F1E2E] rounded-2xl border-2 border-[#1A3A5C] dark:border-[#4A90C4] p-8 sm:p-10 max-w-sm w-full">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#E8563A] text-white text-[11px] font-bold px-4 py-1 rounded-full tracking-wide uppercase">
-                Most Popular
-              </div>
-              {!price.uniform && <div className="text-sm font-semibold text-[#4A6B82] dark:text-[#7AA8C4] -mb-1">Starting at</div>}
+              <div className="text-sm font-semibold text-[#4A6B82] dark:text-[#7AA8C4] -mb-1">Starting at</div>
               <div className="font-serif text-5xl font-bold text-[#1A3A5C] dark:text-white">{price.amount}</div>
-              <div className="text-sm text-[#4A6B82] dark:text-[#7AA8C4] mb-6">per location / 1 week</div>
+              <div className="text-sm text-[#4A6B82] dark:text-[#7AA8C4]">per location / 1 week</div>
+              <p className="text-xs text-[#5B7D96] dark:text-[#7AA8C4] mt-2 mb-6">
+                Price varies by store — you&apos;ll see the exact price before you pay.
+              </p>
               <ul className="text-left mb-8 space-y-2">
                 {["1 store location", "1-week display period", "Full carousel rotation", "Real-time approval status", "Email notifications", "Full refund if denied"].map((item) => (
                   <li key={item} className="text-sm text-[#4A5568] dark:text-[#9DC4E0] flex items-center gap-2">

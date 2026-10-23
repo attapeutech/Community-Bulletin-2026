@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { useDisplaySocket } from "@/lib/socket/client";
+import { QRCodeSVG } from "qrcode.react";
 
 type Ad = {
   id: string;
@@ -448,6 +449,38 @@ function SplitAdSlide({ ad, idx, total }: { ad: Ad; idx: number; total: number }
             </div>
           )}
         </div>
+
+        {/* QR code — scans go through /go/[id] so they count as website clicks */}
+        {ad.showWebsite && ad.contactWebsite && typeof window !== "undefined" && (
+          <div style={{ display: "flex", alignItems: "center", gap: "clamp(10px, 1.4vw, 20px)", marginTop: "clamp(16px, 2.4vw, 34px)" }}>
+            <div style={{
+              background: "#fff",
+              borderRadius: "clamp(6px, 0.7vw, 10px)",
+              padding: "clamp(5px, 0.6vw, 9px)",
+              width: "clamp(84px, 9.5vw, 168px)",
+              flexShrink: 0,
+              lineHeight: 0,
+            }}>
+              <QRCodeSVG
+                value={`${window.location.origin}/go/${ad.id}`}
+                size={256}
+                level="M"
+                marginSize={0}
+                fgColor="#0A1A2E"
+                bgColor="#FFFFFF"
+                style={{ width: "100%", height: "auto" }}
+              />
+            </div>
+            <div>
+              <div style={{ fontSize: "clamp(12px, 1.3vw, 19px)", color: "#fff", fontWeight: 700, lineHeight: 1.25 }}>
+                Scan to visit
+              </div>
+              <div style={{ fontSize: "clamp(10px, 1vw, 14px)", color: "rgba(255,255,255,0.55)", marginTop: 4 }}>
+                Point your phone camera here
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
 

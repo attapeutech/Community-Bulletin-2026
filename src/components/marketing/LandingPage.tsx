@@ -5,7 +5,7 @@ import { useSession } from "@/lib/auth/client";
 import LiveAdsSection from "./LiveAdsSection";
 
 // Prices come from the server (lowest active store price); every store may differ
-export type LandingPrice = { amount: string; label: string; uniform: boolean };
+export type LandingPrice = { amount: string; uniform: boolean };
 
 const FEATURES = (price: LandingPrice) => [
   { icon: "📍", title: "Location-targeted ads", desc: "Choose exactly which store locations display your ad. Target by city, state, or specific address." },
@@ -61,7 +61,7 @@ export default function LandingPage({ price }: { price: LandingPrice }) {
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href={session ? "/ads/new" : "/register"} className="no-underline bg-[#E8563A] text-white px-8 py-3.5 rounded-xl text-base font-bold tracking-wide hover:bg-[#D14A30] transition-colors">
-              Post your first ad — {price.label}
+              Post your first ad
             </Link>
             <a href="#how-it-works" className="no-underline bg-white/10 border border-white/20 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-white/20 transition-colors">
               See how it works

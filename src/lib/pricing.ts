@@ -32,8 +32,3 @@ export function formatPrice(cents: number) {
     maximumFractionDigits: 2,
   })}`;
 }
-
-/** "$100" when every store costs the same, otherwise "from $75". */
-export function priceLabel(range: PriceRange) {
-  return range.minCents === range.maxCents ? formatPrice(range.minCents) : `from ${formatPrice(range.minCents)}`;
-}

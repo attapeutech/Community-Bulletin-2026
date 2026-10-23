@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSession } from "@/lib/auth/client";
 import LiveAdsSection from "./LiveAdsSection";
+import HeroScreen from "./HeroScreen";
 
 // Prices come from the server (lowest active store price); every store may differ
 export type LandingPrice = { amount: string };
@@ -66,28 +67,8 @@ export default function LandingPage({ price }: { price: LandingPrice }) {
             </a>
           </div>
 
-          {/* Screen mockup */}
-          <div className="mt-16 bg-white/5 border border-white/10 rounded-2xl p-5 sm:p-6 max-w-lg mx-auto">
-            <div className="bg-[#0D1B2A] rounded-xl p-1 mb-2">
-              <div className="bg-[#0F3557] rounded-lg px-6 py-5 flex flex-col gap-2.5">
-                <div className="flex justify-between items-center">
-                  <div className="bg-[#4A90C4] rounded h-2.5 w-[45%] opacity-90" />
-                  <div className="w-2 h-2 rounded-full bg-[#E8563A]" />
-                </div>
-                <div className="bg-[#7DB8DC] rounded h-1.5 w-[70%] opacity-60" />
-                <div className="bg-[#7DB8DC] rounded h-1.5 w-[55%] opacity-45" />
-                <div className="flex gap-2 mt-1">
-                  <div className="bg-[#E8563A] rounded w-20 h-7 opacity-90 flex items-center justify-center">
-                    <span className="text-white text-[9px] font-bold">LEARN MORE</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="flex justify-center">
-              <div className="w-14 h-1.5 bg-white/10 rounded" />
-            </div>
-            <p className="text-[#9DC4E0] text-xs mt-2.5 text-center">Your ad displays like this on screens inside stores</p>
-          </div>
+          {/* Live mini-screen: rotates through ads running right now */}
+          <HeroScreen />
         </div>
       </section>
 

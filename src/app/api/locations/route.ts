@@ -46,6 +46,7 @@ export async function GET(req: NextRequest) {
           ilike(cities.name, term),
           ilike(states.name, term),
           ilike(states.code, term),
+          ilike(postalCodes.code, term),
         ) as ReturnType<typeof eq>
       );
     }

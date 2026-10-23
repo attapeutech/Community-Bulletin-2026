@@ -359,7 +359,7 @@ export default function NewAdPage() {
               <div style={{ marginBottom: 8 }}>
                 <Label>Search locations</Label>
                 <Input
-                  placeholder="Store name, city, or state…"
+                  placeholder="Store name, store #, city, state, or ZIP code…"
                   value={locSearch}
                   onChange={(e) => handleLocSearch(e.target.value)}
                   autoComplete="off"

@@ -808,7 +808,7 @@ export default function AdminPanelClient({
             <StatCard label="Users" value={stats.totalUsers} onClick={() => setActiveTab("users")} />
             <StatCard label="Locations" value={stats.totalLocations} onClick={() => { window.location.href = "/dashboard/store-owner"; }} />
             <StatCard label="Screen Views" value={stats.totalViews.toLocaleString()} sub="times ads were shown in stores" />
-            <StatCard label="Website Clicks" value={stats.totalWebsiteClicks.toLocaleString()} sub="clicked through to site" accentClass="text-[#4A90C4]" />
+            <StatCard label="Website Visits" value={stats.totalWebsiteClicks.toLocaleString()} sub="QR scans and link clicks" accentClass="text-[#4A90C4]" />
           </div>
 
           {/* Quick links */}
@@ -1164,7 +1164,7 @@ export default function AdminPanelClient({
                           </span>
                           {ad.showWebsite && ad.contactWebsite && (
                             <span className="text-[11px] text-[#4A6B82]">
-                              🌐 <span className="font-semibold text-[#1A3A5C]">{ad.websiteClickCount.toLocaleString()}</span> site clicks
+                              🌐 <span className="font-semibold text-[#1A3A5C]">{ad.websiteClickCount.toLocaleString()}</span> website visits
                             </span>
                           )}
                         </div>

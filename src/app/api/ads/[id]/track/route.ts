@@ -2,14 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { ads, locations } from "@/lib/db/schema";
 import { and, eq, gte, lte, sql } from "drizzle-orm";
+import { recordWebsiteVisit, clientIp } from "@/lib/click-tracking";
 
 // Public — display screens are never logged in.
 // Body: { event: "view", location: "<store slug>" }  → one time the ad was shown on that store's screen
-//       { event: "website_click" }                   → a click on the ad's website link
+//       { event: "website_click" }                   → a click on the ad's website link (see lib/click-tracking)
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// Ignore repeats of the same event for the same ad from the same client within this window
+// Ignore repeat views of the same ad from the same screen within this window
 // (slides change every 8 s, so a genuine repeat can't be faster)
 const REPEAT_WINDOW_MS = 5000;
 const recent = new Map<string, number>();
@@ -22,10 +23,6 @@ function isRepeat(key: string) {
     for (const [k, t] of recent) if (now - t > REPEAT_WINDOW_MS) recent.delete(k);
   }
   return last !== undefined && now - last < REPEAT_WINDOW_MS;
-}
-
-function clientIp(req: NextRequest) {
-  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "unknown";
 }
 
 export async function POST(
@@ -62,12 +59,8 @@ export async function POST(
     }
 
     if (event === "website_click") {
-      if (isRepeat(`click:${ip}:${id}`)) return NextResponse.json({ success: true, counted: false });
-      await db
-        .update(ads)
-        .set({ websiteClickCount: sql`${ads.websiteClickCount} + 1` })
-        .where(eq(ads.id, id));
-      return NextResponse.json({ success: true, counted: true });
+      const counted = await recordWebsiteVisit(req, id);
+      return NextResponse.json({ success: true, counted });
     }
 
     return NextResponse.json({ success: false, error: "Unknown event" }, { status: 400 });

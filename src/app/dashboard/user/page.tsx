@@ -216,7 +216,7 @@ export default async function UserDashboard() {
                         </span>
                         {ad.showWebsite && ad.contactWebsite && (
                           <span style={{ fontSize: 11, color: "#4A6B82" }}>
-                            🌐 <strong style={{ color: "#1A3A5C" }}>{ad.websiteClickCount.toLocaleString()}</strong> site clicks
+                            🌐 <strong style={{ color: "#1A3A5C" }}>{ad.websiteClickCount.toLocaleString()}</strong> website visits
                           </span>
                         )}
                       </div>

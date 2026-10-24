@@ -37,7 +37,14 @@
 - **Payouts:** monthly, minimum $25 (`MIN_PAYOUT_CENTS` in `src/types`), by Zelle or check only. No bank details are stored. Owners enter their payout details on their Earnings page.
 - **Code:** `src/lib/earnings.ts`. Hooks are in the Stripe webhook and confirm routes, PayPal capture, both approve paths, and `src/lib/refund.ts`.
 - **Requires** the Coolify scheduled task that calls the cron endpoint daily. Without it, earnings never leave *pending*.
-- **Phase 2 (later):** Stripe Connect Express, with transfers from the same ledger.
+- **Phase 2 (agreed 2026-10-24, awaiting partner review, not built):** Stripe Connect Express, with transfers from the same ledger. The plan is summarised for partners on `/dashboard/admin/payouts` (`DirectDepositPlanNotes` in `PayoutsClient.tsx`; remove or update it once Phase 2 ships).
+  - **Payout method:** direct deposit is the standard. Zelle or check only as an admin-approved exception per owner.
+  - **Schedule:** automatic on the 15th of each month (once per owner per month; idempotent), plus an admin "Run direct deposits now" button and a summary email to admins.
+  - **Fees:** AdsEZ absorbs Stripe Connect fees. Owners receive exactly their available balance.
+  - **Funding:** PayPal-funded earnings are paid from the Stripe balance too. If the balance is short, the rest wait until next month.
+  - **Taxes:** no payroll, and owners handle their own taxes. Turn on Stripe 1099 tax reporting for connected accounts (confirm with an accountant).
+  - **Stripe setup needed first (test mode):** enable Connect (Express) with the platform profile, 1099 reporting, and a Connect webhook at `/api/payments/stripe/connect-webhook` for `account.updated`, with its secret in `STRIPE_CONNECT_WEBHOOK_SECRET`.
+  - **Agreement:** update sections 6.4 (direct deposit through Stripe) and 6.6 (owner handles taxes; AdsEZ issues forms through its payment provider) in the sublease agreement doc.
 
 ## In-app notifications (bell), added 2026-10-23
 

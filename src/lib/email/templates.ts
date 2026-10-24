@@ -261,3 +261,28 @@ export async function sendPayoutSentEmail({
     `),
   });
 }
+
+// ─── Account Emails ──────────────────────────────────────────────────────────
+
+/** Sent when an admin creates an account. Never includes the password — the admin hands that over directly. */
+export async function sendAccountCreatedEmail({
+  to, name, roleLabel,
+}: {
+  to: string; name: string; roleLabel: string;
+}) {
+  return sendEmail({
+    to,
+    subject: `Your ${BRAND_NAME} account is ready`,
+    html: emailWrapper(`
+      <h2 style="margin:0 0 8px;color:${BRAND_COLOR};font-size:20px">Welcome, ${name}!</h2>
+      <p style="color:#4A6B82;font-size:14px;margin:0 0 20px">Our team has set up a ${BRAND_NAME} account for you.</p>
+      ${detailTable([
+        { label: "Login email", value: `<strong>${to}</strong>` },
+        { label: "Account type", value: roleLabel },
+        { label: "Password", value: "Your temporary password will be given to you by our team." },
+      ])}
+      <p style="color:#4A6B82;font-size:13px;margin:0 0 16px">When you log in for the first time, you'll be asked to choose your own password.</p>
+      ${primaryButton(`${APP_URL}/login`, "Log in")}
+    `),
+  });
+}

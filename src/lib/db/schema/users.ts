@@ -36,6 +36,9 @@ export const users = pgTable("users", {
   payoutMethod:         text("payout_method"),           // "zelle" | "check"
   payoutZelle:          text("payout_zelle"),            // Zelle email or phone
   payoutMailingAddress: text("payout_mailing_address"),  // for checks
+  // Admin-created accounts / admin password resets: user must choose their own password on first login
+  mustChangePassword:    boolean("must_change_password").default(false).notNull(),
+  tempPasswordExpiresAt: timestamp("temp_password_expires_at"),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({

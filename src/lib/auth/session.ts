@@ -15,7 +15,7 @@ export async function getSession() {
   return session;
 }
 
-export async function requireAuth() {
+export async function requireAuth(opts?: { allowTempPassword?: boolean }) {
   const session = await getSession();
   if (!session) redirect("/login");
 
@@ -23,7 +23,7 @@ export async function requireAuth() {
   // twoFactorEnabled unless declared as Better Auth additionalFields.
   const dbUser = await db.query.users.findFirst({
     where: eq(users.id, session.user.id as string),
-    columns: { twoFactorEnabled: true },
+    columns: { twoFactorEnabled: true, mustChangePassword: true },
   });
 
   if (dbUser?.twoFactorEnabled) {
@@ -38,6 +38,9 @@ export async function requireAuth() {
     });
     if (!verified) redirect("/two-factor");
   }
+
+  // Admin-issued temporary password: the user must choose their own before using the app
+  if (dbUser?.mustChangePassword && !opts?.allowTempPassword) redirect("/set-password");
 
   return session;
 }

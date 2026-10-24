@@ -6,6 +6,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import AdImagePreview from "./AdImagePreview";
 import AdActions from "./AdActions";
+import { ShareButton } from "@/components/ui/ShareButton";
 
 const STATUS_COLORS: Record<string, { bg: string; color: string; label: string }> = {
   pending:   { bg: "#fef9c3", color: "#854d0e", label: "Pending Review" },
@@ -171,6 +172,10 @@ export default async function AdDetailPage({
           >
             View Live Display ↗
           </Link>
+        )}
+        {/* Share the ad's public page while it's live */}
+        {ad.status === "approved" && ad.paymentStatus === "paid" && (
+          <ShareButton adId={ad.id} title={ad.title} text={`At ${location.storeName}`} />
         )}
         <AdActions
           adId={ad.id}

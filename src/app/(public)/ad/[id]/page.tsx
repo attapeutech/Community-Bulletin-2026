@@ -6,6 +6,40 @@ import Link from "next/link";
 import PublicAdPreview from "./PublicAdPreview";
 import { TrackedWebsiteLink } from "@/components/ui/TrackedWebsiteLink";
 import { HeartButton } from "@/components/ui/HeartButton";
+import { ShareButton } from "@/components/ui/ShareButton";
+import type { Metadata } from "next";
+
+// Link previews when the page is shared: ad photo, title, store and description
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const [ad] = await db
+    .select({ title: ads.title, description: ads.description, imageUrl: ads.imageUrl, storeName: locations.storeName, displayName: locations.displayName, cityName: cities.name, stateCode: states.code })
+    .from(ads)
+    .innerJoin(locations, eq(ads.locationId, locations.id))
+    .innerJoin(cities, eq(locations.cityId, cities.id))
+    .innerJoin(states, eq(locations.stateId, states.id))
+    .where(and(eq(ads.id, id), eq(ads.status, "approved"), eq(ads.paymentStatus, "paid")))
+    .limit(1)
+    .catch(() => []);
+  if (!ad) return { title: "Ad not found · CommunityBulletin" };
+
+  const where = `${ad.displayName || ad.storeName}, ${ad.cityName}, ${ad.stateCode}`;
+  const description = ad.description ? `${ad.description} · Now showing at ${where}` : `Now showing at ${where}`;
+  const base = process.env.NEXT_PUBLIC_APP_URL || "https://communitybulletin.com";
+  return {
+    title: `${ad.title} · CommunityBulletin`,
+    description,
+    openGraph: {
+      title: ad.title,
+      description,
+      url: `${base}/ad/${id}`,
+      siteName: "CommunityBulletin",
+      images: [{ url: ad.imageUrl, alt: ad.title }],
+      type: "website",
+    },
+    twitter: { card: "summary_large_image", title: ad.title, description, images: [ad.imageUrl] },
+  };
+}
 
 export default async function PublicAdDetailPage({
   params,
@@ -77,8 +111,9 @@ export default async function PublicAdDetailPage({
             <span style={{ fontSize: 12, color: "#4A6B82" }}>
               through {fmt(row.endedAt)}
             </span>
-            <span style={{ marginLeft: "auto" }}>
+            <span style={{ marginLeft: "auto", display: "inline-flex", gap: 8 }}>
               <HeartButton adId={row.id} variant="pill" />
+              <ShareButton adId={row.id} title={row.title} text={`At ${displayName}, ${row.cityName}`} />
             </span>
           </div>
         </div>

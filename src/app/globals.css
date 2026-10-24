@@ -82,3 +82,80 @@
   height: 100vh;
   height: 100dvh;
 }
+
+/* ── Display screen motion ────────────────────────────────────────────────
+   Applied only to the slide currently on screen, so each restarts per slide. */
+
+/* Slow zoom on photos (slides last 8 s) */
+@keyframes cb-kenburns {
+  from { transform: scale(1) translate(0, 0); }
+  to   { transform: scale(1.07) translate(-1.2%, -1%); }
+}
+.cb-kenburns {
+  animation: cb-kenburns 9s ease-out forwards;
+  will-change: transform;
+}
+
+/* Gentler zoom for image-only ads, so text inside the image is never cropped */
+@keyframes cb-kenburns-soft {
+  from { transform: scale(1); }
+  to   { transform: scale(1.025); }
+}
+.cb-kenburns-soft {
+  animation: cb-kenburns-soft 9s ease-out forwards;
+  will-change: transform;
+}
+
+/* Text entrance: rise and fade in; stagger with animation-delay */
+@keyframes cb-rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.cb-rise {
+  opacity: 0;
+  animation: cb-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Title: each word rises in turn (stagger with animation-delay) */
+@keyframes cb-word {
+  from { opacity: 0; transform: translateY(0.45em); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.cb-word {
+  opacity: 0;
+  animation: cb-word 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Title "pop" once it has landed: grows slightly and settles back (no blinking) */
+@keyframes cb-pop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.06); }
+  65%  { transform: scale(0.99); }
+  100% { transform: scale(1); }
+}
+.cb-pop {
+  animation: cb-pop 0.7s ease-in-out both;
+}
+
+/* Coral bar that draws in under the title, left to right */
+@keyframes cb-underline {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+.cb-underline {
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: cb-underline 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Incoming slide still gliding in: keep its text hidden until it settles and plays */
+.cb-hold { opacity: 0; }
+.cb-hold-bar { transform: scaleX(0); transform-origin: left center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cb-kenburns, .cb-kenburns-soft, .cb-rise, .cb-word, .cb-underline, .cb-pop, .cb-hold, .cb-hold-bar {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

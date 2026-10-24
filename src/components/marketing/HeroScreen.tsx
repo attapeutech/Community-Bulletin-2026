@@ -77,7 +77,7 @@ export default function HeroScreen() {
                     src={ad.imageUrl}
                     alt={ad.title}
                     loading={i === 0 ? "eager" : "lazy"}
-                    className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000"
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${i === index % shown.length ? "cb-kenburns" : ""}`}
                     style={{ opacity: i === index % shown.length ? 1 : 0 }}
                   />
                 ))}

@@ -32,6 +32,16 @@ type AdvertiseSlideSettings = {
 // A carousel slide: a paid ad, or the built-in "Advertise here" slide
 type Slide = { kind: "ad"; ad: Ad } | { kind: "promo"; key: string };
 
+// Text reveal starts this long after a slide begins gliding in (the glide takes ~0.6 s)
+const REVEAL_START_MS = 280;
+// Title words appear this far apart; once all have landed the title "pops"
+const TITLE_WORD_STEP_MS = 180;
+
+// play: animate in now · hold: keep hidden · none: show as-is
+type SlideMotion = "play" | "hold" | "none";
+const motionClass = (motion: SlideMotion, play: string, hold = "cb-hold") =>
+  motion === "play" ? play : motion === "hold" ? hold : undefined;
+
 type LocationInfo = {
   slug: string;
   name: string;
@@ -173,7 +183,7 @@ export default function DisplayPage() {
   }
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
-    { loop: true, duration: 40 },
+    { loop: true, duration: 30 },
     [Autoplay({ delay: 8000, stopOnInteraction: false })]
   );
 
@@ -230,6 +240,20 @@ export default function DisplayPage() {
     if (ads.length < n) out.push({ kind: "promo", key: "promo-end" });
     return out;
   }, [ads, advertiseSlide]);
+
+  // The slide chosen to show next: as it starts gliding in, its photo starts zooming and its
+  // text reveal begins (each item delayed by REVEAL_START_MS), so the words land as it arrives
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  useEffect(() => {
+    if (!emblaApi) return;
+    const onSelect = () => setSelectedIndex(emblaApi.selectedScrollSnap());
+    onSelect();
+    emblaApi.on("select", onSelect);
+    emblaApi.on("reInit", onSelect);
+    return () => { emblaApi.off("select", onSelect); emblaApi.off("reInit", onSelect); };
+  }, [emblaApi]);
+
+  const motionFor = (idx: number): SlideMotion => (idx === selectedIndex ? "play" : "none");
 
   // Reinitialise Embla after slides change
   useEffect(() => {
@@ -324,7 +348,7 @@ export default function DisplayPage() {
             if (slide.kind === "promo") {
               return (
                 <div key={slide.key} style={{ flex: "0 0 100%", minWidth: 0, height: "100%", position: "relative", display: "flex", flexDirection: "column" }}>
-                  <AdvertiseHereSlide settings={advertiseSlide!} location={location} slug={slug} portrait={portrait} />
+                  <AdvertiseHereSlide settings={advertiseSlide!} location={location} slug={slug} portrait={portrait} motion={motionFor(idx)} />
                 </div>
               );
             }
@@ -336,7 +360,7 @@ export default function DisplayPage() {
                 style={{ flex: "0 0 100%", minWidth: 0, height: "100%", position: "relative", display: "flex", flexDirection: "column" }}
               >
                 {hasSplit ? (
-                  <SplitAdSlide ad={ad} idx={idx} total={slides.length} portrait={portrait} />
+                  <SplitAdSlide ad={ad} idx={idx} total={slides.length} portrait={portrait} zooming={idx === selectedIndex} motion={motionFor(idx)} />
                 ) : (
                   /* Full-screen image layout */
                   <div style={{ flex: 1, position: "relative", overflow: "hidden", background: "#0A1A2E", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -355,6 +379,7 @@ export default function DisplayPage() {
                     <img
                       src={ad.imageUrl}
                       alt={ad.title}
+                      className={idx === selectedIndex ? "cb-kenburns-soft" : undefined}
                       style={{ position: "relative", width: "100%", height: "100%", objectFit: "contain", display: "block" }}
                     />
                     <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,26,46,0.7) 0%, transparent 18%)" }} />
@@ -413,7 +438,12 @@ export default function DisplayPage() {
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 // Built-in slide selling this screen's ad space; QR opens Post a New Ad with this store pre-selected
-function AdvertiseHereSlide({ settings, location, slug, portrait }: { settings: AdvertiseSlideSettings; location: LocationInfo | null; slug: string; portrait: boolean }) {
+function AdvertiseHereSlide({ settings, location, slug, portrait, motion }: { settings: AdvertiseSlideSettings; location: LocationInfo | null; slug: string; portrait: boolean; motion: SlideMotion }) {
+  const rise = motionClass(motion, "cb-rise");
+  // Headline builds up word by word and pops, like an ad title; the rest follows it
+  const headlineWords = settings.headline.trim().split(/\s+/);
+  const headlineStartMs = REVEAL_START_MS + 120;
+  const headlineDoneMs = headlineStartMs + Math.min(headlineWords.length, 8) * TITLE_WORD_STEP_MS + 450;
   const storeName = location?.name ?? "this store";
   const subline = settings.subline.replace(/\{store\}/g, storeName);
   const price = location?.pricePerWeekCents
@@ -431,25 +461,32 @@ function AdvertiseHereSlide({ settings, location, slug, portrait }: { settings: 
     }}>
       <div style={{ position: "absolute", top: "-20%", right: "-10%", width: "45vw", height: "45vw", borderRadius: "50%", background: "rgba(232,86,58,0.08)" }} />
       <div style={{ maxWidth: portrait ? "100%" : "56%", position: "relative" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: portrait ? "center" : undefined, gap: 12, marginBottom: "clamp(14px, 2vw, 28px)" }}>
+        <div className={rise} style={{ animationDelay: `${REVEAL_START_MS + 0}ms`, display: "flex", alignItems: "center", justifyContent: portrait ? "center" : undefined, gap: 12, marginBottom: "clamp(14px, 2vw, 28px)" }}>
           <BrandMark size={44} className="ring-1 ring-white/15 rounded-[10px]" />
           <span style={{ fontSize: "clamp(11px, 1vw, 15px)", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#E8563A" }}>Advertise here</span>
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontWeight: 700, color: "#fff", fontSize: portrait ? "clamp(28px, 9vw, 40px)" : "clamp(30px, 5vw, 76px)", lineHeight: 1.08, marginBottom: "clamp(10px, 1.6vw, 22px)" }}>
-          {settings.headline}
+        <div className={motionClass(motion, "cb-pop")} style={{ animationDelay: `${headlineDoneMs}ms`, transformOrigin: portrait ? "center" : "left center", fontFamily: "Georgia, serif", fontWeight: 700, color: "#fff", fontSize: portrait ? "clamp(28px, 9vw, 40px)" : "clamp(30px, 5vw, 76px)", lineHeight: 1.08, marginBottom: "clamp(10px, 1.6vw, 22px)" }}>
+          {headlineWords.map((word, i) => (
+            <span key={i}>
+              <span className={motionClass(motion, "cb-word")} style={{ display: "inline-block", animationDelay: `${headlineStartMs + Math.min(i, 7) * TITLE_WORD_STEP_MS}ms` }}>
+                {word}
+              </span>
+              {i < headlineWords.length - 1 && " "}
+            </span>
+          ))}
         </div>
         {subline && (
-          <div style={{ fontSize: "clamp(15px, 1.9vw, 28px)", color: "rgba(255,255,255,0.75)", lineHeight: 1.4, marginBottom: "clamp(14px, 2.2vw, 30px)" }}>
+          <div className={rise} style={{ animationDelay: `${headlineDoneMs}ms`, fontSize: "clamp(15px, 1.9vw, 28px)", color: "rgba(255,255,255,0.75)", lineHeight: 1.4, marginBottom: "clamp(14px, 2.2vw, 30px)" }}>
             {subline}
           </div>
         )}
-        <div style={{ display: "inline-flex", alignItems: "baseline", gap: 10, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 12, padding: "clamp(8px, 1vw, 14px) clamp(14px, 1.6vw, 22px)" }}>
+        <div className={rise} style={{ animationDelay: `${headlineDoneMs + 120}ms`, display: "inline-flex", alignItems: "baseline", gap: 10, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 12, padding: "clamp(8px, 1vw, 14px) clamp(14px, 1.6vw, 22px)" }}>
           {price && <span style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "clamp(20px, 2.6vw, 40px)", color: "#fff" }}>{price}</span>}
           <span style={{ fontSize: "clamp(12px, 1.3vw, 19px)", color: "rgba(255,255,255,0.7)" }}>{price ? "/ week · " : ""}No contracts</span>
         </div>
       </div>
       {origin && (
-        <div style={{ textAlign: "center", position: "relative", flexShrink: 0 }}>
+        <div className={rise} style={{ animationDelay: `${headlineDoneMs + 260}ms`, textAlign: "center", position: "relative", flexShrink: 0 }}>
           <div style={{ background: "#fff", borderRadius: "clamp(10px, 1.2vw, 18px)", padding: "clamp(10px, 1.2vw, 18px)", width: portrait ? 170 : "clamp(150px, 20vw, 320px)", lineHeight: 0, boxShadow: "0 10px 40px rgba(0,0,0,0.35)" }}>
             <QRCodeSVG value={postUrl} size={512} level="M" marginSize={0} fgColor="#0A1A2E" bgColor="#FFFFFF" style={{ width: "100%", height: "auto" }} />
           </div>
@@ -526,15 +563,24 @@ function HeaderBar({ locationName, storeNumber, portrait }: { locationName: stri
   );
 }
 
-function SplitAdSlide({ ad, idx, total, portrait }: { ad: Ad; idx: number; total: number; portrait: boolean }) {
+function SplitAdSlide({ ad, idx, total, portrait, zooming, motion }: { ad: Ad; idx: number; total: number; portrait: boolean; zooming: boolean; motion: SlideMotion }) {
+  // Text rises in one item after another when this slide comes on screen
+  const rise = motionClass(motion, "cb-rise");
   const len = ad.title.length;
   const titleSize = portrait
-    ? (len <= 20 ? "30px" : len <= 40 ? "24px" : "20px")
+    ? (len <= 20 ? "33px" : len <= 40 ? "27px" : "22px")
     : len <= 20
-    ? "clamp(30px, 4.5vw, 66px)"
+    ? "clamp(34px, 5vw, 74px)"
     : len <= 40
-    ? "clamp(22px, 3.2vw, 48px)"
-    : "clamp(17px, 2.4vw, 36px)";
+    ? "clamp(25px, 3.6vw, 54px)"
+    : "clamp(19px, 2.7vw, 40px)";
+
+  // The title gets the attention: its words rise in one by one, then a coral bar draws in under it;
+  // the rest of the text follows once the title has landed
+  const words = ad.title.trim().split(/\s+/);
+  const WORD_STEP_MS = TITLE_WORD_STEP_MS;
+  const titleDoneMs = REVEAL_START_MS + Math.min(words.length, 8) * WORD_STEP_MS + 450;
+  const after = (ms: number) => `${titleDoneMs + ms}ms`;
 
   return (
     // Landscape: text left, image right. Portrait phone: image on top, text below.
@@ -555,21 +601,48 @@ function SplitAdSlide({ ad, idx, total, portrait }: { ad: Ad; idx: number; total
         borderRight: portrait ? undefined : "1px solid rgba(74,144,196,0.15)",
         borderTop: portrait ? "1px solid rgba(74,144,196,0.15)" : undefined,
       }}>
-        {/* Title */}
-        <div style={{
+        {/* Title — once every word has landed it "pops" (grows slightly and settles) to draw the eye */}
+        <div className={motionClass(motion, "cb-pop")} style={{
+          animationDelay: `${titleDoneMs}ms`,
+          transformOrigin: "left center",
           fontFamily: "Georgia, serif",
           fontSize: titleSize,
           fontWeight: 700,
           color: "#fff",
-          lineHeight: 1.15,
-          marginBottom: "clamp(10px, 1.8vw, 22px)",
+          lineHeight: 1.08,
+          letterSpacing: "-0.01em",
+          textShadow: "0 2px 14px rgba(0,0,0,0.35)",
         }}>
-          {ad.title}
+          {words.map((word, i) => (
+            <span key={i}>
+              <span
+                className={motionClass(motion, "cb-word")}
+                style={{ display: "inline-block", animationDelay: `${REVEAL_START_MS + Math.min(i, 7) * WORD_STEP_MS}ms` }}
+              >
+                {word}
+              </span>
+              {i < words.length - 1 && " "}
+            </span>
+          ))}
         </div>
+        <div
+          className={motionClass(motion, "cb-underline", "cb-hold-bar")}
+          style={{
+            animationDelay: `${titleDoneMs - 120}ms`,
+            flexShrink: 0,
+            width: portrait ? 52 : "clamp(52px, 5.5vw, 84px)",
+            height: portrait ? 4 : "clamp(4px, 0.45vw, 6px)",
+            background: "#E8563A",
+            borderRadius: 3,
+            marginTop: "clamp(10px, 1.4vw, 18px)",
+            marginBottom: "clamp(12px, 1.8vw, 24px)",
+          }}
+        />
 
         {/* Description */}
         {ad.description && (
-          <div style={{
+          <div className={rise} style={{
+            animationDelay: after(0),
             fontSize: "clamp(12px, 1.3vw, 18px)",
             color: "rgba(255,255,255,0.65)",
             lineHeight: 1.6,
@@ -582,15 +655,14 @@ function SplitAdSlide({ ad, idx, total, portrait }: { ad: Ad; idx: number; total
         {/* Accent divider + Contact Info label */}
         {(ad.showPhone || ad.showAddress || ad.showWebsite) && (
           <>
-            <div style={{ width: 44, height: 3, background: "#E8563A", borderRadius: 2, marginBottom: "clamp(10px, 1.4vw, 18px)" }} />
-            <div style={{ fontSize: "clamp(9px, 0.85vw, 12px)", fontWeight: 700, letterSpacing: "0.12em", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: "clamp(8px, 1vw, 14px)" }}>
+            <div className={rise} style={{ animationDelay: after(100), fontSize: "clamp(9px, 0.85vw, 12px)", fontWeight: 700, letterSpacing: "0.12em", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: "clamp(8px, 1vw, 14px)" }}>
               Contact Info
             </div>
           </>
         )}
 
         {/* Contact fields */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "clamp(8px, 1.2vw, 16px)" }}>
+        <div className={rise} style={{ animationDelay: after(160), display: "flex", flexDirection: "column", gap: "clamp(8px, 1.2vw, 16px)" }}>
           {ad.showPhone && ad.contactPhone && (
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: "clamp(14px, 1.5vw, 22px)" }}>📞</span>
@@ -627,7 +699,7 @@ function SplitAdSlide({ ad, idx, total, portrait }: { ad: Ad; idx: number; total
 
         {/* QR code — scans go through /go/[id] so they count as website visits */}
         {ad.showWebsite && ad.contactWebsite && typeof window !== "undefined" && (
-          <div style={{ display: "flex", alignItems: "center", gap: portrait ? 14 : "clamp(10px, 1.4vw, 20px)", marginTop: portrait ? 18 : "clamp(16px, 2.4vw, 34px)" }}>
+          <div className={rise} style={{ animationDelay: after(320), display: "flex", alignItems: "center", gap: portrait ? 14 : "clamp(10px, 1.4vw, 20px)", marginTop: portrait ? 18 : "clamp(16px, 2.4vw, 34px)" }}>
             <div style={{
               background: "#fff",
               borderRadius: "clamp(6px, 0.7vw, 10px)",
@@ -664,6 +736,7 @@ function SplitAdSlide({ ad, idx, total, portrait }: { ad: Ad; idx: number; total
         <img
           src={ad.imageUrl}
           alt={ad.title}
+          className={zooming ? "cb-kenburns" : undefined}
           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
         />
       </div>

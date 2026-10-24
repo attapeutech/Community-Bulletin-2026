@@ -1,0 +1,13 @@
+{
+  "name": "CommunityBulletin Display",
+  "short_name": "CB Display",
+  "description": "In-store ad display screen",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0A1A2E",
+  "theme_color": "#0A1A2E",
+  "icons": [
+    { "src": "/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/apple-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

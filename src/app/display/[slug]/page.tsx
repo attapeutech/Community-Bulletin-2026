@@ -80,6 +80,42 @@ function DateDisplay() {
   return <span>{date}</span>;
 }
 
+// Fullscreen API with the webkit-prefixed fallback older iPad Safari needs.
+// iPhone Safari has no page fullscreen at all — there we offer "Add to Home Screen" instead.
+const fsDoc = () => document as Document & {
+  webkitFullscreenElement?: Element | null;
+  webkitFullscreenEnabled?: boolean;
+  webkitExitFullscreen?: () => Promise<void> | void;
+};
+const fsRoot = () => document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> | void };
+
+function fullscreenSupported() {
+  const d = fsDoc();
+  return !!(d.fullscreenEnabled || d.webkitFullscreenEnabled);
+}
+function fullscreenActive() {
+  const d = fsDoc();
+  return !!(d.fullscreenElement || d.webkitFullscreenElement);
+}
+function enterFullscreen() {
+  const el = fsRoot();
+  try {
+    if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+    else el.webkitRequestFullscreen?.();
+  } catch { /* not allowed without a user gesture */ }
+}
+function exitFullscreen() {
+  const d = fsDoc();
+  try {
+    if (d.exitFullscreen) d.exitFullscreen().catch(() => {});
+    else d.webkitExitFullscreen?.();
+  } catch { /* ignore */ }
+}
+/** Opened from a home-screen icon (iOS) or as an installed app — browser bars are already hidden */
+function runningStandalone() {
+  return window.matchMedia?.("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+}
+
 export default function DisplayPage() {
   const params = useParams();
   const slug = params.slug as string;
@@ -92,28 +128,34 @@ export default function DisplayPage() {
 
   // Fullscreen
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [canFullscreen, setCanFullscreen] = useState(true);
+  const [standalone, setStandalone] = useState(false);
   const [showControls, setShowControls] = useState(false);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    document.documentElement.requestFullscreen?.().catch(() => {});
-    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    setCanFullscreen(fullscreenSupported());
+    setStandalone(runningStandalone());
+    enterFullscreen();
+    const onFsChange = () => setIsFullscreen(fullscreenActive());
     document.addEventListener("fullscreenchange", onFsChange);
-    return () => document.removeEventListener("fullscreenchange", onFsChange);
+    document.addEventListener("webkitfullscreenchange", onFsChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFsChange);
+      document.removeEventListener("webkitfullscreenchange", onFsChange);
+    };
   }, []);
 
+  // Mouse movement or a tap reveals the controls for a few seconds
   function handleMouseMove() {
     setShowControls(true);
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-    hideTimerRef.current = setTimeout(() => setShowControls(false), 3000);
+    hideTimerRef.current = setTimeout(() => setShowControls(false), 4000);
   }
 
   function toggleFullscreen() {
-    if (document.fullscreenElement) {
-      document.exitFullscreen?.();
-    } else {
-      document.documentElement.requestFullscreen?.().catch(() => {});
-    }
+    if (fullscreenActive()) exitFullscreen();
+    else enterFullscreen();
   }
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
@@ -241,8 +283,8 @@ export default function DisplayPage() {
   // ── No ads ───────────────────────────────────────────────────────────────────
   if (slides.length === 0) {
     return (
-      <div style={fullscreen("#0A1A2E")} onMouseMove={handleMouseMove}>
-        <FullscreenOverlay show={showControls} isFullscreen={isFullscreen} onToggle={toggleFullscreen} />
+      <div style={fullscreen("#0A1A2E")} onMouseMove={handleMouseMove} onTouchStart={handleMouseMove}>
+        <FullscreenOverlay show={showControls} isFullscreen={isFullscreen} onToggle={toggleFullscreen} canFullscreen={canFullscreen} standalone={standalone} />
         {/* Header bar */}
         <HeaderBar locationName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} />
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
@@ -257,8 +299,8 @@ export default function DisplayPage() {
 
   // ── Carousel ─────────────────────────────────────────────────────────────────
   return (
-    <div style={fullscreen("#0A1A2E")} onMouseMove={handleMouseMove}>
-      <FullscreenOverlay show={showControls} isFullscreen={isFullscreen} onToggle={toggleFullscreen} />
+    <div style={fullscreen("#0A1A2E")} onMouseMove={handleMouseMove} onTouchStart={handleMouseMove}>
+      <FullscreenOverlay show={showControls} isFullscreen={isFullscreen} onToggle={toggleFullscreen} canFullscreen={canFullscreen} standalone={standalone} />
       <HeaderBar locationName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} />
 
       {/* Carousel */}
@@ -610,7 +652,10 @@ function SplitAdSlide({ ad, idx, total }: { ad: Ad; idx: number; total: number }
   );
 }
 
-function FullscreenOverlay({ show, isFullscreen, onToggle }: { show: boolean; isFullscreen: boolean; onToggle: () => void }) {
+function FullscreenOverlay({ show, isFullscreen, onToggle, canFullscreen, standalone }: {
+  show: boolean; isFullscreen: boolean; onToggle: () => void; canFullscreen: boolean; standalone: boolean;
+}) {
+  const [showTip, setShowTip] = useState(false);
   return (
     <div style={{
       position: "absolute",
@@ -655,7 +700,26 @@ function FullscreenOverlay({ show, isFullscreen, onToggle }: { show: boolean; is
           Home
         </a>
 
-        {/* Fullscreen toggle */}
+        {/* iPhone: no page fullscreen — explain Add to Home Screen (hidden when already opened from the icon) */}
+        {!canFullscreen && !standalone && (
+          <button
+            onClick={() => setShowTip(t => !t)}
+            style={{
+              display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8,
+              background: "rgba(10,26,46,0.85)", border: "1px solid rgba(232,86,58,0.4)", backdropFilter: "blur(8px)",
+              color: "#E8A09D", fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
+              <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+            </svg>
+            Full screen tip
+          </button>
+        )}
+
+        {/* Fullscreen toggle (computers, Android, iPad) */}
+        {canFullscreen && (
         <button
           onClick={onToggle}
           style={{
@@ -691,7 +755,24 @@ function FullscreenOverlay({ show, isFullscreen, onToggle }: { show: boolean; is
             </>
           )}
         </button>
+        )}
       </div>
+
+      {showTip && show && (
+        <div style={{
+          position: "absolute", top: 60, right: 16, maxWidth: 300, pointerEvents: "auto",
+          background: "rgba(10,26,46,0.95)", border: "1px solid rgba(74,144,196,0.4)", borderRadius: 12,
+          padding: "14px 16px", color: "#E6EEF6", fontSize: 13, lineHeight: 1.5, backdropFilter: "blur(8px)",
+        }}>
+          <div style={{ fontWeight: 700, marginBottom: 6, color: "#fff" }}>Full screen on iPhone</div>
+          <ol style={{ margin: 0, paddingLeft: 18 }}>
+            <li>Tap the <strong>Share</strong> button in Safari.</li>
+            <li>Choose <strong>Add to Home Screen</strong>, then <strong>Add</strong>.</li>
+            <li>Open this screen from the new icon: it runs full screen, without browser bars.</li>
+          </ol>
+          <div style={{ marginTop: 8, color: "#9DC4E0", fontSize: 12 }}>Tip: turn the phone sideways for the best view.</div>
+        </div>
+      )}
     </div>
   );
 }

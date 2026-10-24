@@ -1,8 +1,8 @@
 import { getSession } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
-import { ads, locations, cities, states, postalCodes } from "@/lib/db/schema";
-import { eq, and, desc, gte } from "drizzle-orm";
+import { ads, locations, cities, states, postalCodes, savedAds } from "@/lib/db/schema";
+import { eq, and, desc, gte, sql } from "drizzle-orm";
 import Link from "next/link";
 import { RenewAdButton } from "./RenewAdButton";
 import { UserDashboardRefresher } from "./UserDashboardRefresher";
@@ -58,6 +58,7 @@ export default async function UserDashboard() {
       createdAt: ads.createdAt,
       viewCount: ads.viewCount,
       websiteClickCount: ads.websiteClickCount,
+      saveCount: sql<number>`(select count(*)::int from ${savedAds} where ${savedAds.adId} = ${ads.id})`,
       showWebsite: ads.showWebsite,
       contactWebsite: ads.contactWebsite,
       location: {
@@ -219,6 +220,9 @@ export default async function UserDashboard() {
                             🌐 <strong style={{ color: "#1A3A5C" }}>{ad.websiteClickCount.toLocaleString()}</strong> website visits
                           </span>
                         )}
+                        <span style={{ fontSize: 11, color: "#4A6B82" }}>
+                          ♥ <strong style={{ color: "#1A3A5C" }}>{ad.saveCount.toLocaleString()}</strong> saves
+                        </span>
                       </div>
                     )}
                   </div>

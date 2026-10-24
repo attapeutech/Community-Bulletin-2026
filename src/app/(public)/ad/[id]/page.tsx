@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import PublicAdPreview from "./PublicAdPreview";
 import { TrackedWebsiteLink } from "@/components/ui/TrackedWebsiteLink";
+import { HeartButton } from "@/components/ui/HeartButton";
 
 export default async function PublicAdDetailPage({
   params,
@@ -68,13 +69,16 @@ export default async function PublicAdDetailPage({
           <h1 style={{ fontFamily: "Georgia,serif", fontSize: "clamp(22px,4vw,32px)", fontWeight: 700, color: "#1A3A5C", marginBottom: 8 }}>
             {row.title}
           </h1>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#dcfce7", color: "#166534", fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 20 }}>
               <span style={{ width: 6, height: 6, background: "#16a34a", borderRadius: "50%", display: "inline-block" }} />
               Live Now
             </span>
             <span style={{ fontSize: 12, color: "#4A6B82" }}>
               through {fmt(row.endedAt)}
+            </span>
+            <span style={{ marginLeft: "auto" }}>
+              <HeartButton adId={row.id} variant="pill" />
             </span>
           </div>
         </div>

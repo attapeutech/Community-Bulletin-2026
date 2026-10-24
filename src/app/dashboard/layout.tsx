@@ -18,6 +18,7 @@ export default async function DashboardLayout({
 
   const navItems = [
     { href: "/dashboard/user",        label: "My Ads",        roles: ["user", "store_owner", "approver", "admin"] },
+    { href: "/dashboard/saved",       label: "Saved",         roles: ["user", "store_owner", "approver", "admin"] },
     { href: "/dashboard/store-owner",          label: role === "admin" ? "All Locations" : "My Locations", roles: ["store_owner", "admin"] },
     { href: "/dashboard/store-owner/earnings", label: "Earnings",        roles: ["store_owner", "admin"] },
     { href: "/dashboard/approver",             label: "Review Ads",      roles: ["approver", "admin"] },

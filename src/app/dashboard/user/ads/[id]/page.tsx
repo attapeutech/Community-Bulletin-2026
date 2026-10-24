@@ -1,7 +1,7 @@
 import { requireAuth } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
-import { ads, locations, users, payments, cities, states, postalCodes } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { ads, locations, users, payments, cities, states, postalCodes, savedAds } from "@/lib/db/schema";
+import { count, eq } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import AdImagePreview from "./AdImagePreview";
@@ -94,6 +94,9 @@ export default async function AdDetailPage({
     .limit(1);
 
   if (!row) notFound();
+
+  // How many people have saved (hearted) this ad
+  const [{ saves }] = await db.select({ saves: count() }).from(savedAds).where(eq(savedAds.adId, id));
 
   const adPayments = await db
     .select()
@@ -230,7 +233,7 @@ export default async function AdDetailPage({
         <div style={{ fontSize: 12, fontWeight: 700, color: "#4A6B82", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 14 }}>
           Ad Performance
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: ad.showWebsite && ad.contactWebsite ? "1fr 1fr" : "1fr", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 16 }}>
           <div style={{ background: "#F7F9FC", borderRadius: 10, padding: "14px 18px" }}>
             <div style={{ fontSize: 28, fontWeight: 700, color: "#1A3A5C" }}>{ad.viewCount.toLocaleString()}</div>
             <div style={{ fontSize: 12, color: "#4A6B82", marginTop: 2 }}>Screen views</div>
@@ -243,6 +246,11 @@ export default async function AdDetailPage({
               <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 1 }}>QR scans and link clicks</div>
             </div>
           )}
+          <div style={{ background: "#F7F9FC", borderRadius: 10, padding: "14px 18px" }}>
+            <div style={{ fontSize: 28, fontWeight: 700, color: "#1A3A5C" }}>{saves.toLocaleString()}</div>
+            <div style={{ fontSize: 12, color: "#4A6B82", marginTop: 2 }}>Saves</div>
+            <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 1 }}>people who hearted this ad</div>
+          </div>
         </div>
       </div>
 

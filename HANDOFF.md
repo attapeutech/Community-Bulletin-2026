@@ -77,6 +77,16 @@
   - `safeNext()` allows same-site paths only.
 - **Later (option 2):** custom house ads (admin-made, no payment, chosen stores).
 
+## Saved ads (wishlist hearts)
+
+- **Table:** `saved_ads` has primary key (`user_id`, `ad_id`), cascading on user and ad delete, and an index on `ad_id` for per-ad counts (migration 0010).
+- **API:** `GET`/`POST`/`DELETE /api/saved`, signed-in users only (401 in the route; the middleware also requires a session).
+- **UI:**
+  - `HeartButton` (`src/components/ui`): `overlay` variant on Live Ads cards, `pill` variant on the public ad page. Signed-out visitors go to login and are returned to the page.
+  - Shared client store in `src/lib/use-saved-ads.ts`, with one fetch per page and optimistic updates.
+  - `/dashboard/saved` lists saved ads; "Saved" is in the dashboard menu.
+  - Advertisers see a **Saves** count on the ad page's Performance card and in My Ads.
+
 ## Ad analytics definitions
 
 - **Screen views** (`ads.view_count`): one each time a display screen actually shows the ad.

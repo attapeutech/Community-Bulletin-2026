@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { HeartButton } from "@/components/ui/HeartButton";
 
 export type LiveAd = {
   id: string;
@@ -75,8 +76,11 @@ function AdCard({ ad }: { ad: LiveAd }) {
           <div style={{ position: "absolute", top: 10, left: 10, background: "#16a34a", color: "#fff", fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 20, display: "flex", alignItems: "center", gap: 4 }}>
             <span style={{ width: 5, height: 5, background: "#fff", borderRadius: "50%", display: "inline-block" }} /> LIVE
           </div>
-          <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(10,26,46,0.75)", color: "rgba(255,255,255,0.8)", fontSize: 10, padding: "3px 8px", borderRadius: 20, backdropFilter: "blur(4px)" }}>
+          <div style={{ position: "absolute", top: 17, right: 52, background: "rgba(10,26,46,0.75)", color: "rgba(255,255,255,0.8)", fontSize: 10, padding: "3px 8px", borderRadius: 20, backdropFilter: "blur(4px)" }}>
             {daysLeft}d left
+          </div>
+          <div style={{ position: "absolute", top: 10, right: 10 }}>
+            <HeartButton adId={ad.id} />
           </div>
         </div>
 

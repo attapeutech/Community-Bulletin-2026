@@ -17,6 +17,9 @@ const PUBLIC_ROUTES = [
   "/terms",
   "/contact",
   "/go",          // QR code short links from display screens
+  "/icon.png",           // site icons (logged-out visitors and store screens need these)
+  "/apple-icon.png",
+  "/display.webmanifest", // home-screen settings for display screens
 ];
 
 export async function middleware(request: NextRequest) {

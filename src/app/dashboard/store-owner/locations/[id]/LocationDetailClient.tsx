@@ -246,7 +246,10 @@ export default function LocationDetailClient({
             }
           </div>
           <div>
-            <h1 className="font-serif text-2xl font-bold text-[#1A3A5C] mb-1">{location.storeName}</h1>
+            <h1 className="font-serif text-2xl font-bold text-[#1A3A5C] mb-1">
+              {location.storeName}
+              {location.storeNumber && <span className="text-[#E8563A] ml-2">#{location.storeNumber.replace(/^#/, "")}</span>}
+            </h1>
             <div className="text-[13px] text-[#4A6B82]">
               {location.addressLine1} · {location.city.name}, {location.state.code} {location.postalCode.code}
             </div>

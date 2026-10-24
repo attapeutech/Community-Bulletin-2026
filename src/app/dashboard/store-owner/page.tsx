@@ -71,6 +71,7 @@ export default async function StoreOwnerPage() {
     .select({
       id: locations.id,
       storeName: locations.storeName,
+      storeNumber: locations.storeNumber,
       addressLine1: locations.addressLine1,
       slug: locations.slug,
       displayName: locations.displayName,
@@ -161,7 +162,10 @@ export default async function StoreOwnerPage() {
                   {/* Info */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
-                      <span style={{ fontWeight: 700, fontSize: 15, color: ACCENT }}>{loc.storeName}</span>
+                      <span style={{ fontWeight: 700, fontSize: 15, color: ACCENT }}>
+                        {loc.storeName}
+                        {loc.storeNumber && <span style={{ color: "#E8563A", marginLeft: 6 }}>#{loc.storeNumber.replace(/^#/, "")}</span>}
+                      </span>
                       <Badge bg="#dcfce7" color="#166534">{activeAds} active ad{activeAds !== 1 ? "s" : ""}</Badge>
                       {loc.category && <Badge bg="#EEF2FF" color="#3730A3">{loc.category}</Badge>}
                       {isAdmin && <Badge bg="#E8EFF6" color="#1A3A5C">{loc.storeOwner.name}</Badge>}

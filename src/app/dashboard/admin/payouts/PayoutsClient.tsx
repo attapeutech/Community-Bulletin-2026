@@ -124,6 +124,70 @@ function MarkPaidForm({ o, onDone }: { o: OwnerBalance; onDone: () => void }) {
   );
 }
 
+// Plan for partner review — remove or update once Phase 2 ships
+function DirectDepositPlanNotes() {
+  const h = "text-[12px] font-bold text-[#1A3A5C] uppercase tracking-[0.05em] mt-5 mb-2";
+  const ul = "m-0 pl-5 flex flex-col gap-1.5";
+  return (
+    <details className="mb-6 rounded-xl border border-[#D8E4EE] bg-[#F7F9FC] px-5 py-4 text-[13px] text-[#4A6B82] leading-relaxed">
+      <summary className="cursor-pointer font-bold text-[14px] text-[#1A3A5C] flex items-center gap-2 flex-wrap">
+        <span>Planned: automatic direct deposits for store owners (Phase 2)</span>
+        <span className="text-[10px] font-bold uppercase tracking-wide bg-amber-100 text-amber-800 border border-amber-200 rounded-full px-2 py-0.5">Not live yet · for review</span>
+      </summary>
+
+      <p className="mt-3 mb-0">
+        Today we pay store owners by hand each month (Zelle or check). Phase 2 has Stripe pay them automatically by direct deposit,
+        using the same earnings records we already keep.
+      </p>
+
+      <div className={h}>For store owners</div>
+      <ul className={ul}>
+        <li>One-time setup from their Earnings page: <strong>&ldquo;Get paid by direct deposit&rdquo;</strong> opens Stripe&apos;s secure signup, where they enter their identity, bank account and tax details (W-9).</li>
+        <li>We never see or store their bank details; Stripe holds them.</li>
+        <li>Their page shows the status (<em>Not set up</em>, <em>Incomplete</em> or <em>Active</em>) and a link to view their payouts on Stripe.</li>
+        <li>Owners with money waiting but no direct deposit get reminders to finish setup.</li>
+      </ul>
+
+      <div className={h}>Automatic monthly payouts</div>
+      <ul className={ul}>
+        <li>On the <strong>15th of each month</strong>, every owner with direct deposit set up and at least <strong>$25</strong> available is paid their full balance.</li>
+        <li>Each owner gets an email and an in-app notification when their payout is sent.</li>
+        <li>Each owner can be paid only once per month, so nobody is ever paid twice.</li>
+        <li>Owners who haven&apos;t finished setup are skipped; their balance waits for the next run.</li>
+        <li>If our Stripe balance is ever short, the remaining payouts wait until next month.</li>
+        <li>Admins get a summary email after each run: who was paid, how much, and who was skipped and why.</li>
+      </ul>
+
+      <div className={h}>Admin controls (this page)</div>
+      <ul className={ul}>
+        <li>Each owner&apos;s direct-deposit status.</li>
+        <li>A <strong>&ldquo;Run direct deposits now&rdquo;</strong> button to pay early, plus the date and totals of the last run.</li>
+        <li>Zelle or check stays available only as an exception an admin approves for a specific owner.</li>
+      </ul>
+
+      <div className={h}>Taxes: no payroll needed</div>
+      <ul className={ul}>
+        <li>Store owners are independent businesses, not employees: no payroll, no tax withholding. Each owner handles their own taxes.</li>
+        <li>The one remaining duty, sending the yearly 1099 tax information forms, is handled by Stripe: it collects W-9s, files the forms, and delivers copies to owners. We review and approve once a year.</li>
+        <li>Owners paid by Zelle or check fall outside this, which is why direct deposit is the standard. To be confirmed with our accountant.</li>
+      </ul>
+
+      <div className={h}>Costs</div>
+      <ul className={ul}>
+        <li>Stripe charges a small fee per connected owner and per payout. <strong>We cover it</strong>, so owners receive exactly what their Earnings page shows.</li>
+        <li>If we want to offset it later, we can adjust each store&apos;s revenue share, which admins already control, rather than deducting from payouts.</li>
+      </ul>
+
+      <div className={h}>Before it goes live</div>
+      <ul className={ul}>
+        <li>Turn on Stripe Connect in our Stripe account, with our platform profile and 1099 tax reporting.</li>
+        <li>Build and test everything in Stripe test mode first.</li>
+        <li>Update the store owner agreement (sections 6.4 and 6.6) to say payouts are by direct deposit through Stripe, and that each owner handles their own taxes.</li>
+      </ul>
+    </details>
+  );
+}
+
 export default function PayoutsClient({ balances, history }: { balances: OwnerBalance[]; history: PayoutRow[] }) {
   const [openOwner, setOpenOwner] = useState<string | null>(null);
 
@@ -143,6 +207,8 @@ export default function PayoutsClient({ balances, history }: { balances: OwnerBa
           View all earnings →
         </Link>
       </div>
+
+      <DirectDepositPlanNotes />
 
       <Card className="rounded-xl border-[#D8E4EE] overflow-hidden mb-6">
         <CardHeader className="px-6 py-4 border-b border-[#D8E4EE]">

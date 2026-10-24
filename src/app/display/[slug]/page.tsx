@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useParams } from "next/navigation";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { useDisplaySocket } from "@/lib/socket/client";
 import { QRCodeSVG } from "qrcode.react";
+import { BrandMark } from "@/components/layout/BrandMark";
 
 type Ad = {
   id: string;
@@ -20,6 +21,16 @@ type Ad = {
   showAddress: boolean;
   showWebsite: boolean;
 };
+
+type AdvertiseSlideSettings = {
+  enabled: boolean;
+  headline: string;
+  subline: string;
+  everyNAds: number;
+};
+
+// A carousel slide: a paid ad, or the built-in "Advertise here" slide
+type Slide = { kind: "ad"; ad: Ad } | { kind: "promo"; key: string };
 
 type LocationInfo = {
   slug: string;
@@ -75,6 +86,7 @@ export default function DisplayPage() {
 
   const [location, setLocation] = useState<LocationInfo | null>(null);
   const [ads, setAds] = useState<Ad[]>([]);
+  const [advertiseSlide, setAdvertiseSlide] = useState<AdvertiseSlideSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -120,6 +132,7 @@ export default function DisplayPage() {
       setError(""); // clear any prior error on success
       setLocation(json.data.location);
       setAds(json.data.ads);
+      setAdvertiseSlide(json.data.advertiseSlide ?? null);
     } catch {
       setError("Failed to load ads");
     } finally {
@@ -146,17 +159,35 @@ export default function DisplayPage() {
     return () => document.removeEventListener("visibilitychange", onVisible);
   }, [fetchAds]);
 
-  // Reinitialise Embla after ads change
+  // Paid ads with the "Advertise here" slide after every N of them;
+  // it is the only slide when a store has no ads, and appears once per loop when it has fewer than N
+  const slides = useMemo<Slide[]>(() => {
+    const adSlides: Slide[] = ads.map(ad => ({ kind: "ad", ad }));
+    if (!advertiseSlide?.enabled) return adSlides;
+    if (ads.length === 0) return [{ kind: "promo", key: "promo-0" }];
+    const n = Math.max(1, advertiseSlide.everyNAds);
+    const out: Slide[] = [];
+    adSlides.forEach((slide, i) => {
+      out.push(slide);
+      if ((i + 1) % n === 0) out.push({ kind: "promo", key: `promo-${i}` });
+    });
+    if (ads.length < n) out.push({ kind: "promo", key: "promo-end" });
+    return out;
+  }, [ads, advertiseSlide]);
+
+  // Reinitialise Embla after slides change
   useEffect(() => {
     emblaApi?.reInit();
-  }, [ads, emblaApi]);
+  }, [slides, emblaApi]);
 
   // Track view whenever carousel settles on a slide
   useEffect(() => {
-    if (!emblaApi || ads.length === 0) return;
+    if (!emblaApi || slides.length === 0) return;
     function trackCurrentSlide() {
       const idx = emblaApi!.selectedScrollSnap();
-      const ad = ads[idx];
+      const slide = slides[idx];
+      // The "Advertise here" slide is not an ad view
+      const ad = slide?.kind === "ad" ? slide.ad : null;
       if (ad) {
         fetch(`/api/ads/${ad.id}/track`, {
           method: "POST",
@@ -169,7 +200,7 @@ export default function DisplayPage() {
     trackCurrentSlide();
     emblaApi.on("select", trackCurrentSlide);
     return () => { emblaApi.off("select", trackCurrentSlide); };
-  }, [emblaApi, ads]);
+  }, [emblaApi, slides]);
 
   // Socket.io: join location room, refresh ads on push
   useDisplaySocket(slug, fetchAds);
@@ -199,7 +230,7 @@ export default function DisplayPage() {
   }
 
   // ── No ads ───────────────────────────────────────────────────────────────────
-  if (ads.length === 0) {
+  if (slides.length === 0) {
     return (
       <div style={fullscreen("#0A1A2E")} onMouseMove={handleMouseMove}>
         <FullscreenOverlay show={showControls} isFullscreen={isFullscreen} onToggle={toggleFullscreen} />
@@ -224,7 +255,15 @@ export default function DisplayPage() {
       {/* Carousel */}
       <div style={{ flex: 1, overflow: "hidden", position: "relative" }} ref={emblaRef}>
         <div style={{ display: "flex", height: "100%" }}>
-          {ads.map((ad, idx) => {
+          {slides.map((slide, idx) => {
+            if (slide.kind === "promo") {
+              return (
+                <div key={slide.key} style={{ flex: "0 0 100%", minWidth: 0, height: "100%", position: "relative", display: "flex", flexDirection: "column" }}>
+                  <AdvertiseHereSlide settings={advertiseSlide!} location={location} slug={slug} />
+                </div>
+              );
+            }
+            const ad = slide.ad;
             const hasSplit = !!(ad.contactPhone || ad.contactAddress || ad.contactWebsite);
             return (
               <div
@@ -232,7 +271,7 @@ export default function DisplayPage() {
                 style={{ flex: "0 0 100%", minWidth: 0, height: "100%", position: "relative", display: "flex", flexDirection: "column" }}
               >
                 {hasSplit ? (
-                  <SplitAdSlide ad={ad} idx={idx} total={ads.length} />
+                  <SplitAdSlide ad={ad} idx={idx} total={slides.length} />
                 ) : (
                   /* Full-screen image layout */
                   <div style={{ flex: 1, position: "relative", overflow: "hidden", background: "#0A1A2E", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -249,7 +288,7 @@ export default function DisplayPage() {
                     </div>
                     {/* Slide counter */}
                     <div style={{ position: "absolute", top: 20, right: 24, background: "rgba(10,26,46,0.6)", color: "rgba(255,255,255,0.7)", fontSize: 13, padding: "4px 12px", borderRadius: 20, backdropFilter: "blur(4px)" }}>
-                      {idx + 1} / {ads.length}
+                      {idx + 1} / {slides.length}
                     </div>
                   </div>
                 )}
@@ -260,7 +299,7 @@ export default function DisplayPage() {
       </div>
 
       {/* Dot indicators */}
-      {ads.length > 1 && (
+      {slides.length > 1 && (
         <div style={{
           position: "absolute",
           bottom: 56,
@@ -271,7 +310,7 @@ export default function DisplayPage() {
           gap: 8,
           zIndex: 10,
         }}>
-          {ads.map((_, i) => (
+          {slides.map((_, i) => (
             <button
               key={i}
               onClick={() => emblaApi?.scrollTo(i)}
@@ -295,6 +334,54 @@ export default function DisplayPage() {
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
+
+// Built-in slide selling this screen's ad space; QR opens Post a New Ad with this store pre-selected
+function AdvertiseHereSlide({ settings, location, slug }: { settings: AdvertiseSlideSettings; location: LocationInfo | null; slug: string }) {
+  const storeName = location?.name ?? "this store";
+  const subline = settings.subline.replace(/\{store\}/g, storeName);
+  const price = location?.pricePerWeekCents
+    ? `$${(location.pricePerWeekCents / 100).toFixed(location.pricePerWeekCents % 100 === 0 ? 0 : 2)}`
+    : null;
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const postUrl = `${origin}/ads/new?location=${encodeURIComponent(slug)}&src=screen`;
+
+  return (
+    <div style={{
+      flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "clamp(24px, 5vw, 80px)",
+      padding: "clamp(20px, 4vw, 64px)", background: "radial-gradient(ellipse at 30% 20%, #16426B 0%, #0A1A2E 70%)",
+      position: "relative", overflow: "hidden",
+    }}>
+      <div style={{ position: "absolute", top: "-20%", right: "-10%", width: "45vw", height: "45vw", borderRadius: "50%", background: "rgba(232,86,58,0.08)" }} />
+      <div style={{ maxWidth: "56%", position: "relative" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: "clamp(14px, 2vw, 28px)" }}>
+          <BrandMark size={44} className="ring-1 ring-white/15 rounded-[10px]" />
+          <span style={{ fontSize: "clamp(11px, 1vw, 15px)", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#E8563A" }}>Advertise here</span>
+        </div>
+        <div style={{ fontFamily: "Georgia, serif", fontWeight: 700, color: "#fff", fontSize: "clamp(30px, 5vw, 76px)", lineHeight: 1.08, marginBottom: "clamp(10px, 1.6vw, 22px)" }}>
+          {settings.headline}
+        </div>
+        {subline && (
+          <div style={{ fontSize: "clamp(15px, 1.9vw, 28px)", color: "rgba(255,255,255,0.75)", lineHeight: 1.4, marginBottom: "clamp(14px, 2.2vw, 30px)" }}>
+            {subline}
+          </div>
+        )}
+        <div style={{ display: "inline-flex", alignItems: "baseline", gap: 10, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 12, padding: "clamp(8px, 1vw, 14px) clamp(14px, 1.6vw, 22px)" }}>
+          {price && <span style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "clamp(20px, 2.6vw, 40px)", color: "#fff" }}>{price}</span>}
+          <span style={{ fontSize: "clamp(12px, 1.3vw, 19px)", color: "rgba(255,255,255,0.7)" }}>{price ? "/ week · " : ""}No contracts</span>
+        </div>
+      </div>
+      {origin && (
+        <div style={{ textAlign: "center", position: "relative", flexShrink: 0 }}>
+          <div style={{ background: "#fff", borderRadius: "clamp(10px, 1.2vw, 18px)", padding: "clamp(10px, 1.2vw, 18px)", width: "clamp(150px, 20vw, 320px)", lineHeight: 0, boxShadow: "0 10px 40px rgba(0,0,0,0.35)" }}>
+            <QRCodeSVG value={postUrl} size={512} level="M" marginSize={0} fgColor="#0A1A2E" bgColor="#FFFFFF" style={{ width: "100%", height: "auto" }} />
+          </div>
+          <div style={{ marginTop: "clamp(10px, 1.2vw, 18px)", fontSize: "clamp(14px, 1.6vw, 24px)", fontWeight: 700, color: "#fff" }}>Scan to get started</div>
+          <div style={{ fontSize: "clamp(11px, 1vw, 15px)", color: "#4A90C4", marginTop: 4 }}>communitybulletin.com</div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function fullscreen(bg: string): React.CSSProperties {
   return {

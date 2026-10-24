@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { ads, locations, cities, states, postalCodes } from "@/lib/db/schema";
 import { eq, and, or, lte, gte, asc } from "drizzle-orm";
+import { getAdvertiseSlideSettings } from "@/lib/settings";
 
 // GET /api/display/[slug] — public: approved, currently-running ads for a location
 export async function GET(
@@ -93,6 +94,7 @@ export async function GET(
           postalCode: location.postalCode,
         },
         ads: activeAds,
+        advertiseSlide: await getAdvertiseSlideSettings(),
       },
     });
   } catch (error: any) {

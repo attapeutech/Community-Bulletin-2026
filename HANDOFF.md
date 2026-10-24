@@ -59,6 +59,17 @@
 - **Welcome email:** optional `sendAccountCreatedEmail`. It never includes the password.
 - **Code:** `src/lib/temp-password.ts`, which hashes with better-auth's own hasher and writes the `credential` account.
 
+## "Advertise here" slide on display screens
+
+- **Built-in slide:** `AdvertiseHereSlide` in `display/[slug]/page.tsx`, a built-in slide (not an ad record). It appears after every N paid ads, once per loop when a store has fewer than N, and alone when a store has none. It's never counted as an ad view.
+- **Settings:** stored in `app_settings`, key `advertise_slide` (enabled, headline, sub-line with `{store}`, every N). They're edited on the Admin Panel's Overview tab, and saving refreshes all screens. The display feed returns them as `advertiseSlide`.
+- **QR code:** opens `/ads/new?location=<slug>&src=screen`. Post a New Ad pre-selects the store through `GET /api/locations?slug=`.
+- **Return trip after login or sign-up:**
+  - The middleware keeps the query string in `callbackUrl`.
+  - Login and register read it with `useNextParam()` and pass it to sign-in, Google sign-in, the verification email (`callbackURL`) and the links between the two pages.
+  - `safeNext()` allows same-site paths only.
+- **Later (option 2):** custom house ads (admin-made, no payment, chosen stores).
+
 ## To do
 
 - [ ] **About 1 week after 2026-10-23:** if Neon is stable, delete the old Postgres resource in Coolify (`postgresql-database-gt2gswqg8jmybj5l2ydntnfg`). Until then, don't reuse its password; it's in git history.

@@ -11,10 +11,11 @@ import { useSavedAds, setSaved } from "@/lib/use-saved-ads";
  * Save-to-wishlist heart. Signed-out visitors are sent to log in and brought back to this page.
  * variant "overlay": round button over an ad image · "pill": labelled button ("Save" / "Saved")
  */
-export function HeartButton({ adId, variant = "overlay", refreshOnChange = false }: {
+export function HeartButton({ adId, variant = "overlay", refreshOnChange = false, returnTo }: {
   adId: string;
-  variant?: "overlay" | "pill";
+  variant?: "overlay" | "pill" | "screen";  // screen: dark button in the display-screen controls
   refreshOnChange?: boolean;  // re-render the page after a change (e.g. the Saved list)
+  returnTo?: string;          // where to come back to after logging in (default: this page)
 }) {
   const router = useRouter();
   const { data: session } = useSession();
@@ -27,7 +28,7 @@ export function HeartButton({ adId, variant = "overlay", refreshOnChange = false
     e.preventDefault();
     e.stopPropagation();
     if (!signedIn) {
-      const here = window.location.pathname + window.location.search;
+      const here = returnTo ?? window.location.pathname + window.location.search;
       router.push(`/login?callbackUrl=${encodeURIComponent(here)}`);
       return;
     }
@@ -53,6 +54,27 @@ export function HeartButton({ adId, variant = "overlay", refreshOnChange = false
   }
 
   const label = saved ? "Remove from saved ads" : "Save this ad";
+
+  if (variant === "screen") {
+    return (
+      <button
+        type="button"
+        onClick={toggle}
+        aria-pressed={saved}
+        aria-label={label}
+        title={label}
+        style={{
+          display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8,
+          background: saved ? "rgba(232,86,58,0.25)" : "rgba(10,26,46,0.85)",
+          border: "1px solid rgba(232,86,58,0.5)", backdropFilter: "blur(8px)",
+          color: saved ? "#FFD2C8" : "#E8A09D", fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
+        }}
+      >
+        <Heart size={14} fill={saved ? "#E8563A" : "none"} color={saved ? "#E8563A" : "currentColor"} strokeWidth={2.2} />
+        {saved ? "Saved" : "Save"}
+      </button>
+    );
+  }
 
   if (variant === "pill") {
     return (

@@ -139,6 +139,19 @@ function usePortraitPhone() {
   return portrait;
 }
 
+/** Phone held sideways: wide but short — the text panel is compacted so nothing spills off */
+function useShortLandscape() {
+  const [short, setShort] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(orientation: landscape) and (max-height: 560px)");
+    setShort(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setShort(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return short;
+}
+
 export default function DisplayPage() {
   const params = useParams();
   const slug = params.slug as string;
@@ -154,6 +167,7 @@ export default function DisplayPage() {
   const [canFullscreen, setCanFullscreen] = useState(true);
   const [standalone, setStandalone] = useState(false);
   const portrait = usePortraitPhone();
+  const short = useShortLandscape();
   const [showControls, setShowControls] = useState(false);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -324,13 +338,13 @@ export default function DisplayPage() {
       <div className="cb-display-root" style={fullscreen("#0A1A2E")} onMouseMove={handleMouseMove} onTouchStart={handleMouseMove}>
         <FullscreenOverlay show={showControls} isFullscreen={isFullscreen} onToggle={toggleFullscreen} canFullscreen={canFullscreen} standalone={standalone} />
         {/* Header bar */}
-        <HeaderBar locationName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} portrait={portrait} />
+        <HeaderBar locationName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} portrait={portrait || short} />
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
           <div style={{ fontSize: 64 }}>📋</div>
           <p style={{ fontSize: 22, color: "#4A90C4", letterSpacing: "0.05em" }}>No active ads at this time</p>
           <p style={{ fontSize: 14, color: "#2A4A6C" }}>Ads will appear here once approved</p>
         </div>
-        <FooterBar priceCents={location?.pricePerWeekCents} portrait={portrait} />
+        <FooterBar priceCents={location?.pricePerWeekCents} portrait={portrait || short} />
       </div>
     );
   }
@@ -339,7 +353,7 @@ export default function DisplayPage() {
   return (
     <div className="cb-display-root" style={fullscreen("#0A1A2E")} onMouseMove={handleMouseMove} onTouchStart={handleMouseMove}>
       <FullscreenOverlay show={showControls} isFullscreen={isFullscreen} onToggle={toggleFullscreen} canFullscreen={canFullscreen} standalone={standalone} />
-      <HeaderBar locationName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} portrait={portrait} />
+      <HeaderBar locationName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} portrait={portrait || short} />
 
       {/* Carousel */}
       <div style={{ flex: 1, overflow: "hidden", position: "relative" }} ref={emblaRef}>
@@ -348,7 +362,7 @@ export default function DisplayPage() {
             if (slide.kind === "promo") {
               return (
                 <div key={slide.key} style={{ flex: "0 0 100%", minWidth: 0, height: "100%", position: "relative", display: "flex", flexDirection: "column" }}>
-                  <AdvertiseHereSlide settings={advertiseSlide!} location={location} slug={slug} portrait={portrait} motion={motionFor(idx)} />
+                  <AdvertiseHereSlide settings={advertiseSlide!} location={location} slug={slug} portrait={portrait} short={short} motion={motionFor(idx)} />
                 </div>
               );
             }
@@ -360,7 +374,7 @@ export default function DisplayPage() {
                 style={{ flex: "0 0 100%", minWidth: 0, height: "100%", position: "relative", display: "flex", flexDirection: "column" }}
               >
                 {hasSplit ? (
-                  <SplitAdSlide ad={ad} idx={idx} total={slides.length} portrait={portrait} zooming={idx === selectedIndex} motion={motionFor(idx)} />
+                  <SplitAdSlide ad={ad} idx={idx} total={slides.length} portrait={portrait} short={short} zooming={idx === selectedIndex} motion={motionFor(idx)} />
                 ) : (
                   /* Full-screen image layout */
                   <div style={{ flex: 1, position: "relative", overflow: "hidden", background: "#0A1A2E", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -430,7 +444,7 @@ export default function DisplayPage() {
         </div>
       )}
 
-      <FooterBar priceCents={location?.pricePerWeekCents} portrait={portrait} />
+      <FooterBar priceCents={location?.pricePerWeekCents} portrait={portrait || short} />
     </div>
   );
 }
@@ -438,7 +452,7 @@ export default function DisplayPage() {
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 // Built-in slide selling this screen's ad space; QR opens Post a New Ad with this store pre-selected
-function AdvertiseHereSlide({ settings, location, slug, portrait, motion }: { settings: AdvertiseSlideSettings; location: LocationInfo | null; slug: string; portrait: boolean; motion: SlideMotion }) {
+function AdvertiseHereSlide({ settings, location, slug, portrait, short, motion }: { settings: AdvertiseSlideSettings; location: LocationInfo | null; slug: string; portrait: boolean; short: boolean; motion: SlideMotion }) {
   const rise = motionClass(motion, "cb-rise");
   // Headline builds up word by word and pops, like an ad title; the rest follows it
   const headlineWords = settings.headline.trim().split(/\s+/);
@@ -456,16 +470,16 @@ function AdvertiseHereSlide({ settings, location, slug, portrait, motion }: { se
     <div style={{
       flex: 1, display: "flex", flexDirection: portrait ? "column" : "row", alignItems: "center", justifyContent: "center",
       gap: portrait ? 22 : "clamp(24px, 5vw, 80px)", textAlign: portrait ? "center" : undefined,
-      padding: portrait ? "24px 20px" : "clamp(20px, 4vw, 64px)", background: "radial-gradient(ellipse at 30% 20%, #16426B 0%, #0A1A2E 70%)",
+      padding: portrait ? "24px 20px" : short ? "12px 28px" : "clamp(20px, 4vw, 64px)", background: "radial-gradient(ellipse at 30% 20%, #16426B 0%, #0A1A2E 70%)",
       position: "relative", overflow: "hidden",
     }}>
       <div style={{ position: "absolute", top: "-20%", right: "-10%", width: "45vw", height: "45vw", borderRadius: "50%", background: "rgba(232,86,58,0.08)" }} />
       <div style={{ maxWidth: portrait ? "100%" : "56%", position: "relative" }}>
-        <div className={rise} style={{ animationDelay: `${REVEAL_START_MS + 0}ms`, display: "flex", alignItems: "center", justifyContent: portrait ? "center" : undefined, gap: 12, marginBottom: "clamp(14px, 2vw, 28px)" }}>
+        <div className={rise} style={{ animationDelay: `${REVEAL_START_MS + 0}ms`, display: "flex", alignItems: "center", justifyContent: portrait ? "center" : undefined, gap: 12, marginBottom: short ? 8 : "clamp(14px, 2vw, 28px)" }}>
           <BrandMark size={44} className="ring-1 ring-white/15 rounded-[10px]" />
           <span style={{ fontSize: "clamp(11px, 1vw, 15px)", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#E8563A" }}>Advertise here</span>
         </div>
-        <div className={motionClass(motion, "cb-pop")} style={{ animationDelay: `${headlineDoneMs}ms`, transformOrigin: portrait ? "center" : "left center", fontFamily: "Georgia, serif", fontWeight: 700, color: "#fff", fontSize: portrait ? "clamp(28px, 9vw, 40px)" : "clamp(30px, 5vw, 76px)", lineHeight: 1.08, marginBottom: "clamp(10px, 1.6vw, 22px)" }}>
+        <div className={motionClass(motion, "cb-pop")} style={{ animationDelay: `${headlineDoneMs}ms`, transformOrigin: portrait ? "center" : "left center", fontFamily: "Georgia, serif", fontWeight: 700, color: "#fff", fontSize: portrait ? "clamp(28px, 9vw, 40px)" : short ? "clamp(24px, 9vh, 44px)" : "clamp(30px, 5vw, 76px)", lineHeight: 1.08, marginBottom: short ? 6 : "clamp(10px, 1.6vw, 22px)" }}>
           {headlineWords.map((word, i) => (
             <span key={i}>
               <span className={motionClass(motion, "cb-word")} style={{ display: "inline-block", animationDelay: `${headlineStartMs + Math.min(i, 7) * TITLE_WORD_STEP_MS}ms` }}>
@@ -476,7 +490,7 @@ function AdvertiseHereSlide({ settings, location, slug, portrait, motion }: { se
           ))}
         </div>
         {subline && (
-          <div className={rise} style={{ animationDelay: `${headlineDoneMs}ms`, fontSize: "clamp(15px, 1.9vw, 28px)", color: "rgba(255,255,255,0.75)", lineHeight: 1.4, marginBottom: "clamp(14px, 2.2vw, 30px)" }}>
+          <div className={rise} style={{ animationDelay: `${headlineDoneMs}ms`, fontSize: "clamp(15px, 1.9vw, 28px)", color: "rgba(255,255,255,0.75)", lineHeight: 1.4, marginBottom: short ? 10 : "clamp(14px, 2.2vw, 30px)" }}>
             {subline}
           </div>
         )}
@@ -487,7 +501,7 @@ function AdvertiseHereSlide({ settings, location, slug, portrait, motion }: { se
       </div>
       {origin && (
         <div className={rise} style={{ animationDelay: `${headlineDoneMs + 260}ms`, textAlign: "center", position: "relative", flexShrink: 0 }}>
-          <div style={{ background: "#fff", borderRadius: "clamp(10px, 1.2vw, 18px)", padding: "clamp(10px, 1.2vw, 18px)", width: portrait ? 170 : "clamp(150px, 20vw, 320px)", lineHeight: 0, boxShadow: "0 10px 40px rgba(0,0,0,0.35)" }}>
+          <div style={{ background: "#fff", borderRadius: "clamp(10px, 1.2vw, 18px)", padding: "clamp(10px, 1.2vw, 18px)", width: portrait ? 170 : short ? "clamp(100px, 34vh, 170px)" : "clamp(150px, 20vw, 320px)", lineHeight: 0, boxShadow: "0 10px 40px rgba(0,0,0,0.35)" }}>
             <QRCodeSVG value={postUrl} size={512} level="M" marginSize={0} fgColor="#0A1A2E" bgColor="#FFFFFF" style={{ width: "100%", height: "auto" }} />
           </div>
           <div style={{ marginTop: "clamp(10px, 1.2vw, 18px)", fontSize: "clamp(14px, 1.6vw, 24px)", fontWeight: 700, color: "#fff" }}>Scan to get started</div>
@@ -563,12 +577,14 @@ function HeaderBar({ locationName, storeNumber, portrait }: { locationName: stri
   );
 }
 
-function SplitAdSlide({ ad, idx, total, portrait, zooming, motion }: { ad: Ad; idx: number; total: number; portrait: boolean; zooming: boolean; motion: SlideMotion }) {
+function SplitAdSlide({ ad, idx, total, portrait, short, zooming, motion }: { ad: Ad; idx: number; total: number; portrait: boolean; short: boolean; zooming: boolean; motion: SlideMotion }) {
   // Text rises in one item after another when this slide comes on screen
   const rise = motionClass(motion, "cb-rise");
   const len = ad.title.length;
   const titleSize = portrait
     ? (len <= 20 ? "33px" : len <= 40 ? "27px" : "22px")
+    : short
+    ? (len <= 20 ? "clamp(22px, 8vh, 36px)" : len <= 40 ? "clamp(19px, 6.5vh, 30px)" : "clamp(17px, 5.5vh, 26px)")
     : len <= 20
     ? "clamp(34px, 5vw, 74px)"
     : len <= 40
@@ -592,7 +608,7 @@ function SplitAdSlide({ ad, idx, total, portrait, zooming, motion }: { ad: Ad; i
         display: "flex",
         flexDirection: "column",
         justifyContent: portrait ? "flex-start" : "center",
-        padding: portrait ? "18px 20px 22px" : "clamp(20px, 4vw, 56px)",
+        padding: portrait ? "18px 20px 22px" : short ? "12px 22px" : "clamp(20px, 4vw, 56px)",
         position: "relative",
         flex: portrait ? "1 1 auto" : undefined,
         flexShrink: portrait ? 1 : 0,
@@ -634,8 +650,8 @@ function SplitAdSlide({ ad, idx, total, portrait, zooming, motion }: { ad: Ad; i
             height: portrait ? 4 : "clamp(4px, 0.45vw, 6px)",
             background: "#E8563A",
             borderRadius: 3,
-            marginTop: "clamp(10px, 1.4vw, 18px)",
-            marginBottom: "clamp(12px, 1.8vw, 24px)",
+            marginTop: short ? 6 : "clamp(10px, 1.4vw, 18px)",
+            marginBottom: short ? 8 : "clamp(12px, 1.8vw, 24px)",
           }}
         />
 
@@ -645,15 +661,15 @@ function SplitAdSlide({ ad, idx, total, portrait, zooming, motion }: { ad: Ad; i
             animationDelay: after(0),
             fontSize: "clamp(12px, 1.3vw, 18px)",
             color: "rgba(255,255,255,0.65)",
-            lineHeight: 1.6,
-            marginBottom: "clamp(14px, 2vw, 28px)",
+            lineHeight: short ? 1.4 : 1.6,
+            marginBottom: short ? 8 : "clamp(14px, 2vw, 28px)",
           }}>
             {ad.description}
           </div>
         )}
 
         {/* Accent divider + Contact Info label */}
-        {(ad.showPhone || ad.showAddress || ad.showWebsite) && (
+        {!short && (ad.showPhone || ad.showAddress || ad.showWebsite) && (
           <>
             <div className={rise} style={{ animationDelay: after(100), fontSize: "clamp(9px, 0.85vw, 12px)", fontWeight: 700, letterSpacing: "0.12em", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: "clamp(8px, 1vw, 14px)" }}>
               Contact Info
@@ -662,7 +678,7 @@ function SplitAdSlide({ ad, idx, total, portrait, zooming, motion }: { ad: Ad; i
         )}
 
         {/* Contact fields */}
-        <div className={rise} style={{ animationDelay: after(160), display: "flex", flexDirection: "column", gap: "clamp(8px, 1.2vw, 16px)" }}>
+        <div className={rise} style={{ animationDelay: after(160), display: "flex", flexDirection: "column", gap: short ? 4 : "clamp(8px, 1.2vw, 16px)" }}>
           {ad.showPhone && ad.contactPhone && (
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: "clamp(14px, 1.5vw, 22px)" }}>📞</span>
@@ -699,12 +715,12 @@ function SplitAdSlide({ ad, idx, total, portrait, zooming, motion }: { ad: Ad; i
 
         {/* QR code — scans go through /go/[id] so they count as website visits */}
         {ad.showWebsite && ad.contactWebsite && typeof window !== "undefined" && (
-          <div className={rise} style={{ animationDelay: after(320), display: "flex", alignItems: "center", gap: portrait ? 14 : "clamp(10px, 1.4vw, 20px)", marginTop: portrait ? 18 : "clamp(16px, 2.4vw, 34px)" }}>
+          <div className={rise} style={{ animationDelay: after(320), display: "flex", alignItems: "center", gap: portrait ? 14 : short ? 10 : "clamp(10px, 1.4vw, 20px)", marginTop: portrait ? 18 : short ? 8 : "clamp(16px, 2.4vw, 34px)" }}>
             <div style={{
               background: "#fff",
               borderRadius: "clamp(6px, 0.7vw, 10px)",
               padding: portrait ? 7 : "clamp(5px, 0.6vw, 9px)",
-              width: portrait ? 116 : "clamp(84px, 9.5vw, 168px)",
+              width: portrait ? 116 : short ? "clamp(56px, 17vh, 76px)" : "clamp(84px, 9.5vw, 168px)",
               flexShrink: 0,
               lineHeight: 0,
             }}>

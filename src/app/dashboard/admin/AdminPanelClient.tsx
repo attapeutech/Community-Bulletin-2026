@@ -807,7 +807,7 @@ export default function AdminPanelClient({
             <StatCard label="Denied" value={stats.deniedAds} accentClass="text-red-800" onClick={() => { setStatusFilter("denied"); setAdSearch(""); setActiveTab("ads"); }} />
             <StatCard label="Users" value={stats.totalUsers} onClick={() => setActiveTab("users")} />
             <StatCard label="Locations" value={stats.totalLocations} onClick={() => { window.location.href = "/dashboard/store-owner"; }} />
-            <StatCard label="Total Ad Views" value={stats.totalViews.toLocaleString()} sub="detail page opens" />
+            <StatCard label="Screen Views" value={stats.totalViews.toLocaleString()} sub="times ads were shown in stores" />
             <StatCard label="Website Clicks" value={stats.totalWebsiteClicks.toLocaleString()} sub="clicked through to site" accentClass="text-[#4A90C4]" />
           </div>
 
@@ -1160,7 +1160,7 @@ export default function AdminPanelClient({
                         )}
                         <div className="flex items-center gap-3 mb-1">
                           <span className="text-[11px] text-[#4A6B82]">
-                            👁 <span className="font-semibold text-[#1A3A5C]">{ad.viewCount.toLocaleString()}</span> views
+                            👁 <span className="font-semibold text-[#1A3A5C]">{ad.viewCount.toLocaleString()}</span> screen views
                           </span>
                           {ad.showWebsite && ad.contactWebsite && (
                             <span className="text-[11px] text-[#4A6B82]">

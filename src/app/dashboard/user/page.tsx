@@ -212,7 +212,7 @@ export default async function UserDashboard() {
                     {(ad.status === "approved" || ad.status === "expired" || ad.status === "cancelled") && (
                       <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
                         <span style={{ fontSize: 11, color: "#4A6B82" }}>
-                          👁 <strong style={{ color: "#1A3A5C" }}>{ad.viewCount.toLocaleString()}</strong> views
+                          👁 <strong style={{ color: "#1A3A5C" }}>{ad.viewCount.toLocaleString()}</strong> screen views
                         </span>
                         {ad.showWebsite && ad.contactWebsite && (
                           <span style={{ fontSize: 11, color: "#4A6B82" }}>

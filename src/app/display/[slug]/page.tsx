@@ -40,6 +40,8 @@ const REVEAL_START_MS = 280;
 const TITLE_WORD_STEP_MS = 180;
 
 // play: animate in now · hold: keep hidden · none: show as-is
+const RECONNECTING = "__reconnecting__";
+
 type SlideMotion = "play" | "hold" | "none";
 const motionClass = (motion: SlideMotion, play: string, hold = "cb-hold") =>
   motion === "play" ? play : motion === "hold" ? hold : undefined;
@@ -203,20 +205,27 @@ export default function DisplayPage() {
     [Autoplay({ delay: 8000, stopOnInteraction: false })]
   );
 
+  // If the server is briefly unreachable (a deploy, a Wi-Fi blip), keep showing the current ads
+  // and retry on the next poll; only a screen that has never loaded shows "Connecting…"
+  const loadedOnceRef = useRef(false);
   const fetchAds = useCallback(async () => {
     try {
       const res = await fetch(`/api/display/${slug}`, { cache: "no-store" });
-      const json = await res.json();
-      if (!json.success) {
-        setError(json.error || "Location not found");
+      if (res.status === 404) {
+        const j = await res.json().catch(() => null);
+        setError(j?.error || "Location not found");
         return;
       }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "Load failed");
+      loadedOnceRef.current = true;
       setError(""); // clear any prior error on success
       setLocation(json.data.location);
       setAds(json.data.ads);
       setAdvertiseSlide(json.data.advertiseSlide ?? null);
     } catch {
-      setError("Failed to load ads");
+      if (!loadedOnceRef.current) setError(RECONNECTING);
     } finally {
       setLoading(false);
     }
@@ -335,6 +344,18 @@ export default function DisplayPage() {
   }
 
   // ── Error ────────────────────────────────────────────────────────────────────
+  if (error === RECONNECTING) {
+    return (
+      <div className="cb-display-root" style={fullscreen("#0A1A2E")}>
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 14, textAlign: "center", padding: 24 }}>
+          <BrandMark size={64} className="ring-1 ring-white/15 rounded-[14px]" />
+          <p style={{ fontSize: 20, color: "#fff", fontWeight: 600, margin: 0 }}>Connecting to CommunityBulletin…</p>
+          <p style={{ fontSize: 14, color: "#9DC4E0", margin: 0 }}>This screen will start automatically in a moment.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="cb-display-root" style={fullscreen("#0A1A2E")}>

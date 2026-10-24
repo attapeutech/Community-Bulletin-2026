@@ -116,6 +116,19 @@ function runningStandalone() {
   return window.matchMedia?.("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
 }
 
+/** Phone (or small tablet) held upright — the TV layout is stacked vertically instead */
+function usePortraitPhone() {
+  const [portrait, setPortrait] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(orientation: portrait) and (max-width: 820px)");
+    setPortrait(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setPortrait(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return portrait;
+}
+
 export default function DisplayPage() {
   const params = useParams();
   const slug = params.slug as string;
@@ -130,6 +143,7 @@ export default function DisplayPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [canFullscreen, setCanFullscreen] = useState(true);
   const [standalone, setStandalone] = useState(false);
+  const portrait = usePortraitPhone();
   const [showControls, setShowControls] = useState(false);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -259,7 +273,7 @@ export default function DisplayPage() {
   // ── Loading ──────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div style={fullscreen("#0A1A2E")}>
+      <div className="cb-display-root" style={fullscreen("#0A1A2E")}>
         <div style={{ textAlign: "center", color: "#4A90C4" }}>
           <div style={{ fontSize: 32, marginBottom: 12, animation: "spin 1s linear infinite" }}>⏳</div>
           <p style={{ fontSize: 18, letterSpacing: "0.1em" }}>Loading display…</p>
@@ -271,7 +285,7 @@ export default function DisplayPage() {
   // ── Error ────────────────────────────────────────────────────────────────────
   if (error) {
     return (
-      <div style={fullscreen("#0A1A2E")}>
+      <div className="cb-display-root" style={fullscreen("#0A1A2E")}>
         <div style={{ textAlign: "center", color: "#E8563A" }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>📵</div>
           <p style={{ fontSize: 20 }}>{error}</p>
@@ -283,25 +297,25 @@ export default function DisplayPage() {
   // ── No ads ───────────────────────────────────────────────────────────────────
   if (slides.length === 0) {
     return (
-      <div style={fullscreen("#0A1A2E")} onMouseMove={handleMouseMove} onTouchStart={handleMouseMove}>
+      <div className="cb-display-root" style={fullscreen("#0A1A2E")} onMouseMove={handleMouseMove} onTouchStart={handleMouseMove}>
         <FullscreenOverlay show={showControls} isFullscreen={isFullscreen} onToggle={toggleFullscreen} canFullscreen={canFullscreen} standalone={standalone} />
         {/* Header bar */}
-        <HeaderBar locationName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} />
+        <HeaderBar locationName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} portrait={portrait} />
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
           <div style={{ fontSize: 64 }}>📋</div>
           <p style={{ fontSize: 22, color: "#4A90C4", letterSpacing: "0.05em" }}>No active ads at this time</p>
           <p style={{ fontSize: 14, color: "#2A4A6C" }}>Ads will appear here once approved</p>
         </div>
-        <FooterBar priceCents={location?.pricePerWeekCents} />
+        <FooterBar priceCents={location?.pricePerWeekCents} portrait={portrait} />
       </div>
     );
   }
 
   // ── Carousel ─────────────────────────────────────────────────────────────────
   return (
-    <div style={fullscreen("#0A1A2E")} onMouseMove={handleMouseMove} onTouchStart={handleMouseMove}>
+    <div className="cb-display-root" style={fullscreen("#0A1A2E")} onMouseMove={handleMouseMove} onTouchStart={handleMouseMove}>
       <FullscreenOverlay show={showControls} isFullscreen={isFullscreen} onToggle={toggleFullscreen} canFullscreen={canFullscreen} standalone={standalone} />
-      <HeaderBar locationName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} />
+      <HeaderBar locationName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} portrait={portrait} />
 
       {/* Carousel */}
       <div style={{ flex: 1, overflow: "hidden", position: "relative" }} ref={emblaRef}>
@@ -310,7 +324,7 @@ export default function DisplayPage() {
             if (slide.kind === "promo") {
               return (
                 <div key={slide.key} style={{ flex: "0 0 100%", minWidth: 0, height: "100%", position: "relative", display: "flex", flexDirection: "column" }}>
-                  <AdvertiseHereSlide settings={advertiseSlide!} location={location} slug={slug} />
+                  <AdvertiseHereSlide settings={advertiseSlide!} location={location} slug={slug} portrait={portrait} />
                 </div>
               );
             }
@@ -322,14 +336,26 @@ export default function DisplayPage() {
                 style={{ flex: "0 0 100%", minWidth: 0, height: "100%", position: "relative", display: "flex", flexDirection: "column" }}
               >
                 {hasSplit ? (
-                  <SplitAdSlide ad={ad} idx={idx} total={slides.length} />
+                  <SplitAdSlide ad={ad} idx={idx} total={slides.length} portrait={portrait} />
                 ) : (
                   /* Full-screen image layout */
                   <div style={{ flex: 1, position: "relative", overflow: "hidden", background: "#0A1A2E", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {/* Portrait phone: fill the space around a wide image with a soft, darkened copy of it */}
+                    {portrait && (
+                      <img
+                        src={ad.imageUrl}
+                        alt=""
+                        aria-hidden="true"
+                        style={{
+                          position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover",
+                          filter: "blur(28px) brightness(0.45) saturate(1.2)", transform: "scale(1.2)",
+                        }}
+                      />
+                    )}
                     <img
                       src={ad.imageUrl}
                       alt={ad.title}
-                      style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+                      style={{ position: "relative", width: "100%", height: "100%", objectFit: "contain", display: "block" }}
                     />
                     <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,26,46,0.7) 0%, transparent 18%)" }} />
                     <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "10px 32px", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
@@ -379,7 +405,7 @@ export default function DisplayPage() {
         </div>
       )}
 
-      <FooterBar priceCents={location?.pricePerWeekCents} />
+      <FooterBar priceCents={location?.pricePerWeekCents} portrait={portrait} />
     </div>
   );
 }
@@ -387,7 +413,7 @@ export default function DisplayPage() {
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 // Built-in slide selling this screen's ad space; QR opens Post a New Ad with this store pre-selected
-function AdvertiseHereSlide({ settings, location, slug }: { settings: AdvertiseSlideSettings; location: LocationInfo | null; slug: string }) {
+function AdvertiseHereSlide({ settings, location, slug, portrait }: { settings: AdvertiseSlideSettings; location: LocationInfo | null; slug: string; portrait: boolean }) {
   const storeName = location?.name ?? "this store";
   const subline = settings.subline.replace(/\{store\}/g, storeName);
   const price = location?.pricePerWeekCents
@@ -398,17 +424,18 @@ function AdvertiseHereSlide({ settings, location, slug }: { settings: AdvertiseS
 
   return (
     <div style={{
-      flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "clamp(24px, 5vw, 80px)",
-      padding: "clamp(20px, 4vw, 64px)", background: "radial-gradient(ellipse at 30% 20%, #16426B 0%, #0A1A2E 70%)",
+      flex: 1, display: "flex", flexDirection: portrait ? "column" : "row", alignItems: "center", justifyContent: "center",
+      gap: portrait ? 22 : "clamp(24px, 5vw, 80px)", textAlign: portrait ? "center" : undefined,
+      padding: portrait ? "24px 20px" : "clamp(20px, 4vw, 64px)", background: "radial-gradient(ellipse at 30% 20%, #16426B 0%, #0A1A2E 70%)",
       position: "relative", overflow: "hidden",
     }}>
       <div style={{ position: "absolute", top: "-20%", right: "-10%", width: "45vw", height: "45vw", borderRadius: "50%", background: "rgba(232,86,58,0.08)" }} />
-      <div style={{ maxWidth: "56%", position: "relative" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: "clamp(14px, 2vw, 28px)" }}>
+      <div style={{ maxWidth: portrait ? "100%" : "56%", position: "relative" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: portrait ? "center" : undefined, gap: 12, marginBottom: "clamp(14px, 2vw, 28px)" }}>
           <BrandMark size={44} className="ring-1 ring-white/15 rounded-[10px]" />
           <span style={{ fontSize: "clamp(11px, 1vw, 15px)", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#E8563A" }}>Advertise here</span>
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontWeight: 700, color: "#fff", fontSize: "clamp(30px, 5vw, 76px)", lineHeight: 1.08, marginBottom: "clamp(10px, 1.6vw, 22px)" }}>
+        <div style={{ fontFamily: "Georgia, serif", fontWeight: 700, color: "#fff", fontSize: portrait ? "clamp(28px, 9vw, 40px)" : "clamp(30px, 5vw, 76px)", lineHeight: 1.08, marginBottom: "clamp(10px, 1.6vw, 22px)" }}>
           {settings.headline}
         </div>
         {subline && (
@@ -423,7 +450,7 @@ function AdvertiseHereSlide({ settings, location, slug }: { settings: AdvertiseS
       </div>
       {origin && (
         <div style={{ textAlign: "center", position: "relative", flexShrink: 0 }}>
-          <div style={{ background: "#fff", borderRadius: "clamp(10px, 1.2vw, 18px)", padding: "clamp(10px, 1.2vw, 18px)", width: "clamp(150px, 20vw, 320px)", lineHeight: 0, boxShadow: "0 10px 40px rgba(0,0,0,0.35)" }}>
+          <div style={{ background: "#fff", borderRadius: "clamp(10px, 1.2vw, 18px)", padding: "clamp(10px, 1.2vw, 18px)", width: portrait ? 170 : "clamp(150px, 20vw, 320px)", lineHeight: 0, boxShadow: "0 10px 40px rgba(0,0,0,0.35)" }}>
             <QRCodeSVG value={postUrl} size={512} level="M" marginSize={0} fgColor="#0A1A2E" bgColor="#FFFFFF" style={{ width: "100%", height: "auto" }} />
           </div>
           <div style={{ marginTop: "clamp(10px, 1.2vw, 18px)", fontSize: "clamp(14px, 1.6vw, 24px)", fontWeight: 700, color: "#fff" }}>Scan to get started</div>
@@ -437,7 +464,6 @@ function AdvertiseHereSlide({ settings, location, slug }: { settings: AdvertiseS
 function fullscreen(bg: string): React.CSSProperties {
   return {
     width: "100vw",
-    height: "100vh",
     background: bg,
     display: "flex",
     flexDirection: "column",
@@ -446,24 +472,25 @@ function fullscreen(bg: string): React.CSSProperties {
   };
 }
 
-function HeaderBar({ locationName, storeNumber }: { locationName: string; storeNumber: string | null }) {
+function HeaderBar({ locationName, storeNumber, portrait }: { locationName: string; storeNumber: string | null; portrait: boolean }) {
   return (
     <div style={{
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
-      padding: "14px 32px",
+      gap: 10,
+      padding: portrait ? "10px 14px" : "14px 32px",
       background: "rgba(10,26,46,0.95)",
       borderBottom: "1px solid rgba(74,144,196,0.2)",
       zIndex: 20,
       flexShrink: 0,
     }}>
       {/* Logo */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <a href="/" style={{ textDecoration: "none" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: portrait ? 8 : 12, minWidth: 0 }}>
+        <a href="/" style={{ textDecoration: "none", flexShrink: 0 }}>
           <div style={{
             fontFamily: "Georgia,serif",
-            fontSize: 16,
+            fontSize: portrait ? 14 : 16,
             fontWeight: 700,
             color: "#fff",
             letterSpacing: "0.02em",
@@ -473,8 +500,8 @@ function HeaderBar({ locationName, storeNumber }: { locationName: string; storeN
           </div>
         </a>
         <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.15)" }} />
-        <div style={{ fontSize: 13, color: "#9DC4E0", display: "flex", alignItems: "center", gap: 6 }}>
-          {locationName}
+        <div style={{ fontSize: portrait ? 12 : 13, color: "#9DC4E0", display: "flex", alignItems: "center", gap: 6, minWidth: 0, whiteSpace: "nowrap" }}>
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{locationName}</span>
           {storeNumber && (
             <>
               <span style={{ color: "#E8563A", fontWeight: 700 }}>#</span>
@@ -485,39 +512,48 @@ function HeaderBar({ locationName, storeNumber }: { locationName: string; storeN
       </div>
 
       {/* Clock */}
-      <div style={{ textAlign: "right" }}>
-        <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", fontVariantNumeric: "tabular-nums" }}>
+      <div style={{ textAlign: "right", flexShrink: 0 }}>
+        <div style={{ fontSize: portrait ? 17 : 22, fontWeight: 700, color: "#fff", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
           <Clock />
         </div>
-        <div style={{ fontSize: 11, color: "#4A90C4" }}>
-          <DateDisplay />
-        </div>
+        {!portrait && (
+          <div style={{ fontSize: 11, color: "#4A90C4" }}>
+            <DateDisplay />
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function SplitAdSlide({ ad, idx, total }: { ad: Ad; idx: number; total: number }) {
+function SplitAdSlide({ ad, idx, total, portrait }: { ad: Ad; idx: number; total: number; portrait: boolean }) {
   const len = ad.title.length;
-  const titleSize = len <= 20
+  const titleSize = portrait
+    ? (len <= 20 ? "30px" : len <= 40 ? "24px" : "20px")
+    : len <= 20
     ? "clamp(30px, 4.5vw, 66px)"
     : len <= 40
     ? "clamp(22px, 3.2vw, 48px)"
     : "clamp(17px, 2.4vw, 36px)";
 
   return (
-    <div style={{ height: "100%", display: "flex", position: "relative" }}>
-      {/* Left panel */}
+    // Landscape: text left, image right. Portrait phone: image on top, text below.
+    <div style={{ height: "100%", display: "flex", flexDirection: portrait ? "column-reverse" : "row", position: "relative" }}>
+      {/* Text panel */}
       <div style={{
-        width: "42%",
+        width: portrait ? "100%" : "42%",
         background: "#0A1A2E",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
-        padding: "clamp(20px, 4vw, 56px)",
+        justifyContent: portrait ? "flex-start" : "center",
+        padding: portrait ? "18px 20px 22px" : "clamp(20px, 4vw, 56px)",
         position: "relative",
-        flexShrink: 0,
-        borderRight: "1px solid rgba(74,144,196,0.15)",
+        flex: portrait ? "1 1 auto" : undefined,
+        flexShrink: portrait ? 1 : 0,
+        minHeight: 0,
+        overflowY: portrait ? "auto" : undefined,
+        borderRight: portrait ? undefined : "1px solid rgba(74,144,196,0.15)",
+        borderTop: portrait ? "1px solid rgba(74,144,196,0.15)" : undefined,
       }}>
         {/* Title */}
         <div style={{
@@ -591,12 +627,12 @@ function SplitAdSlide({ ad, idx, total }: { ad: Ad; idx: number; total: number }
 
         {/* QR code — scans go through /go/[id] so they count as website visits */}
         {ad.showWebsite && ad.contactWebsite && typeof window !== "undefined" && (
-          <div style={{ display: "flex", alignItems: "center", gap: "clamp(10px, 1.4vw, 20px)", marginTop: "clamp(16px, 2.4vw, 34px)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: portrait ? 14 : "clamp(10px, 1.4vw, 20px)", marginTop: portrait ? 18 : "clamp(16px, 2.4vw, 34px)" }}>
             <div style={{
               background: "#fff",
               borderRadius: "clamp(6px, 0.7vw, 10px)",
-              padding: "clamp(5px, 0.6vw, 9px)",
-              width: "clamp(84px, 9.5vw, 168px)",
+              padding: portrait ? 7 : "clamp(5px, 0.6vw, 9px)",
+              width: portrait ? 116 : "clamp(84px, 9.5vw, 168px)",
               flexShrink: 0,
               lineHeight: 0,
             }}>
@@ -611,10 +647,10 @@ function SplitAdSlide({ ad, idx, total }: { ad: Ad; idx: number; total: number }
               />
             </div>
             <div>
-              <div style={{ fontSize: "clamp(12px, 1.3vw, 19px)", color: "#fff", fontWeight: 700, lineHeight: 1.25 }}>
+              <div style={{ fontSize: portrait ? 16 : "clamp(12px, 1.3vw, 19px)", color: "#fff", fontWeight: 700, lineHeight: 1.25 }}>
                 Scan to visit
               </div>
-              <div style={{ fontSize: "clamp(10px, 1vw, 14px)", color: "rgba(255,255,255,0.55)", marginTop: 4 }}>
+              <div style={{ fontSize: portrait ? 13 : "clamp(10px, 1vw, 14px)", color: "rgba(255,255,255,0.55)", marginTop: 4 }}>
                 Point your phone camera here
               </div>
             </div>
@@ -623,8 +659,8 @@ function SplitAdSlide({ ad, idx, total }: { ad: Ad; idx: number; total: number }
 
       </div>
 
-      {/* Right panel — image */}
-      <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
+      {/* Image panel */}
+      <div style={{ flex: portrait ? "0 0 44%" : 1, overflow: "hidden", position: "relative" }}>
         <img
           src={ad.imageUrl}
           alt={ad.title}
@@ -777,11 +813,12 @@ function FullscreenOverlay({ show, isFullscreen, onToggle, canFullscreen, standa
   );
 }
 
-function FooterBar({ priceCents }: { priceCents?: number }) {
+function FooterBar({ priceCents, portrait }: { priceCents?: number; portrait?: boolean }) {
   const price = priceCents ? `$${(priceCents / 100).toFixed(priceCents % 100 === 0 ? 0 : 2)}` : null;
   return (
     <div style={{
-      padding: "10px 32px",
+      padding: portrait ? "8px 14px" : "10px 32px",
+      gap: 10,
       background: "rgba(10,26,46,0.95)",
       borderTop: "1px solid rgba(74,144,196,0.15)",
       display: "flex",

@@ -11,6 +11,7 @@ import { sendAdApprovedEmail, sendAdDeniedEmail, sendAdCancelledEmail } from "@/
 import { processAdRefund } from "@/lib/refund";
 import { setEarningsAvailableAt } from "@/lib/earnings";
 import { notifyAdApproved, notifyAdDenied, notifyAdCancelled } from "@/lib/notifications";
+import { formatLocationLabel } from "@/lib/location-label";
 
 // GET /api/admin/ads — all ads with optional status filter
 export async function GET(req: NextRequest) {
@@ -82,6 +83,7 @@ export async function PATCH(req: NextRequest) {
         location: {
           id: locations.id,
           storeName: locations.storeName,
+          storeNumber: locations.storeNumber,
           slug: locations.slug,
           addressLine1: locations.addressLine1,
           cityName: cities.name,
@@ -133,8 +135,7 @@ export async function PATCH(req: NextRequest) {
     pushDashboardUpdate({ adId, status, locationSlug: row.location.slug }).catch(console.error);
 
     // Send emails (non-blocking)
-    const { storeName, addressLine1, cityName, stateCode, postalCode } = row.location;
-    const locationName = `${storeName} — ${addressLine1}, ${cityName}, ${stateCode} ${postalCode}`;
+    const locationName = formatLocationLabel(row.location);
     if (isApproving) {
       const emailResult = await sendAdApprovedEmail({
         to: row.user.email,

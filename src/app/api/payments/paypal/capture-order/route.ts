@@ -8,6 +8,7 @@ import { capturePayPalOrder } from "@/lib/paypal";
 import { sendAdSubmittedEmail, sendPaymentReceiptEmail, sendAdReviewNotificationEmail } from "@/lib/email/templates";
 import { recordEarning } from "@/lib/earnings";
 import { notifyPaymentRecorded } from "@/lib/notifications";
+import { formatLocationLabel } from "@/lib/location-label";
 
 const schema = z.object({
   adId: z.string().uuid(),
@@ -29,6 +30,7 @@ export async function POST(req: NextRequest) {
         user: { id: users.id, name: users.name, email: users.email },
         location: {
           storeName: locations.storeName,
+          storeNumber: locations.storeNumber,
           pricePerWeekCents: locations.pricePerWeekCents,
           addressLine1: locations.addressLine1,
           cityName: cities.name,
@@ -93,8 +95,7 @@ export async function POST(req: NextRequest) {
       .set({ paymentStatus: "paid", updatedAt: now })
       .where(eq(ads.id, adId));
 
-    const { storeName, addressLine1, cityName, stateCode, postalCode } = row.location;
-    const locationName = `${storeName} — ${addressLine1}, ${cityName}, ${stateCode} ${postalCode}`;
+    const locationName = formatLocationLabel(row.location);
     const amount = `$${(amountCents / 100).toFixed(2)}`;
 
     // Send emails (non-blocking)

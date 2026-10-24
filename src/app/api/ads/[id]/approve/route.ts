@@ -9,6 +9,7 @@ import { sendAdApprovedEmail } from "@/lib/email/templates";
 import { pushDisplayRefresh, pushDashboardUpdate } from "@/lib/socket/notify";
 import { setEarningsAvailableAt } from "@/lib/earnings";
 import { notifyAdApproved } from "@/lib/notifications";
+import { formatLocationLabel } from "@/lib/location-label";
 
 // PATCH /api/ads/[id]/approve
 export async function PATCH(
@@ -28,6 +29,7 @@ export async function PATCH(
         location: {
           id: locations.id,
           storeName: locations.storeName,
+          storeNumber: locations.storeNumber,
           slug: locations.slug,
           addressLine1: locations.addressLine1,
           cityName: cities.name,
@@ -78,8 +80,7 @@ export async function PATCH(
     await notifyAdApproved(id, row.user.id, row.ad.title, endedAt);
 
     // Send approval email (non-blocking)
-    const { storeName, addressLine1, cityName, stateCode, postalCode } = row.location;
-    const locationName = `${storeName} — ${addressLine1}, ${cityName}, ${stateCode} ${postalCode}`;
+    const locationName = formatLocationLabel(row.location);
     sendAdApprovedEmail({
       to: row.user.email,
       userName: row.user.name,

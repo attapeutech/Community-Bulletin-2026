@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { sendAdSubmittedEmail, sendPaymentReceiptEmail, sendAdReviewNotificationEmail } from "@/lib/email/templates";
 import { recordEarning } from "@/lib/earnings";
 import { notifyPaymentRecorded } from "@/lib/notifications";
+import { formatLocationLabel } from "@/lib/location-label";
 
 export const dynamic = "force-dynamic";
 
@@ -85,6 +86,7 @@ export async function POST(req: NextRequest) {
         user: { id: users.id, name: users.name, email: users.email },
         location: {
           storeName: locations.storeName,
+          storeNumber: locations.storeNumber,
           addressLine1: locations.addressLine1,
           cityName: cities.name,
           stateCode: states.code,
@@ -101,8 +103,7 @@ export async function POST(req: NextRequest) {
       .limit(1);
 
     if (row) {
-      const { storeName, addressLine1, cityName, stateCode, postalCode } = row.location;
-      const locationName = `${storeName} — ${addressLine1}, ${cityName}, ${stateCode} ${postalCode}`;
+      const locationName = formatLocationLabel(row.location);
       const amount = `$${((session.amount_total ?? 10000) / 100).toFixed(2)}`;
       sendPaymentReceiptEmail({
         to: row.user.email,

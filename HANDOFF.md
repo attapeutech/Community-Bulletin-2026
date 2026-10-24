@@ -77,8 +77,12 @@
   - Recorded by public `POST /api/ads/[id]/track` with `{event:"view", location:<slug>}`. It only counts approved, currently running ads booked at that store.
   - Repeats from the same IP within 5 seconds are ignored (in-memory, per server process).
   - Dashboard page opens no longer count.
-- **Website clicks** (`ads.website_click_count`): QR scans via `/go/[id]`, plus clicks on the public ad page's link (same track route, `website_click`). The owner's own dashboard link isn't tracked.
-- **Reset:** view counts were inflated before this fix and are reset to 0 at deploy.
+- **Website visits** (`ads.website_click_count`): QR scans via `/go/[id]` plus website-link clicks on the public ad page (track route, `website_click`), both through `recordWebsiteVisit()` in `src/lib/click-tracking.ts`.
+  - Counted once per IP per ad per minute (shared between both paths).
+  - Bots and link-preview fetchers are skipped by user-agent.
+  - Visitors are always redirected, whether or not the visit is counted.
+  - The owner's own dashboard link isn't tracked, and the old `/api/ads/[id]/visit-website` route was removed.
+- **Reset:** view counts and website visits were inflated before these fixes and were reset to 0 at deploy.
 
 ## To do
 

@@ -240,7 +240,7 @@ export default async function AdDetailPage({
             <div style={{ background: "#F7F9FC", borderRadius: 10, padding: "14px 18px" }}>
               <div style={{ fontSize: 28, fontWeight: 700, color: "#1A3A5C" }}>{ad.websiteClickCount.toLocaleString()}</div>
               <div style={{ fontSize: 12, color: "#4A6B82", marginTop: 2 }}>Website visits</div>
-              <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 1 }}>clicked through to site</div>
+              <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 1 }}>QR scans and link clicks</div>
             </div>
           )}
         </div>

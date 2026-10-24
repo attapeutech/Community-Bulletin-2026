@@ -547,7 +547,7 @@ function SplitAdSlide({ ad, idx, total }: { ad: Ad; idx: number; total: number }
           )}
         </div>
 
-        {/* QR code — scans go through /go/[id] so they count as website clicks */}
+        {/* QR code — scans go through /go/[id] so they count as website visits */}
         {ad.showWebsite && ad.contactWebsite && typeof window !== "undefined" && (
           <div style={{ display: "flex", alignItems: "center", gap: "clamp(10px, 1.4vw, 20px)", marginTop: "clamp(16px, 2.4vw, 34px)" }}>
             <div style={{

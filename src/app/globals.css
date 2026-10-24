@@ -76,3 +76,9 @@
   overflow: hidden;
   background: #000;
 }
+
+/* Display screens fill the visible area; dvh excludes mobile browser toolbars (vh fallback for older TVs) */
+.cb-display-root {
+  height: 100vh;
+  height: 100dvh;
+}

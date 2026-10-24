@@ -298,12 +298,19 @@ export default function DisplayPage() {
     return () => { emblaApi.off("select", trackShownSlide); };
   }, [emblaApi, trackShownSlide]);
 
-  // The first slide after the screen loads counts once
+  // First load: open on the ad named in ?ad= (from "View Live Display") if it's showing here;
+  // otherwise start at the first slide. Either way the first slide shown counts once.
   useEffect(() => {
     if (initialTrackedRef.current || !emblaApi || slides.length === 0) return;
     initialTrackedRef.current = true;
+    const focusAdId = new URLSearchParams(window.location.search).get("ad");
+    const target = focusAdId ? slides.findIndex(s => s.kind === "ad" && s.ad.id === focusAdId) : -1;
+    if (target > 0) {
+      emblaApi.scrollTo(target, true); // instant jump; its "select" event records the view
+      return;
+    }
     trackShownSlide();
-  }, [emblaApi, slides.length, trackShownSlide]);
+  }, [emblaApi, slides, trackShownSlide]);
 
   // Socket.io: join location room, refresh ads on push
   useDisplaySocket(slug, fetchAds);

@@ -149,7 +149,7 @@ export default async function PublicAdDetailPage({
 
         {/* View live display CTA */}
         <Link
-          href={`/display/${row.locationSlug}`}
+          href={`/display/${row.locationSlug}?ad=${row.id}`}
           target="_blank"
           style={{
             display: "inline-flex", alignItems: "center", gap: 8,

@@ -153,7 +153,7 @@ export default async function AdDetailPage({
         )}
         {ad.status === "approved" && (
           <Link
-            href={`/display/${location.slug}`}
+            href={`/display/${location.slug}?ad=${ad.id}`}
             target="_blank"
             style={{
               display: "inline-block",

@@ -161,7 +161,7 @@ export async function sendAdApprovedEmail({
   to: string; userName: string; adTitle: string; locationName: string;
   locationSlug: string; adId: string; startedAt: string; endedAt: string;
 }) {
-  const displayUrl = `${APP_URL}/display/${locationSlug}`;
+  const displayUrl = `${APP_URL}/display/${locationSlug}?ad=${adId}`;  // opens on this ad
   return sendEmail({
     to,
     subject: `Your ad is approved and live — "${adTitle}"`,

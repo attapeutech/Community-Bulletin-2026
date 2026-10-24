@@ -180,27 +180,36 @@ export default function DisplayPage() {
     emblaApi?.reInit();
   }, [slides, emblaApi]);
 
-  // Track view whenever carousel settles on a slide
+  // Count a screen view each time a slide is actually shown. Data refreshes (polling every
+  // 10 s, socket pushes) rebuild `slides` but must not re-count the slide already on screen.
+  const slidesRef = useRef<Slide[]>([]);
+  slidesRef.current = slides;
+  const initialTrackedRef = useRef(false);
+
+  const trackShownSlide = useCallback(() => {
+    if (!emblaApi) return;
+    const slide = slidesRef.current[emblaApi.selectedScrollSnap()];
+    // The "Advertise here" slide is not an ad view
+    if (slide?.kind !== "ad") return;
+    fetch(`/api/ads/${slide.ad.id}/track`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: "view", location: slug }),
+    }).catch(() => {});
+  }, [emblaApi, slug]);
+
   useEffect(() => {
-    if (!emblaApi || slides.length === 0) return;
-    function trackCurrentSlide() {
-      const idx = emblaApi!.selectedScrollSnap();
-      const slide = slides[idx];
-      // The "Advertise here" slide is not an ad view
-      const ad = slide?.kind === "ad" ? slide.ad : null;
-      if (ad) {
-        fetch(`/api/ads/${ad.id}/track`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ event: "view" }),
-        }).catch(() => {});
-      }
-    }
-    // Track initial slide
-    trackCurrentSlide();
-    emblaApi.on("select", trackCurrentSlide);
-    return () => { emblaApi.off("select", trackCurrentSlide); };
-  }, [emblaApi, slides]);
+    if (!emblaApi) return;
+    emblaApi.on("select", trackShownSlide);
+    return () => { emblaApi.off("select", trackShownSlide); };
+  }, [emblaApi, trackShownSlide]);
+
+  // The first slide after the screen loads counts once
+  useEffect(() => {
+    if (initialTrackedRef.current || !emblaApi || slides.length === 0) return;
+    initialTrackedRef.current = true;
+    trackShownSlide();
+  }, [emblaApi, slides.length, trackShownSlide]);
 
   // Socket.io: join location room, refresh ads on push
   useDisplaySocket(slug, fetchAds);

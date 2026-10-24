@@ -1,12 +1,11 @@
 import { requireAuth } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import { ads, locations, users, payments, cities, states, postalCodes } from "@/lib/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import AdImagePreview from "./AdImagePreview";
 import AdActions from "./AdActions";
-import { TrackedWebsiteLink } from "@/components/ui/TrackedWebsiteLink";
 
 const STATUS_COLORS: Record<string, { bg: string; color: string; label: string }> = {
   pending:   { bg: "#fef9c3", color: "#854d0e", label: "Pending Review" },
@@ -68,10 +67,7 @@ export default async function AdDetailPage({
     redirect("/dashboard");
   }
 
-  // Increment view count now that access is confirmed
-  await db.update(ads).set({ viewCount: sql`${ads.viewCount} + 1` }).where(eq(ads.id, id)).catch(() => {});
-
-  // Main query — will reflect the just-incremented viewCount
+  // Views count only times the ad was shown on in-store screens, not opens of this page
   const [row] = await db
     .select({
       ad: ads,
@@ -203,7 +199,7 @@ export default async function AdDetailPage({
         <Row label="Title" value={ad.title} />
         {ad.description && <Row label="Description" value={ad.description} />}
         {ad.showWebsite && ad.contactWebsite && (
-          <Row label="Website" value={<TrackedWebsiteLink adId={ad.id} url={ad.contactWebsite} />} />
+          <Row label="Website" value={<a href={/^https?:\/\//i.test(ad.contactWebsite) ? ad.contactWebsite : `https://${ad.contactWebsite}`} target="_blank" rel="noopener noreferrer" style={{ color: "#4A90C4" }}>{ad.contactWebsite}</a>} />
         )}
         <Row label="Status" value={<Badge {...adStatus} />} />
         <Row label="Payment" value={<Badge {...payStatus} />} />
@@ -237,8 +233,8 @@ export default async function AdDetailPage({
         <div style={{ display: "grid", gridTemplateColumns: ad.showWebsite && ad.contactWebsite ? "1fr 1fr" : "1fr", gap: 16 }}>
           <div style={{ background: "#F7F9FC", borderRadius: 10, padding: "14px 18px" }}>
             <div style={{ fontSize: 28, fontWeight: 700, color: "#1A3A5C" }}>{ad.viewCount.toLocaleString()}</div>
-            <div style={{ fontSize: 12, color: "#4A6B82", marginTop: 2 }}>Total views</div>
-            <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 1 }}>detail page opens</div>
+            <div style={{ fontSize: 12, color: "#4A6B82", marginTop: 2 }}>Screen views</div>
+            <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 1 }}>times shown on in-store screens</div>
           </div>
           {ad.showWebsite && ad.contactWebsite && (
             <div style={{ background: "#F7F9FC", borderRadius: 10, padding: "14px 18px" }}>

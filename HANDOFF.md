@@ -70,6 +70,16 @@
   - `safeNext()` allows same-site paths only.
 - **Later (option 2):** custom house ads (admin-made, no payment, chosen stores).
 
+## Ad analytics definitions
+
+- **Screen views** (`ads.view_count`): one each time a display screen actually shows the ad.
+  - Sent by `display/[slug]` on each carousel `select`, plus once at load. Data refreshes never re-count.
+  - Recorded by public `POST /api/ads/[id]/track` with `{event:"view", location:<slug>}`. It only counts approved, currently running ads booked at that store.
+  - Repeats from the same IP within 5 seconds are ignored (in-memory, per server process).
+  - Dashboard page opens no longer count.
+- **Website clicks** (`ads.website_click_count`): QR scans via `/go/[id]`, plus clicks on the public ad page's link (same track route, `website_click`). The owner's own dashboard link isn't tracked.
+- **Reset:** view counts were inflated before this fix and are reset to 0 at deploy.
+
 ## To do
 
 - [ ] **About 1 week after 2026-10-23:** if Neon is stable, delete the old Postgres resource in Coolify (`postgresql-database-gt2gswqg8jmybj5l2ydntnfg`). Until then, don't reuse its password; it's in git history.

@@ -28,6 +28,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/cron") ||
     pathname.startsWith("/api/display") ||
     pathname.startsWith("/api/ads/live") ||
+    /^\/api\/ads\/[^/]+\/track$/.test(pathname) ||   // view/click tracking from logged-out display screens
     pathname.startsWith("/api/geo") ||
     pathname.startsWith("/api/support") ||
     pathname.startsWith("/api/auth/verify-recaptcha") ||

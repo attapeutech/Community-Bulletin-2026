@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Heart } from "lucide-react";
+import { toast } from "sonner";
 import { useSession } from "@/lib/auth/client";
 import { useSavedAds, setSaved } from "@/lib/use-saved-ads";
 
@@ -32,9 +33,23 @@ export function HeartButton({ adId, variant = "overlay", refreshOnChange = false
     }
     if (busy) return;
     setBusy(true);
-    const ok = await setSaved(adId, !saved);
+    const nowSaved = !saved;
+    const ok = await setSaved(adId, nowSaved);
     setBusy(false);
-    if (ok && refreshOnChange) router.refresh();
+    if (!ok) {
+      toast.error(nowSaved ? "Couldn't save this ad. Please try again." : "Couldn't remove this ad. Please try again.");
+      return;
+    }
+    if (nowSaved) {
+      const onSavedPage = window.location.pathname.startsWith("/dashboard/saved");
+      toast.success("Saved to your list", {
+        description: "Find it anytime under Dashboard → Saved.",
+        action: onSavedPage ? undefined : { label: "View", onClick: () => router.push("/dashboard/saved") },
+      });
+    } else {
+      toast("Removed from saved ads");
+    }
+    if (refreshOnChange) router.refresh();
   }
 
   const label = saved ? "Remove from saved ads" : "Save this ad";

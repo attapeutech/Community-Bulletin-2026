@@ -237,6 +237,19 @@ export default function NewAdPage() {
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Step 1: Location search ─────────────────────────────────────────────────
+  // Arriving from a display screen's "Advertise here" QR code: ?location=<store slug> pre-selects the store
+  useEffect(() => {
+    const slug = new URLSearchParams(window.location.search).get("location");
+    if (!slug) return;
+    fetch(`/api/locations?slug=${encodeURIComponent(slug)}`)
+      .then(r => r.json())
+      .then(json => {
+        const loc = json.success ? json.data?.[0] : null;
+        if (loc) setSelectedLocation(loc);
+      })
+      .catch(() => {});
+  }, []);
+
   const handleLocSearch = (val: string) => {
     setLocSearch(val);
     if (searchTimeout.current) clearTimeout(searchTimeout.current);

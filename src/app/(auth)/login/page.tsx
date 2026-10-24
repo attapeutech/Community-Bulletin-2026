@@ -16,6 +16,8 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { useNextParam } from "@/lib/use-next-param";
+import { withNext } from "@/lib/safe-redirect";
 
 const schema = z.object({
   email: z.string().email("Enter a valid email address"),
@@ -51,10 +53,12 @@ export default function LoginPage() {
   const router = useRouter();
   const { data: session } = useSession();
   const [formError, setFormError] = useState<string | null>(null);
+  // Where to return after sign-in (e.g. Post a New Ad from a screen's QR code)
+  const next = useNextParam();
 
   useEffect(() => {
-    if (session) router.replace("/dashboard");
-  }, [session, router]);
+    if (session) router.replace(next);
+  }, [session, router, next]);
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
@@ -81,7 +85,7 @@ export default function LoginPage() {
         password: data.password,
         fetchOptions: {
           onSuccess: () => {
-            window.location.href = "/dashboard";
+            window.location.href = next;
           },
           onError: (ctx) => {
             const msg = ctx.error?.message ?? "";
@@ -102,7 +106,7 @@ export default function LoginPage() {
     if (!unverifiedEmail) return;
     setResending(true);
     try {
-      await sendVerificationEmail({ email: unverifiedEmail, callbackURL: "/dashboard" });
+      await sendVerificationEmail({ email: unverifiedEmail, callbackURL: next });
       toast.success("Verification email sent! Please check your inbox.");
     } catch {
       setFormError("Failed to resend verification email. Please try again.");
@@ -119,6 +123,12 @@ export default function LoginPage() {
       <p className="text-[13px] text-muted-foreground mt-0 mb-5">
         Sign in to your CommunityBulletin account
       </p>
+
+      {next.startsWith("/ads/new") && (
+        <div className="bg-[#F0F7FF] border border-[#C9DFF2] rounded-lg px-3.5 py-2.5 mb-5 text-[13px] text-[#1A3A5C]">
+          New here? Create a free account below — we&apos;ll bring you straight back to post your ad.
+        </div>
+      )}
 
       {unverifiedEmail && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg px-3.5 py-3 mb-5">
@@ -212,7 +222,7 @@ export default function LoginPage() {
       <Button
         type="button"
         variant="outline"
-        onClick={() => signIn.social({ provider: "google", callbackURL: "/dashboard" })}
+        onClick={() => signIn.social({ provider: "google", callbackURL: next })}
         className="w-full h-10 text-[13px] font-medium"
       >
         <GoogleIcon />
@@ -221,7 +231,7 @@ export default function LoginPage() {
 
       <p className="text-center mt-5 text-[13px] text-muted-foreground">
         Don&apos;t have an account?{" "}
-        <Link href="/register" className="text-destructive font-semibold no-underline">
+        <Link href={withNext("/register", next)} className="text-destructive font-semibold no-underline">
           Create one free
         </Link>
       </p>

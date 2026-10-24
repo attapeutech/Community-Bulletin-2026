@@ -17,6 +17,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { AddUserPanel, TempPasswordNotice, type IssuedCredential } from "./UserCredentials";
+import { AdvertiseSlideCard } from "./AdvertiseSlideCard";
 
 const STATUS_BADGE_CLASS: Record<string, string> = {
   pending:   "bg-yellow-100 text-yellow-800 border-yellow-200",
@@ -876,6 +877,8 @@ export default function AdminPanelClient({
               </CardContent>
             </Card>
           )}
+
+          <AdvertiseSlideCard />
         </TabsContent>
 
         {/* USERS TAB */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -17,6 +17,8 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { useNextParam } from "@/lib/use-next-param";
+import { withNext } from "@/lib/safe-redirect";
 
 const schema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -66,7 +68,12 @@ const GoogleIcon = () => (
 function RegisterForm() {
   const router = useRouter();
   const { data: session } = useSession();
-  if (session) { router.replace("/dashboard"); return null; }
+  // Where to return after sign-up and email confirmation (e.g. Post a New Ad from a screen's QR code)
+  const next = useNextParam();
+
+  useEffect(() => {
+    if (session) router.replace(next);
+  }, [session, router, next]);
 
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
@@ -112,7 +119,7 @@ function RegisterForm() {
         name: data.name,
         email: data.email,
         password: data.password,
-        callbackURL: "/dashboard",
+        callbackURL: next,
       });
       if (result.error) {
         setFormError(result.error.message ?? "Registration failed. Please try again.");
@@ -123,7 +130,7 @@ function RegisterForm() {
     } catch {
       setFormError("Something went wrong. Please try again.");
     }
-  }, [executeRecaptcha]);
+  }, [executeRecaptcha, next]);
 
   return (
     <AuthLayout>
@@ -133,6 +140,12 @@ function RegisterForm() {
       <p className="text-[13px] text-muted-foreground mt-0 mb-6">
         Start advertising in your community today.
       </p>
+
+      {next.startsWith("/ads/new") && (
+        <div className="bg-[#F0F7FF] border border-[#C9DFF2] rounded-lg px-3.5 py-2.5 mb-5 text-[13px] text-[#1A3A5C]">
+          After you confirm your email, we&apos;ll take you straight to posting your ad.
+        </div>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col">
         <div className="mb-4">
@@ -195,7 +208,7 @@ function RegisterForm() {
       <Button
         type="button"
         variant="outline"
-        onClick={() => signIn.social?.({ provider: "google", callbackURL: "/dashboard" })}
+        onClick={() => signIn.social?.({ provider: "google", callbackURL: next })}
         className="w-full h-10 text-[13px] font-medium"
       >
         <GoogleIcon />
@@ -204,7 +217,7 @@ function RegisterForm() {
 
       <p className="text-center mt-5 text-[13px] text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/login" className="text-destructive font-semibold no-underline">
+        <Link href={withNext("/login", next)} className="text-destructive font-semibold no-underline">
           Sign in
         </Link>
       </p>

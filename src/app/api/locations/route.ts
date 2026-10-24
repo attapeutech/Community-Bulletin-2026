@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
   const stateId = searchParams.get("stateId");
   const cityId = searchParams.get("cityId");
   const search = searchParams.get("search");
+  const slug = searchParams.get("slug");  // exact store, e.g. from a display-screen QR code
 
   try {
     const conditions: ReturnType<typeof eq>[] = [eq(locations.isActive, true)];
@@ -36,6 +37,7 @@ export async function GET(req: NextRequest) {
     if (countryId) conditions.push(eq(locations.countryId, countryId));
     if (stateId) conditions.push(eq(locations.stateId, stateId));
     if (cityId) conditions.push(eq(locations.cityId, cityId));
+    if (slug) conditions.push(eq(locations.slug, slug));
     if (search) {
       const term = `%${search}%`;
       conditions.push(

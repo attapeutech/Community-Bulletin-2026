@@ -7,6 +7,7 @@ import Autoplay from "embla-carousel-autoplay";
 import { useDisplaySocket } from "@/lib/socket/client";
 import { QRCodeSVG } from "qrcode.react";
 import { BrandMark } from "@/components/layout/BrandMark";
+import { HeartButton } from "@/components/ui/HeartButton";
 
 type Ad = {
   id: string;
@@ -269,6 +270,10 @@ export default function DisplayPage() {
 
   const motionFor = (idx: number): SlideMotion => (idx === selectedIndex ? "play" : "none");
 
+  // Ad on screen right now (null on the "Advertise here" slide) — for the Save button in the controls
+  const currentSlide = slides[selectedIndex];
+  const currentAdId = currentSlide?.kind === "ad" ? currentSlide.ad.id : null;
+
   // Reinitialise Embla after slides change
   useEffect(() => {
     emblaApi?.reInit();
@@ -359,7 +364,7 @@ export default function DisplayPage() {
   // ── Carousel ─────────────────────────────────────────────────────────────────
   return (
     <div className="cb-display-root" style={fullscreen("#0A1A2E")} onMouseMove={handleMouseMove} onTouchStart={handleMouseMove}>
-      <FullscreenOverlay show={showControls} isFullscreen={isFullscreen} onToggle={toggleFullscreen} canFullscreen={canFullscreen} standalone={standalone} />
+      <FullscreenOverlay show={showControls} isFullscreen={isFullscreen} onToggle={toggleFullscreen} canFullscreen={canFullscreen} standalone={standalone} currentAdId={currentAdId} slug={slug} />
       <HeaderBar locationName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} portrait={portrait || short} />
 
       {/* Carousel */}
@@ -784,8 +789,9 @@ function SplitAdSlide({ ad, idx, total, portrait, short, zooming, motion }: { ad
   );
 }
 
-function FullscreenOverlay({ show, isFullscreen, onToggle, canFullscreen, standalone }: {
+function FullscreenOverlay({ show, isFullscreen, onToggle, canFullscreen, standalone, currentAdId, slug }: {
   show: boolean; isFullscreen: boolean; onToggle: () => void; canFullscreen: boolean; standalone: boolean;
+  currentAdId?: string | null; slug?: string;
 }) {
   const [showTip, setShowTip] = useState(false);
   return (
@@ -805,6 +811,12 @@ function FullscreenOverlay({ show, isFullscreen, onToggle, canFullscreen, standa
         transition: "opacity 0.3s ease",
         pointerEvents: show ? "auto" : "none",
       }}>
+        {/* Save the ad on screen — only in these tap/hover controls, so store TVs never show it.
+            After logging in, the viewer returns to this screen opened on the same ad. */}
+        {currentAdId && slug && (
+          <HeartButton adId={currentAdId} variant="screen" returnTo={`/display/${slug}?ad=${currentAdId}`} />
+        )}
+
         {/* Home */}
         <a
           href="/"

@@ -8,8 +8,17 @@ import { toast } from "sonner";
  * Share an ad's public page. Uses the device's share sheet where available (phones, Safari, Edge);
  * otherwise a small menu: copy link, Facebook, X, WhatsApp, email.
  */
-export function ShareButton({ adId, title, text }: { adId: string; title: string; text?: string }) {
+export function ShareButton({ adId, title, text, variant = "pill", onOpenChange }: {
+  adId: string;
+  title: string;
+  text?: string;
+  variant?: "pill" | "screen";              // screen: dark button in the display-screen controls
+  onOpenChange?: (open: boolean) => void;   // lets the display keep its controls visible while the menu is open
+}) {
   const [open, setOpen] = useState(false);
+  // The ad being shared is fixed when the menu opens (a display screen may move to the next slide meanwhile)
+  const [menuAd, setMenuAd] = useState({ adId, title });
+  useEffect(() => { onOpenChange?.(open); }, [open, onOpenChange]);
   const wrapRef = useRef<HTMLDivElement>(null);
 
   // Close the menu on outside click / Escape
@@ -27,18 +36,20 @@ export function ShareButton({ adId, title, text }: { adId: string; title: string
     };
   }, [open]);
 
-  const url = () => `${window.location.origin}/ad/${adId}`;
-  const message = text ? `${title} — ${text}` : title;
+  const shared = open ? menuAd : { adId, title };
+  const url = () => `${window.location.origin}/ad/${shared.adId}`;
+  const message = text ? `${shared.title} — ${text}` : shared.title;
 
   async function share() {
     if (navigator.share) {
       try {
-        await navigator.share({ title, text: message, url: url() });
+        await navigator.share({ title: shared.title, text: message, url: url() });
         return;
       } catch (err) {
         if ((err as DOMException)?.name === "AbortError") return; // user closed the share sheet
       }
     }
+    setMenuAd({ adId, title });
     setOpen(o => !o);
   }
 
@@ -69,13 +80,17 @@ export function ShareButton({ adId, title, text }: { adId: string; title: string
         onClick={share}
         aria-haspopup="menu"
         aria-expanded={open}
-        style={{
+        style={variant === "screen" ? {
+          display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8,
+          background: "rgba(10,26,46,0.85)", border: "1px solid rgba(74,144,196,0.4)", backdropFilter: "blur(8px)",
+          color: "#9DC4E0", fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
+        } : {
           display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 20,
           border: "1px solid #D8E4EE", background: "#fff", color: "#1A3A5C",
           fontSize: 13, fontWeight: 600, cursor: "pointer",
         }}
       >
-        <Share2 size={15} strokeWidth={2} />
+        <Share2 size={variant === "screen" ? 14 : 15} strokeWidth={2} />
         Share
       </button>
 
@@ -100,7 +115,7 @@ export function ShareButton({ adId, title, text }: { adId: string; title: string
           <button role="menuitem" style={item} onClick={() => openWindow(`https://wa.me/?text=${encodeURIComponent(`${message} ${url()}`)}`)}>
             <span style={{ width: 15, textAlign: "center", fontWeight: 800, color: "#25D366" }}>✆</span> WhatsApp
           </button>
-          <button role="menuitem" style={item} onClick={() => { window.location.href = `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(`${message}\n\n${url()}`)}`; setOpen(false); }}>
+          <button role="menuitem" style={item} onClick={() => { window.location.href = `mailto:?subject=${encodeURIComponent(shared.title)}&body=${encodeURIComponent(`${message}\n\n${url()}`)}`; setOpen(false); }}>
             <Mail size={15} /> Email
           </button>
         </div>

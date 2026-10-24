@@ -8,6 +8,7 @@ import { useDisplaySocket } from "@/lib/socket/client";
 import { QRCodeSVG } from "qrcode.react";
 import { BrandMark } from "@/components/layout/BrandMark";
 import { HeartButton } from "@/components/ui/HeartButton";
+import { ShareButton } from "@/components/ui/ShareButton";
 
 type Ad = {
   id: string;
@@ -273,6 +274,7 @@ export default function DisplayPage() {
   // Ad on screen right now (null on the "Advertise here" slide) — for the Save button in the controls
   const currentSlide = slides[selectedIndex];
   const currentAdId = currentSlide?.kind === "ad" ? currentSlide.ad.id : null;
+  const currentAdTitle = currentSlide?.kind === "ad" ? currentSlide.ad.title : "";
 
   // Reinitialise Embla after slides change
   useEffect(() => {
@@ -364,7 +366,7 @@ export default function DisplayPage() {
   // ── Carousel ─────────────────────────────────────────────────────────────────
   return (
     <div className="cb-display-root" style={fullscreen("#0A1A2E")} onMouseMove={handleMouseMove} onTouchStart={handleMouseMove}>
-      <FullscreenOverlay show={showControls} isFullscreen={isFullscreen} onToggle={toggleFullscreen} canFullscreen={canFullscreen} standalone={standalone} currentAdId={currentAdId} slug={slug} />
+      <FullscreenOverlay show={showControls} isFullscreen={isFullscreen} onToggle={toggleFullscreen} canFullscreen={canFullscreen} standalone={standalone} currentAdId={currentAdId} currentAdTitle={currentAdTitle} storeName={location?.name} slug={slug} />
       <HeaderBar locationName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} portrait={portrait || short} />
 
       {/* Carousel */}
@@ -789,11 +791,14 @@ function SplitAdSlide({ ad, idx, total, portrait, short, zooming, motion }: { ad
   );
 }
 
-function FullscreenOverlay({ show, isFullscreen, onToggle, canFullscreen, standalone, currentAdId, slug }: {
+function FullscreenOverlay({ show: showFromActivity, isFullscreen, onToggle, canFullscreen, standalone, currentAdId, currentAdTitle, storeName, slug }: {
   show: boolean; isFullscreen: boolean; onToggle: () => void; canFullscreen: boolean; standalone: boolean;
-  currentAdId?: string | null; slug?: string;
+  currentAdId?: string | null; currentAdTitle?: string; storeName?: string; slug?: string;
 }) {
   const [showTip, setShowTip] = useState(false);
+  // Keep the controls up while the share menu is open, even after the usual 4 s fade
+  const [shareOpen, setShareOpen] = useState(false);
+  const show = showFromActivity || shareOpen;
   return (
     <div style={{
       position: "absolute",
@@ -815,6 +820,17 @@ function FullscreenOverlay({ show, isFullscreen, onToggle, canFullscreen, standa
             After logging in, the viewer returns to this screen opened on the same ad. */}
         {currentAdId && slug && (
           <HeartButton adId={currentAdId} variant="screen" returnTo={`/display/${slug}?ad=${currentAdId}`} />
+        )}
+
+        {/* Share the ad on screen (its public ad page) */}
+        {currentAdId && (
+          <ShareButton
+            adId={currentAdId}
+            title={currentAdTitle ?? ""}
+            text={storeName ? `At ${storeName}` : undefined}
+            variant="screen"
+            onOpenChange={setShareOpen}
+          />
         )}
 
         {/* Home */}

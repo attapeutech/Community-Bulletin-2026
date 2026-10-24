@@ -51,6 +51,14 @@
 - **UI:** `src/components/layout/NotificationBell.tsx`, in the dashboard sidebar, the dashboard mobile header, and the public navbar when logged in.
 - **Limit:** pushes reach only users connected to this one server process. Running several app instances later would need the Socket.io Redis adapter.
 
+## Admin-created accounts and temporary passwords
+
+- **What admins do:** on the Users tab, **Add user** creates an account with any role. **Reset password** issues a new temporary password. Both show the password once (format `Word-Word-Word-NN`). It expires after 7 days (`TEMP_PASSWORD_DAYS`).
+- **Account state:** admin-created accounts are email-confirmed, with `users.must_change_password = true`. `requireAuth()` redirects flagged users to `/set-password`. Only `POST /api/user/set-password` opts out (`allowTempPassword`).
+- **Expiry:** an expired temporary password is refused at sign-in in the auth `session.create.before` hook, with a 403 message the login page shows.
+- **Welcome email:** optional `sendAccountCreatedEmail`. It never includes the password.
+- **Code:** `src/lib/temp-password.ts`, which hashes with better-auth's own hasher and writes the `credential` account.
+
 ## To do
 
 - [ ] **About 1 week after 2026-10-23:** if Neon is stable, delete the old Postgres resource in Coolify (`postgresql-database-gt2gswqg8jmybj5l2ydntnfg`). Until then, don't reuse its password; it's in git history.
@@ -61,4 +69,5 @@
 - [ ] `npm audit` reports 39 vulnerabilities (3 critical). Review with `npm audit` before running `npm audit fix`.
 - [ ] Remote has a stray `master` branch alongside `main`. Delete it if it isn't intentional.
 - [ ] Local `git stash@{0}` holds only lockfile `"peer": true` noise and can be dropped (`git stash drop`).
+- [ ] **Sales team role, later:** add a `sales` value to the `user_role` enum (migration), decide what sales staff can see and do, and add it to `ROLE_OPTIONS` in `UserCredentials.tsx` and the role menus.
 - [ ] **Home page stats, later:** the bar under the hero shows launch highlights (`HIGHLIGHTS` in `LandingPage.tsx`) instead of the old made-up figures. When the numbers are worth showing, add live stats (stores, cities, ads run) that switch on automatically above a chosen threshold, for example 25+ stores.

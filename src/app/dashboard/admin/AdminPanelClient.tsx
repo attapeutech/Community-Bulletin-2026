@@ -16,6 +16,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import { AddUserPanel, TempPasswordNotice, type IssuedCredential } from "./UserCredentials";
 
 const STATUS_BADGE_CLASS: Record<string, string> = {
   pending:   "bg-yellow-100 text-yellow-800 border-yellow-200",
@@ -480,6 +481,9 @@ export default function AdminPanelClient({
   const [userToast, setUserToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [banning, setBanning] = useState<string | null>(null);
   const [verifying, setVerifying] = useState<string | null>(null);
+  const [issuedCredential, setIssuedCredential] = useState<IssuedCredential | null>(null);
+  const [confirmReset, setConfirmReset] = useState<string | null>(null);
+  const [resetting, setResetting] = useState<string | null>(null);
   const [banReasonInput, setBanReasonInput] = useState<Record<string, string>>({});
   const [confirmBan, setConfirmBan] = useState<string | null>(null);
   const [confirmDeleteUser, setConfirmDeleteUser] = useState<string | null>(null);
@@ -531,6 +535,22 @@ export default function AdminPanelClient({
       showUserToast(e.message || "Failed to update role", false);
     } finally {
       setRoleChanging(null);
+    }
+  }
+
+  async function resetUserPassword(u: User) {
+    setResetting(u.id);
+    try {
+      const res = await fetch(`/api/admin/users/${u.id}/reset-password`, { method: "POST" });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      setIssuedCredential({ name: u.name, email: u.email, tempPassword: json.data.tempPassword, expiresInDays: json.data.expiresInDays, isNewAccount: false });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (e: any) {
+      showUserToast(e.message || "Failed to reset password", false);
+    } finally {
+      setResetting(null);
+      setConfirmReset(null);
     }
   }
 
@@ -878,7 +898,20 @@ export default function AdminPanelClient({
                 </button>
               )}
             </div>
+            <div className="ml-auto" />
+            <AddUserPanel
+              onCreated={(user, credential) => {
+                setUsers(prev => [user as User, ...prev]);
+                setIssuedCredential(credential);
+              }}
+            />
           </div>
+
+          {issuedCredential && (
+            <div className="mb-4">
+              <TempPasswordNotice credential={issuedCredential} onDismiss={() => setIssuedCredential(null)} />
+            </div>
+          )}
 
           <Card className="rounded-xl border-[#D8E4EE] overflow-hidden">
             <CardHeader className="px-6 py-4 border-b border-[#D8E4EE]">
@@ -983,6 +1016,24 @@ export default function AdminPanelClient({
                           <Button variant="outline" size="sm" onClick={() => setConfirmBan(u.id)}
                             className="h-7 px-3 text-[11px] font-semibold border-red-200 text-red-600 bg-red-50 hover:bg-red-100">
                             Ban
+                          </Button>
+                        ))}
+                        {!isSelf && (confirmReset === u.id ? (
+                          <div className="flex items-center gap-1">
+                            <span className="text-[11px] text-[#1A3A5C] font-semibold">Issue a new temporary password?</span>
+                            <Button variant="outline" size="sm" disabled={resetting === u.id} onClick={() => resetUserPassword(u)}
+                              className="h-7 px-2.5 text-[11px] font-semibold border-[#1A3A5C] text-[#1A3A5C] bg-[#F0F5FA] hover:bg-[#E3ECF5]">
+                              {resetting === u.id ? "…" : "Confirm"}
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => setConfirmReset(null)}
+                              className="h-7 px-2.5 text-[11px] font-semibold border-[#D8E4EE] text-[#4A6B82] bg-white">
+                              Cancel
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button variant="outline" size="sm" onClick={() => setConfirmReset(u.id)}
+                            className="h-7 px-3 text-[11px] font-semibold border-[#D8E4EE] text-[#1A3A5C] bg-white hover:bg-[#F0F5FA]">
+                            Reset password
                           </Button>
                         ))}
                         {!isSelf && (confirmDeleteUser === u.id ? (

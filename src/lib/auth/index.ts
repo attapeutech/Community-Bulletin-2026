@@ -1,5 +1,5 @@
 import { betterAuth } from "better-auth";
-import { createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
+import { createAuthMiddleware, getSessionFromCtx, APIError } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { randomUUID } from "node:crypto";
 import { db } from "@/lib/db/client";
@@ -87,12 +87,21 @@ export const auth = betterAuth({
       create: {
         before: async (session) => {
           const [user] = await db
-            .select({ banned: users.banned, banReason: users.banReason })
+            .select({
+              banned: users.banned,
+              banReason: users.banReason,
+              mustChangePassword: users.mustChangePassword,
+              tempPasswordExpiresAt: users.tempPasswordExpiresAt,
+            })
             .from(users)
             .where(eq(users.id, session.userId as string))
             .limit(1);
           if (user?.banned) {
             throw new Error(user.banReason || "Your account has been suspended. Please contact support.");
+          }
+          // Unused temporary passwords (admin-created accounts / resets) expire
+          if (user?.mustChangePassword && user.tempPasswordExpiresAt && user.tempPasswordExpiresAt < new Date()) {
+            throw new APIError("FORBIDDEN", { message: "Your temporary password has expired. Please contact CommunityBulletin for a new one." });
           }
           return { data: session };
         },

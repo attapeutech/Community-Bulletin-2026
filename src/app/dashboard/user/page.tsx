@@ -243,7 +243,7 @@ export default async function UserDashboard() {
                     )}
                     {ad.status === "approved" && (
                       <Link
-                        href={`/display/${ad.location.slug}`}
+                        href={`/display/${ad.location.slug}?ad=${ad.id}`}
                         target="_blank"
                         style={{
                           fontSize: 12,

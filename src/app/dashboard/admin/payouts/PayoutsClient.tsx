@@ -16,6 +16,7 @@ export type OwnerBalance = {
   payoutMethod: string | null;
   payoutZelle: string | null;
   payoutMailingAddress: string | null;
+  agreementStatus: string | null;   // null = not tracked; payouts held while not_sent / sent
   availableCents: number;
   availableCount: number;
   pendingCents: number;
@@ -222,6 +223,7 @@ export default function PayoutsClient({ balances, history }: { balances: OwnerBa
             <div className="divide-y divide-[#D8E4EE]">
               {balances.map(o => {
                 const belowMin = o.availableCents < MIN_PAYOUT_CENTS;
+                const agreementPending = o.agreementStatus === "not_sent" || o.agreementStatus === "sent";
                 return (
                   <div key={o.id} className="px-5 py-4">
                     <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -244,7 +246,13 @@ export default function PayoutsClient({ balances, history }: { balances: OwnerBa
                         )}
                       </div>
                     </div>
-                    {o.availableCents > 0 && openOwner !== o.id && (
+                    {agreementPending && (
+                      <div className="mt-2 text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-2.5 py-1.5 inline-block">
+                        Agreement {o.agreementStatus === "sent" ? "sent, awaiting signature" : "not sent yet"} — payouts are held until it&apos;s signed.{" "}
+                        <Link href="/dashboard/admin/applications" className="underline">Update on Applications</Link>
+                      </div>
+                    )}
+                    {o.availableCents > 0 && openOwner !== o.id && !agreementPending && (
                       <div className="mt-2 flex items-center gap-2 flex-wrap">
                         <Button
                           variant="outline"

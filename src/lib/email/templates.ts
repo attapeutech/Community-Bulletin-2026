@@ -286,3 +286,62 @@ export async function sendAccountCreatedEmail({
     `),
   });
 }
+
+// ─── Store Partner Applications ──────────────────────────────────────────────
+
+export async function sendPartnerApplicationAdminEmail({
+  businessName, contactName, email, phone, address, storeType, locationsCount, hasScreen,
+}: {
+  businessName: string; contactName: string; email: string; phone: string; address: string;
+  storeType: string; locationsCount: string; hasScreen: string;
+}) {
+  return sendEmail({
+    to: ADMIN_EMAIL,
+    subject: `New store partner application: ${businessName}`,
+    html: emailWrapper(`
+      <h2 style="margin:0 0 8px;color:${BRAND_COLOR};font-size:20px">New store partner application</h2>
+      <p style="color:#4A6B82;font-size:14px;margin:0 0 20px">A store owner wants to host a Community Bulletin screen.</p>
+      ${detailTable([
+        { label: "Business", value: `<strong>${businessName}</strong>` },
+        { label: "Contact", value: `${contactName} · ${phone} · ${email}` },
+        { label: "Address", value: address },
+        { label: "Store type", value: storeType },
+        { label: "Locations", value: locationsCount },
+        { label: "Has a TV", value: hasScreen },
+      ])}
+      ${primaryButton(`${APP_URL}/dashboard/admin/applications`, "Review application")}
+    `),
+  });
+}
+
+export async function sendPartnerApprovedEmail({ to, name, businessName }: { to: string; name: string; businessName: string }) {
+  return sendEmail({
+    to,
+    subject: `Welcome aboard — ${businessName} is approved`,
+    html: emailWrapper(`
+      <h2 style="margin:0 0 8px;color:#16a34a;font-size:20px">You're approved, ${name}!</h2>
+      <p style="color:#4A6B82;font-size:14px;margin:0 0 16px">Your store partner application for <strong>${businessName}</strong> has been approved.</p>
+      <p style="color:#4A6B82;font-size:14px;margin:0 0 16px">Here's what happens next:</p>
+      <ol style="color:#4A6B82;font-size:14px;margin:0 0 20px;padding-left:20px;line-height:1.7">
+        <li>We'll contact you to schedule setup of your screen.</li>
+        <li>We'll send your store partner agreement to review and sign.</li>
+        <li>Add your payout details on your Earnings page so we can pay you each month.</li>
+      </ol>
+      ${primaryButton(`${APP_URL}/dashboard/store-owner`, "Go to your dashboard")}
+    `),
+  });
+}
+
+export async function sendPartnerDeclinedEmail({ to, name, businessName, reason }: { to: string; name: string; businessName: string; reason: string | null }) {
+  return sendEmail({
+    to,
+    subject: `Your store partner application for ${businessName}`,
+    html: emailWrapper(`
+      <h2 style="margin:0 0 8px;color:${BRAND_COLOR};font-size:20px">Thanks for your interest, ${name}</h2>
+      <p style="color:#4A6B82;font-size:14px;margin:0 0 16px">We're not able to move forward with <strong>${businessName}</strong> as a store partner at this time.</p>
+      ${reason ? `<div style="background:#F7F9FC;border-left:4px solid ${ACCENT_COLOR};padding:12px 16px;margin:0 0 16px;border-radius:0 8px 8px 0"><p style="margin:0;font-size:13px;color:#1A3A5C">${reason}</p></div>` : ""}
+      <p style="color:#4A6B82;font-size:13px">Your account stays active, and you're welcome to advertise on Community Bulletin or reach out again in the future.</p>
+      ${primaryButton(`${APP_URL}/contact`, "Contact us")}
+    `),
+  });
+}

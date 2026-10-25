@@ -74,6 +74,11 @@ export default function NewLocationPage() {
   });
 
   const [submitError, setSubmitError] = useState("");
+  // Admin setting up the first store for an approved partner application (?application=<id>)
+  const [application, setApplication] = useState<null | {
+    id: string; businessName: string; addressLine1: string; city: string; state: string; postalCode: string;
+    hasScreen: string; ownerName: string; ownerEmail: string;
+  }>(null);
   const [logoUrl, setLogoUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [countries, setCountries] = useState<(Option & { code: string })[]>([]);
@@ -132,10 +137,29 @@ export default function NewLocationPage() {
     }
   }
 
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("application");
+    if (!id || !isAdmin) return;
+    fetch(`/api/admin/applications/${id}`)
+      .then(r => r.json())
+      .then(json => {
+        if (!json.success) return;
+        const a = json.data;
+        setApplication(a);
+        setValue("storeName", a.businessName, { shouldValidate: true });
+        setValue("addressLine1", a.addressLine1, { shouldValidate: true });
+        if (a.hasScreen === "yes") {
+          setValue("equipmentProvided", true);
+          setValue("shareRateBps", 5000);
+        }
+      })
+      .catch(() => {});
+  }, [isAdmin, setValue]);
+
   async function onSubmit(data: FormData) {
     setSubmitError("");
     try {
-      const payload = { ...data, logoUrl: logoUrl || undefined };
+      const payload = { ...data, logoUrl: logoUrl || undefined, applicationId: application?.id };
       const res = await fetch("/api/locations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -143,7 +167,7 @@ export default function NewLocationPage() {
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
-      router.push("/dashboard/store-owner");
+      router.push(application ? "/dashboard/admin/applications" : "/dashboard/store-owner");
     } catch (e: any) {
       setSubmitError(e.message || "Failed to create location");
     }
@@ -163,6 +187,16 @@ export default function NewLocationPage() {
         <Alert variant="destructive" className="mb-5">
           <AlertDescription>{submitError}</AlertDescription>
         </Alert>
+      )}
+
+      {application && (
+        <div className="mb-6 rounded-xl border border-[#C9DFF2] bg-[#F0F7FF] px-4 py-3 text-[13px] text-[#1A3A5C]">
+          <div className="font-semibold mb-1">Setting up the store for {application.ownerName} ({application.ownerEmail})</div>
+          <div className="text-[#4A6B82]">
+            From their application: {application.addressLine1}, {application.city}, {application.state} {application.postalCode}.
+            Pick the matching country, state, city and ZIP below — if the city or ZIP isn&apos;t listed, add it in Geography first.
+          </div>
+        </div>
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-6">

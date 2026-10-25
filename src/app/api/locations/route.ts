@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db/client";
-import { locations, countries, states, cities, postalCodes, users } from "@/lib/db/schema";
+import { locations, countries, states, cities, postalCodes, users, partnerApplications } from "@/lib/db/schema";
 import { eq, and, ilike, or } from "drizzle-orm";
 import { getSession } from "@/lib/auth/session";
 import { MIN_PRICE_PER_WEEK_CENTS, MAX_PRICE_PER_WEEK_CENTS, MAX_SHARE_RATE_BPS, AD_PRICE_CENTS, DEFAULT_SHARE_RATE_BPS } from "@/types";
@@ -108,6 +108,8 @@ const createSchema = z.object({
   category: z.string().max(100).optional(),
   logoUrl: z.string().url().optional(),
   businessHours: z.string().max(500).optional(),
+  // Admin-only: set up the first store for an approved partner application (owned by the applicant)
+  applicationId: z.string().uuid().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -124,12 +126,26 @@ export async function POST(req: NextRequest) {
     const userId = (session.user as any).id as string;
     const isAdmin = role === "admin";
 
+    let ownerId = userId;
+    if (data.applicationId) {
+      if (!isAdmin) return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+      const [app] = await db
+        .select({ userId: partnerApplications.userId, status: partnerApplications.status })
+        .from(partnerApplications)
+        .where(eq(partnerApplications.id, data.applicationId))
+        .limit(1);
+      if (!app || app.status !== "approved") {
+        return NextResponse.json({ success: false, error: "Approve the application first" }, { status: 409 });
+      }
+      ownerId = app.userId;
+    }
+
     // Generate a unique slug from store name + short id
     const baseSlug = slugify(data.storeName, { lower: true, strict: true });
     const slug = `${baseSlug}-${nanoid(6)}`;
 
     const [location] = await db.insert(locations).values({
-      storeOwnerId: userId,
+      storeOwnerId: ownerId,
       storeName: data.storeName,
       storeNumber: data.storeNumber ?? null,
       addressLine1: data.addressLine1,
@@ -151,6 +167,12 @@ export async function POST(req: NextRequest) {
       logoUrl: data.logoUrl ?? null,
       businessHours: data.businessHours ?? null,
     }).returning();
+
+    if (data.applicationId) {
+      await db.update(partnerApplications)
+        .set({ locationId: location.id, updatedAt: new Date() })
+        .where(eq(partnerApplications.id, data.applicationId));
+    }
 
     return NextResponse.json({ success: true, data: location }, { status: 201 });
   } catch (error: any) {

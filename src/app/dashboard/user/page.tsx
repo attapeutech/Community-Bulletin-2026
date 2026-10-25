@@ -6,6 +6,7 @@ import { eq, and, desc, gte, sql } from "drizzle-orm";
 import Link from "next/link";
 import { RenewAdButton } from "./RenewAdButton";
 import { UserDashboardRefresher } from "./UserDashboardRefresher";
+import { latestApplicationFor } from "@/lib/partner-applications";
 
 const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }> = {
   pending:   { bg: "#fef9c3", color: "#854d0e", label: "Pending Review" },
@@ -87,9 +88,25 @@ export default async function UserDashboard() {
   const pendingAds = userAds.filter((a) => a.status === "pending").length;
   const paidAds = userAds.filter((a) => a.paymentStatus === "paid").length;
 
+  // Store partner application status (shown until approved — then they become a store owner)
+  const application = user.role === "user" ? await latestApplicationFor(userId) : null;
+
   return (
     <div>
       <UserDashboardRefresher adIds={userAds.map(a => a.id)} />
+      {application?.status === "pending" && (
+        <div style={{ background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 12, padding: "12px 16px", marginBottom: 18, fontSize: 14, color: "#92400E" }}>
+          <strong>Your store partner application for {application.businessName} is under review.</strong>{" "}
+          We&apos;ll be in touch soon — you&apos;ll get an email and a notification when it&apos;s reviewed.
+        </div>
+      )}
+      {application?.status === "declined" && (
+        <div style={{ background: "#F7F9FC", border: "1px solid #D8E4EE", borderRadius: 12, padding: "12px 16px", marginBottom: 18, fontSize: 14, color: "#1A3A5C" }}>
+          Your store partner application for <strong>{application.businessName}</strong> wasn&apos;t approved
+          {application.declineReason ? `: ${application.declineReason}` : "."}{" "}
+          <Link href="/partners/apply" style={{ color: "#4A90C4" }}>Apply again</Link>
+        </div>
+      )}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
         <h1 style={{ fontFamily: "Georgia,serif", fontSize: 26, fontWeight: 700, color: "#1A3A5C" }}>
           Welcome back, {user.name.split(" ")[0]}!

@@ -39,6 +39,10 @@ export const users = pgTable("users", {
   // Admin-created accounts / admin password resets: user must choose their own password on first login
   mustChangePassword:    boolean("must_change_password").default(false).notNull(),
   tempPasswordExpiresAt: timestamp("temp_password_expires_at"),
+  // Store partner agreement, tracked by admins. null = not tracked (store owners set up before applications).
+  // Payouts are held while it is "not_sent" or "sent".
+  partnerAgreementStatus:   text("partner_agreement_status"),   // not_sent | sent | signed
+  partnerAgreementSignedAt: timestamp("partner_agreement_signed_at"),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({

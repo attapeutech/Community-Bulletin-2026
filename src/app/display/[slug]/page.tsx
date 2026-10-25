@@ -208,6 +208,7 @@ export default function DisplayPage() {
   // If the server is briefly unreachable (a deploy, a Wi-Fi blip), keep showing the current ads
   // and retry on the next poll; only a screen that has never loaded shows "Connecting…"
   const loadedOnceRef = useRef(false);
+  const versionRef = useRef<string | null>(null);
   const fetchAds = useCallback(async () => {
     try {
       const res = await fetch(`/api/display/${slug}`, { cache: "no-store" });
@@ -219,6 +220,14 @@ export default function DisplayPage() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Load failed");
+      // A new deploy is live: reload once so this screen runs the latest version
+      if (json.data.version) {
+        if (versionRef.current && versionRef.current !== json.data.version) {
+          window.location.reload();
+          return;
+        }
+        versionRef.current = json.data.version;
+      }
       loadedOnceRef.current = true;
       setError(""); // clear any prior error on success
       setLocation(json.data.location);
@@ -285,9 +294,12 @@ export default function DisplayPage() {
   const currentAdId = currentSlide?.kind === "ad" ? currentSlide.ad.id : null;
   const currentAdTitle = currentSlide?.kind === "ad" ? currentSlide.ad.title : "";
 
-  // Reinitialise Embla after slides change
+  // Reinitialise Embla after slides change. If the slide it was on no longer exists
+  // (e.g. ads were removed while the screen was open), go back to the first slide.
   useEffect(() => {
-    emblaApi?.reInit();
+    if (!emblaApi) return;
+    emblaApi.reInit();
+    if (emblaApi.selectedScrollSnap() >= slides.length) emblaApi.scrollTo(0, true);
   }, [slides, emblaApi]);
 
   // Count a screen view each time a slide is actually shown. Data refreshes (polling every

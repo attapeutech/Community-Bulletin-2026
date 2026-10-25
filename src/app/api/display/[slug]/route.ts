@@ -4,6 +4,9 @@ import { ads, locations, cities, states, postalCodes } from "@/lib/db/schema";
 import { eq, and, or, lte, gte, asc } from "drizzle-orm";
 import { getAdvertiseSlideSettings } from "@/lib/settings";
 
+// One value per running server process (shared across route bundles)
+const SERVER_VERSION: string = ((globalThis as any).__cbServerVersion ??= String(Date.now()));
+
 // GET /api/display/[slug] — public: approved, currently-running ads for a location
 export async function GET(
   _req: NextRequest,
@@ -95,6 +98,8 @@ export async function GET(
         },
         ads: activeAds,
         advertiseSlide: await getAdvertiseSlideSettings(),
+        // Changes on every deploy/restart; screens reload themselves when it changes
+        version: SERVER_VERSION,
       },
     });
   } catch (error: any) {

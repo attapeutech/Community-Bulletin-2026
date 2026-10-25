@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db/client";
-import { locations } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { locations, states, cities, postalCodes } from "@/lib/db/schema";
+import { and, eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth/session";
 import { MIN_PRICE_PER_WEEK_CENTS, MAX_PRICE_PER_WEEK_CENTS, MAX_SHARE_RATE_BPS } from "@/types";
 
@@ -14,6 +14,11 @@ const updateSchema = z.object({
   displayName: z.string().max(120).nullable().optional(),
   currency: z.string().length(3).optional(),
   isActive: z.boolean().optional(),
+  // Country / state / city / ZIP are sent together
+  countryId: z.string().uuid().optional(),
+  stateId: z.string().uuid().optional(),
+  cityId: z.string().uuid().optional(),
+  postalCodeId: z.string().uuid().optional(),
   // Admin-only fields (stripped for store owners below)
   pricePerWeekCents: z.number().int().min(MIN_PRICE_PER_WEEK_CENTS).max(MAX_PRICE_PER_WEEK_CENTS).optional(),
   shareRateBps: z.number().int().min(0).max(MAX_SHARE_RATE_BPS).optional(),
@@ -52,6 +57,29 @@ export async function PATCH(
       delete data.pricePerWeekCents;
       delete data.shareRateBps;
       delete data.equipmentProvided;
+    }
+
+    // Make sure the new place is consistent: ZIP in the city, city in the state, state in the country
+    const geo = [data.countryId, data.stateId, data.cityId, data.postalCodeId];
+    if (geo.some(Boolean)) {
+      if (!geo.every(Boolean)) {
+        return NextResponse.json({ success: false, error: "Country, state, city and postal code are all required" }, { status: 422 });
+      }
+      const [match] = await db
+        .select({ id: postalCodes.id })
+        .from(postalCodes)
+        .innerJoin(cities, eq(postalCodes.cityId, cities.id))
+        .innerJoin(states, eq(cities.stateId, states.id))
+        .where(and(
+          eq(postalCodes.id, data.postalCodeId!),
+          eq(cities.id, data.cityId!),
+          eq(states.id, data.stateId!),
+          eq(states.countryId, data.countryId!),
+        ))
+        .limit(1);
+      if (!match) {
+        return NextResponse.json({ success: false, error: "That postal code doesn't match the selected city and state" }, { status: 422 });
+      }
     }
 
     const [updated] = await db

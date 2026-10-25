@@ -80,8 +80,8 @@ export function StorePartnerFields({
           <Input value={value.city} onChange={set("city")} placeholder="City" className={bad("city")} />
           {err("city")}
         </div>
-        <div className="col-span-3 sm:col-span-1">
-          <Input value={value.state} onChange={set("state")} placeholder="State" maxLength={50} className={bad("state")} />
+        <div className="col-span-3 sm:col-span-1 min-w-[64px]">
+          <Input value={value.state} onChange={set("state")} placeholder="State" maxLength={50} className={cn("px-2.5", bad("state"))} />
           {err("state")}
         </div>
         <div className="col-span-3 sm:col-span-2">
@@ -90,16 +90,16 @@ export function StorePartnerFields({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
         <div>
-          <Label className={labelCls}>How many stores?</Label>
+          <Label className={labelCls}>Number of stores</Label>
           <select value={value.locationsCount} onChange={set("locationsCount")} className={cn(selectCls, bad("locationsCount"))}>
             {LOCATION_COUNTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
           {err("locationsCount")}
         </div>
         <div>
-          <Label className={labelCls}>Do you have a TV to use?</Label>
+          <Label className={labelCls}>Have a TV to use?</Label>
           <select value={value.hasScreen} onChange={set("hasScreen")} className={cn(selectCls, bad("hasScreen"))}>
             <option value="">Choose…</option>
             {HAS_SCREEN.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}

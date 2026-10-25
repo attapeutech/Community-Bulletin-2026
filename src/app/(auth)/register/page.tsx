@@ -166,7 +166,7 @@ function RegisterForm() {
   }, [executeRecaptcha, next, isStoreOwner, store]);
 
   return (
-    <AuthLayout>
+    <AuthLayout wide={isStoreOwner}>
       <h1 className="font-serif font-bold text-[21px] text-primary m-0 mb-1">
         Create your account
       </h1>

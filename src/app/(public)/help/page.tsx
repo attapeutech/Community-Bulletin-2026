@@ -14,7 +14,7 @@ const FAQ_CATEGORIES = [
     label: "Getting Started",
     color: "#4A90C4",
     faqs: [
-      { q: "How do I create an account?", a: <>Click <Link href="/register" className="text-[#4A90C4] font-medium hover:underline">Get started free</Link> on the home page, fill in your name, email and password, then verify your email. You'll be ready to post ads within minutes.</> },
+      { q: "How do I create an account?", a: <>Click <Link href="/register" className="text-[#4A90C4] font-medium hover:underline">Get started free</Link> on the home page, fill in your name, email and password, then verify your email. You'll be ready to post ads within minutes. Own a store? Tick &ldquo;I own or manage a store&rdquo; to also apply as a store partner.</> },
       { q: "How do I post my first ad?", a: <>After logging in, go to <Link href="https://communitybulletin.com/dashboard/user" className="text-[#4A90C4] font-medium hover:underline">My Ads</Link> in your dashboard and click 'Post a New Ad'. Upload your image, choose a store location, select your run dates, and complete the payment at that store's weekly price. Your ad will be reviewed within 24 hours.</> },
       { q: "What image formats are accepted?", a: "We accept JPEG, PNG, WebP, and GIF files up to 10 MB. For best display quality we recommend a 1920×1080 (16:9) or 1080×1920 (9:16) image at 72–150 DPI." },
       { q: "How long does a campaign run?", a: "Each campaign runs for 1 week (7 days) from the approved start date. You can post multiple campaigns to extend your reach." },
@@ -47,10 +47,14 @@ const FAQ_CATEGORIES = [
     label: "For Store Owners",
     color: "#8B5CF6",
     faqs: [
-      { q: "How do I register my store?", a: "Sign up for an account, then contact us to have your role upgraded to Store Owner. Once upgraded, go to 'My Locations' in your dashboard and click 'Add Location' to register your store." },
-      { q: "How does the display screen work?", a: "Once your location is set up, open the Display Screen URL on any screen or TV browser at your location. Approved ads for your location rotate automatically in a carousel — no app install required." },
-      { q: "What screen sizes are supported?", a: "The display works on any screen that runs a modern browser: TVs, tablets, desktop monitors, and more. It auto-scales to fill the screen." },
-      { q: "Can I choose which ads display at my store?", a: "Currently all approved ads targeting your location are displayed. If you have concerns about specific content, contact our support team." },
+      { q: "How do I become a store partner?", a: <>When you <Link href="/register" className="text-[#4A90C4] font-medium hover:underline">create your account</Link>, tick <strong>&ldquo;I own or manage a store&rdquo;</strong> and add your store details. Already have an account? Use <Link href="/partners/apply" className="text-[#4A90C4] font-medium hover:underline">Become a Store Partner</Link>. We review every store, then email you once you&apos;re approved and contact you to set up your screen. You can see your application status on your dashboard.</> },
+      { q: "Do I need to buy any equipment?", a: "No. There are no fees. Use a TV and WiFi you already have plus an inexpensive streaming device, or we provide and install the screen at no cost to you. Setup takes about an hour." },
+      { q: "How much will I earn?", a: "You earn a share of every ad shown at your store: the percentage agreed for your location (typically 50% if you provide the screen, or 25% if we do), calculated on the ad price after card processing fees. Your Earnings page shows every ad and what you've earned." },
+      { q: "When and how do I get paid?", a: <>Earnings from an ad become available once its weekly run ends, and are paid out monthly; balances under $25 roll over to the next month. Add your payout details (Zelle or mailed check) on your <Link href="/dashboard/store-owner/earnings" className="text-[#4A90C4] font-medium hover:underline">Earnings page</Link>. Payouts start once your store partner agreement is signed. Direct deposit is coming soon.</> },
+      { q: "Do I need to sign an agreement?", a: "Yes. After you're approved we'll send a store partner agreement covering the screen space, your revenue share and payouts. Payouts begin once it's signed." },
+      { q: "How does the display screen work?", a: "Once your location is set up, open the Display Screen URL on any TV or screen browser at your store. Approved ads for your location rotate automatically — no app install required. If the internet drops briefly, the screen keeps showing ads and reconnects on its own." },
+      { q: "What screen sizes are supported?", a: "The display works on any screen that runs a modern browser: TVs, tablets, monitors and phones, in landscape or portrait. It scales to fit. On an iPhone or iPad, tap Share → Add to Home Screen and open it from the icon for full screen." },
+      { q: "Can I choose which ads display at my store?", a: "Every ad is reviewed by our team before it appears, and prohibited content is never shown. If you have concerns about a specific ad, or want competitors excluded, contact us and we'll take care of it." },
     ],
   },
   {

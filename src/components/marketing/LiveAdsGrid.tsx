@@ -127,6 +127,7 @@ type Props = {
 export default function LiveAdsGrid({ state = "", city = "", search = "", limit }: Props) {
   const [ads, setAds] = useState<LiveAd[]>([]);
   const [loading, setLoading] = useState(true);
+  const [advertiseHeadline, setAdvertiseHeadline] = useState<string | null>(null);
 
   const fetchAds = useCallback(async () => {
     setLoading(true);
@@ -137,7 +138,7 @@ export default function LiveAdsGrid({ state = "", city = "", search = "", limit 
       if (city)   params.set("city",   city);
       const res = await fetch(`/api/ads/live${params.toString() ? `?${params}` : ""}`);
       const json = await res.json();
-      if (json.success) setAds(json.data);
+      if (json.success) { setAds(json.data); setAdvertiseHeadline(json.advertiseHeadline ?? null); }
     } catch { /* ignore */ }
     finally { setLoading(false); }
   }, [search, state, city]);
@@ -177,16 +178,28 @@ export default function LiveAdsGrid({ state = "", city = "", search = "", limit 
     );
   }
 
+  // No ads (here): invite people to advertise instead of a dead end
   if (ads.length === 0) {
+    const filtered = !!(search || state || city);
     return (
-      <div style={{ textAlign: "center", padding: "60px 0", color: "#4A6B82" }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
-        <div style={{ fontSize: 16, fontWeight: 600, color: "#1A3A5C", marginBottom: 6 }}>
-          {search || state || city ? "No ads match your filter" : "No live ads at the moment"}
+      <div className="bg-white dark:bg-[#0F2236] border border-[#D8E4EE] dark:border-[#1E3550]" style={{ textAlign: "center", padding: "48px 24px", borderRadius: 16, maxWidth: 560, margin: "24px auto" }}>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>📣</div>
+        <div className="text-[#1A3A5C] dark:text-white" style={{ fontFamily: "Georgia,serif", fontSize: 24, fontWeight: 700, marginBottom: 8 }}>
+          {advertiseHeadline || "Your ad could be here"}
         </div>
-        <div style={{ fontSize: 13 }}>
-          {search || state || city ? "Try adjusting your search or location" : "Check back soon — new ads go live daily"}
+        <div className="text-[#4A6B82] dark:text-[#7AA8C4]" style={{ fontSize: 14, lineHeight: 1.5, marginBottom: 20 }}>
+          {filtered
+            ? "No ads match your search yet. Be the first to reach local shoppers here."
+            : "Reach shoppers on in-store screens at local businesses near you."}
         </div>
+        <Link href="/ads/new" className="no-underline inline-flex items-center bg-[#E8563A] hover:bg-[#d44a2f] text-white text-sm font-bold rounded-lg transition-colors" style={{ height: 40, padding: "0 20px" }}>
+          + Post an Ad
+        </Link>
+        {filtered && (
+          <div className="text-[#4A6B82] dark:text-[#7AA8C4]" style={{ fontSize: 12, marginTop: 14 }}>
+            Or try adjusting your search or location
+          </div>
+        )}
       </div>
     );
   }

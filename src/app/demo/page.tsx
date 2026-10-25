@@ -312,6 +312,7 @@ export default function DemoPage() {
           <p className="d-cta-sub">A 20-minute call is all it takes to see Community Bulletin in action and understand exactly what a pilot at your store would look like — with no commitment required.</p>
           <div className="d-cta-btns">
             <a href="https://communitybulletin.com/contact" className="d-btn-xl">Schedule a Call</a>
+            <a href="/partners/apply" className="d-btn-sec">Apply as a Store Partner</a>
             <a href="https://communitybulletin.com/contact" className="d-btn-sec">Send an Email</a>
           </div>
           <div className="d-contact-row">

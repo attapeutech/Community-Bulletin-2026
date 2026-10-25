@@ -16,6 +16,9 @@ export const notificationTypeEnum = pgEnum("notification_type", [
   "store_ad_paid",      // store owner: new paid ad at their location
   "earnings_available", // store owner: earnings released after run ended
   "payout_sent",        // store owner: payout recorded
+  "partner_application", // admins: new store partner application
+  "partner_approved",    // applicant: approved as a store partner
+  "partner_declined",    // applicant: application declined
 ]);
 
 export const notificationChannelEnum = pgEnum("notification_channel", [

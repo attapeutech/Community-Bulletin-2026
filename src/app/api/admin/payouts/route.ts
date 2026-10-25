@@ -29,6 +29,15 @@ export async function POST(req: NextRequest) {
     }
     const { ownerId, method, reference, note, expectedCents } = parsed.data;
 
+    // Payouts are held until the store partner agreement is signed (null = not tracked, e.g. older partners)
+    const [ownerRow] = await db.select({ agreement: users.partnerAgreementStatus }).from(users).where(eq(users.id, ownerId)).limit(1);
+    if (ownerRow?.agreement === "not_sent" || ownerRow?.agreement === "sent") {
+      return NextResponse.json(
+        { success: false, error: "This partner hasn't signed their agreement yet. Mark it signed on the Applications page first." },
+        { status: 409 }
+      );
+    }
+
     const result = await db.transaction(async (tx) => {
       const rows = await tx
         .select({ id: ownerEarnings.id, amountCents: ownerEarnings.amountCents, currency: ownerEarnings.currency })

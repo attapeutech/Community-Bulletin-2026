@@ -33,6 +33,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/display") ||
     pathname.startsWith("/api/ads/live") ||
     pathname === "/api/health" ||   // Coolify health check (zero-downtime deploys)
+    pathname === "/api/partners/apply-signup" ||   // register form, before email confirmation
     /^\/api\/ads\/[^/]+\/track$/.test(pathname) ||   // view/click tracking from logged-out display screens
     pathname.startsWith("/api/geo") ||
     pathname.startsWith("/api/support") ||

@@ -19,6 +19,8 @@ import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useNextParam } from "@/lib/use-next-param";
 import { withNext } from "@/lib/safe-redirect";
+import { StorePartnerFields, EMPTY_STORE_PARTNER, validateStorePartner, type StorePartnerValues } from "@/components/partners/StorePartnerFields";
+import { partnerApplicationSchema } from "@/lib/partner-application-schema";
 
 const schema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -77,6 +79,10 @@ function RegisterForm() {
 
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
+  // "I own or manage a store" — sends a store partner application with the sign-up
+  const [isStoreOwner, setIsStoreOwner] = useState(false);
+  const [store, setStore] = useState<StorePartnerValues>(EMPTY_STORE_PARTNER);
+  const [storeErrors, setStoreErrors] = useState<Partial<Record<keyof StorePartnerValues, string>>>({});
   const { executeRecaptcha } = useGoogleReCaptcha();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -85,6 +91,15 @@ function RegisterForm() {
   const onSubmit = useCallback(async (data: FormData) => {
     setFormError(null);
     setFormSuccess(null);
+
+    if (isStoreOwner) {
+      const errs = validateStorePartner(partnerApplicationSchema, { ...store, contactName: store.contactName || data.name });
+      setStoreErrors(errs);
+      if (Object.keys(errs).length) {
+        setFormError("Please complete the store details below.");
+        return;
+      }
+    }
 
     if (!executeRecaptcha) {
       setFormError("reCAPTCHA not ready. Please try again.");
@@ -125,12 +140,30 @@ function RegisterForm() {
         setFormError(result.error.message ?? "Registration failed. Please try again.");
         return;
       }
+      if (isStoreOwner) {
+        const appRes = await fetch("/api/partners/apply-signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: data.email,
+            application: { ...store, contactName: store.contactName || data.name, notes: store.notes || undefined },
+          }),
+        }).catch(() => null);
+        if (appRes?.ok) {
+          setFormSuccess("Account created and your store partner application is in! Check your email to verify your account — we'll be in touch about your store.");
+          toast.success("Account created — store application received");
+        } else {
+          setFormSuccess("Account created! Check your email to verify your account. We couldn't submit your store details — after logging in, apply from the 'Become a Store Partner' page.");
+          toast.success("Account created! Please check your email to verify your account.");
+        }
+        return;
+      }
       setFormSuccess("Account created! Please check your email to verify your account.");
       toast.success("Account created! Please check your email to verify your account.");
     } catch {
       setFormError("Something went wrong. Please try again.");
     }
-  }, [executeRecaptcha, next]);
+  }, [executeRecaptcha, next, isStoreOwner, store]);
 
   return (
     <AuthLayout>
@@ -179,6 +212,27 @@ function RegisterForm() {
           <PasswordInput placeholder="Re-enter password" {...register("confirm")} className={errors.confirm ? "border-destructive bg-destructive/5" : ""} />
           <FieldError msg={errors.confirm?.message} />
         </div>
+
+        {/* Store owners: apply to host a screen with the same sign-up */}
+        <label className="flex items-start gap-2.5 mb-4 cursor-pointer rounded-lg border border-input bg-background px-3 py-2.5">
+          <input
+            type="checkbox"
+            checked={isStoreOwner}
+            onChange={e => { setIsStoreOwner(e.target.checked); setStoreErrors({}); }}
+            className="mt-0.5 w-4 h-4 accent-[#1A3A5C]"
+          />
+          <span className="text-[13px] text-foreground leading-snug">
+            <strong>I own or manage a store</strong> and want to host a Community Bulletin screen
+            <span className="block text-[11px] text-muted-foreground mt-0.5">Earn a share of ad revenue. We&apos;ll review your store and get in touch.</span>
+          </span>
+        </label>
+
+        {isStoreOwner && (
+          <div className="mb-5 rounded-lg border border-input bg-muted/30 p-4">
+            <div className="font-serif font-bold text-[15px] text-primary mb-3">Store details</div>
+            <StorePartnerFields value={store} onChange={setStore} errors={storeErrors} />
+          </div>
+        )}
 
         <p className="text-[11px] text-muted-foreground mt-0 mb-4">
           By creating an account you agree to our{" "}

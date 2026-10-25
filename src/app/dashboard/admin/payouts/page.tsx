@@ -28,6 +28,7 @@ export default async function AdminPayoutsPage() {
       payoutMethod: users.payoutMethod,
       payoutZelle: users.payoutZelle,
       payoutMailingAddress: users.payoutMailingAddress,
+      agreementStatus: users.partnerAgreementStatus,
     })
     .from(users)
     .where(inArray(users.role, ["store_owner"]))

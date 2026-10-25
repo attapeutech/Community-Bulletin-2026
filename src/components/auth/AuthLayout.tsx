@@ -2,7 +2,7 @@ import { BrandMark } from "@/components/layout/BrandMark";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 
-export function AuthLayout({ children }: { children: React.ReactNode }) {
+export function AuthLayout({ children, wide = false }: { children: React.ReactNode; wide?: boolean }) {
   return (
     <div className="flex min-h-screen font-sans">
 
@@ -47,7 +47,8 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
 
       {/* ── RIGHT PANEL ── */}
       <div className="flex-1 bg-secondary flex items-center justify-center px-4 sm:px-8 py-10">
-        <div className="w-full max-w-[400px] flex flex-col items-center gap-6">
+        {/* wide: roomier card for longer forms (e.g. register with store details) */}
+        <div className={`w-full ${wide ? "max-w-[560px]" : "max-w-[400px]"} flex flex-col items-center gap-6 transition-[max-width] duration-200`}>
           {/* Mobile-only logo */}
           <Link href="/" className="lg:hidden flex items-center gap-3 no-underline">
             <BrandMark size={52} />

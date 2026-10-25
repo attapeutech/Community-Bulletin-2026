@@ -21,7 +21,7 @@ function LiveAdsContent() {
           <div style={{ fontSize: 11, fontWeight: 700, color: "#E8563A", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6 }}>
             Live right now
           </div>
-          <h1 style={{ fontFamily: "Georgia,serif", fontSize: "clamp(22px,3vw,34px)", fontWeight: 700, color: "#1A3A5C", margin: 0 }}>
+          <h1 className="text-[#1A3A5C] dark:text-white" style={{ fontFamily: "Georgia,serif", fontSize: "clamp(22px,3vw,34px)", fontWeight: 700, margin: 0 }}>
             {locationLabel ? `Live Ads — ${locationLabel}` : "All Live Ads"}
           </h1>
         </div>

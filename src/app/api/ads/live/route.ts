@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { ads, locations, cities, states, postalCodes } from "@/lib/db/schema";
 import { eq, and, lte, gte, asc, or, ilike } from "drizzle-orm";
+import { getAdvertiseSlideSettings } from "@/lib/settings";
 
 // GET /api/ads/live — public: all currently running ads, searchable
 export async function GET(req: NextRequest) {
@@ -73,7 +74,10 @@ export async function GET(req: NextRequest) {
       endedAt: r.endedAt.toISOString(),
     }));
 
-    return NextResponse.json({ success: true, data });
+    // Same "Your ad could be here" headline the screens use, for the empty state
+    const advertiseHeadline = data.length ? null : (await getAdvertiseSlideSettings()).headline;
+
+    return NextResponse.json({ success: true, data, advertiseHeadline });
   } catch (error) {
     console.error("[GET /api/ads/live]", error);
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MIN_PRICE_PER_WEEK_CENTS, MAX_PRICE_PER_WEEK_CENTS, MAX_SHARE_RATE_BPS } from "@/types";
 
 const editSchema = z.object({
@@ -22,6 +23,10 @@ const editSchema = z.object({
   displayName:       z.string().optional(),
   addressLine1:      z.string().min(5, "Enter a full street address"),
   addressLine2:      z.string().optional(),
+  countryId:         z.string().min(1, "Select a country"),
+  stateId:           z.string().min(1, "Select a state"),
+  cityId:            z.string().min(1, "Select a city"),
+  postalCodeId:      z.string().min(1, "Select a postal code"),
   pricePerWeekCents: z.number().int()
     .min(MIN_PRICE_PER_WEEK_CENTS, `Minimum $${MIN_PRICE_PER_WEEK_CENTS / 100}/week`)
     .max(MAX_PRICE_PER_WEEK_CENTS, `Maximum $${(MAX_PRICE_PER_WEEK_CENTS / 100).toLocaleString()}/week`),
@@ -33,6 +38,8 @@ const editSchema = z.object({
   logoUrl:           z.string().optional(),
 });
 type EditFormData = z.infer<typeof editSchema>;
+
+type Option = { id: string; name: string };
 
 type Ad = {
   id: string; title: string; imageUrl: string; status: string;
@@ -48,6 +55,7 @@ type Location = {
   pricePerWeekCents: number; shareRateBps: number; equipmentProvided: boolean;
   description: string | null; category: string | null;
   logoUrl: string | null; businessHours: string | null;
+  countryId: string; stateId: string; cityId: string; postalCodeId: string;
   city: { name: string }; state: { code: string }; postalCode: { code: string };
 };
 
@@ -141,6 +149,10 @@ export default function LocationDetailClient({
       displayName:       location.displayName ?? "",
       addressLine1:      location.addressLine1,
       addressLine2:      location.addressLine2 ?? "",
+      countryId:         location.countryId,
+      stateId:           location.stateId,
+      cityId:            location.cityId,
+      postalCodeId:      location.postalCodeId,
       pricePerWeekCents: location.pricePerWeekCents,
       shareRateBps:      location.shareRateBps,
       equipmentProvided: location.equipmentProvided,
@@ -154,6 +166,45 @@ export default function LocationDetailClient({
   // price in dollars / share in percent for display in inputs
   const priceWatch = watch("pricePerWeekCents");
   const shareWatch = watch("shareRateBps");
+
+  // Country → state → city → ZIP dropdowns, loaded only while editing
+  const [countries,   setCountries]   = useState<Option[]>([]);
+  const [states,      setStates]      = useState<Option[]>([]);
+  const [cities,      setCities]      = useState<Option[]>([]);
+  const [postalCodes, setPostalCodes] = useState<Option[]>([]);
+  const watchedCountry = watch("countryId");
+  const watchedState   = watch("stateId");
+  const watchedCity    = watch("cityId");
+
+  useEffect(() => {
+    if (!editMode || countries.length) return;
+    fetch("/api/geo/countries").then(r => r.json()).then(j => j.success && setCountries(j.data));
+  }, [editMode, countries.length]);
+
+  useEffect(() => {
+    if (!editMode || !watchedCountry) return;
+    fetch(`/api/geo/states?countryId=${watchedCountry}`).then(r => r.json()).then(j => j.success && setStates(j.data));
+  }, [editMode, watchedCountry]);
+
+  useEffect(() => {
+    if (!editMode || !watchedState) return;
+    fetch(`/api/geo/cities?stateId=${watchedState}`).then(r => r.json()).then(j => j.success && setCities(j.data));
+  }, [editMode, watchedState]);
+
+  useEffect(() => {
+    if (!editMode || !watchedCity) return;
+    fetch(`/api/geo/postal-codes?cityId=${watchedCity}`).then(r => r.json()).then(j => j.success && setPostalCodes(j.data));
+  }, [editMode, watchedCity]);
+
+  // Changing a level clears the levels below it (the current values stay when the form opens)
+  function pickGeo(field: "countryId" | "stateId" | "cityId" | "postalCodeId", val: string) {
+    const below = { countryId: ["stateId", "cityId", "postalCodeId"], stateId: ["cityId", "postalCodeId"], cityId: ["postalCodeId"], postalCodeId: [] }[field] as ("stateId" | "cityId" | "postalCodeId")[];
+    setValue(field, val, { shouldValidate: true });
+    for (const f of below) setValue(f, "");
+    if (below.includes("stateId")) setStates([]);
+    if (below.includes("cityId")) setCities([]);
+    if (below.includes("postalCodeId")) setPostalCodes([]);
+  }
 
   async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -362,6 +413,49 @@ export default function LocationDetailClient({
                 <div>
                   <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">Address line 2</Label>
                   <Input {...register("addressLine2")} className="h-10 text-sm bg-[#F7F9FC] border-[#D1DDE8]" placeholder="Suite, floor, etc." />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">Country *</Label>
+                  <Select value={watch("countryId")} onValueChange={(val) => pickGeo("countryId", val)}>
+                    <SelectTrigger className={cn("h-10 text-sm bg-[#F7F9FC] border-[#D1DDE8]", errors.countryId && "border-red-300 bg-red-50")}>
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent>{countries.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <FieldError msg={errors.countryId?.message} />
+                </div>
+                <div>
+                  <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">State *</Label>
+                  <Select value={watch("stateId")} onValueChange={(val) => pickGeo("stateId", val)} disabled={!states.length}>
+                    <SelectTrigger className={cn("h-10 text-sm bg-[#F7F9FC] border-[#D1DDE8]", errors.stateId && "border-red-300 bg-red-50")}>
+                      <SelectValue placeholder="Select state" />
+                    </SelectTrigger>
+                    <SelectContent>{states.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <FieldError msg={errors.stateId?.message} />
+                </div>
+                <div>
+                  <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">City *</Label>
+                  <Select value={watch("cityId")} onValueChange={(val) => pickGeo("cityId", val)} disabled={!cities.length}>
+                    <SelectTrigger className={cn("h-10 text-sm bg-[#F7F9FC] border-[#D1DDE8]", errors.cityId && "border-red-300 bg-red-50")}>
+                      <SelectValue placeholder="Select city" />
+                    </SelectTrigger>
+                    <SelectContent>{cities.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <FieldError msg={errors.cityId?.message} />
+                </div>
+                <div>
+                  <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">Postal code *</Label>
+                  <Select value={watch("postalCodeId")} onValueChange={(val) => pickGeo("postalCodeId", val)} disabled={!postalCodes.length}>
+                    <SelectTrigger className={cn("h-10 text-sm bg-[#F7F9FC] border-[#D1DDE8]", errors.postalCodeId && "border-red-300 bg-red-50")}>
+                      <SelectValue placeholder="Select postal code" />
+                    </SelectTrigger>
+                    <SelectContent>{postalCodes.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <FieldError msg={errors.postalCodeId?.message} />
                 </div>
               </div>
 

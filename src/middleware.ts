@@ -16,6 +16,7 @@ const PUBLIC_ROUTES = [
   "/privacy",
   "/terms",
   "/contact",
+  "/demo",        // franchise partner pitch page (linked from the public navbar)
   "/go",          // QR code short links from display screens
   "/icon.png",           // site icons (logged-out visitors and store screens need these)
   "/apple-icon.png",

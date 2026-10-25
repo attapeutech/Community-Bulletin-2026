@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./demo.css";
 
 export const metadata: Metadata = {
-  title: "Community Bulletin — Franchise Partner Opportunity",
+  title: "Community Bulletin — Store Partner Opportunity",
   description:
-    "See how Community Bulletin generates passive revenue for Grocery Outlet franchise owners through locally-targeted digital in-store ads.",
+    "See how Community Bulletin generates passive revenue for neighborhood store owners — gas stations, convenience stores and grocers — through locally-targeted digital in-store ads.",
 };
 
 export default function DemoPage() {
@@ -20,7 +20,7 @@ export default function DemoPage() {
       <section className="d-hero">
         <div className="d-wrap d-hero-inner">
           <div>
-            <div className="d-eyebrow">Franchise Partner Opportunity</div>
+            <div className="d-eyebrow">Store Partner Opportunity</div>
             <h1 className="d-h1">Your store.<br />Your community.<br />A new revenue stream.</h1>
             <p className="d-hero-sub">Community Bulletin places locally-targeted digital ads on screens inside your store — generating passive income while connecting your neighbors&rsquo; businesses to your customers.</p>
             <div className="d-hero-btns">
@@ -101,18 +101,18 @@ export default function DemoPage() {
               <p>Every week, thousands of people in your community walk through your store. They&rsquo;re your neighbors — and they&rsquo;re the same customers that local dentists, restaurants, tutors, and service businesses are trying to reach.</p>
               <p>Right now, those businesses spend money on mailers, Facebook ads, and print coupons — often missing their audience entirely. Community Bulletin changes that by placing their message exactly where their customers already are: inside your store.</p>
               <div className="d-pullquote">
-                <p>&ldquo;Grocery Outlet shoppers visit 2–3 times per week. That repeat exposure is premium inventory that no flyer or Facebook post can match.&rdquo;</p>
+                <p>&ldquo;Your customers come back again and again — to fill up, grab a coffee, or pick up essentials. That repeat exposure is premium inventory that no flyer or Facebook post can match.&rdquo;</p>
               </div>
-              <p>You provide the space. We handle everything else — the technology, advertiser recruitment, payment processing, content review, and 24/7 display operation. Your staff doesn&rsquo;t lift a finger.</p>
+              <p>You provide the space, and a screen if you have one. We handle the rest — the technology, advertiser recruitment, payments, content review, and 24/7 display operation. After setup, your staff doesn&rsquo;t lift a finger.</p>
             </div>
             <div className="d-stat-col">
               <div className="d-stat-row">
-                <div className="d-stat-num">2–3×</div>
-                <div className="d-stat-lbl">Average weekly visits per Grocery Outlet shopper — one of the highest repeat-visit rates in grocery retail.</div>
+                <div className="d-stat-num">Every day</div>
+                <div className="d-stat-lbl">Regulars stop in to fill up, pay at the counter and grab what they need — the same neighbors local businesses want to reach.</div>
               </div>
               <div className="d-stat-row">
                 <div className="d-stat-num">$0</div>
-                <div className="d-stat-lbl">Upfront cost to you. No hardware purchase, no subscription, no staff time required.</div>
+                <div className="d-stat-lbl">Fees, ever. No subscription and no platform charges. Use a screen you already have, or we provide one at no cost to you.</div>
               </div>
               <div className="d-stat-row">
                 <div className="d-stat-num">100%</div>
@@ -134,7 +134,7 @@ export default function DemoPage() {
               <div className="d-step-num">01</div>
               <div className="d-step-rule"></div>
               <div className="d-step-title">Set up a screen in your store</div>
-              <div className="d-step-body">All you need is a standard flat-screen TV, a mini PC or streaming device, and a WiFi connection — equipment many stores already have. Set it up yourself and earn a 50% revenue share. If you&rsquo;d rather we handle the equipment and installation, that option is available too at a 25% share.</div>
+              <div className="d-step-body"><strong>Two ways to get started.</strong> Use a TV and WiFi you already have, plus an inexpensive streaming device, and earn a 50% revenue share. Or we supply and install everything at no cost to you, for a 25% share. Either way, setup takes about an hour.</div>
             </div>
             <div>
               <div className="d-step-num">02</div>
@@ -146,7 +146,7 @@ export default function DemoPage() {
               <div className="d-step-num">03</div>
               <div className="d-step-rule"></div>
               <div className="d-step-title">Ads rotate automatically. Revenue arrives monthly.</div>
-              <div className="d-step-body">Approved ads go live on your display in real time. The platform handles rotation, scheduling, and refresh automatically. You receive a monthly revenue report and payment — no action required.</div>
+              <div className="d-step-body">Approved ads go live on your display in real time. The platform handles rotation, scheduling, and refresh automatically. You receive monthly payouts by direct deposit, plus a live earnings dashboard — just a one-time payout setup.</div>
             </div>
           </div>
         </div>
@@ -156,23 +156,23 @@ export default function DemoPage() {
         <div className="d-wrap">
           <div className="d-rev-eyebrow">Revenue Potential</div>
           <h2 className="d-rev-h2">Passive income from space<br />you already own.</h2>
-          <p className="d-rev-sub">Ad slots are priced at $100 per week per advertiser. Each location targets 40 active ads — that&rsquo;s $4,000/week in gross revenue per screen. Your share depends on one factor: who provides and sets up the display equipment.</p>
+          <p className="d-rev-sub">A typical ad slot is $100 per week. Each location targets 40 active ads — about $4,000/week in ad revenue per screen. Your share, paid on ad revenue after card processing fees, depends on one factor: who provides and sets up the display equipment.</p>
           <div className="d-rev-grid">
             <div className="d-rev-scenarios">
               <div className="d-rev-card d-rev-card-hi">
                 <div className="d-rev-card-lbl">You provide &amp; set up the screen <span className="d-pref-badge">Preferred</span></div>
-                <div className="d-rev-card-amt">$8,000<span className="d-rev-card-mo">/mo</span></div>
-                <div className="d-rev-card-desc">50% revenue share · 40 active ads at $100/week · $96,000/year</div>
+                <div className="d-rev-card-amt">~$7,750<span className="d-rev-card-mo">/mo</span></div>
+                <div className="d-rev-card-desc">50% share after card fees · 40 active ads at $100/week · about $93,000/year</div>
               </div>
               <div className="d-rev-card">
                 <div className="d-rev-card-lbl">We provide &amp; install the screen</div>
-                <div className="d-rev-card-amt">$4,000<span className="d-rev-card-mo">/mo</span></div>
-                <div className="d-rev-card-desc">25% revenue share · 40 active ads at $100/week · $48,000/year</div>
+                <div className="d-rev-card-amt">~$3,880<span className="d-rev-card-mo">/mo</span></div>
+                <div className="d-rev-card-desc">25% share after card fees · 40 active ads at $100/week · about $46,500/year</div>
               </div>
             </div>
             <div className="d-rev-detail">
-              <p>Advertisers pay <strong style={{color:"#fff"}}>$100 per week</strong> per ad slot — a fraction of what print media or social advertising costs for comparable local reach. Each location targets <strong style={{color:"#fff"}}>40 active ads</strong>, generating $4,000 per week in gross revenue per screen.</p>
-              <p>Your revenue share depends on one factor: <strong style={{color:"#fff"}}>who provides the display equipment.</strong> Store owners who supply a TV, mini PC, and WiFi — and handle the setup themselves — earn <strong style={{color:"#fff"}}>50% ($8,000/month)</strong>. When Community Bulletin provides and installs the equipment, the share is <strong style={{color:"#fff"}}>25% ($4,000/month)</strong> to offset our hardware and contractor costs.</p>
+              <p>A typical ad costs <strong style={{color:"#fff"}}>$100 per week</strong> — a fraction of what print media or social advertising costs for comparable local reach. Each location targets <strong style={{color:"#fff"}}>40 active ads</strong>, generating about $4,000 per week in ad revenue per screen.</p>
+              <p>Your revenue share depends on one factor: <strong style={{color:"#fff"}}>who provides the display equipment.</strong> Store owners who supply a TV, mini PC, and WiFi — and handle the setup themselves — earn <strong style={{color:"#fff"}}>50% of ad revenue after card processing fees (about $7,750/month)</strong>. When Community Bulletin provides and installs the equipment, the share is <strong style={{color:"#fff"}}>25% (about $3,880/month)</strong> to offset our hardware and contractor costs. Payout costs are on us — you receive your full share.</p>
               <p>We strongly prefer the store-provides model. It eliminates the need for us to coordinate licensed contractors and specialized installation — keeping the partnership simple on both sides and putting significantly more money in your pocket.</p>
               <div className="d-rev-note">
                 <strong>What &ldquo;providing your own equipment&rdquo; means:</strong><br />
@@ -181,7 +181,7 @@ export default function DemoPage() {
             </div>
           </div>
           <p style={{marginTop:"32px",fontSize:"12px",color:"rgba(255,255,255,.6)",lineHeight:"1.6"}}>
-            <strong style={{color:"rgba(255,255,255,.8)"}}>Disclaimer:</strong> Revenue figures are projections based on full capacity (40 active ads at $100/week) — not a guarantee. Actual results will vary based on advertiser demand at your location.
+            <strong style={{color:"rgba(255,255,255,.8)"}}>Disclaimer:</strong> Revenue figures are projections based on full capacity (40 active ads at $100/week, after card processing fees of about 3%) — not a guarantee. Actual results will vary based on advertiser demand at your location.
           </p>
         </div>
       </section>
@@ -273,9 +273,9 @@ export default function DemoPage() {
                   <div className="d-mini-rev">
                     <div className="d-mini-sec">August Revenue</div>
                     <div className="d-mini-rev-num">
-                      $8,000<span style={{fontSize:"13px",color:"var(--d-text-faint)",fontFamily:"var(--d-sans)"}}>.00</span>
+                      $7,760<span style={{fontSize:"13px",color:"var(--d-text-faint)",fontFamily:"var(--d-sans)"}}>.00</span>
                     </div>
-                    <div className="d-mini-rev-sub">40 active ads · $100/wk each · 50% share</div>
+                    <div className="d-mini-rev-sub">40 active ads · $100/wk each · 50% share after card fees</div>
                   </div>
                 </div>
               </div>
@@ -286,20 +286,20 @@ export default function DemoPage() {
 
       <section className="d-fit">
         <div className="d-wrap">
-          <div className="d-label">Why Grocery Outlet</div>
+          <div className="d-label">Why neighborhood stores</div>
           <h2 className="d-h2">The right platform for the right store.</h2>
           <div className="d-fit-grid">
             <div className="d-fit-card">
               <div className="d-fit-card-title">High repeat traffic makes your display premium inventory</div>
-              <div className="d-fit-card-body">Grocery Outlet shoppers visit more frequently than most grocery chains. That repeat exposure makes your display far more valuable to local advertisers than a one-time mailer or a social post — and they&rsquo;re willing to pay for it.</div>
+              <div className="d-fit-card-body">Gas stations, convenience stores and neighborhood grocers see the same customers week after week. That repeat exposure makes your display far more valuable to local advertisers than a one-time mailer or a social post — and they&rsquo;re willing to pay for it.</div>
             </div>
             <div className="d-fit-card">
               <div className="d-fit-card-title">Your customers are already in a local-services mindset</div>
-              <div className="d-fit-card-body">People shopping for value are the same people looking for a dentist nearby, a place for after-school tutoring, a good family restaurant. They&rsquo;re receptive to local, relevant recommendations at exactly the right moment.</div>
+              <div className="d-fit-card-body">The neighbors who stop by your store are the same people looking for a dentist nearby, a place for after-school tutoring, a good family restaurant. They&rsquo;re receptive to local, relevant recommendations at exactly the right moment.</div>
             </div>
             <div className="d-fit-card">
-              <div className="d-fit-card-title">Community Bulletin aligns with Grocery Outlet&rsquo;s brand values</div>
-              <div className="d-fit-card-body">Grocery Outlet&rsquo;s position as a community-first, value-driven retailer makes it a natural fit. The platform extends that promise — your store becomes a hub connecting your neighborhood&rsquo;s businesses and residents.</div>
+              <div className="d-fit-card-title">Your store becomes a community hub</div>
+              <div className="d-fit-card-body">Local stores are already part of their neighborhood&rsquo;s daily routine. Community Bulletin builds on that — your store becomes a hub connecting your neighborhood&rsquo;s businesses and residents, at no cost to you.</div>
             </div>
           </div>
         </div>

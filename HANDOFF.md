@@ -77,6 +77,27 @@
   - `safeNext()` allows same-site paths only.
 - **Later (option 2):** custom house ads (admin-made, no payment, chosen stores).
 
+## Display screens (2026-10-24)
+
+- **Layouts:**
+  - Portrait phones (`usePortraitPhone`, ≤820px) stack the image on top, with the text and QR below.
+  - Short landscape (`useShortLandscape`, height ≤560px) is compacted.
+  - TVs and computers are unchanged.
+  - The root uses `100dvh` with a `100vh` fallback (`.cb-display-root` in `globals.css`).
+- **Motion** (CSS in `globals.css`, all off for `prefers-reduced-motion`):
+  - Slow zoom on photos (`cb-kenburns`, gentler `cb-kenburns-soft` for image-only ads).
+  - Title words reveal one by one (`cb-word`, 180ms apart) and then pop (`cb-pop`), with a coral bar (`cb-underline`); the rest of the text rises after (`cb-rise`).
+  - Triggered by the selected slide, starting `REVEAL_START_MS` (280ms) into the glide.
+- **`?ad=<id>`** opens the screen on that ad (used by "View Live Display" links and the approval email).
+- **iPhone has no page fullscreen:** a "Full screen tip" explains Add to Home Screen instead. The display layout and `public/display.webmanifest` open it standalone.
+- **Tap/hover controls:** Home, Fullscreen, ♡ Save and Share for the ad on screen. Store TVs never show them.
+- **Offline:** screens keep the current ads and retry silently; a never-loaded screen shows "Connecting…".
+
+## Sharing and deploys
+
+- **`ShareButton`** (`src/components/ui`): native share sheet, or a menu (copy link, Facebook, X, WhatsApp, email). It's on the public ad page, the advertiser's live ad page and the display controls. The public ad page has Open Graph and Twitter preview tags using the ad image. If WhatsApp previews lack the image (WebP), add a JPEG preview image.
+- **Zero-downtime deploys:** Coolify health check on `GET /api/health` (public; checks the DB within 4s). Without it, Traefik shows "no available server" during deploys.
+
 ## Saved ads (wishlist hearts)
 
 - **Table:** `saved_ads` has primary key (`user_id`, `ad_id`), cascading on user and ad delete, and an index on `ad_id` for per-ad counts (migration 0010).

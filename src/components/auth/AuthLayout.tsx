@@ -34,9 +34,9 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
           </p>
         </div>
 
-        {/* Stats */}
+        {/* Launch-stage highlights (same as the home page); swap for live numbers once they're worth showing */}
         <div className="flex justify-around w-full pt-[18px] border-t border-white/10">
-          {[{ num: "500+", lbl: "Locations" }, { num: "2,400+", lbl: "Active ads" }, { num: "48", lbl: "States" }].map(({ num, lbl }) => (
+          {[{ num: "Local", lbl: "Stores near you" }, { num: "1-week", lbl: "Campaigns" }, { num: "Human", lbl: "Reviewed ads" }].map(({ num, lbl }) => (
             <div key={lbl} className="text-center">
               <div className="font-serif font-bold text-[18px] text-destructive">{num}</div>
               <div className="text-[10px] text-accent/60 mt-0.5">{lbl}</div>

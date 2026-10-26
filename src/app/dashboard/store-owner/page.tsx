@@ -63,8 +63,9 @@ export default async function StoreOwnerPage() {
   const userId = (session.user as any).id as string;
   const isAdmin = role === "admin";
 
+  // Admins also see deactivated locations (so they can reactivate or delete them)
   const conditions = isAdmin
-    ? [eq(locations.isActive, true)]
+    ? []
     : [eq(locations.storeOwnerId, userId), eq(locations.isActive, true)];
 
   const locs = await db
@@ -165,6 +166,7 @@ export default async function StoreOwnerPage() {
                       <span style={{ fontWeight: 700, fontSize: 15, color: ACCENT }}>
                         {loc.storeName}
                         {loc.storeNumber && <span style={{ color: "#E8563A", marginLeft: 6 }}>#{loc.storeNumber.replace(/^#/, "")}</span>}
+                        {!loc.isActive && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, fontFamily: "system-ui, sans-serif", color: "#64748B", background: "#F1F5F9", border: "1px solid #E2E8F0", borderRadius: 999, padding: "2px 8px", verticalAlign: "middle" }}>Inactive</span>}
                       </span>
                       <Badge bg="#dcfce7" color="#166534">{activeAds} active ad{activeAds !== 1 ? "s" : ""}</Badge>
                       {loc.category && <Badge bg="#EEF2FF" color="#3730A3">{loc.category}</Badge>}

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db/client";
-import { locations, states, cities, postalCodes } from "@/lib/db/schema";
-import { and, eq } from "drizzle-orm";
+import { locations, states, cities, postalCodes, ads, payments, ownerEarnings } from "@/lib/db/schema";
+import { and, eq, count } from "drizzle-orm";
 import { getSession } from "@/lib/auth/session";
 import { MIN_PRICE_PER_WEEK_CENTS, MAX_PRICE_PER_WEEK_CENTS, MAX_SHARE_RATE_BPS } from "@/types";
 
@@ -94,6 +94,51 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: "Validation failed", details: error.errors }, { status: 422 });
     }
     console.error("[PATCH /api/locations/[id]]", error);
+    return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
+  }
+}
+
+// DELETE /api/locations/[id] — admin only. Allowed only when no money ever moved through the
+// location (no payments, no owner earnings); its unpaid draft ads go with it. Otherwise the
+// records are kept and the admin is told to deactivate it instead.
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getSession();
+    if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    if ((session.user as any).role !== "admin") {
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+    }
+    const { id } = await params;
+
+    const [location] = await db.select({ id: locations.id }).from(locations).where(eq(locations.id, id)).limit(1);
+    if (!location) return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+
+    const [{ paid }] = await db
+      .select({ paid: count() })
+      .from(payments)
+      .innerJoin(ads, eq(payments.adId, ads.id))
+      .where(eq(ads.locationId, id));
+    const [{ earned }] = await db.select({ earned: count() }).from(ownerEarnings).where(eq(ownerEarnings.locationId, id));
+    if (paid > 0 || earned > 0) {
+      return NextResponse.json({
+        success: false,
+        error: "This location has payment or earnings history, so it can't be deleted. Deactivate it instead to take it off screens and posting.",
+      }, { status: 409 });
+    }
+
+    // Saved-ad and notification rows for these ads are removed by their cascades
+    const deletedAds = await db.transaction(async (tx) => {
+      const removed = await tx.delete(ads).where(eq(ads.locationId, id)).returning({ id: ads.id });
+      await tx.delete(locations).where(eq(locations.id, id));
+      return removed.length;
+    });
+
+    return NextResponse.json({ success: true, data: { deletedAds } });
+  } catch (error: any) {
+    console.error("[DELETE /api/locations/[id]]", error);
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
 }

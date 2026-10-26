@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { HeartButton } from "@/components/ui/HeartButton";
+import { AdvertiseFullscreen } from "@/components/display/AdvertiseFullscreen";
 
 export type LiveAd = {
   id: string;
@@ -122,12 +123,16 @@ type Props = {
   city?: string;
   search?: string;
   limit?: number;
+  /** With no ads live anywhere, open the all-locations display full screen */
+  fullscreenWhenEmpty?: boolean;
 };
 
-export default function LiveAdsGrid({ state = "", city = "", search = "", limit }: Props) {
+export default function LiveAdsGrid({ state = "", city = "", search = "", limit, fullscreenWhenEmpty = false }: Props) {
   const [ads, setAds] = useState<LiveAd[]>([]);
   const [loading, setLoading] = useState(true);
-  const [advertiseHeadline, setAdvertiseHeadline] = useState<string | null>(null);
+  const [advertise, setAdvertise] = useState<{ headline: string; fromPriceCents: number | null } | null>(null);
+  const [fullscreenClosed, setFullscreenClosed] = useState(false);
+  const closeFullscreen = useCallback(() => setFullscreenClosed(true), []);
 
   const fetchAds = useCallback(async () => {
     setLoading(true);
@@ -138,7 +143,7 @@ export default function LiveAdsGrid({ state = "", city = "", search = "", limit 
       if (city)   params.set("city",   city);
       const res = await fetch(`/api/ads/live${params.toString() ? `?${params}` : ""}`);
       const json = await res.json();
-      if (json.success) { setAds(json.data); setAdvertiseHeadline(json.advertiseHeadline ?? null); }
+      if (json.success) { setAds(json.data); setAdvertise(json.advertise ?? null); }
     } catch { /* ignore */ }
     finally { setLoading(false); }
   }, [search, state, city]);
@@ -185,7 +190,7 @@ export default function LiveAdsGrid({ state = "", city = "", search = "", limit 
       <div className="bg-white dark:bg-[#0F2236] border border-[#D8E4EE] dark:border-[#1E3550]" style={{ textAlign: "center", padding: "48px 24px", borderRadius: 16, maxWidth: 560, margin: "24px auto" }}>
         <div style={{ fontSize: 40, marginBottom: 12 }}>📣</div>
         <div className="text-[#1A3A5C] dark:text-white" style={{ fontFamily: "Georgia,serif", fontSize: 24, fontWeight: 700, marginBottom: 8 }}>
-          {advertiseHeadline || "Your ad could be here"}
+          {advertise?.headline || "Your ad could be here"}
         </div>
         <div className="text-[#4A6B82] dark:text-[#7AA8C4]" style={{ fontSize: 14, lineHeight: 1.5, marginBottom: 20 }}>
           {filtered
@@ -199,6 +204,9 @@ export default function LiveAdsGrid({ state = "", city = "", search = "", limit 
           <div className="text-[#4A6B82] dark:text-[#7AA8C4]" style={{ fontSize: 12, marginTop: 14 }}>
             Or try adjusting your search or location
           </div>
+        )}
+        {fullscreenWhenEmpty && !filtered && advertise && !fullscreenClosed && (
+          <AdvertiseFullscreen onClose={closeFullscreen} />
         )}
       </div>
     );

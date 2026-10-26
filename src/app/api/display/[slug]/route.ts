@@ -1,11 +1,67 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { ads, locations, cities, states, postalCodes } from "@/lib/db/schema";
-import { eq, and, or, lte, gte, asc } from "drizzle-orm";
+import { eq, and, or, lte, gte, asc, min } from "drizzle-orm";
 import { getAdvertiseSlideSettings } from "@/lib/settings";
 
 // One value per running server process (shared across route bundles)
 const SERVER_VERSION: string = ((globalThis as any).__cbServerVersion ??= String(Date.now()));
+
+// Reserved slug: one screen with every live ad from all active locations (used by Live Ads)
+const ALL_LOCATIONS_SLUG = "all";
+
+const adColumns = {
+  id: ads.id,
+  title: ads.title,
+  description: ads.description,
+  imageUrl: ads.imageUrl,
+  displayOrder: ads.displayOrder,
+  startedAt: ads.startedAt,
+  endedAt: ads.endedAt,
+  contactPhone:   ads.contactPhone,
+  contactAddress: ads.contactAddress,
+  contactWebsite: ads.contactWebsite,
+  showPhone:   ads.showPhone,
+  showAddress: ads.showAddress,
+  showWebsite: ads.showWebsite,
+};
+
+async function allLocationsResponse(now: Date) {
+  const liveAds = await db
+    .select(adColumns)
+    .from(ads)
+    .innerJoin(locations, eq(ads.locationId, locations.id))
+    .where(and(
+      eq(locations.isActive, true),
+      eq(ads.status, "approved"),
+      eq(ads.paymentStatus, "paid"),
+      lte(ads.startedAt, now),
+      gte(ads.endedAt, now)
+    ))
+    .orderBy(asc(ads.startedAt));
+  const [{ fromPriceCents }] = await db
+    .select({ fromPriceCents: min(locations.pricePerWeekCents) })
+    .from(locations)
+    .where(eq(locations.isActive, true));
+
+  return NextResponse.json({
+    success: true,
+    data: {
+      location: {
+        slug: ALL_LOCATIONS_SLUG,
+        name: "All locations",
+        storeName: "Community Bulletin",
+        storeNumber: null,
+        pricePerWeekCents: fromPriceCents ?? undefined,
+        allLocations: true,
+        address: "", address2: null, city: "", stateCode: "", postalCode: "",
+      },
+      ads: liveAds,
+      advertiseSlide: await getAdvertiseSlideSettings(),
+      version: SERVER_VERSION,
+    },
+  });
+}
 
 // GET /api/display/[slug] — public: approved, currently-running ads for a location
 export async function GET(
@@ -15,6 +71,7 @@ export async function GET(
   try {
     const { slug } = await params;
     const now = new Date();
+    if (slug === ALL_LOCATIONS_SLUG) return await allLocationsResponse(now);
 
     // Accept both slug ("store-name-abc123") and raw UUID (for direct TV links)
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
@@ -54,21 +111,7 @@ export async function GET(
     }
 
     const activeAds = await db
-      .select({
-        id: ads.id,
-        title: ads.title,
-        description: ads.description,
-        imageUrl: ads.imageUrl,
-        displayOrder: ads.displayOrder,
-        startedAt: ads.startedAt,
-        endedAt: ads.endedAt,
-        contactPhone:   ads.contactPhone,
-        contactAddress: ads.contactAddress,
-        contactWebsite: ads.contactWebsite,
-        showPhone:   ads.showPhone,
-        showAddress: ads.showAddress,
-        showWebsite: ads.showWebsite,
-      })
+      .select(adColumns)
       .from(ads)
       .where(
         and(

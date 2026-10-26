@@ -126,6 +126,101 @@ function DisplayScreenCard({ slug }: { slug: string }) {
   );
 }
 
+function DangerZoneCard({ location }: { location: Location }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [typed, setTyped] = useState("");
+  const nameMatches = typed.trim().toLowerCase() === location.storeName.trim().toLowerCase();
+
+  async function toggleActive() {
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/locations/${location.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !location.isActive }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      toast.success(location.isActive ? "Location deactivated" : "Location reactivated");
+      router.refresh();
+    } catch (e: any) {
+      toast.error(e.message || "Update failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function deleteLocation() {
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/locations/${location.id}`, { method: "DELETE" });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      toast.success(`${location.storeName} deleted`);
+      router.push("/dashboard/store-owner");
+      router.refresh();
+    } catch (e: any) {
+      toast.error(e.message || "Delete failed", { duration: 8000 });
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card className="border-red-200 mt-6 overflow-hidden">
+      <div className="px-6 py-4 border-b border-red-200 bg-red-50/50">
+        <h2 className="font-serif text-[18px] text-red-800 m-0">Danger zone</h2>
+        <p className="text-xs text-[#4A6B82] mt-1 mb-0">Admin only.</p>
+      </div>
+      <div className="px-6 py-4 flex items-start justify-between gap-4 flex-wrap border-b border-[#EDF2F7]">
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-semibold text-[#1A3A5C]">{location.isActive ? "Deactivate location" : "Reactivate location"}</div>
+          <p className="text-xs text-[#4A6B82] mt-0.5 mb-0">
+            {location.isActive
+              ? "Takes it off its display screen and out of Post an Ad. All ads, payments and earnings are kept, and you can reactivate it any time."
+              : "This location is inactive: its screen shows nothing and it can't be chosen for new ads."}
+          </p>
+        </div>
+        <Button variant="outline" disabled={busy} onClick={toggleActive} className="text-[13px] border-[#D1DDE8]">
+          {location.isActive ? "Deactivate" : "Reactivate"}
+        </Button>
+      </div>
+      <div className="px-6 py-4">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-semibold text-[#1A3A5C]">Delete location</div>
+            <p className="text-xs text-[#4A6B82] mt-0.5 mb-0">
+              Permanently removes the location and any unpaid draft ads. Only possible if it has never had a payment or earnings; otherwise deactivate it.
+            </p>
+          </div>
+          {!confirming && (
+            <Button variant="outline" disabled={busy} onClick={() => setConfirming(true)} className="text-[13px] text-red-700 border-red-300 hover:bg-red-50">
+              Delete…
+            </Button>
+          )}
+        </div>
+        {confirming && (
+          <div className="mt-4 rounded-lg border border-red-200 bg-red-50/50 p-4">
+            <Label className="mb-1.5 block text-[12px] text-[#4A5568]">
+              Type <strong>{location.storeName}</strong> to confirm
+            </Label>
+            <Input value={typed} onChange={(e) => setTyped(e.target.value)} autoFocus className="h-10 text-sm bg-white border-[#D1DDE8] max-w-sm" />
+            <div className="flex gap-2 mt-3">
+              <Button disabled={!nameMatches || busy} onClick={deleteLocation} className="text-[13px] bg-red-600 hover:bg-red-700 text-white">
+                {busy ? "Deleting…" : "Delete permanently"}
+              </Button>
+              <Button variant="outline" disabled={busy} onClick={() => { setConfirming(false); setTyped(""); }} className="text-[13px]">
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+}
+
 export default function LocationDetailClient({
   location, initialAds, isAdmin,
 }: {
@@ -649,6 +744,8 @@ export default function LocationDetailClient({
           })
         )}
       </Card>
+
+      {isAdmin && <DangerZoneCard location={location} />}
     </div>
   );
 }

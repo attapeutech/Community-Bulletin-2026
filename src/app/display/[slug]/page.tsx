@@ -9,6 +9,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { BrandMark } from "@/components/layout/BrandMark";
 import { HeartButton } from "@/components/ui/HeartButton";
 import { ShareButton } from "@/components/ui/ShareButton";
+import { AdvertiseHereSlide, REVEAL_START_MS, TITLE_WORD_STEP_MS, motionClass, usePortraitPhone, useShortLandscape, type SlideMotion } from "@/components/display/AdvertiseHereSlide";
 
 type Ad = {
   id: string;
@@ -34,17 +35,9 @@ type AdvertiseSlideSettings = {
 // A carousel slide: a paid ad, or the built-in "Advertise here" slide
 type Slide = { kind: "ad"; ad: Ad } | { kind: "promo"; key: string };
 
-// Text reveal starts this long after a slide begins gliding in (the glide takes ~0.6 s)
-const REVEAL_START_MS = 280;
-// Title words appear this far apart; once all have landed the title "pops"
-const TITLE_WORD_STEP_MS = 180;
 
-// play: animate in now · hold: keep hidden · none: show as-is
 const RECONNECTING = "__reconnecting__";
 
-type SlideMotion = "play" | "hold" | "none";
-const motionClass = (motion: SlideMotion, play: string, hold = "cb-hold") =>
-  motion === "play" ? play : motion === "hold" ? hold : undefined;
 
 type LocationInfo = {
   slug: string;
@@ -52,12 +45,17 @@ type LocationInfo = {
   storeName: string;
   storeNumber: string | null;
   pricePerWeekCents?: number;
+  allLocations?: boolean;   // the /display/all screen (every store's ads)
   address: string;
   address2: string | null;
   city: string;
   stateCode: string;
   postalCode: string;
 };
+
+function formatPrice(cents: number) {
+  return `$${(cents / 100).toFixed(cents % 100 === 0 ? 0 : 2)}`;
+}
 
 function Clock() {
   const [time, setTime] = useState("");
@@ -130,31 +128,6 @@ function runningStandalone() {
   return window.matchMedia?.("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
 }
 
-/** Phone (or small tablet) held upright — the TV layout is stacked vertically instead */
-function usePortraitPhone() {
-  const [portrait, setPortrait] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(orientation: portrait) and (max-width: 820px)");
-    setPortrait(mq.matches);
-    const onChange = (e: MediaQueryListEvent) => setPortrait(e.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-  return portrait;
-}
-
-/** Phone held sideways: wide but short — the text panel is compacted so nothing spills off */
-function useShortLandscape() {
-  const [short, setShort] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(orientation: landscape) and (max-height: 560px)");
-    setShort(mq.matches);
-    const onChange = (e: MediaQueryListEvent) => setShort(e.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-  return short;
-}
 
 export default function DisplayPage() {
   const params = useParams();
@@ -311,8 +284,8 @@ export default function DisplayPage() {
   const trackShownSlide = useCallback(() => {
     if (!emblaApi) return;
     const slide = slidesRef.current[emblaApi.selectedScrollSnap()];
-    // The "Advertise here" slide is not an ad view
-    if (slide?.kind !== "ad") return;
+    // The "Advertise here" slide is not an ad view; nor is the all-locations (website) screen
+    if (slide?.kind !== "ad" || slug === "all") return;
     fetch(`/api/ads/${slide.ad.id}/track`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -391,7 +364,7 @@ export default function DisplayPage() {
           <p style={{ fontSize: 22, color: "#4A90C4", letterSpacing: "0.05em" }}>No active ads at this time</p>
           <p style={{ fontSize: 14, color: "#2A4A6C" }}>Ads will appear here once approved</p>
         </div>
-        <FooterBar priceCents={location?.pricePerWeekCents} portrait={portrait || short} />
+        <FooterBar priceCents={location?.pricePerWeekCents} allLocations={location?.allLocations} portrait={portrait || short} />
       </div>
     );
   }
@@ -409,7 +382,18 @@ export default function DisplayPage() {
             if (slide.kind === "promo") {
               return (
                 <div key={slide.key} style={{ flex: "0 0 100%", minWidth: 0, height: "100%", position: "relative", display: "flex", flexDirection: "column" }}>
-                  <AdvertiseHereSlide settings={advertiseSlide!} location={location} slug={slug} portrait={portrait} short={short} motion={motionFor(idx)} />
+                  <AdvertiseHereSlide
+                    headline={advertiseSlide!.headline}
+                    subline={location?.allLocations
+                      ? "Reach shoppers on in-store screens at local businesses near you"
+                      : advertiseSlide!.subline.replace(/\{store\}/g, location?.name ?? "this store")}
+                    price={location?.pricePerWeekCents ? formatPrice(location.pricePerWeekCents) : null}
+                    pricePrefix={location?.allLocations ? "From " : ""}
+                    postUrl={typeof window === "undefined" ? "" : location?.allLocations
+                      ? `${window.location.origin}/ads/new`
+                      : `${window.location.origin}/ads/new?location=${encodeURIComponent(slug)}&src=screen`}
+                    portrait={portrait} short={short} motion={motionFor(idx)}
+                  />
                 </div>
               );
             }
@@ -491,7 +475,7 @@ export default function DisplayPage() {
         </div>
       )}
 
-      <FooterBar priceCents={location?.pricePerWeekCents} portrait={portrait || short} />
+      <FooterBar priceCents={location?.pricePerWeekCents} allLocations={location?.allLocations} portrait={portrait || short} />
     </div>
   );
 }
@@ -499,65 +483,6 @@ export default function DisplayPage() {
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 // Built-in slide selling this screen's ad space; QR opens Post a New Ad with this store pre-selected
-function AdvertiseHereSlide({ settings, location, slug, portrait, short, motion }: { settings: AdvertiseSlideSettings; location: LocationInfo | null; slug: string; portrait: boolean; short: boolean; motion: SlideMotion }) {
-  const rise = motionClass(motion, "cb-rise");
-  // Headline builds up word by word and pops, like an ad title; the rest follows it
-  const headlineWords = settings.headline.trim().split(/\s+/);
-  const headlineStartMs = REVEAL_START_MS + 120;
-  const headlineDoneMs = headlineStartMs + Math.min(headlineWords.length, 8) * TITLE_WORD_STEP_MS + 450;
-  const storeName = location?.name ?? "this store";
-  const subline = settings.subline.replace(/\{store\}/g, storeName);
-  const price = location?.pricePerWeekCents
-    ? `$${(location.pricePerWeekCents / 100).toFixed(location.pricePerWeekCents % 100 === 0 ? 0 : 2)}`
-    : null;
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const postUrl = `${origin}/ads/new?location=${encodeURIComponent(slug)}&src=screen`;
-
-  return (
-    <div style={{
-      flex: 1, display: "flex", flexDirection: portrait ? "column" : "row", alignItems: "center", justifyContent: "center",
-      gap: portrait ? 22 : "clamp(24px, 5vw, 80px)", textAlign: portrait ? "center" : undefined,
-      padding: portrait ? "24px 20px" : short ? "12px 28px" : "clamp(20px, 4vw, 64px)", background: "radial-gradient(ellipse at 30% 20%, #16426B 0%, #0A1A2E 70%)",
-      position: "relative", overflow: "hidden",
-    }}>
-      <div style={{ position: "absolute", top: "-20%", right: "-10%", width: "45vw", height: "45vw", borderRadius: "50%", background: "rgba(232,86,58,0.08)" }} />
-      <div style={{ maxWidth: portrait ? "100%" : "56%", position: "relative" }}>
-        <div className={rise} style={{ animationDelay: `${REVEAL_START_MS + 0}ms`, display: "flex", alignItems: "center", justifyContent: portrait ? "center" : undefined, gap: 12, marginBottom: short ? 8 : "clamp(14px, 2vw, 28px)" }}>
-          <BrandMark size={44} className="ring-1 ring-white/15 rounded-[10px]" />
-          <span style={{ fontSize: "clamp(11px, 1vw, 15px)", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#E8563A" }}>Advertise here</span>
-        </div>
-        <div className={motionClass(motion, "cb-pop")} style={{ animationDelay: `${headlineDoneMs}ms`, transformOrigin: portrait ? "center" : "left center", fontFamily: "Georgia, serif", fontWeight: 700, color: "#fff", fontSize: portrait ? "clamp(28px, 9vw, 40px)" : short ? "clamp(24px, 9vh, 44px)" : "clamp(30px, 5vw, 76px)", lineHeight: 1.08, marginBottom: short ? 6 : "clamp(10px, 1.6vw, 22px)" }}>
-          {headlineWords.map((word, i) => (
-            <span key={i}>
-              <span className={motionClass(motion, "cb-word")} style={{ display: "inline-block", animationDelay: `${headlineStartMs + Math.min(i, 7) * TITLE_WORD_STEP_MS}ms` }}>
-                {word}
-              </span>
-              {i < headlineWords.length - 1 && " "}
-            </span>
-          ))}
-        </div>
-        {subline && (
-          <div className={rise} style={{ animationDelay: `${headlineDoneMs}ms`, fontSize: "clamp(15px, 1.9vw, 28px)", color: "rgba(255,255,255,0.75)", lineHeight: 1.4, marginBottom: short ? 10 : "clamp(14px, 2.2vw, 30px)" }}>
-            {subline}
-          </div>
-        )}
-        <div className={rise} style={{ animationDelay: `${headlineDoneMs + 120}ms`, display: "inline-flex", alignItems: "baseline", gap: 10, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 12, padding: "clamp(8px, 1vw, 14px) clamp(14px, 1.6vw, 22px)" }}>
-          {price && <span style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "clamp(20px, 2.6vw, 40px)", color: "#fff" }}>{price}</span>}
-          <span style={{ fontSize: "clamp(12px, 1.3vw, 19px)", color: "rgba(255,255,255,0.7)" }}>{price ? "/ week · " : ""}No contracts</span>
-        </div>
-      </div>
-      {origin && (
-        <div className={rise} style={{ animationDelay: `${headlineDoneMs + 260}ms`, textAlign: "center", position: "relative", flexShrink: 0 }}>
-          <div style={{ background: "#fff", borderRadius: "clamp(10px, 1.2vw, 18px)", padding: "clamp(10px, 1.2vw, 18px)", width: portrait ? 170 : short ? "clamp(100px, 34vh, 170px)" : "clamp(150px, 20vw, 320px)", lineHeight: 0, boxShadow: "0 10px 40px rgba(0,0,0,0.35)" }}>
-            <QRCodeSVG value={postUrl} size={512} level="M" marginSize={0} fgColor="#0A1A2E" bgColor="#FFFFFF" style={{ width: "100%", height: "auto" }} />
-          </div>
-          <div style={{ marginTop: "clamp(10px, 1.2vw, 18px)", fontSize: "clamp(14px, 1.6vw, 24px)", fontWeight: 700, color: "#fff" }}>Scan to get started</div>
-          <div style={{ fontSize: "clamp(11px, 1vw, 15px)", color: "#4A90C4", marginTop: 4 }}>communitybulletin.com</div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 function fullscreen(bg: string): React.CSSProperties {
   return {
@@ -970,7 +895,7 @@ function FullscreenOverlay({ show: showFromActivity, isFullscreen, onToggle, can
   );
 }
 
-function FooterBar({ priceCents, portrait }: { priceCents?: number; portrait?: boolean }) {
+function FooterBar({ priceCents, allLocations, portrait }: { priceCents?: number; allLocations?: boolean; portrait?: boolean }) {
   const price = priceCents ? `$${(priceCents / 100).toFixed(priceCents % 100 === 0 ? 0 : 2)}` : null;
   return (
     <div style={{
@@ -985,9 +910,9 @@ function FooterBar({ priceCents, portrait }: { priceCents?: number; portrait?: b
       zIndex: 20,
     }}>
       <p style={{ fontSize: 12, color: "#2A4A6C" }}>
-        Advertise at this location — <span style={{ color: "#4A90C4" }}>communitybulletin.com</span>
+        {allLocations ? "Advertise at local stores" : "Advertise at this location"} — <span style={{ color: "#4A90C4" }}>communitybulletin.com</span>
       </p>
-      <p style={{ fontSize: 11, color: "#1A2A3C" }}>{price ? `${price} · ` : ""}1 week · No contracts</p>
+      <p style={{ fontSize: 11, color: "#1A2A3C" }}>{price ? `${allLocations ? "From " : ""}${price} · ` : ""}1 week · No contracts</p>
     </div>
   );
 }

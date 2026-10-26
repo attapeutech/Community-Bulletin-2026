@@ -14,6 +14,9 @@ export function notifyDisplayScreen(slug: string) {
     const lastRefresh = (global as any).__lastRefresh as Record<string, number> | undefined;
     if (lastRefresh) lastRefresh[slug] = Date.now();
     io.to(`display:${slug}`).emit("ads:refresh", { slug });
+    // The all-locations screen (Live Ads) shows every store's ads
+    if (lastRefresh) lastRefresh.all = Date.now();
+    io.to("display:all").emit("ads:refresh", { slug: "all" });
   }
 }
 

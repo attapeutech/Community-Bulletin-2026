@@ -26,7 +26,7 @@ function LiveAdsContent() {
           </h1>
         </div>
       </div>
-      <LiveAdsGrid state={state} city={city} search={search} />
+      <LiveAdsGrid state={state} city={city} search={search} fullscreenWhenEmpty />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { ads, locations, cities, states, postalCodes } from "@/lib/db/schema";
-import { eq, and, lte, gte, asc, or, ilike } from "drizzle-orm";
+import { eq, and, lte, gte, asc, or, ilike, min } from "drizzle-orm";
 import { getAdvertiseSlideSettings } from "@/lib/settings";
 
 // GET /api/ads/live — public: all currently running ads, searchable
@@ -74,10 +74,17 @@ export async function GET(req: NextRequest) {
       endedAt: r.endedAt.toISOString(),
     }));
 
-    // Same "Your ad could be here" headline the screens use, for the empty state
-    const advertiseHeadline = data.length ? null : (await getAdvertiseSlideSettings()).headline;
+    // Nothing live: the "Your ad could be here" headline the screens use, and the lowest weekly price
+    let advertise: { headline: string; fromPriceCents: number | null } | null = null;
+    if (!data.length) {
+      const [{ fromPriceCents }] = await db
+        .select({ fromPriceCents: min(locations.pricePerWeekCents) })
+        .from(locations)
+        .where(eq(locations.isActive, true));
+      advertise = { headline: (await getAdvertiseSlideSettings()).headline, fromPriceCents };
+    }
 
-    return NextResponse.json({ success: true, data, advertiseHeadline });
+    return NextResponse.json({ success: true, data, advertise });
   } catch (error) {
     console.error("[GET /api/ads/live]", error);
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });

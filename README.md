@@ -101,7 +101,7 @@ src/
 │   ├── payments/           # Stripe + PayPal helpers
 │   └── socket/             # Socket.io server + client hooks
 ├── types/                  # Shared TypeScript types
-└── middleware.ts            # Route protection
+└── proxy.ts                 # Route protection (Next.js proxy, formerly middleware)
 scripts/
 └── seed.ts                 # DB seed script
 ```

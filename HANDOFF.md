@@ -108,7 +108,7 @@
 - **Settings:** stored in `app_settings`, key `advertise_slide` (enabled, headline, sub-line with `{store}`, every N). They're edited on the Admin Panel's Overview tab, and saving refreshes all screens. The display feed returns them as `advertiseSlide`.
 - **QR code:** opens `/ads/new?location=<slug>&src=screen`. Post a New Ad pre-selects the store through `GET /api/locations?slug=`.
 - **Return trip after login or sign-up:**
-  - The middleware keeps the query string in `callbackUrl`.
+  - The proxy (`src/proxy.ts`, formerly `middleware.ts`) keeps the query string in `callbackUrl`.
   - Login and register read it with `useNextParam()` and pass it to sign-in, Google sign-in, the verification email (`callbackURL`) and the links between the two pages.
   - `safeNext()` allows same-site paths only.
 - **Later (option 2):** custom house ads (admin-made, no payment, chosen stores).
@@ -173,7 +173,7 @@
 ## Saved ads (wishlist hearts)
 
 - **Table:** `saved_ads` has primary key (`user_id`, `ad_id`), cascading on user and ad delete, and an index on `ad_id` for per-ad counts (migration 0010).
-- **API:** `GET`/`POST`/`DELETE /api/saved`, signed-in users only (401 in the route; the middleware also requires a session).
+- **API:** `GET`/`POST`/`DELETE /api/saved`, signed-in users only (401 in the route; the proxy also requires a session).
 - **UI:**
   - `HeartButton` (`src/components/ui`): `overlay` variant on Live Ads cards, `pill` variant on the public ad page. Signed-out visitors go to login and are returned to the page.
   - Shared client store in `src/lib/use-saved-ads.ts`, with one fetch per page and optimistic updates.

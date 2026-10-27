@@ -23,7 +23,7 @@ const PUBLIC_ROUTES = [
   "/display.webmanifest", // home-screen settings for display screens
 ];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (

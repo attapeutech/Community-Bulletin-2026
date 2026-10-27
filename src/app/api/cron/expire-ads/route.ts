@@ -4,7 +4,7 @@ import { ads, locations } from "@/lib/db/schema";
 import { eq, and, lt, inArray } from "drizzle-orm";
 import { pushDisplayRefresh } from "@/lib/socket/notify";
 import { releaseEarnings } from "@/lib/earnings";
-import { notifyAdsExpired, notifyAdsExpiringSoon } from "@/lib/notifications";
+import { notifyAdsExpired, notifyAdsExpiringSoon, notifyLeadFollowUps } from "@/lib/notifications";
 import { stripeConnectEnabled } from "@/lib/stripe";
 import { runDirectDeposits, payoutDayOfMonth, PAYOUT_DAY } from "@/lib/direct-deposits";
 
@@ -47,6 +47,12 @@ export async function POST(req: NextRequest) {
   // Warn advertisers whose ads end within 24 hours (once per run)
   const expiringSoon = await notifyAdsExpiringSoon(now);
 
+  // Sales: remind lead owners about follow-ups due today (at most once a day)
+  const leadReminders = await notifyLeadFollowUps(now).catch(err => {
+    console.error("[cron/expire-ads] lead follow-up reminders failed", err);
+    return 0;
+  });
+
   // Find all approved ads whose run window has ended
   const expired = await db
     .select({ id: ads.id, locationId: ads.locationId })
@@ -54,7 +60,7 @@ export async function POST(req: NextRequest) {
     .where(and(eq(ads.status, "approved"), lt(ads.endedAt, now)));
 
   if (expired.length === 0) {
-    return NextResponse.json({ success: true, expired: 0, expiringSoon, earnings, directDeposits });
+    return NextResponse.json({ success: true, expired: 0, expiringSoon, leadReminders, earnings, directDeposits });
   }
 
   const adIds = expired.map(a => a.id);
@@ -79,5 +85,5 @@ export async function POST(req: NextRequest) {
   }
 
   console.log(`[cron/expire-ads] Expired ${adIds.length} ad(s) across ${affectedLocations.length} location(s)`);
-  return NextResponse.json({ success: true, expired: adIds.length, locations: affectedLocations.map(l => l.slug), expiringSoon, earnings, directDeposits });
+  return NextResponse.json({ success: true, expired: adIds.length, locations: affectedLocations.map(l => l.slug), expiringSoon, leadReminders, earnings, directDeposits });
 }

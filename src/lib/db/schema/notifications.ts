@@ -19,6 +19,7 @@ export const notificationTypeEnum = pgEnum("notification_type", [
   "partner_application", // admins: new store partner application
   "partner_approved",    // applicant: approved as a store partner
   "partner_declined",    // applicant: application declined
+  "lead_follow_up",      // sales: leads due for follow-up today
 ]);
 
 export const notificationChannelEnum = pgEnum("notification_channel", [

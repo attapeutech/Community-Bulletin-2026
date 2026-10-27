@@ -79,6 +79,11 @@ export default function NewLocationPage() {
     id: string; businessName: string; addressLine1: string; city: string; state: string; postalCode: string;
     hasScreen: string; ownerName: string; ownerEmail: string;
   }>(null);
+  // Admin setting up the store for a won sales lead (?lead=<id>)
+  const [lead, setLead] = useState<null | {
+    id: string; businessName: string; address: string | null; city: string | null;
+    ownerName: string | null; ownerEmail: string | null;
+  }>(null);
   const [logoUrl, setLogoUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [countries, setCountries] = useState<(Option & { code: string })[]>([]);
@@ -156,10 +161,25 @@ export default function NewLocationPage() {
       .catch(() => {});
   }, [isAdmin, setValue]);
 
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("lead");
+    if (!id || !isAdmin) return;
+    fetch(`/api/admin/leads/${id}`)
+      .then(r => r.json())
+      .then(json => {
+        if (!json.success || json.data.kind !== "store_partner") return;
+        const l = json.data;
+        setLead(l);
+        setValue("storeName", l.businessName, { shouldValidate: true });
+        if (l.address) setValue("addressLine1", l.address, { shouldValidate: true });
+      })
+      .catch(() => {});
+  }, [isAdmin, setValue]);
+
   async function onSubmit(data: FormData) {
     setSubmitError("");
     try {
-      const payload = { ...data, logoUrl: logoUrl || undefined, applicationId: application?.id };
+      const payload = { ...data, logoUrl: logoUrl || undefined, applicationId: application?.id, leadId: lead?.id };
       const res = await fetch("/api/locations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -167,7 +187,7 @@ export default function NewLocationPage() {
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
-      router.push(application ? "/dashboard/admin/applications" : "/dashboard/store-owner");
+      router.push(lead ? `/dashboard/sales/${lead.id}` : application ? "/dashboard/admin/applications" : "/dashboard/store-owner");
     } catch (e: any) {
       setSubmitError(e.message || "Failed to create location");
     }
@@ -194,6 +214,19 @@ export default function NewLocationPage() {
           <div className="font-semibold mb-1">Setting up the store for {application.ownerName} ({application.ownerEmail})</div>
           <div className="text-[#4A6B82]">
             From their application: {application.addressLine1}, {application.city}, {application.state} {application.postalCode}.
+            Pick the matching country, state, city and ZIP below — if the city or ZIP isn&apos;t listed, add it in Geography first.
+          </div>
+        </div>
+      )}
+
+      {lead && (
+        <div className="mb-6 rounded-xl border border-[#C9DFF2] bg-[#F0F7FF] px-4 py-3 text-[13px] text-[#1A3A5C]">
+          <div className="font-semibold mb-1">Setting up the store for sales lead {lead.businessName}</div>
+          <div className="text-[#4A6B82]">
+            {lead.ownerEmail
+              ? <>It will belong to <b className="text-[#1A3A5C]">{lead.ownerName} ({lead.ownerEmail})</b>, who becomes a store owner and earns the owner share. </>
+              : <><b className="text-amber-800">No owner account is linked to this lead</b>, so the store would belong to you and earn no owner share. Link the owner&apos;s account on the lead first (create it in Users → Add user if needed). </>}
+            {(lead.address || lead.city) && <>From the lead: {[lead.address, lead.city].filter(Boolean).join(", ")}. </>}
             Pick the matching country, state, city and ZIP below — if the city or ZIP isn&apos;t listed, add it in Geography first.
           </div>
         </div>

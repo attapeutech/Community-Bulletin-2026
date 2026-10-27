@@ -36,6 +36,8 @@ export default async function LocationDetailPage({
       category: locations.category,
       logoUrl: locations.logoUrl,
       businessHours: locations.businessHours,
+      dailyCustomers: locations.dailyCustomers,
+      trafficUpdatedAt: locations.trafficUpdatedAt,
       countryId: locations.countryId,
       stateId: locations.stateId,
       cityId: locations.cityId,

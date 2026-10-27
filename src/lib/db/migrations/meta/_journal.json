@@ -85,6 +85,13 @@
       "when": 1792943911712,
       "tag": "0011_partner_applications",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792987608945,
+      "tag": "0012_location_traffic",
+      "breakpoints": true
     }
   ]
 }

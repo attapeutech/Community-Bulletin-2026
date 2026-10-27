@@ -59,6 +59,7 @@ export async function GET(req: NextRequest) {
         storeName: locations.storeName,
         storeNumber: locations.storeNumber,
         pricePerWeekCents: locations.pricePerWeekCents,
+        dailyCustomers: locations.dailyCustomers,
         addressLine1: locations.addressLine1,
         addressLine2: locations.addressLine2,
         slug: locations.slug,

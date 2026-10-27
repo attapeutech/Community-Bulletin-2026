@@ -43,8 +43,8 @@ export function useShortLandscape() {
 }
 
 /** The "Advertise here" slide: headline built word by word, price, and a QR code to post an ad */
-export function AdvertiseHereSlide({ headline, subline, price, pricePrefix = "", postUrl, portrait, short, motion }: {
-  headline: string; subline: string; price: string | null; pricePrefix?: string; postUrl: string;
+export function AdvertiseHereSlide({ headline, subline, reach, price, pricePrefix = "", postUrl, portrait, short, motion }: {
+  headline: string; subline: string; reach?: string | null; price: string | null; pricePrefix?: string; postUrl: string;
   portrait: boolean; short: boolean; motion: SlideMotion;
 }) {
   const rise = motionClass(motion, "cb-rise");
@@ -79,6 +79,12 @@ export function AdvertiseHereSlide({ headline, subline, price, pricePrefix = "",
         {subline && (
           <div className={rise} style={{ animationDelay: `${headlineDoneMs}ms`, fontSize: "clamp(15px, 1.9vw, 28px)", color: "rgba(255,255,255,0.75)", lineHeight: 1.4, marginBottom: short ? 10 : "clamp(14px, 2.2vw, 30px)" }}>
             {subline}
+          </div>
+        )}
+        {reach && (
+          <div className={rise} style={{ animationDelay: `${headlineDoneMs + 60}ms`, display: "flex", alignItems: "center", justifyContent: portrait ? "center" : undefined, gap: 8, fontSize: "clamp(15px, 1.8vw, 26px)", fontWeight: 700, color: "#7EE2A8", marginTop: short ? -4 : "clamp(-6px, -0.8vw, -14px)", marginBottom: short ? 10 : "clamp(14px, 2.2vw, 30px)" }}>
+            <span style={{ width: "0.55em", height: "0.55em", borderRadius: "50%", background: "#22C55E", boxShadow: "0 0 0 4px rgba(34,197,94,0.2)", flexShrink: 0 }} />
+            {reach}
           </div>
         )}
         <div className={rise} style={{ animationDelay: `${headlineDoneMs + 120}ms`, display: "inline-flex", alignItems: "baseline", gap: 10, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 12, padding: "clamp(8px, 1vw, 14px) clamp(14px, 1.6vw, 22px)" }}>

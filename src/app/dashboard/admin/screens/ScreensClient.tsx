@@ -91,7 +91,16 @@ function ScreenCard({ screen, locations, nowIso }: { screen: ScreenRow; location
             )}
           </div>
           <div className="text-xs text-[#4A6B82] mt-1">
-            {screen.label ? `${deviceSummary(screen.userAgent)} · ` : ""}Showing <code className="text-[11px]">{screen.currentPath ?? "—"}</code> · IP {screen.ip ?? "—"}
+            {screen.label ? `${deviceSummary(screen.userAgent)} · ` : ""}Showing{" "}
+            {/* Reported by the screen itself, so only same-site paths become links */}
+            {screen.currentPath && /^\/(?!\/)/.test(screen.currentPath) ? (
+              <a href={screen.currentPath} target="_blank" rel="noopener noreferrer" className="text-[#4A90C4] hover:underline">
+                <code className="text-[11px]">{screen.currentPath}</code> ↗
+              </a>
+            ) : (
+              <code className="text-[11px]">{screen.currentPath ?? "—"}</code>
+            )}{" "}
+            · IP {screen.ip ?? "—"}
           </div>
         </div>
         <div className="text-right text-xs text-[#4A6B82]">

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { paypalEnabled } from "@/lib/payment-options";
 import { useSession } from "@/lib/auth/client";
 import LiveAdsSection from "./LiveAdsSection";
 import HeroScreen from "./HeroScreen";
@@ -20,7 +21,7 @@ const FEATURES = (price: LandingPrice) => [
 const HOW_IT_WORKS = [
   { step: "01", title: "Pick a location", desc: "Browse store locations near you and select where you want your ad to display." },
   { step: "02", title: "Upload your ad", desc: "Upload your poster or image. We support all formats and sizes — we handle the rest." },
-  { step: "03", title: "Pay & submit", desc: "Secure payment via Stripe or PayPal at the store's weekly price. Your ad is submitted for review instantly." },
+  { step: "03", title: "Pay & submit", desc: `Secure card payment via Stripe${paypalEnabled() ? " or PayPal" : ""} at the store's weekly price. Your ad is submitted for review instantly.` },
   { step: "04", title: "Go live", desc: "Once approved you get an email with a link to see your ad live on the display screen." },
 ];
 

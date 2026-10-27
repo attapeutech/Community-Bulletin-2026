@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { paypalEnabled } from "@/lib/payment-options";
 
 const ACCENT = "#1A3A5C";
 const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? "";
+const SHOW_PAYPAL = paypalEnabled();
 
 type AdSummary = {
   id: string;
@@ -70,7 +72,7 @@ export default function PaymentPage() {
 
   // Load PayPal script when we have an unpaid ad
   useEffect(() => {
-    if (!ad || ad.paymentStatus !== "unpaid" || !PAYPAL_CLIENT_ID || success) return;
+    if (!SHOW_PAYPAL || !ad || ad.paymentStatus !== "unpaid" || !PAYPAL_CLIENT_ID || success) return;
     loadPayPalScript()
       .then(() => setPaypalReady(true))
       .catch(() => console.warn("PayPal SDK failed to load"));
@@ -238,7 +240,7 @@ export default function PaymentPage() {
           <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: ACCENT, marginBottom: 24 }}>Choose payment method</h2>
 
           {/* Stripe */}
-          <div style={{ marginBottom: 24, padding: 20, border: "1px solid #D8E4EE", borderRadius: 12 }}>
+          <div style={{ marginBottom: SHOW_PAYPAL ? 24 : 0, padding: 20, border: "1px solid #D8E4EE", borderRadius: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
               <span style={{ fontSize: 20 }}>💳</span>
               <span style={{ fontWeight: 600, color: ACCENT }}>Credit / Debit Card</span>
@@ -267,7 +269,8 @@ export default function PaymentPage() {
             </button>
           </div>
 
-          {/* PayPal */}
+          {/* PayPal (only when switched on) */}
+          {SHOW_PAYPAL && (
           <div style={{ padding: 20, border: "1px solid #D8E4EE", borderRadius: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
               <span style={{ fontSize: 20 }}>🅿️</span>
@@ -289,6 +292,7 @@ export default function PaymentPage() {
               )}
             </div>
           </div>
+          )}
         </div>
       </div>
     </div>

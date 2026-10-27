@@ -5,12 +5,16 @@ import { ads, locations } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth/session";
 import { eq, and } from "drizzle-orm";
 import { createPayPalOrder } from "@/lib/paypal";
+import { paypalEnabled } from "@/lib/payment-options";
 
 const schema = z.object({ adId: z.string().uuid() });
 
 // POST /api/payments/paypal/create-order
 export async function POST(req: NextRequest) {
   try {
+    if (!paypalEnabled()) {
+      return NextResponse.json({ success: false, error: "PayPal isn't available right now. Please pay by card." }, { status: 404 });
+    }
     const session = await requireAuth();
     const userId = (session.user as any).id as string;
 

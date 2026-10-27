@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { paypalEnabled } from "@/lib/payment-options";
 import Link from "next/link";
 import {
   HelpCircle, BookOpen, CreditCard, Store,
@@ -26,7 +27,7 @@ const FAQ_CATEGORIES = [
     color: "#E8563A",
     faqs: [
       { q: "How much does it cost?", a: "Each store has its own weekly price, shown in the location search and again before you pay. No hidden fees, no setup costs, no contracts." },
-      { q: "What payment methods are accepted?", a: "We accept all major credit and debit cards via Stripe. PayPal is also supported at checkout." },
+      { q: "What payment methods are accepted?", a: `We accept all major credit and debit cards via Stripe.${paypalEnabled() ? " PayPal is also supported at checkout." : ""}` },
       { q: "Can I get a refund?", a: "Yes. If your ad is denied after review you will receive a full refund automatically. Approved ads that are cancelled before the run date are also eligible for a refund — contact support for details." },
       { q: "When is my card charged?", a: "Your card is charged at the time of submission, before review. If the ad is denied, the charge is reversed within 3–5 business days." },
     ],

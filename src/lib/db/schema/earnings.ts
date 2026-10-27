@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, timestamp, pgEnum, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, integer, timestamp, pgEnum, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { users } from "./users";
 import { locations } from "./locations";
@@ -18,6 +18,7 @@ export const earningStatusEnum = pgEnum("earning_status", [
 export const payoutMethodEnum = pgEnum("payout_method", [
   "zelle",
   "check",
+  "stripe",   // direct deposit through Stripe Connect
 ]);
 
 // One row per advertiser payment at a store-owner location.
@@ -49,7 +50,7 @@ export const ownerEarnings = pgTable("owner_earnings", {
   index("owner_earnings_owner_status_idx").on(t.ownerId, t.status),
 ]);
 
-// One row per manual payment sent to a store owner.
+// One row per payment sent to a store owner (manual Zelle/check, or a Stripe direct deposit).
 export const payouts = pgTable("payouts", {
   id: uuid("id").primaryKey().defaultRandom(),
   ownerId: uuid("owner_id")
@@ -58,14 +59,16 @@ export const payouts = pgTable("payouts", {
   amountCents: integer("amount_cents").notNull(),
   currency: text("currency").default("USD").notNull(),
   method: payoutMethodEnum("method").notNull(),
-  reference: text("reference"),                             // Zelle confirmation or check number
+  reference: text("reference"),                             // Zelle confirmation, check number, or Stripe transfer id
   note: text("note"),
+  period: text("period"),                                   // "2026-11" for direct deposits: one per owner per month
   paidAt: timestamp("paid_at").defaultNow().notNull(),
-  createdBy: uuid("created_by")
-    .notNull()
+  createdBy: uuid("created_by")                              // null for automatic direct deposits
     .references(() => users.id, { onDelete: "restrict" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => [
+  uniqueIndex("payouts_owner_period_uq").on(t.ownerId, t.period),  // manual payouts have no period (NULLs never clash)
+]);
 
 export const ownerEarningsRelations = relations(ownerEarnings, ({ one }) => ({
   payment: one(payments, { fields: [ownerEarnings.paymentId], references: [payments.id] }),

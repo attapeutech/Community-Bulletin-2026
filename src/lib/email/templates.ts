@@ -243,8 +243,9 @@ export async function sendAdDeniedEmail({
 export async function sendPayoutSentEmail({
   to, ownerName, amountFormatted, method, reference, adCount,
 }: {
-  to: string; ownerName: string; amountFormatted: string; method: "zelle" | "check"; reference: string | null; adCount: number;
+  to: string; ownerName: string; amountFormatted: string; method: "zelle" | "check" | "stripe"; reference: string | null; adCount: number;
 }) {
+  const methodLabel = method === "stripe" ? "Direct deposit (usually arrives in 2–3 business days)" : method === "zelle" ? "Zelle" : "Mailed check";
   return sendEmail({
     to,
     subject: `Your CommunityBulletin payout of ${amountFormatted} is on its way`,
@@ -253,11 +254,34 @@ export async function sendPayoutSentEmail({
       <p style="color:#4A6B82;font-size:14px;margin:0 0 20px">Hi ${ownerName}, we've sent your earnings from ads shown at your store.</p>
       ${detailTable([
         { label: "Amount", value: `<strong style="color:${CORAL_COLOR}">${amountFormatted}</strong>` },
-        { label: "Method", value: method === "zelle" ? "Zelle" : "Mailed check" },
+        { label: "Method", value: methodLabel },
         ...(reference ? [{ label: method === "zelle" ? "Confirmation" : "Check number", value: reference }] : []),
         { label: "Ad runs included", value: String(adCount) },
       ])}
       ${primaryButton(`${APP_URL}/dashboard/store-owner/earnings`, "View Earnings")}
+    `),
+  });
+}
+
+/** After a direct-deposit run that paid someone or hit an error: what happened, for admins */
+export async function sendDirectDepositSummaryEmail({ to, summary }: {
+  to: string;
+  summary: { period: string; trigger: "schedule" | "manual"; paid: { name: string; amountCents: number }[]; skipped: { name: string; amountCents: number; reason?: string }[]; failed: { name: string; amountCents: number; reason?: string }[] };
+}) {
+  const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
+  const total = summary.paid.reduce((s, p) => s + p.amountCents, 0);
+  const list = (rows: { name: string; amountCents: number; reason?: string }[]) =>
+    rows.map(r => `<li style="margin:0 0 4px">${r.name}: <strong>${usd(r.amountCents)}</strong>${r.reason ? ` — ${r.reason}` : ""}</li>`).join("");
+  return sendEmail({
+    to,
+    subject: `Direct deposits ${summary.period}: ${summary.paid.length} paid (${usd(total)})${summary.failed.length ? `, ${summary.failed.length} failed` : ""}`,
+    html: emailWrapper(`
+      <h2 style="margin:0 0 8px;color:${BRAND_COLOR};font-size:20px">Direct deposit run · ${summary.period}</h2>
+      <p style="color:#4A6B82;font-size:14px;margin:0 0 16px">${summary.trigger === "manual" ? "Started by an admin." : "Automatic monthly run."}</p>
+      ${summary.paid.length ? `<p style="margin:0 0 6px;font-weight:bold;color:#16a34a">Paid (${usd(total)})</p><ul style="margin:0 0 16px;padding-left:20px;color:#1A3A5C;font-size:14px">${list(summary.paid)}</ul>` : ""}
+      ${summary.failed.length ? `<p style="margin:0 0 6px;font-weight:bold;color:#B91C1C">Failed — please check</p><ul style="margin:0 0 16px;padding-left:20px;color:#1A3A5C;font-size:14px">${list(summary.failed)}</ul>` : ""}
+      ${summary.skipped.length ? `<p style="margin:0 0 6px;font-weight:bold;color:#4A6B82">Skipped</p><ul style="margin:0 0 16px;padding-left:20px;color:#4A6B82;font-size:13px">${list(summary.skipped)}</ul>` : ""}
+      ${primaryButton(`${APP_URL}/dashboard/admin/payouts`, "Open Payouts")}
     `),
   });
 }

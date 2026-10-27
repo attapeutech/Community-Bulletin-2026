@@ -5,6 +5,7 @@ import { users, ownerEarnings, payouts } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/auth/session";
 import { eq, and, inArray } from "drizzle-orm";
 import { sendPayoutSentEmail } from "@/lib/email/templates";
+import { stripeConnectEnabled } from "@/lib/stripe";
 import { notifyPayoutSent } from "@/lib/notifications";
 
 const schema = z.object({
@@ -30,7 +31,16 @@ export async function POST(req: NextRequest) {
     const { ownerId, method, reference, note, expectedCents } = parsed.data;
 
     // Payouts are held until the store partner agreement is signed (null = not tracked, e.g. older partners)
-    const [ownerRow] = await db.select({ agreement: users.partnerAgreementStatus }).from(users).where(eq(users.id, ownerId)).limit(1);
+    const [ownerRow] = await db
+      .select({ agreement: users.partnerAgreementStatus, payoutsEnabled: users.stripePayoutsEnabled, manualAllowed: users.manualPayoutAllowed })
+      .from(users).where(eq(users.id, ownerId)).limit(1);
+    // Owners on direct deposit are paid automatically; Zelle/check needs an admin-approved exception
+    if (stripeConnectEnabled() && ownerRow?.payoutsEnabled && !ownerRow.manualAllowed) {
+      return NextResponse.json(
+        { success: false, error: "This owner is paid by direct deposit. Allow Zelle/check for them first if you need to pay manually." },
+        { status: 409 }
+      );
+    }
     if (ownerRow?.agreement === "not_sent" || ownerRow?.agreement === "sent") {
       return NextResponse.json(
         { success: false, error: "This partner hasn't signed their agreement yet. Mark it signed on the Applications page first." },

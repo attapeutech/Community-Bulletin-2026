@@ -5,6 +5,8 @@ import { eq, and, lt, inArray } from "drizzle-orm";
 import { pushDisplayRefresh } from "@/lib/socket/notify";
 import { releaseEarnings } from "@/lib/earnings";
 import { notifyAdsExpired, notifyAdsExpiringSoon } from "@/lib/notifications";
+import { stripeConnectEnabled } from "@/lib/stripe";
+import { runDirectDeposits, payoutDayOfMonth, PAYOUT_DAY } from "@/lib/direct-deposits";
 
 // POST /api/cron/expire-ads
 // Called by Coolify scheduled task:
@@ -30,6 +32,18 @@ export async function POST(req: NextRequest) {
     console.log(`[cron/expire-ads] Earnings: ${earnings.released} released, ${earnings.voided} voided, ${earnings.retryLater} retry later`);
   }
 
+  // Monthly direct deposits: from the 15th on, each daily run pays anyone eligible who hasn't been
+  // paid this month (so a missed day catches up; nobody is paid twice)
+  let directDeposits: { paid: number; failed: number } | null = null;
+  if (stripeConnectEnabled() && payoutDayOfMonth(now) >= PAYOUT_DAY) {
+    try {
+      const run = await runDirectDeposits({ now, trigger: "schedule" });
+      directDeposits = { paid: run.paid.length, failed: run.failed.length };
+    } catch (err) {
+      console.error("[cron/expire-ads] direct deposits failed", err);
+    }
+  }
+
   // Warn advertisers whose ads end within 24 hours (once per run)
   const expiringSoon = await notifyAdsExpiringSoon(now);
 
@@ -40,7 +54,7 @@ export async function POST(req: NextRequest) {
     .where(and(eq(ads.status, "approved"), lt(ads.endedAt, now)));
 
   if (expired.length === 0) {
-    return NextResponse.json({ success: true, expired: 0, expiringSoon, earnings });
+    return NextResponse.json({ success: true, expired: 0, expiringSoon, earnings, directDeposits });
   }
 
   const adIds = expired.map(a => a.id);
@@ -65,5 +79,5 @@ export async function POST(req: NextRequest) {
   }
 
   console.log(`[cron/expire-ads] Expired ${adIds.length} ad(s) across ${affectedLocations.length} location(s)`);
-  return NextResponse.json({ success: true, expired: adIds.length, locations: affectedLocations.map(l => l.slug), expiringSoon, earnings });
+  return NextResponse.json({ success: true, expired: adIds.length, locations: affectedLocations.map(l => l.slug), expiringSoon, earnings, directDeposits });
 }

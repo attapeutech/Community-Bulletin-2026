@@ -3,6 +3,8 @@ import { db } from "@/lib/db/client";
 import { users, ownerEarnings, payouts } from "@/lib/db/schema";
 import { eq, desc, sql, inArray } from "drizzle-orm";
 import PayoutsClient, { type OwnerBalance, type PayoutRow } from "./PayoutsClient";
+import { stripeConnectEnabled, stripeTestMode } from "@/lib/stripe";
+import { lastDirectDepositRun } from "@/lib/direct-deposits";
 
 export default async function AdminPayoutsPage() {
   await requireAdmin();
@@ -29,6 +31,9 @@ export default async function AdminPayoutsPage() {
       payoutZelle: users.payoutZelle,
       payoutMailingAddress: users.payoutMailingAddress,
       agreementStatus: users.partnerAgreementStatus,
+      stripeAccountId: users.stripeAccountId,
+      stripePayoutsEnabled: users.stripePayoutsEnabled,
+      manualPayoutAllowed: users.manualPayoutAllowed,
     })
     .from(users)
     .where(inArray(users.role, ["store_owner"]))
@@ -61,5 +66,12 @@ export default async function AdminPayoutsPage() {
     .limit(50)
   ).map(p => ({ ...p, paidAt: p.paidAt.toISOString() }));
 
-  return <PayoutsClient balances={balances} history={history} />;
+  const connectEnabled = stripeConnectEnabled();
+  return (
+    <PayoutsClient
+      balances={balances}
+      history={history}
+      directDeposits={connectEnabled ? { testMode: stripeTestMode(), lastRun: await lastDirectDepositRun() } : null}
+    />
+  );
 }

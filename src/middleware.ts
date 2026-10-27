@@ -30,6 +30,9 @@ export async function middleware(request: NextRequest) {
     PUBLIC_ROUTES.some((r) => pathname === r || pathname.startsWith(r + "/")) ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/cron") ||
+    // Stripe calls these directly; each checks Stripe's signature
+    pathname === "/api/payments/stripe/webhook" ||
+    pathname === "/api/payments/stripe/connect-webhook" ||
     pathname.startsWith("/api/display") ||
     pathname.startsWith("/api/ads/live") ||
     pathname === "/api/health" ||   // Coolify health check (zero-downtime deploys)

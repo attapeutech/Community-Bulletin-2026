@@ -38,6 +38,8 @@ export const locations = pgTable("locations", {
   category: text("category"),
   logoUrl: text("logo_url"),
   businessHours: text("business_hours"),
+  dailyCustomers: integer("daily_customers"),         // store-reported average customers per day; admin-set
+  trafficUpdatedAt: timestamp("traffic_updated_at"),  // when dailyCustomers was last set
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

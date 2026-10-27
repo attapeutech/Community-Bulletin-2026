@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDropzone } from "react-dropzone";
+import { costPerThousandCents, formatCostPerThousand, formatShoppers } from "@/lib/traffic";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type Location = {
@@ -10,6 +11,7 @@ type Location = {
   storeName: string;
   storeNumber?: string | null;
   pricePerWeekCents: number;
+  dailyCustomers?: number | null;
   slug: string;
   addressLine1: string;
   addressLine2?: string | null;
@@ -19,6 +21,17 @@ type Location = {
 };
 
 type Step = 1 | 2 | 3 | 4;
+
+/** "~500 shoppers a day · $28.57 per 1,000 shoppers" (store-reported traffic) */
+function ShopperReach({ loc }: { loc: Location }) {
+  const cpm = costPerThousandCents(loc.pricePerWeekCents, loc.dailyCustomers);
+  return (
+    <div style={{ fontSize: 12, color: "#15803D", fontWeight: 600, marginTop: 3 }}>
+      ~{formatShoppers(loc.dailyCustomers!)} shoppers a day
+      {cpm !== null && <span style={{ color: "#4A6B82", fontWeight: 400 }}> · {formatCostPerThousand(cpm)} per 1,000 shoppers</span>}
+    </div>
+  );
+}
 
 function formatPrice(cents: number) {
   return `$${(cents / 100).toFixed(cents % 100 === 0 ? 0 : 2)}`;
@@ -414,6 +427,7 @@ export default function NewAdPage() {
                         {loc.addressLine1}, {loc.city.name}, {loc.state.code} {loc.postalCode?.code}
                         {loc.storeNumber && <StoreNumber value={loc.storeNumber} />}
                       </div>
+                      {loc.dailyCustomers ? <ShopperReach loc={loc} /> : null}
                     </button>
                   ))}
                 </div>
@@ -426,6 +440,7 @@ export default function NewAdPage() {
                     {selectedLocation.addressLine1}, {selectedLocation.city.name}, {selectedLocation.state.code} {selectedLocation.postalCode?.code}
                     {selectedLocation.storeNumber && <StoreNumber value={selectedLocation.storeNumber} />}
                   </div>
+                  {selectedLocation.dailyCustomers ? <ShopperReach loc={selectedLocation} /> : null}
                 </div>
               )}
 

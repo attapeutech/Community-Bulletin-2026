@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MIN_PRICE_PER_WEEK_CENTS, MAX_PRICE_PER_WEEK_CENTS, MAX_SHARE_RATE_BPS } from "@/types";
+import { costPerThousandCents, formatCostPerThousand, formatShoppers, formatTrafficDate } from "@/lib/traffic";
 
 const editSchema = z.object({
   storeName:         z.string().min(2, "Store name must be at least 2 characters"),
@@ -32,6 +33,7 @@ const editSchema = z.object({
     .max(MAX_PRICE_PER_WEEK_CENTS, `Maximum $${(MAX_PRICE_PER_WEEK_CENTS / 100).toLocaleString()}/week`),
   shareRateBps:      z.number().int().min(0, "Cannot be negative").max(MAX_SHARE_RATE_BPS, `Maximum ${MAX_SHARE_RATE_BPS / 100}%`),
   equipmentProvided: z.boolean(),
+  dailyCustomers:    z.number().int().min(0, "Cannot be negative").max(1_000_000).nullable(),
   description:       z.string().max(1000).optional(),
   category:          z.string().max(100).optional(),
   businessHours:     z.string().max(500).optional(),
@@ -56,6 +58,7 @@ type Location = {
   description: string | null; category: string | null;
   logoUrl: string | null; businessHours: string | null;
   countryId: string; stateId: string; cityId: string; postalCodeId: string;
+  dailyCustomers: number | null; trafficUpdatedAt: Date | string | null;
   city: { name: string }; state: { code: string }; postalCode: { code: string };
 };
 
@@ -251,6 +254,7 @@ export default function LocationDetailClient({
       pricePerWeekCents: location.pricePerWeekCents,
       shareRateBps:      location.shareRateBps,
       equipmentProvided: location.equipmentProvided,
+      dailyCustomers:    location.dailyCustomers,
       description:       location.description ?? "",
       category:          location.category ?? "",
       businessHours:     location.businessHours ?? "",
@@ -261,6 +265,7 @@ export default function LocationDetailClient({
   // price in dollars / share in percent for display in inputs
   const priceWatch = watch("pricePerWeekCents");
   const shareWatch = watch("shareRateBps");
+  const trafficWatch = watch("dailyCustomers");
 
   // Country → state → city → ZIP dropdowns, loaded only while editing
   const [countries,   setCountries]   = useState<Option[]>([]);
@@ -420,7 +425,7 @@ export default function LocationDetailClient({
 
       {/* Info cards row */}
       {!editMode && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
           <div className="bg-white rounded-xl border border-[#D8E4EE] p-4">
             <div className="text-[10px] font-semibold text-[#4A6B82] uppercase tracking-wider mb-1">Price / Week</div>
             <div className="text-lg font-bold text-[#1A3A5C]">{formatCents(location.pricePerWeekCents, location.currency)}</div>
@@ -431,6 +436,15 @@ export default function LocationDetailClient({
               {shareRate}
             </div>
             <div className="text-[10px] text-[#5B7D96] mt-0.5">{location.equipmentProvided ? "owner provides equipment" : "platform equipment"}</div>
+          </div>
+          <div className="bg-white rounded-xl border border-[#D8E4EE] p-4">
+            <div className="text-[10px] font-semibold text-[#4A6B82] uppercase tracking-wider mb-1">Daily Shoppers</div>
+            <div className="text-lg font-bold text-[#1A3A5C]">{location.dailyCustomers ? `~${formatShoppers(location.dailyCustomers)}` : "—"}</div>
+            <div className="text-[10px] text-[#5B7D96] mt-0.5">
+              {location.dailyCustomers
+                ? `${formatCostPerThousand(costPerThousandCents(location.pricePerWeekCents, location.dailyCustomers)!)} per 1,000 · ${formatTrafficDate(location.trafficUpdatedAt) ?? "store-reported"}`
+                : isAdmin ? "Add in Edit" : "Not set"}
+            </div>
           </div>
           <div className="bg-white rounded-xl border border-[#D8E4EE] p-4">
             <div className="text-[10px] font-semibold text-[#4A6B82] uppercase tracking-wider mb-1">Active Ads</div>
@@ -639,6 +653,29 @@ export default function LocationDetailClient({
                       <FieldError msg={errors.shareRateBps?.message} />
                       <p className="text-[10px] text-[#5B7D96] mt-1.5">Owner earns this % of each ad price after card fees. Changes apply to new payments only.</p>
                     </div>
+                  </div>
+                  <div>
+                    <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
+                      Average daily customers
+                    </Label>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <Input
+                        type="number"
+                        min={0}
+                        step={10}
+                        placeholder="e.g. 500"
+                        value={trafficWatch ?? ""}
+                        onChange={(e) => setValue("dailyCustomers", e.target.value === "" ? null : Math.round(Number(e.target.value)), { shouldValidate: true })}
+                        className={cn("h-10 w-36 text-sm bg-white border-[#D1DDE8]", errors.dailyCustomers && "border-red-300 bg-red-50")}
+                      />
+                      {trafficWatch ? (
+                        <span className="text-xs text-[#4A6B82]">
+                          ≈ <strong className="text-[#1A3A5C]">{formatCostPerThousand(costPerThousandCents(priceWatch, trafficWatch)!)}</strong> per 1,000 shoppers at {formatCents(priceWatch, location.currency)}/week
+                        </span>
+                      ) : null}
+                    </div>
+                    <FieldError msg={errors.dailyCustomers?.message} />
+                    <p className="text-[10px] text-[#5B7D96] mt-1.5">As reported by the store (e.g. daily register transactions). Shown to advertisers as &ldquo;~500 shoppers a day&rdquo;, dated when you change it. Leave blank to hide.</p>
                   </div>
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input

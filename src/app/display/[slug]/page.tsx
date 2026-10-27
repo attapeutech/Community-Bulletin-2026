@@ -46,6 +46,7 @@ type LocationInfo = {
   storeNumber: string | null;
   pricePerWeekCents?: number;
   allLocations?: boolean;   // the /display/all screen (every store's ads)
+  dailyCustomers?: number | null;
   address: string;
   address2: string | null;
   city: string;
@@ -387,6 +388,7 @@ export default function DisplayPage() {
                     subline={location?.allLocations
                       ? "Reach shoppers on in-store screens at local businesses near you"
                       : advertiseSlide!.subline.replace(/\{store\}/g, location?.name ?? "this store")}
+                    reach={location?.dailyCustomers ? `~${location.dailyCustomers.toLocaleString("en-US")} shoppers a day` : null}
                     price={location?.pricePerWeekCents ? formatPrice(location.pricePerWeekCents) : null}
                     pricePrefix={location?.allLocations ? "From " : ""}
                     postUrl={typeof window === "undefined" ? "" : location?.allLocations

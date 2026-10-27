@@ -27,6 +27,7 @@ const updateSchema = z.object({
   category: z.string().max(100).nullable().optional(),
   logoUrl: z.string().url().nullable().optional(),
   businessHours: z.string().max(500).nullable().optional(),
+  dailyCustomers: z.number().int().min(0).max(1_000_000).nullable().optional(),
 });
 
 // PATCH /api/locations/[id]
@@ -57,6 +58,7 @@ export async function PATCH(
       delete data.pricePerWeekCents;
       delete data.shareRateBps;
       delete data.equipmentProvided;
+      delete data.dailyCustomers;
     }
 
     // Make sure the new place is consistent: ZIP in the city, city in the state, state in the country
@@ -84,7 +86,14 @@ export async function PATCH(
 
     const [updated] = await db
       .update(locations)
-      .set({ ...data, updatedAt: new Date() })
+      .set({
+        ...data,
+        // Date the traffic figure so advertisers see how current it is
+        ...(data.dailyCustomers !== undefined && data.dailyCustomers !== location.dailyCustomers
+          ? { trafficUpdatedAt: data.dailyCustomers === null ? null : new Date() }
+          : {}),
+        updatedAt: new Date(),
+      })
       .where(eq(locations.id, id))
       .returning();
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
+import { assignedScreenSlug, goToScreen } from "@/lib/screen-device";
 import { useSearchParams } from "next/navigation";
 import LiveAdsGrid from "@/components/marketing/LiveAdsGrid";
 
@@ -9,6 +10,12 @@ function LiveAdsContent() {
   const state  = searchParams.get("state")  ?? "";
   const city   = searchParams.get("city")   ?? "";
   const search = searchParams.get("search") ?? "";
+
+  // A store TV that was assigned remotely goes straight to its screen (e.g. after a reboot)
+  useEffect(() => {
+    const slug = assignedScreenSlug();
+    if (slug) goToScreen(slug);
+  }, []);
 
   const locationLabel = state
     ? city ? `${city}, ${state}` : state

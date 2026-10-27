@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { useDisplaySocket } from "@/lib/socket/client";
+import { screenCheckin, goToScreen } from "@/lib/screen-device";
 import { QRCodeSVG } from "qrcode.react";
 import { BrandMark } from "@/components/layout/BrandMark";
 import { HeartButton } from "@/components/ui/HeartButton";
@@ -217,6 +218,23 @@ export default function DisplayPage() {
   useEffect(() => {
     fetchAds();
   }, [fetchAds]);
+
+  // Remote setup: report in once a minute; if an admin assigned this screen to a location,
+  // switch to that location's screen (works even from inside the Live Ads page)
+  const locationSlugRef = useRef<string | null>(null);
+  locationSlugRef.current = location?.slug ?? null;
+  useEffect(() => {
+    const check = () => {
+      screenCheckin(`/display/${slug}`)
+        .then((assigned) => {
+          if (assigned && assigned !== slug && assigned !== locationSlugRef.current) goToScreen(assigned);
+        })
+        .catch(() => {});
+    };
+    check();
+    const id = setInterval(check, 60_000);
+    return () => clearInterval(id);
+  }, [slug]);
 
   // Polling fallback — refreshes every 10 seconds regardless of Socket.io
   useEffect(() => {

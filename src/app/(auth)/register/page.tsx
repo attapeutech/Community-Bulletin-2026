@@ -19,6 +19,7 @@ import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useNextParam } from "@/lib/use-next-param";
 import { withNext } from "@/lib/safe-redirect";
+import { googleAuthEnabled } from "@/lib/google-auth";
 import { StorePartnerFields, EMPTY_STORE_PARTNER, validateStorePartner, type StorePartnerValues } from "@/components/partners/StorePartnerFields";
 import { partnerApplicationSchema } from "@/lib/partner-application-schema";
 
@@ -253,21 +254,25 @@ function RegisterForm() {
         </Button>
       </form>
 
-      <div className="flex items-center gap-3 my-4">
-        <Separator className="flex-1" />
-        <span className="text-xs text-muted-foreground">or</span>
-        <Separator className="flex-1" />
-      </div>
+      {googleAuthEnabled() && (
+        <>
+          <div className="flex items-center gap-3 my-4">
+            <Separator className="flex-1" />
+            <span className="text-xs text-muted-foreground">or</span>
+            <Separator className="flex-1" />
+          </div>
 
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => signIn.social?.({ provider: "google", callbackURL: next })}
-        className="w-full h-10 text-[13px] font-medium"
-      >
-        <GoogleIcon />
-        Continue with Google
-      </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => signIn.social({ provider: "google", callbackURL: next, errorCallbackURL: "/login" })}
+            className="w-full h-10 text-[13px] font-medium"
+          >
+            <GoogleIcon />
+            Continue with Google
+          </Button>
+        </>
+      )}
 
       <p className="text-center mt-5 text-[13px] text-muted-foreground">
         Already have an account?{" "}

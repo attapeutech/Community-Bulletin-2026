@@ -102,13 +102,20 @@
 - **Welcome email:** optional `sendAccountCreatedEmail`. It never includes the password.
 - **Code:** `src/lib/temp-password.ts`, which hashes with better-auth's own hasher and writes the `credential` account.
 
+## Sign in with Google (2026-10-27)
+
+- **On/off:** on when `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (build variable) and `GOOGLE_CLIENT_SECRET` are set (`src/lib/google-auth.ts`, `socialProviders` in `src/lib/auth/index.ts`). Without them the "Continue with Google" buttons are hidden. Both are set in Coolify and `.env.local`.
+- **Google Cloud:** OAuth client "Community Bulletin" (Web application) in the **laotech** project. Redirect URIs: `https://communitybulletin.com/api/auth/callback/google` and `http://localhost:3000/api/auth/callback/google`. The consent screen's Branding (app name, support email) and Audience (must be **In production**) are set there.
+- **Accounts:** a Google sign-in with the same email as an existing account links to it (Google confirms the email). New Google users get role `user`; store owners apply at `/partners/apply`.
+- **Errors** (e.g. suspended account) return to `/login?error=…`, which shows a message.
+
 ## "Advertise here" slide on display screens
 
 - **Built-in slide:** `AdvertiseHereSlide` (now shared, in `src/components/display/AdvertiseHereSlide.tsx`, with the motion helpers and layout hooks), a built-in slide (not an ad record). It appears after every N paid ads, once per loop when a store has fewer than N, and alone when a store has none. It's never counted as an ad view.
 - **Settings:** stored in `app_settings`, key `advertise_slide` (enabled, headline, sub-line with `{store}`, every N). They're edited on the Admin Panel's Overview tab, and saving refreshes all screens. The display feed returns them as `advertiseSlide`.
 - **QR code:** opens `/ads/new?location=<slug>&src=screen`. Post a New Ad pre-selects the store through `GET /api/locations?slug=`.
 - **Return trip after login or sign-up:**
-  - The middleware keeps the query string in `callbackUrl`.
+  - The proxy (`src/proxy.ts`, formerly `middleware.ts`) keeps the query string in `callbackUrl`.
   - Login and register read it with `useNextParam()` and pass it to sign-in, Google sign-in, the verification email (`callbackURL`) and the links between the two pages.
   - `safeNext()` allows same-site paths only.
 - **Later (option 2):** custom house ads (admin-made, no payment, chosen stores).
@@ -173,7 +180,7 @@
 ## Saved ads (wishlist hearts)
 
 - **Table:** `saved_ads` has primary key (`user_id`, `ad_id`), cascading on user and ad delete, and an index on `ad_id` for per-ad counts (migration 0010).
-- **API:** `GET`/`POST`/`DELETE /api/saved`, signed-in users only (401 in the route; the middleware also requires a session).
+- **API:** `GET`/`POST`/`DELETE /api/saved`, signed-in users only (401 in the route; the proxy also requires a session).
 - **UI:**
   - `HeartButton` (`src/components/ui`): `overlay` variant on Live Ads cards, `pill` variant on the public ad page. Signed-out visitors go to login and are returned to the page.
   - Shared client store in `src/lib/use-saved-ads.ts`, with one fetch per page and optimistic updates.

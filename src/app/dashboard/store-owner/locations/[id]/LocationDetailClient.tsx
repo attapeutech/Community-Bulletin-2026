@@ -101,7 +101,7 @@ function DisplayScreenCard({ slug }: { slug: string }) {
       </div>
       <div className="px-6 py-5 flex flex-col sm:flex-row gap-6 items-start sm:items-center">
         {/* QR code */}
-        <div className="shrink-0 bg-white p-3 rounded-xl border border-[#D8E4EE] shadow-sm">
+        <div className="shrink-0 bg-white dark:bg-white p-3 rounded-xl border border-[#D8E4EE] shadow-sm">
           <QRCodeSVG value={displayUrl} size={128} bgColor="#ffffff" fgColor="#1A3A5C" level="M" />
         </div>
         {/* URL + instructions */}

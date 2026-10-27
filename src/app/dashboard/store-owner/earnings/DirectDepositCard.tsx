@@ -42,9 +42,9 @@ export default function DirectDepositCard({ status, testMode, availableCents }: 
   }
 
   return (
-    <div style={{ background: "#fff", borderRadius: 12, border: `1px solid ${status === "active" ? "#BBF7D0" : "#D8E4EE"}`, padding: "18px 20px" }}>
+    <div style={{ background: "var(--cb-surface)", borderRadius: 12, border: `1px solid ${status === "active" ? "#BBF7D0" : "var(--cb-line)"}`, padding: "18px 20px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 4 }}>
-        <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, fontWeight: 700, color: ACCENT, margin: 0 }}>Direct Deposit</h2>
+        <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, fontWeight: 700, color: "var(--cb-ink)", margin: 0 }}>Direct Deposit</h2>
         <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 20, background: st.bg, color: st.color }}>{st.label}</span>
         {testMode && (
           <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "#FEF3C7", color: "#92400E", textTransform: "uppercase", letterSpacing: "0.05em" }}>
@@ -55,29 +55,29 @@ export default function DirectDepositCard({ status, testMode, availableCents }: 
 
       {status === "active" ? (
         <>
-          <p style={{ fontSize: 13, color: "#4A6B82", margin: "6px 0 14px", lineHeight: 1.6 }}>
+          <p style={{ fontSize: 13, color: "var(--cb-ink-2)", margin: "6px 0 14px", lineHeight: 1.6 }}>
             You&apos;re all set. On the <strong>15th of each month</strong>, your available balance (if it&apos;s at least $25) is sent
             to your bank automatically. It usually arrives in 2–3 business days. You&apos;ll get an email each time.
           </p>
-          <button type="button" disabled={busy} onClick={() => go("/api/stripe/connect/dashboard")} style={{ ...buttonStyle, background: "#fff", color: ACCENT, border: "1px solid #D1DDE8", opacity: busy ? 0.7 : 1 }}>
+          <button type="button" disabled={busy} onClick={() => go("/api/stripe/connect/dashboard")} style={{ ...buttonStyle, background: "var(--cb-surface)", color: "var(--cb-ink)", border: "1px solid var(--cb-line-2)", opacity: busy ? 0.7 : 1 }}>
             {busy ? "Opening Stripe…" : "View payouts & bank details on Stripe ↗"}
           </button>
         </>
       ) : (
         <>
-          <p style={{ fontSize: 13, color: "#4A6B82", margin: "6px 0 14px", lineHeight: 1.6 }}>
+          <p style={{ fontSize: 13, color: "var(--cb-ink-2)", margin: "6px 0 14px", lineHeight: 1.6 }}>
             {status === "incomplete"
               ? "Your setup isn't finished yet. Pick up where you left off — it only takes a few minutes."
               : "Get your earnings deposited straight into your bank account every month."}
             {" "}Stripe, our payment partner, securely collects your bank and tax details (W-9); we never see your bank account number.
-            {availableCents > 0 && <strong style={{ color: "#92400E" }}> You have earnings waiting — finish setup so we can pay you.</strong>}
+            {availableCents > 0 && <strong style={{ color: "var(--cb-amber)" }}> You have earnings waiting — finish setup so we can pay you.</strong>}
           </p>
           <button type="button" disabled={busy} onClick={() => go("/api/stripe/connect/onboard")} style={{ ...buttonStyle, opacity: busy ? 0.7 : 1 }}>
             {busy ? "Opening Stripe…" : status === "incomplete" ? "Finish direct deposit setup →" : "Get paid by direct deposit →"}
           </button>
         </>
       )}
-      {error && <p style={{ fontSize: 13, color: "#B91C1C", margin: "10px 0 0" }}>{error}</p>}
+      {error && <p style={{ fontSize: 13, color: "var(--cb-red)", margin: "10px 0 0" }}>{error}</p>}
     </div>
   );
 }

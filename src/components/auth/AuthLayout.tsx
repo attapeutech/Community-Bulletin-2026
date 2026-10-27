@@ -7,7 +7,7 @@ export function AuthLayout({ children, wide = false }: { children: React.ReactNo
     <div className="flex min-h-screen font-sans">
 
       {/* ── LEFT PANEL ── */}
-      <div className="hidden lg:flex lg:w-[42%] lg:min-w-[340px] bg-primary px-9 py-8 flex-col justify-between items-center">
+      <div className="hidden lg:flex lg:w-[42%] lg:min-w-[340px] bg-primary dark:bg-[#0F2540] px-9 py-8 flex-col justify-between items-center">
         {/* Logo hero */}
         <Link href="/" className="flex flex-col items-center gap-5 flex-1 justify-center no-underline">
           <BrandMark size={112} className="ring-1 ring-white/15 rounded-[25px]" />
@@ -17,7 +17,7 @@ export function AuthLayout({ children, wide = false }: { children: React.ReactNo
               Bulletin<span className="text-accent text-[22px] font-sans font-normal">.com</span>
             </div>
             <div className="w-[50px] h-[3px] bg-destructive rounded-sm mx-auto mt-3" />
-            <div className="text-[11px] text-accent/60 mt-2 tracking-[0.1em] uppercase">
+            <div className="text-[11px] text-accent/60 dark:text-[#9DC4E0]/80 mt-2 tracking-[0.1em] uppercase">
               Digital in-store advertising
             </div>
           </div>
@@ -28,7 +28,7 @@ export function AuthLayout({ children, wide = false }: { children: React.ReactNo
           <h2 className="font-serif font-bold text-[17px] text-white leading-snug mb-2">
             Your neighborhood.<br />Your screen. Your community.
           </h2>
-          <p className="text-xs text-accent/60 leading-relaxed m-0">
+          <p className="text-xs text-accent/60 dark:text-[#9DC4E0]/80 leading-relaxed m-0">
             Connecting local businesses with their community —<br />
             on digital screens inside the stores people visit every day.
           </p>
@@ -39,7 +39,7 @@ export function AuthLayout({ children, wide = false }: { children: React.ReactNo
           {[{ num: "Local", lbl: "Stores near you" }, { num: "1-week", lbl: "Campaigns" }, { num: "Human", lbl: "Reviewed ads" }].map(({ num, lbl }) => (
             <div key={lbl} className="text-center">
               <div className="font-serif font-bold text-[18px] text-destructive">{num}</div>
-              <div className="text-[10px] text-accent/60 mt-0.5">{lbl}</div>
+              <div className="text-[10px] text-accent/60 dark:text-[#9DC4E0]/80 mt-0.5">{lbl}</div>
             </div>
           ))}
         </div>

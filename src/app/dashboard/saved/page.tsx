@@ -41,16 +41,16 @@ export default async function SavedAdsPage() {
 
   return (
     <div>
-      <h1 style={{ fontFamily: "Georgia,serif", fontSize: 26, fontWeight: 700, color: ACCENT, marginBottom: 4 }}>Saved Ads</h1>
-      <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 24 }}>
+      <h1 style={{ fontFamily: "Georgia,serif", fontSize: 26, fontWeight: 700, color: "var(--cb-ink)", marginBottom: 4 }}>Saved Ads</h1>
+      <p style={{ color: "var(--cb-ink-2)", fontSize: 14, marginBottom: 24 }}>
         Ads you&apos;ve saved with the heart. Tap the heart again to remove one.
       </p>
 
       {rows.length === 0 ? (
-        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: 48, textAlign: "center" }}>
+        <div style={{ background: "var(--cb-surface)", borderRadius: 12, border: "1px solid var(--cb-line)", padding: 48, textAlign: "center" }}>
           <div style={{ fontSize: 36, marginBottom: 12 }}>🤍</div>
-          <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: ACCENT, marginBottom: 8 }}>No saved ads yet</h2>
-          <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 20 }}>Browse ads running in local stores and tap the heart to save the ones you like.</p>
+          <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: "var(--cb-ink)", marginBottom: 8 }}>No saved ads yet</h2>
+          <p style={{ color: "var(--cb-ink-2)", fontSize: 14, marginBottom: 20 }}>Browse ads running in local stores and tap the heart to save the ones you like.</p>
           <Link href="/live-ads" style={{ background: ACCENT, color: "#fff", padding: "10px 22px", borderRadius: 8, textDecoration: "none", fontSize: 14, fontWeight: 600 }}>
             Browse live ads
           </Link>
@@ -60,7 +60,7 @@ export default async function SavedAdsPage() {
           {rows.map(r => {
             const live = isLive(r);
             const card = (
-              <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", overflow: "hidden", height: "100%", display: "flex", flexDirection: "column", opacity: live ? 1 : 0.75 }}>
+              <div style={{ background: "var(--cb-surface)", borderRadius: 12, border: "1px solid var(--cb-line)", overflow: "hidden", height: "100%", display: "flex", flexDirection: "column", opacity: live ? 1 : 0.75 }}>
                 <div style={{ position: "relative", height: 150, background: "#0A1A2E" }}>
                   <img src={r.imageUrl} alt={r.title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", filter: live ? undefined : "grayscale(0.6)" }} />
                   <span style={{
@@ -74,16 +74,16 @@ export default async function SavedAdsPage() {
                   </div>
                 </div>
                 <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
-                  <div style={{ fontFamily: "Georgia,serif", fontSize: 15, fontWeight: 700, color: ACCENT, lineHeight: 1.3 }}>{r.title}</div>
+                  <div style={{ fontFamily: "Georgia,serif", fontSize: 15, fontWeight: 700, color: "var(--cb-ink)", lineHeight: 1.3 }}>{r.title}</div>
                   {r.description && (
-                    <div style={{ fontSize: 12, color: "#4A6B82", lineHeight: 1.5, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{r.description}</div>
+                    <div style={{ fontSize: 12, color: "var(--cb-ink-2)", lineHeight: 1.5, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{r.description}</div>
                   )}
-                  <div style={{ fontSize: 12, color: "#1A3A5C", fontWeight: 600, marginTop: "auto", paddingTop: 6 }}>
+                  <div style={{ fontSize: 12, color: "var(--cb-ink)", fontWeight: 600, marginTop: "auto", paddingTop: 6 }}>
                     📍 {r.displayName || r.storeName}
                     {r.storeNumber && <span style={{ color: "#E8563A", marginLeft: 4 }}>#{r.storeNumber.replace(/^#/, "")}</span>}
-                    <span style={{ color: "#4A6B82", fontWeight: 400 }}> · {r.cityName}, {r.stateCode}</span>
+                    <span style={{ color: "var(--cb-ink-2)", fontWeight: 400 }}> · {r.cityName}, {r.stateCode}</span>
                   </div>
-                  <div style={{ fontSize: 11, color: "#5B7D96" }}>
+                  <div style={{ fontSize: 11, color: "var(--cb-ink-3)" }}>
                     Saved {r.savedAt.toLocaleDateString("en-US", { dateStyle: "medium" })}
                     {!live && " · no longer running"}
                   </div>

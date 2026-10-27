@@ -150,7 +150,7 @@ export default async function StoreOwnerPage() {
             const activeAds = adCountMap[loc.id] ?? 0;
 
             return (
-              <div key={loc.id} style={{ background: "var(--cb-surface)", borderRadius: 12, border: "1px solid var(--cb-line)", padding: "20px 24px" }}>
+              <div key={loc.id} className="p-4 sm:px-6 sm:py-5" style={{ background: "var(--cb-surface)", borderRadius: 12, border: "1px solid var(--cb-line)" }}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
                   {/* Logo or icon */}
                   <div style={{ width: 52, height: 52, borderRadius: 12, background: "#F0F7FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
@@ -160,8 +160,8 @@ export default async function StoreOwnerPage() {
                     }
                   </div>
 
-                  {/* Info */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  {/* Info: on phones the actions wrap below it instead of squeezing it */}
+                  <div style={{ flex: "1 1 180px", minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
                       <span style={{ fontWeight: 700, fontSize: 15, color: "var(--cb-ink)" }}>
                         {loc.storeName}
@@ -175,7 +175,7 @@ export default async function StoreOwnerPage() {
                     <div style={{ fontSize: 13, color: "var(--cb-ink-2)" }}>
                       {loc.addressLine1} · {loc.city.name}, {loc.state.code} {loc.postalCode.code}
                     </div>
-                    <div style={{ fontSize: 11, color: "var(--cb-ink-3)", marginTop: 4, fontFamily: "monospace" }}>
+                    <div style={{ fontSize: 11, color: "var(--cb-ink-3)", marginTop: 4, fontFamily: "monospace", overflowWrap: "anywhere" }}>
                       /display/{loc.slug}
                     </div>
 

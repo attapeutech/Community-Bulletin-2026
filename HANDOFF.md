@@ -1,8 +1,8 @@
-# Handoff: 2026-10-22 (updated 2026-10-26)
+# Handoff: 2026-10-22 (updated 2026-10-27)
 
 ## Where things stand
 
-- **Branch:** `claude/ad-submission-payment-x36DJ` was synced with origin, `main` was merged into it, and it was then merged into `main` via PR. `main` now holds everything.
+- **Branch:** everything is merged into `main` (latest: PR #75). Work goes on a short-lived branch per change and is merged by PR; `gh` isn't installed locally, so PRs are opened from the GitHub link that `git push` prints.
 - **Production:** deployed from `main` in Coolify (manual **Redeploy**; auto-deploy is not on). The deploy succeeded, and login and ad renewals work.
   - On 2026-10-27 a Redeploy kept serving an older build until the app's **Git Source** settings were saved again (Branch `main`, Commit SHA `HEAD`) and it was redeployed. If a deploy doesn't show a merged change, check those two fields and the commit line in the deployment log.
 - **Database:** moved from the Coolify Postgres container to **Neon** (Postgres 18, `us-east-2`).
@@ -11,12 +11,27 @@
   - Verified after cutover: two ad renewals on 2026-10-23 were written to Neon (payments 55 → 57).
 - **Socket.io:** runs inside the main Next.js server (`server.ts`, port 3000). No separate service is needed.
 
+## 2026-10-27 summary
+
+- **Home page badge** now says "Now booking ad space" (was a hard-coded "Now live in 48 states").
+- **Database SSL:** `DATABASE_URL` uses `sslmode=verify-full` (locally and in Coolify) instead of `require`, which silences the `pg` warning and keeps the strict check after future driver upgrades.
+- **Sign in with Google** is live (section below).
+- **`src/middleware.ts` is now `src/proxy.ts`** (Next.js 16 rename; same logic, exported function `proxy`).
+- **Dark mode** is readable across the app: `:where(.dark)` rules and `--cb-*` variables in `globals.css` remap the hard-coded light colors. Anything that must stay white in dark mode (QR codes, the Live Ads dot) uses `dark:bg-white`.
+- **Mobile:** the dashboard menu closes when a link is tapped; All Locations cards no longer squeeze on phones.
+- **Admin → Screens:** the "Showing" path opens that display in a new tab.
+- **Sales** page for the field sales process (section below), with migrations `0015` and `0016` applied to Neon.
+- **Coolify:** all `.env.local` variables were checked against Coolify; the Git Source settings were re-saved (see Production above).
+
 ## Environment and config
 
 - Local config is in **`.env.local`** (git-ignored). It points at the **production** Neon database (pooled), so admin actions taken locally change live data.
 - In `.env.local`, `APP_URL`, `NEXT_PUBLIC_APP_URL` and `BETTER_AUTH_URL` must be `http://localhost:3000`, or local login silently fails (the auth cookie lands on the production domain). Run locally with `npm start`; it includes Socket.io.
 - **`.env` is no longer tracked** (commit `2cec282`). It still exists in older git history, including the old Coolify Postgres password.
 - `drizzle.config.ts` loads `.env.local` first, then `.env`.
+- **`DATABASE_URL`** ends with `?sslmode=verify-full&channel_binding=require` (locally and in Coolify).
+- **Google sign-in:** `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (a Coolify **build variable**) and `GOOGLE_CLIENT_SECRET`, in both `.env.local` and Coolify.
+- **Stripe** still runs on **test** keys in production. Live mode needs only `STRIPE_SECRET_KEY` (`sk_live_…`) and a new live-mode `STRIPE_WEBHOOK_SECRET`; checkout uses Stripe-hosted pages, so no publishable key is needed (`NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` and `APP_URL` in `.env.local` are unused).
 - **PayPal is off** (2026-10-26) unless `NEXT_PUBLIC_PAYPAL_ENABLED=true` (`src/lib/payment-options.ts`). While it's off, checkout shows card only, `create-order` refuses, and the Help and home page text drops PayPal. Refunds of older PayPal payments still work. Turning it on needs a redeploy (build-time variable), plus `PAYPAL_MODE=live` and live credentials.
 
 ## Migrations
@@ -24,7 +39,7 @@
 - Production had been built with `db:push`, so Drizzle's migration history was empty. All migrations up to `0004_ad_analytics` were recorded as applied in Neon's `drizzle.__drizzle_migrations`, so `npm run db:migrate` works normally from here.
 - **Run migrations against the direct (non-pooled) Neon host:** remove `-pooler` from the hostname. Restores and DDL can fail through the pooler.
 - `0003` and `0004` have hand-written timestamps (`when: 1750…`) that are older than `0002`. They are already applied, so this is harmless, but generate future migrations with `npm run db:generate` rather than writing them by hand.
-- **Applied to Neon through `0014`:**
+- **Applied to Neon through `0016`** (17 rows in `drizzle.__drizzle_migrations`):
   - `0012_location_traffic`: `locations.daily_customers` and `traffic_updated_at`
   - `0013_screen_devices`
   - `0014_direct_deposits`
@@ -219,7 +234,14 @@
 
 ## To do
 
-- [ ] **Direct deposits go-live:**
+- [ ] **Stripe live card payments (Stage 1), waiting on the EIN from the business partner:**
+  1. In the Stripe Dashboard (account **Bulletin Board**, Test mode off), finish activation: business details, ID verification, payout bank account, statement descriptor (e.g. `COMMUNITYBULLETIN`), support email, website `https://communitybulletin.com`.
+  2. Copy the live secret key (`sk_live_…`).
+  3. Create a live-mode webhook at `https://communitybulletin.com/api/payments/stripe/webhook` with event `checkout.session.completed`, and copy its signing secret.
+  4. In Coolify, replace `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`, then Redeploy. Keep test keys in `.env.local`.
+  5. Make one real payment with a real card, check the ad is marked paid, the receipt email arrives and the webhook delivery succeeded in Stripe, then refund it from the Admin Panel.
+- [ ] **Before Stripe goes live:** local `.env.local` points at the production database, so a local test checkout would create a fake "paid" ad and owner earnings in production. Avoid local test checkouts, or set up a Neon branch for local development.
+- [ ] **Direct deposits go-live (Stage 2, after Stage 1):**
   1. Partner sign-off.
   2. Finish Stripe's live-mode steps (activate account, verify ID, branding, 1099 reporting).
   3. Add a Connect webhook (`account.updated`, "events on Connected accounts") at `https://communitybulletin.com/api/payments/stripe/connect-webhook`, and put its secret in Coolify as `STRIPE_CONNECT_WEBHOOK_SECRET`.
@@ -232,10 +254,12 @@
 
 - [ ] **About 1 week after 2026-10-23:** if Neon is stable, delete the old Postgres resource in Coolify (`postgresql-database-gt2gswqg8jmybj5l2ydntnfg`). Until then, don't reuse its password; it's in git history.
 - [ ] If a separate Socket.io service still exists in the Coolify project, stop and remove it.
-- [ ] Check that every variable in `.env.local` also exists in Coolify's environment variables (reCAPTCHA, cron secret, R2, email).
 - [ ] Optional: turn on **Auto Deploy** in Coolify (needs the GitHub App source or a webhook).
 - [ ] Put the Coolify dashboard behind a domain with HTTPS. It's currently plain HTTP on `:8000`.
 - [ ] `npm audit` reports 39 vulnerabilities (3 critical). Review with `npm audit` before running `npm audit fix`.
 - [ ] Local `git stash@{0}` holds only lockfile `"peer": true` noise and can be dropped (`git stash drop`).
-- [ ] **Sales team role, later:** add a `sales` value to the `user_role` enum (migration), decide what sales staff can see and do, and add it to `ROLE_OPTIONS` in `UserCredentials.tsx` and the role menus.
+- [ ] **Test data from 2026-10-27:** **Thai Grocery Tacoma #TGT-101** is an active location owned by `demonterock@gmail.com` (now a store owner), with a Won store lead in Sales. If it was only a test: deactivate or delete the location (Danger zone), set the account back to User, and delete the lead.
+- [ ] Delete the leftover remote branch `feat/google-signin-and-proxy` (an early, broken version of PR #68).
+- [ ] **Sales team role, later:** the Sales page is admin-only today (the co-founder doing sales is an admin). When a sales team joins: add `sales` to the `user_role` enum (migration), allow it on `/dashboard/sales` and `/api/admin/leads` (`requireRole("sales", "admin")`), add it to `ROLE_OPTIONS` in `UserCredentials.tsx` and the role menus, and decide whether sales staff see all leads or only their own. Store setup stays admin-only.
+- [ ] **Sales, optional ideas:** create a store lead automatically when someone applies on the website (source "Website"); a clearer Delete lead button or bulk delete; a per-store goal instead of the fixed 40.
 - [ ] **Home page stats, later:** the bar under the hero shows launch highlights (`HIGHLIGHTS` in `LandingPage.tsx`) instead of the old made-up figures. When the numbers are worth showing, add live stats (stores, cities, ads run) that switch on automatically above a chosen threshold, for example 25+ stores.

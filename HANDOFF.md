@@ -204,7 +204,6 @@
   6. Set `STRIPE_CONNECT_ENABLED=true` in Coolify.
   7. Delete the direct-deposit test owner and their data.
 - [ ] Check that `STRIPE_WEBHOOK_SECRET` in Coolify matches the payment webhook endpoint in Stripe. Stripe can reach the webhook now.
-- [ ] **Home page badge:** it says "Now live in 48 states", which is hard-coded and untrue (`LandingPage.tsx`). Change it to neutral or real wording.
 - [ ] Optional: hide the clock on display screens while the tap/hover controls are showing (they overlap on desktop).
 
 - [ ] **About 1 week after 2026-10-23:** if Neon is stable, delete the old Postgres resource in Coolify (`postgresql-database-gt2gswqg8jmybj5l2ydntnfg`). Until then, don't reuse its password; it's in git history.

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { MIN_PAYOUT_CENTS } from "@/types";
+import type { RunSummary } from "@/lib/direct-deposits";
 
 export type OwnerBalance = {
   id: string;
@@ -17,6 +18,9 @@ export type OwnerBalance = {
   payoutZelle: string | null;
   payoutMailingAddress: string | null;
   agreementStatus: string | null;   // null = not tracked; payouts held while not_sent / sent
+  stripeAccountId: string | null;
+  stripePayoutsEnabled: boolean;
+  manualPayoutAllowed: boolean;     // admin-approved Zelle/check exception
   availableCents: number;
   availableCount: number;
   pendingCents: number;
@@ -27,11 +31,116 @@ export type PayoutRow = {
   id: string;
   ownerName: string;
   amountCents: number;
-  method: "zelle" | "check";
+  method: "zelle" | "check" | "stripe";
   reference: string | null;
   note: string | null;
   paidAt: string;
 };
+
+type DirectDepositsInfo = { testMode: boolean; lastRun: RunSummary | null } | null;
+
+const METHOD_LABEL = { zelle: "Zelle", check: "Check", stripe: "Direct deposit" } as const;
+
+function DirectDepositBadge({ o }: { o: OwnerBalance }) {
+  const [label, cls] = o.manualPayoutAllowed
+    ? ["Zelle/check exception", "bg-slate-100 text-slate-700 border-slate-200"]
+    : o.stripePayoutsEnabled
+      ? ["Direct deposit active", "bg-green-50 text-green-800 border-green-200"]
+      : o.stripeAccountId
+        ? ["Direct deposit setup incomplete", "bg-amber-50 text-amber-800 border-amber-200"]
+        : ["Direct deposit not set up", "bg-amber-50 text-amber-800 border-amber-200"];
+  return <span className={cn("inline-block text-[10px] font-semibold border rounded-full px-2 py-0.5", cls)}>{label}</span>;
+}
+
+function ManualExceptionToggle({ o }: { o: OwnerBalance }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  async function toggle() {
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/admin/direct-deposits/owner/${o.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ manualPayoutAllowed: !o.manualPayoutAllowed }),
+      });
+      if ((await res.json()).success) router.refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <button onClick={toggle} disabled={busy} className="text-[11px] text-[#4A90C4] hover:underline bg-transparent border-0 p-0 cursor-pointer disabled:opacity-50">
+      {o.manualPayoutAllowed ? "Switch back to direct deposit" : "Allow Zelle/check instead"}
+    </button>
+  );
+}
+
+function DirectDepositsCard({ info }: { info: NonNullable<DirectDepositsInfo> }) {
+  const router = useRouter();
+  const [running, setRunning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const run = info.lastRun;
+
+  async function runNow() {
+    if (!confirm("Pay every eligible store owner their available balance now by direct deposit?")) return;
+    setRunning(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/direct-deposits/run", { method: "POST" });
+      const json = await res.json();
+      if (!json.success) setError(json.error ?? "Run failed");
+      router.refresh();
+    } catch {
+      setError("Run failed. Please try again.");
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  const paidTotal = run?.paid.reduce((s, p) => s + p.amountCents, 0) ?? 0;
+  return (
+    <Card className="rounded-xl border-[#D8E4EE] overflow-hidden mb-6">
+      <CardHeader className="px-6 py-4 border-b border-[#D8E4EE]">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <CardTitle className="font-serif text-[18px] text-[#1A3A5C] flex items-center gap-2 flex-wrap">
+              Direct Deposits
+              {info.testMode && <span className="text-[10px] font-bold uppercase tracking-wide bg-amber-100 text-amber-800 border border-amber-200 rounded-full px-2 py-0.5">Stripe test mode</span>}
+            </CardTitle>
+            <p className="text-xs text-[#4A6B82] mt-1">
+              Automatic on the 15th of each month: every owner with direct deposit active and at least {money(MIN_PAYOUT_CENTS)} available is paid their full balance. Each owner is paid at most once a month.
+            </p>
+          </div>
+          <Button onClick={runNow} disabled={running} className="bg-[#1A3A5C] hover:bg-[#15304d] text-white text-[13px] h-9">
+            {running ? "Running…" : "Run direct deposits now"}
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="px-6 py-4 text-[13px] text-[#4A6B82]">
+        {error && <p className="text-red-700 m-0 mb-2">{error}</p>}
+        {!run ? (
+          <p className="m-0">No runs yet.</p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <div>
+              <strong className="text-[#1A3A5C]">Last run:</strong> {new Date(run.at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
+              {" · "}{run.trigger === "manual" ? "started by an admin" : "automatic"}
+              {" · "}<span className="text-green-800 font-semibold">{run.paid.length} paid ({money(paidTotal)})</span>
+              {run.failed.length > 0 && <span className="text-red-700 font-semibold"> · {run.failed.length} failed</span>}
+              {run.skipped.length > 0 && <> · {run.skipped.length} skipped</>}
+            </div>
+            {(run.failed.length > 0 || run.skipped.length > 0) && (
+              <ul className="m-0 pl-5 flex flex-col gap-1 text-[12px]">
+                {run.failed.map(l => <li key={`f-${l.ownerId}`} className="text-red-700">{l.name} ({money(l.amountCents)}): {l.reason}</li>)}
+                {run.skipped.map(l => <li key={`s-${l.ownerId}`}>{l.name} ({money(l.amountCents)}): {l.reason}</li>)}
+              </ul>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 function money(cents: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
@@ -189,7 +298,7 @@ function DirectDepositPlanNotes() {
   );
 }
 
-export default function PayoutsClient({ balances, history }: { balances: OwnerBalance[]; history: PayoutRow[] }) {
+export default function PayoutsClient({ balances, history, directDeposits }: { balances: OwnerBalance[]; history: PayoutRow[]; directDeposits: DirectDepositsInfo }) {
   const [openOwner, setOpenOwner] = useState<string | null>(null);
 
   const totalOwed = balances.reduce((s, o) => s + o.availableCents, 0);
@@ -209,7 +318,7 @@ export default function PayoutsClient({ balances, history }: { balances: OwnerBa
         </Link>
       </div>
 
-      <DirectDepositPlanNotes />
+      {directDeposits ? <DirectDepositsCard info={directDeposits} /> : <DirectDepositPlanNotes />}
 
       <Card className="rounded-xl border-[#D8E4EE] overflow-hidden mb-6">
         <CardHeader className="px-6 py-4 border-b border-[#D8E4EE]">
@@ -224,13 +333,21 @@ export default function PayoutsClient({ balances, history }: { balances: OwnerBa
               {balances.map(o => {
                 const belowMin = o.availableCents < MIN_PAYOUT_CENTS;
                 const agreementPending = o.agreementStatus === "not_sent" || o.agreementStatus === "sent";
+                // With direct deposits on, owners whose direct deposit is active are paid automatically
+                const paidAutomatically = !!directDeposits && o.stripePayoutsEnabled && !o.manualPayoutAllowed;
                 return (
                   <div key={o.id} className="px-5 py-4">
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div className="min-w-0">
                         <div className="font-semibold text-[14px] text-[#1A3A5C]">{o.name}</div>
                         <div className="text-[12px] text-[#4A6B82]">{o.email}</div>
-                        <div className="text-[12px] text-[#4A6B82] mt-1.5"><PayoutDetails o={o} /></div>
+                        {directDeposits && (
+                          <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+                            <DirectDepositBadge o={o} />
+                            <ManualExceptionToggle o={o} />
+                          </div>
+                        )}
+                        {!paidAutomatically && <div className="text-[12px] text-[#4A6B82] mt-1.5"><PayoutDetails o={o} /></div>}
                       </div>
                       <div className="text-right shrink-0">
                         <div className={cn("text-[18px] font-bold", belowMin ? "text-[#4A6B82]" : "text-green-800")}>
@@ -252,7 +369,7 @@ export default function PayoutsClient({ balances, history }: { balances: OwnerBa
                         <Link href="/dashboard/admin/applications" className="underline">Update on Applications</Link>
                       </div>
                     )}
-                    {o.availableCents > 0 && openOwner !== o.id && !agreementPending && (
+                    {o.availableCents > 0 && openOwner !== o.id && !agreementPending && !paidAutomatically && (
                       <div className="mt-2 flex items-center gap-2 flex-wrap">
                         <Button
                           variant="outline"
@@ -288,7 +405,7 @@ export default function PayoutsClient({ balances, history }: { balances: OwnerBa
                   <div>
                     <div className="text-[14px] font-semibold text-[#1A3A5C]">{p.ownerName}</div>
                     <div className="text-[12px] text-[#4A6B82]">
-                      {new Date(p.paidAt).toLocaleDateString("en-US", { dateStyle: "medium" })} · {p.method === "zelle" ? "Zelle" : "Check"}
+                      {new Date(p.paidAt).toLocaleDateString("en-US", { dateStyle: "medium" })} · {METHOD_LABEL[p.method]}
                       {p.reference && ` · ref ${p.reference}`}
                       {p.note && ` · ${p.note}`}
                     </div>

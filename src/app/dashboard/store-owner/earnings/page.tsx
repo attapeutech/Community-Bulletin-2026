@@ -5,6 +5,9 @@ import { eq, desc, ne, and } from "drizzle-orm";
 import Link from "next/link";
 import { MIN_PAYOUT_CENTS } from "@/types";
 import PayoutDetailsForm from "./PayoutDetailsForm";
+import DirectDepositCard from "./DirectDepositCard";
+import { stripeConnectEnabled, stripeTestMode } from "@/lib/stripe";
+import { directDepositStatus, syncConnectAccount } from "@/lib/direct-deposits";
 
 const ACCENT = "#1A3A5C";
 
@@ -71,10 +74,27 @@ export default async function EarningsPage() {
     .orderBy(desc(payouts.paidAt));
 
   const [me] = isAdmin ? [] : await db
-    .select({ payoutMethod: users.payoutMethod, payoutZelle: users.payoutZelle, payoutMailingAddress: users.payoutMailingAddress })
+    .select({
+      payoutMethod: users.payoutMethod, payoutZelle: users.payoutZelle, payoutMailingAddress: users.payoutMailingAddress,
+      stripeAccountId: users.stripeAccountId, stripePayoutsEnabled: users.stripePayoutsEnabled, manualPayoutAllowed: users.manualPayoutAllowed,
+    })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
+
+  // Direct deposit (Stripe Connect). Unfinished setups are re-checked with Stripe on each visit,
+  // so returning from Stripe's signup shows the new status even before the webhook arrives.
+  const connectEnabled = stripeConnectEnabled() && !isAdmin;
+  if (connectEnabled && me?.stripeAccountId && !me.stripePayoutsEnabled) {
+    try {
+      me.stripePayoutsEnabled = (await syncConnectAccount(me.stripeAccountId)).stripePayoutsEnabled;
+    } catch (err) {
+      console.error("[earnings] Stripe account sync failed", err);
+    }
+  }
+  const ddStatus = me ? directDepositStatus(me) : "not_set_up";
+  // Zelle/check is the fallback only when direct deposit is off, or as an admin-approved exception
+  const showManualDetails = !connectEnabled || !!me?.manualPayoutAllowed;
 
   // Pending amounts are estimates until the run ends and the processor fee is known
   const estimate = (r: typeof rows[number]) => Math.round((r.grossCents * r.shareRateBps) / 10000);
@@ -112,7 +132,7 @@ export default async function EarningsPage() {
         <Card label="Pending" value={`≈ ${formatCents(pendingCents)}`} sub={`${pending.length} ad run${pending.length !== 1 ? "s" : ""} in progress`} color="#92400E" />
         <Card label="Available" value={formatCents(availableCents)} sub="included in the next payout" color="#1E40AF" />
         <Card label="Paid Out" value={formatCents(paidOutCents)} sub={`${payoutRows.length} payout${payoutRows.length !== 1 ? "s" : ""}`} color="#166534" />
-        <Card label="Payout Schedule" value="Monthly" sub={`minimum ${formatCents(MIN_PAYOUT_CENTS)}; smaller balances roll over`} />
+        <Card label="Payout Schedule" value={connectEnabled ? "Monthly, 15th" : "Monthly"} sub={`minimum ${formatCents(MIN_PAYOUT_CENTS)}; smaller balances roll over`} />
       </div>
 
       {/* How it works */}
@@ -123,7 +143,11 @@ export default async function EarningsPage() {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-        {!isAdmin && (
+        {connectEnabled && !me?.manualPayoutAllowed && (
+          <DirectDepositCard status={ddStatus} testMode={stripeTestMode()} availableCents={availableCents} />
+        )}
+
+        {!isAdmin && showManualDetails && (
           <PayoutDetailsForm
             initialMethod={me?.payoutMethod ?? null}
             initialZelle={me?.payoutZelle ?? null}
@@ -146,7 +170,7 @@ export default async function EarningsPage() {
                       {isAdmin && <span style={{ fontWeight: 400, color: "#4A6B82" }}> · {p.ownerName}</span>}
                     </div>
                     <div style={{ fontSize: 12, color: "#4A6B82", marginTop: 2 }}>
-                      {p.method === "zelle" ? "Zelle" : "Check"}{p.reference ? ` · ref ${p.reference}` : ""}
+                      {p.method === "stripe" ? "Direct deposit" : p.method === "zelle" ? "Zelle" : "Check"}{p.reference && p.method !== "stripe" ? ` · ref ${p.reference}` : ""}
                     </div>
                   </div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: "#166534" }}>{formatCents(p.amountCents, p.currency)}</div>

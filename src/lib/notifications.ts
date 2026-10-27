@@ -190,11 +190,12 @@ export async function notifyEarningsAvailable(ownerId: string, amountCents: numb
   });
 }
 
-export async function notifyPayoutSent(ownerId: string, amountCents: number, method: "zelle" | "check") {
+export async function notifyPayoutSent(ownerId: string, amountCents: number, method: "zelle" | "check" | "stripe") {
   await notifyUser(ownerId, {
     type: "payout_sent",
     subject: `Payout of ${money(amountCents)} sent`,
-    body: method === "zelle" ? "Sent via Zelle." : "Sent by mailed check.",
+    body: method === "stripe" ? "Sent by direct deposit. It usually reaches your bank in 2–3 business days."
+      : method === "zelle" ? "Sent via Zelle." : "Sent by mailed check.",
     link: "/dashboard/store-owner/earnings",
   });
 }

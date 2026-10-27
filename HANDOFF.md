@@ -102,6 +102,13 @@
 - **Welcome email:** optional `sendAccountCreatedEmail`. It never includes the password.
 - **Code:** `src/lib/temp-password.ts`, which hashes with better-auth's own hasher and writes the `credential` account.
 
+## Sign in with Google (2026-10-27)
+
+- **On/off:** on when `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (build variable) and `GOOGLE_CLIENT_SECRET` are set (`src/lib/google-auth.ts`, `socialProviders` in `src/lib/auth/index.ts`). Without them the "Continue with Google" buttons are hidden. Both are set in Coolify and `.env.local`.
+- **Google Cloud:** OAuth client "Community Bulletin" (Web application) in the **laotech** project. Redirect URIs: `https://communitybulletin.com/api/auth/callback/google` and `http://localhost:3000/api/auth/callback/google`. The consent screen's Branding (app name, support email) and Audience (must be **In production**) are set there.
+- **Accounts:** a Google sign-in with the same email as an existing account links to it (Google confirms the email). New Google users get role `user`; store owners apply at `/partners/apply`.
+- **Errors** (e.g. suspended account) return to `/login?error=…`, which shows a message.
+
 ## "Advertise here" slide on display screens
 
 - **Built-in slide:** `AdvertiseHereSlide` (now shared, in `src/components/display/AdvertiseHereSlide.tsx`, with the motion helpers and layout hooks), a built-in slide (not an ad record). It appears after every N paid ads, once per loop when a store has fewer than N, and alone when a store has none. It's never counted as an ad view.

@@ -18,6 +18,7 @@ import { AlertCircle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useNextParam } from "@/lib/use-next-param";
 import { withNext } from "@/lib/safe-redirect";
+import { googleAuthEnabled } from "@/lib/google-auth";
 
 const schema = z.object({
   email: z.string().email("Enter a valid email address"),
@@ -59,6 +60,13 @@ export default function LoginPage() {
   useEffect(() => {
     if (session) router.replace(next);
   }, [session, router, next]);
+
+  // Google sign-in sends people back here with ?error= when it fails (e.g. suspended account)
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).has("error")) {
+      setFormError("Google sign-in didn't work. Please try again, or sign in with your email and password.");
+    }
+  }, []);
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
@@ -213,21 +221,25 @@ export default function LoginPage() {
         </Button>
       </form>
 
-      <div className="flex items-center gap-3 my-4">
-        <Separator className="flex-1" />
-        <span className="text-xs text-muted-foreground">or</span>
-        <Separator className="flex-1" />
-      </div>
+      {googleAuthEnabled() && (
+        <>
+          <div className="flex items-center gap-3 my-4">
+            <Separator className="flex-1" />
+            <span className="text-xs text-muted-foreground">or</span>
+            <Separator className="flex-1" />
+          </div>
 
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => signIn.social({ provider: "google", callbackURL: next })}
-        className="w-full h-10 text-[13px] font-medium"
-      >
-        <GoogleIcon />
-        Continue with Google
-      </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => signIn.social({ provider: "google", callbackURL: next, errorCallbackURL: "/login" })}
+            className="w-full h-10 text-[13px] font-medium"
+          >
+            <GoogleIcon />
+            Continue with Google
+          </Button>
+        </>
+      )}
 
       <p className="text-center mt-5 text-[13px] text-muted-foreground">
         Don&apos;t have an account?{" "}

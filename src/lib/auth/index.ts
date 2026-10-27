@@ -7,6 +7,7 @@ import * as schema from "@/lib/db/schema";
 import { users, sessions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { sendVerificationEmail, sendPasswordResetEmail } from "@/lib/email/templates";
+import { googleAuthEnabled } from "@/lib/google-auth";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -36,6 +37,17 @@ export const auth = betterAuth({
     },
     autoSignInAfterVerification: true,
   },
+
+  // Existing email accounts are linked automatically, since Google confirms the address
+  ...(googleAuthEnabled() && process.env.GOOGLE_CLIENT_SECRET && {
+    socialProviders: {
+      google: {
+        clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        prompt: "select_account" as const,
+      },
+    },
+  }),
 
   user: {
     additionalFields: {

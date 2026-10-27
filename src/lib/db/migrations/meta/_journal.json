@@ -92,6 +92,13 @@
       "when": 1792987608945,
       "tag": "0012_location_traffic",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1793064138123,
+      "tag": "0013_screen_devices",
+      "breakpoints": true
     }
   ]
 }

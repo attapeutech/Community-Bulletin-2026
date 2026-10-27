@@ -25,6 +25,7 @@ export default async function DashboardLayout({
     { href: "/dashboard/admin",       label: "Admin Panel",   roles: ["admin"] },
     { href: "/dashboard/admin/applications", label: "Applications", roles: ["admin"] },
     { href: "/dashboard/admin/payouts", label: "Payouts",     roles: ["admin"] },
+    { href: "/dashboard/admin/screens", label: "Screens",     roles: ["admin"] },
     { href: "/dashboard/admin/geo",   label: "Geography",     roles: ["admin"] },
     { href: "/partners/apply",         label: "Become a Store Partner", roles: ["user"] },
     { href: "/dashboard/profile",     label: "Account",       roles: ["user", "store_owner", "approver", "admin"] },

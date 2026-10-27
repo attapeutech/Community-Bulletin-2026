@@ -34,9 +34,9 @@ function Badge({ bg, color, label }: { bg: string; color: string; label: string 
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div style={{ display: "flex", gap: 16, padding: "12px 0", borderBottom: "1px solid #D8E4EE", fontSize: 14 }}>
-      <div style={{ width: 160, flexShrink: 0, color: "#4A6B82", fontSize: 13 }}>{label}</div>
-      <div style={{ flex: 1, color: "#1A3A5C" }}>{value}</div>
+    <div style={{ display: "flex", gap: 16, padding: "12px 0", borderBottom: "1px solid var(--cb-line)", fontSize: 14 }}>
+      <div style={{ width: 160, flexShrink: 0, color: "var(--cb-ink-2)", fontSize: 13 }}>{label}</div>
+      <div style={{ flex: 1, color: "var(--cb-ink)" }}>{value}</div>
     </div>
   );
 }
@@ -121,15 +121,15 @@ export default async function AdDetailPage({
   return (
     <div style={{ maxWidth: 720 }}>
       {/* Breadcrumb */}
-      <div style={{ marginBottom: 24, display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#4A6B82" }}>
-        <Link href="/dashboard/user" style={{ color: "#4A6B82", textDecoration: "none" }}>My Ads</Link>
+      <div style={{ marginBottom: 24, display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--cb-ink-2)" }}>
+        <Link href="/dashboard/user" style={{ color: "var(--cb-ink-2)", textDecoration: "none" }}>My Ads</Link>
         <span>›</span>
-        <span style={{ color: "#1A3A5C" }}>{ad.title}</span>
+        <span style={{ color: "var(--cb-ink)" }}>{ad.title}</span>
       </div>
 
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h1 style={{ fontFamily: "Georgia,serif", fontSize: 24, fontWeight: 700, color: "#1A3A5C", marginBottom: 8 }}>
+          <h1 style={{ fontFamily: "Georgia,serif", fontSize: 24, fontWeight: 700, color: "var(--cb-ink)", marginBottom: 8 }}>
             {ad.title}
           </h1>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -202,8 +202,8 @@ export default async function AdDetailPage({
       />
 
       {/* Details */}
-      <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "0 24px", marginBottom: 24 }}>
-        <Row label="Location" value={<>{location.storeName}<br /><span style={{ fontSize: 12, color: "#4A6B82" }}>{location.addressLine1}{location.addressLine2 ? `, ${location.addressLine2}` : ""}, {location.cityName}, {location.stateCode} {location.postalCode}</span></>} />
+      <div style={{ background: "var(--cb-surface)", borderRadius: 12, border: "1px solid var(--cb-line)", padding: "0 24px", marginBottom: 24 }}>
+        <Row label="Location" value={<>{location.storeName}<br /><span style={{ fontSize: 12, color: "var(--cb-ink-2)" }}>{location.addressLine1}{location.addressLine2 ? `, ${location.addressLine2}` : ""}, {location.cityName}, {location.stateCode} {location.postalCode}</span></>} />
         <Row label="Title" value={ad.title} />
         {ad.description && <Row label="Description" value={ad.description} />}
         {ad.showWebsite && ad.contactWebsite && (
@@ -225,7 +225,7 @@ export default async function AdDetailPage({
         />
         {ad.reviewNote && (
           <div style={{ padding: "16px 0" }}>
-            <div style={{ fontSize: 13, color: "#4A6B82", marginBottom: 8 }}>Reviewer note</div>
+            <div style={{ fontSize: 13, color: "var(--cb-ink-2)", marginBottom: 8 }}>Reviewer note</div>
             <div style={{ background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#991b1b" }}>
               {ad.reviewNote}
             </div>
@@ -234,49 +234,49 @@ export default async function AdDetailPage({
       </div>
 
       {/* Analytics */}
-      <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "16px 24px", marginBottom: 24 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: "#4A6B82", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 14 }}>
+      <div style={{ background: "var(--cb-surface)", borderRadius: 12, border: "1px solid var(--cb-line)", padding: "16px 24px", marginBottom: 24 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "var(--cb-ink-2)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 14 }}>
           Ad Performance
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 16 }}>
-          <div style={{ background: "#F7F9FC", borderRadius: 10, padding: "14px 18px" }}>
-            <div style={{ fontSize: 28, fontWeight: 700, color: "#1A3A5C" }}>{ad.viewCount.toLocaleString()}</div>
-            <div style={{ fontSize: 12, color: "#4A6B82", marginTop: 2 }}>Screen views</div>
-            <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 1 }}>times shown on in-store screens</div>
+          <div style={{ background: "var(--cb-surface-2)", borderRadius: 10, padding: "14px 18px" }}>
+            <div style={{ fontSize: 28, fontWeight: 700, color: "var(--cb-ink)" }}>{ad.viewCount.toLocaleString()}</div>
+            <div style={{ fontSize: 12, color: "var(--cb-ink-2)", marginTop: 2 }}>Screen views</div>
+            <div style={{ fontSize: 11, color: "var(--cb-ink-3)", marginTop: 1 }}>times shown on in-store screens</div>
           </div>
           {ad.showWebsite && ad.contactWebsite && (
-            <div style={{ background: "#F7F9FC", borderRadius: 10, padding: "14px 18px" }}>
-              <div style={{ fontSize: 28, fontWeight: 700, color: "#1A3A5C" }}>{ad.websiteClickCount.toLocaleString()}</div>
-              <div style={{ fontSize: 12, color: "#4A6B82", marginTop: 2 }}>Website visits</div>
-              <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 1 }}>QR scans and link clicks</div>
+            <div style={{ background: "var(--cb-surface-2)", borderRadius: 10, padding: "14px 18px" }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: "var(--cb-ink)" }}>{ad.websiteClickCount.toLocaleString()}</div>
+              <div style={{ fontSize: 12, color: "var(--cb-ink-2)", marginTop: 2 }}>Website visits</div>
+              <div style={{ fontSize: 11, color: "var(--cb-ink-3)", marginTop: 1 }}>QR scans and link clicks</div>
             </div>
           )}
-          <div style={{ background: "#F7F9FC", borderRadius: 10, padding: "14px 18px" }}>
-            <div style={{ fontSize: 28, fontWeight: 700, color: "#1A3A5C" }}>{saves.toLocaleString()}</div>
-            <div style={{ fontSize: 12, color: "#4A6B82", marginTop: 2 }}>Saves</div>
-            <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 1 }}>people who hearted this ad</div>
+          <div style={{ background: "var(--cb-surface-2)", borderRadius: 10, padding: "14px 18px" }}>
+            <div style={{ fontSize: 28, fontWeight: 700, color: "var(--cb-ink)" }}>{saves.toLocaleString()}</div>
+            <div style={{ fontSize: 12, color: "var(--cb-ink-2)", marginTop: 2 }}>Saves</div>
+            <div style={{ fontSize: 11, color: "var(--cb-ink-3)", marginTop: 1 }}>people who hearted this ad</div>
           </div>
         </div>
       </div>
 
       {/* Payments */}
       {adPayments.length > 0 && (
-        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", overflow: "hidden" }}>
-          <div style={{ padding: "16px 24px", borderBottom: "1px solid #D8E4EE" }}>
-            <h2 style={{ fontFamily: "Georgia,serif", fontSize: 16, color: "#1A3A5C" }}>Payment History</h2>
+        <div style={{ background: "var(--cb-surface)", borderRadius: 12, border: "1px solid var(--cb-line)", overflow: "hidden" }}>
+          <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--cb-line)" }}>
+            <h2 style={{ fontFamily: "Georgia,serif", fontSize: 16, color: "var(--cb-ink)" }}>Payment History</h2>
           </div>
           <div style={{ padding: "0 24px" }}>
             {adPayments.map((pmt) => (
-              <div key={pmt.id} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid #D8E4EE", fontSize: 13 }}>
+              <div key={pmt.id} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid var(--cb-line)", fontSize: 13 }}>
                 <div>
-                  <div style={{ fontWeight: 600, color: "#1A3A5C", textTransform: "capitalize" }}>{pmt.provider}</div>
-                  <div style={{ color: "#4A6B82", fontSize: 11 }}>{pmt.providerTxId}</div>
+                  <div style={{ fontWeight: 600, color: "var(--cb-ink)", textTransform: "capitalize" }}>{pmt.provider}</div>
+                  <div style={{ color: "var(--cb-ink-2)", fontSize: 11 }}>{pmt.providerTxId}</div>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <div style={{ fontWeight: 600, color: "#1A3A5C" }}>
+                  <div style={{ fontWeight: 600, color: "var(--cb-ink)" }}>
                     ${(pmt.amountCents / 100).toFixed(2)} {pmt.currency}
                   </div>
-                  <div style={{ color: "#4A6B82", fontSize: 11, textTransform: "capitalize" }}>{pmt.status}</div>
+                  <div style={{ color: "var(--cb-ink-2)", fontSize: 11, textTransform: "capitalize" }}>{pmt.status}</div>
                 </div>
               </div>
             ))}

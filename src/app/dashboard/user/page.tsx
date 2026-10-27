@@ -101,14 +101,14 @@ export default async function UserDashboard() {
         </div>
       )}
       {application?.status === "declined" && (
-        <div style={{ background: "#F7F9FC", border: "1px solid #D8E4EE", borderRadius: 12, padding: "12px 16px", marginBottom: 18, fontSize: 14, color: "#1A3A5C" }}>
+        <div style={{ background: "var(--cb-surface-2)", border: "1px solid var(--cb-line)", borderRadius: 12, padding: "12px 16px", marginBottom: 18, fontSize: 14, color: "var(--cb-ink)" }}>
           Your store partner application for <strong>{application.businessName}</strong> wasn&apos;t approved
           {application.declineReason ? `: ${application.declineReason}` : "."}{" "}
           <Link href="/partners/apply" style={{ color: "#4A90C4" }}>Apply again</Link>
         </div>
       )}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
-        <h1 style={{ fontFamily: "Georgia,serif", fontSize: 26, fontWeight: 700, color: "#1A3A5C" }}>
+        <h1 style={{ fontFamily: "Georgia,serif", fontSize: 26, fontWeight: 700, color: "var(--cb-ink)" }}>
           Welcome back, {user.name.split(" ")[0]}!
         </h1>
         <Link
@@ -128,7 +128,7 @@ export default async function UserDashboard() {
           + Post New Ad
         </Link>
       </div>
-      <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 32 }}>
+      <p style={{ color: "var(--cb-ink-2)", fontSize: 14, marginBottom: 32 }}>
         Manage your ads and track their status.
       </p>
 
@@ -140,19 +140,19 @@ export default async function UserDashboard() {
           { label: "Pending Review", value: pendingAds },
           { label: "Paid", value: paidAds },
         ].map(({ label, value }) => (
-          <div key={label} style={{ background: "#fff", borderRadius: 12, padding: "20px 24px", border: "0.5px solid #D8E4EE" }}>
-            <div style={{ fontSize: 12, color: "#4A6B82", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: "#1A3A5C", fontFamily: "Georgia,serif" }}>{value}</div>
+          <div key={label} style={{ background: "var(--cb-surface)", borderRadius: 12, padding: "20px 24px", border: "0.5px solid var(--cb-line)" }}>
+            <div style={{ fontSize: 12, color: "var(--cb-ink-2)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: "var(--cb-ink)", fontFamily: "Georgia,serif" }}>{value}</div>
           </div>
         ))}
       </div>
 
       {/* Ads list */}
       {userAds.length === 0 ? (
-        <div style={{ background: "#fff", borderRadius: 12, border: "0.5px solid #D8E4EE", padding: 48, textAlign: "center" }}>
+        <div style={{ background: "var(--cb-surface)", borderRadius: 12, border: "0.5px solid var(--cb-line)", padding: 48, textAlign: "center" }}>
           <div style={{ fontSize: 40, marginBottom: 16 }}>📋</div>
-          <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: "#1A3A5C", marginBottom: 8 }}>No ads yet</h2>
-          <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 24 }}>
+          <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: "var(--cb-ink)", marginBottom: 8 }}>No ads yet</h2>
+          <p style={{ color: "var(--cb-ink-2)", fontSize: 14, marginBottom: 24 }}>
             Post your first ad and reach customers at local store locations.
           </p>
           <Link
@@ -172,9 +172,9 @@ export default async function UserDashboard() {
           </Link>
         </div>
       ) : (
-        <div style={{ background: "#fff", borderRadius: 12, border: "0.5px solid #D8E4EE", overflow: "hidden" }}>
-          <div style={{ padding: "16px 24px", borderBottom: "1px solid #D8E4EE", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: "#1A3A5C" }}>Your Ads</h2>
+        <div style={{ background: "var(--cb-surface)", borderRadius: 12, border: "0.5px solid var(--cb-line)", overflow: "hidden" }}>
+          <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--cb-line)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: "var(--cb-ink)" }}>Your Ads</h2>
           </div>
 
           <div>
@@ -191,7 +191,7 @@ export default async function UserDashboard() {
                     gap: 16,
                     alignItems: "flex-start",
                     padding: "16px 24px",
-                    borderBottom: idx < userAds.length - 1 ? "1px solid #D8E4EE" : "none",
+                    borderBottom: idx < userAds.length - 1 ? "1px solid var(--cb-line)" : "none",
                   }}
                 >
                   {/* Thumbnail */}
@@ -206,39 +206,39 @@ export default async function UserDashboard() {
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
                       <Link
                         href={`/dashboard/user/ads/${ad.id}`}
-                        style={{ fontWeight: 600, fontSize: 15, color: "#1A3A5C", textDecoration: "none" }}
+                        style={{ fontWeight: 600, fontSize: 15, color: "var(--cb-ink)", textDecoration: "none" }}
                       >
                         {ad.title}
                       </Link>
                       <Badge {...adStatus} />
                       <Badge {...payStatus} />
                     </div>
-                    <div style={{ fontSize: 12, color: "#4A6B82" }}>
+                    <div style={{ fontSize: 12, color: "var(--cb-ink-2)" }}>
                       {ad.location.storeName} · {ad.location.addressLine1}, {ad.location.cityName}, {ad.location.stateCode} {ad.location.postalCode}
                     </div>
                     {(ad.status === "approved" || ad.status === "expired" || ad.status === "cancelled") && (
-                      <div style={{ fontSize: 11, color: "#4A6B82", marginTop: 1 }}>
+                      <div style={{ fontSize: 11, color: "var(--cb-ink-2)", marginTop: 1 }}>
                         {ad.status === "approved" ? "Runs" : "Ran"}{" "}
                         {new Date(ad.startedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                         {" – "}
                         {new Date(ad.endedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                       </div>
                     )}
-                    <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 2 }}>
+                    <div style={{ fontSize: 11, color: "var(--cb-ink-3)", marginTop: 2 }}>
                       Submitted {new Date(ad.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                     </div>
                     {(ad.status === "approved" || ad.status === "expired" || ad.status === "cancelled") && (
                       <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
-                        <span style={{ fontSize: 11, color: "#4A6B82" }}>
-                          👁 <strong style={{ color: "#1A3A5C" }}>{ad.viewCount.toLocaleString()}</strong> screen views
+                        <span style={{ fontSize: 11, color: "var(--cb-ink-2)" }}>
+                          👁 <strong style={{ color: "var(--cb-ink)" }}>{ad.viewCount.toLocaleString()}</strong> screen views
                         </span>
                         {ad.showWebsite && ad.contactWebsite && (
-                          <span style={{ fontSize: 11, color: "#4A6B82" }}>
-                            🌐 <strong style={{ color: "#1A3A5C" }}>{ad.websiteClickCount.toLocaleString()}</strong> website visits
+                          <span style={{ fontSize: 11, color: "var(--cb-ink-2)" }}>
+                            🌐 <strong style={{ color: "var(--cb-ink)" }}>{ad.websiteClickCount.toLocaleString()}</strong> website visits
                           </span>
                         )}
-                        <span style={{ fontSize: 11, color: "#4A6B82" }}>
-                          ♥ <strong style={{ color: "#1A3A5C" }}>{ad.saveCount.toLocaleString()}</strong> saves
+                        <span style={{ fontSize: 11, color: "var(--cb-ink-2)" }}>
+                          ♥ <strong style={{ color: "var(--cb-ink)" }}>{ad.saveCount.toLocaleString()}</strong> saves
                         </span>
                       </div>
                     )}
@@ -283,7 +283,7 @@ export default async function UserDashboard() {
                     )}
                     <Link
                       href={`/dashboard/user/ads/${ad.id}`}
-                      style={{ fontSize: 12, color: "#4A6B82", textDecoration: "none" }}
+                      style={{ fontSize: 12, color: "var(--cb-ink-2)", textDecoration: "none" }}
                     >
                       Details
                     </Link>

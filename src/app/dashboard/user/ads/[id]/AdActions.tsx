@@ -84,7 +84,7 @@ export default function AdActions({
             <button
               onClick={() => setConfirmEnd(false)}
               disabled={loading}
-              style={{ ...btnBase, borderColor: "#D8E4EE", color: "#4A6B82", padding: "5px 12px", fontSize: 13 }}
+              style={{ ...btnBase, borderColor: "var(--cb-line)", color: "var(--cb-ink-2)", padding: "5px 12px", fontSize: 13 }}
             >
               Cancel
             </button>
@@ -114,7 +114,7 @@ export default function AdActions({
             <button
               onClick={() => setConfirmRenew(false)}
               disabled={loading}
-              style={{ ...btnBase, borderColor: "#D8E4EE", color: "#4A6B82", padding: "5px 12px", fontSize: 13 }}
+              style={{ ...btnBase, borderColor: "var(--cb-line)", color: "var(--cb-ink-2)", padding: "5px 12px", fontSize: 13 }}
             >
               Cancel
             </button>

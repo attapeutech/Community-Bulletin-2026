@@ -7,7 +7,7 @@ const ACCENT = "#1A3A5C";
 
 const inputStyle: React.CSSProperties = {
   width: "100%", padding: "9px 12px", fontSize: 14, borderRadius: 8,
-  border: "1px solid #D1DDE8", background: "#F7F9FC", color: ACCENT, boxSizing: "border-box",
+  border: "1px solid var(--cb-line-2)", background: "var(--cb-surface-2)", color: "var(--cb-ink)", boxSizing: "border-box",
 };
 
 export default function PayoutDetailsForm({
@@ -51,9 +51,9 @@ export default function PayoutDetailsForm({
 
   const radio = (value: "zelle" | "check", label: string) => (
     <label style={{
-      display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 14, color: ACCENT,
-      padding: "8px 14px", borderRadius: 8, border: `1px solid ${method === value ? ACCENT : "#D1DDE8"}`,
-      background: method === value ? "#F0F5FA" : "#fff", fontWeight: method === value ? 600 : 400,
+      display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 14, color: "var(--cb-ink)",
+      padding: "8px 14px", borderRadius: 8, border: `1px solid ${method === value ? ACCENT : "var(--cb-line-2)"}`,
+      background: method === value ? "var(--cb-surface-2)" : "var(--cb-surface)", fontWeight: method === value ? 600 : 400,
     }}>
       <input type="radio" name="payoutMethod" checked={method === value} onChange={() => setMethod(value)} />
       {label}
@@ -61,11 +61,11 @@ export default function PayoutDetailsForm({
   );
 
   return (
-    <form onSubmit={save} style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "18px 20px" }}>
-      <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, fontWeight: 700, color: ACCENT, margin: "0 0 4px" }}>
+    <form onSubmit={save} style={{ background: "var(--cb-surface)", borderRadius: 12, border: "1px solid var(--cb-line)", padding: "18px 20px" }}>
+      <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, fontWeight: 700, color: "var(--cb-ink)", margin: "0 0 4px" }}>
         Payout Details
       </h2>
-      <p style={{ fontSize: 13, color: "#4A6B82", margin: "0 0 14px" }}>
+      <p style={{ fontSize: 13, color: "var(--cb-ink-2)", margin: "0 0 14px" }}>
         Where should we send your earnings? Payouts go out monthly.
       </p>
 
@@ -76,14 +76,14 @@ export default function PayoutDetailsForm({
 
       {method === "zelle" ? (
         <div>
-          <label style={{ fontSize: 12, fontWeight: 600, color: "#4A6B82", display: "block", marginBottom: 6 }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: "var(--cb-ink-2)", display: "block", marginBottom: 6 }}>
             Zelle email or phone
           </label>
           <input style={inputStyle} value={zelle} onChange={e => setZelle(e.target.value)} placeholder="you@example.com or (555) 123-4567" />
         </div>
       ) : (
         <div>
-          <label style={{ fontSize: 12, fontWeight: 600, color: "#4A6B82", display: "block", marginBottom: 6 }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: "var(--cb-ink-2)", display: "block", marginBottom: 6 }}>
             Mailing address for checks
           </label>
           <textarea style={{ ...inputStyle, minHeight: 80, resize: "vertical" }} value={address} onChange={e => setAddress(e.target.value)}
@@ -99,7 +99,7 @@ export default function PayoutDetailsForm({
           {saving ? "Saving…" : "Save payout details"}
         </button>
         {message && (
-          <span style={{ fontSize: 13, color: message.ok ? "#166534" : "#B91C1C" }}>{message.text}</span>
+          <span style={{ fontSize: 13, color: message.ok ? "var(--cb-green)" : "var(--cb-red)" }}>{message.text}</span>
         )}
       </div>
     </form>

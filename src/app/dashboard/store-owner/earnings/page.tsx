@@ -23,10 +23,10 @@ const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }>
 
 function Card({ label, value, sub, color = ACCENT }: { label: string; value: string; sub: string; color?: string }) {
   return (
-    <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "16px 20px" }}>
-      <div style={{ fontSize: 10, fontWeight: 600, color: "#4A6B82", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>{label}</div>
+    <div style={{ background: "var(--cb-surface)", borderRadius: 12, border: "1px solid var(--cb-line)", padding: "16px 20px" }}>
+      <div style={{ fontSize: 10, fontWeight: 600, color: "var(--cb-ink-2)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>{label}</div>
       <div style={{ fontSize: 22, fontWeight: 700, color }}>{value}</div>
-      <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 2 }}>{sub}</div>
+      <div style={{ fontSize: 11, color: "var(--cb-ink-3)", marginTop: 2 }}>{sub}</div>
     </div>
   );
 }
@@ -109,10 +109,10 @@ export default async function EarningsPage() {
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6, gap: 12, flexWrap: "wrap" }}>
         <div>
-          <h1 style={{ fontFamily: "Georgia,serif", fontSize: 26, fontWeight: 700, color: ACCENT }}>
+          <h1 style={{ fontFamily: "Georgia,serif", fontSize: 26, fontWeight: 700, color: "var(--cb-ink)" }}>
             {isAdmin ? "All Earnings" : "My Earnings"}
           </h1>
-          <p style={{ color: "#4A6B82", fontSize: 14, marginTop: 4 }}>
+          <p style={{ color: "var(--cb-ink-2)", fontSize: 14, marginTop: 4 }}>
             Your share of ad revenue, after card processing fees.
           </p>
         </div>
@@ -121,7 +121,7 @@ export default async function EarningsPage() {
             Manage Payouts →
           </Link>
         ) : (
-          <Link href="/dashboard/store-owner" style={{ fontSize: 13, color: "#4A6B82", textDecoration: "none" }}>
+          <Link href="/dashboard/store-owner" style={{ fontSize: 13, color: "var(--cb-ink-2)", textDecoration: "none" }}>
             ← Back to Locations
           </Link>
         )}
@@ -129,15 +129,15 @@ export default async function EarningsPage() {
 
       {/* Summary cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 24, marginTop: 20 }}>
-        <Card label="Pending" value={`≈ ${formatCents(pendingCents)}`} sub={`${pending.length} ad run${pending.length !== 1 ? "s" : ""} in progress`} color="#92400E" />
-        <Card label="Available" value={formatCents(availableCents)} sub="included in the next payout" color="#1E40AF" />
-        <Card label="Paid Out" value={formatCents(paidOutCents)} sub={`${payoutRows.length} payout${payoutRows.length !== 1 ? "s" : ""}`} color="#166534" />
+        <Card label="Pending" value={`≈ ${formatCents(pendingCents)}`} sub={`${pending.length} ad run${pending.length !== 1 ? "s" : ""} in progress`} color="var(--cb-amber)" />
+        <Card label="Available" value={formatCents(availableCents)} sub="included in the next payout" color="var(--cb-blue)" />
+        <Card label="Paid Out" value={formatCents(paidOutCents)} sub={`${payoutRows.length} payout${payoutRows.length !== 1 ? "s" : ""}`} color="var(--cb-green)" />
         <Card label="Payout Schedule" value={connectEnabled ? "Monthly, 15th" : "Monthly"} sub={`minimum ${formatCents(MIN_PAYOUT_CENTS)}; smaller balances roll over`} />
       </div>
 
       {/* How it works */}
-      <div style={{ background: "#F7F9FC", border: "1px solid #D8E4EE", borderRadius: 12, padding: "14px 18px", fontSize: 13, color: "#4A6B82", marginBottom: 24, lineHeight: 1.6 }}>
-        <strong style={{ color: ACCENT }}>How earnings work:</strong> when an advertiser pays for an ad at your store, it shows here as
+      <div style={{ background: "var(--cb-surface-2)", border: "1px solid var(--cb-line)", borderRadius: 12, padding: "14px 18px", fontSize: 13, color: "var(--cb-ink-2)", marginBottom: 24, lineHeight: 1.6 }}>
+        <strong style={{ color: "var(--cb-ink)" }}>How earnings work:</strong> when an advertiser pays for an ad at your store, it shows here as
         <strong> pending</strong>. Once the ad&apos;s run ends, it becomes <strong>available</strong>: your share
         (the percentage agreed for each location, shown on every ad below) of the ad price after card processing fees. Available earnings are paid out monthly.
       </div>
@@ -158,22 +158,22 @@ export default async function EarningsPage() {
         {/* Payout history */}
         {payoutRows.length > 0 && (
           <div>
-            <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, fontWeight: 700, color: ACCENT, marginBottom: 12 }}>
+            <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, fontWeight: 700, color: "var(--cb-ink)", marginBottom: 12 }}>
               Payout History
             </h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {payoutRows.map(p => (
-                <div key={p.id} style={{ background: "#fff", borderRadius: 10, border: "1px solid #D8E4EE", padding: "12px 16px", display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                <div key={p.id} style={{ background: "var(--cb-surface)", borderRadius: 10, border: "1px solid var(--cb-line)", padding: "12px 16px", display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: ACCENT }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--cb-ink)" }}>
                       {new Date(p.paidAt).toLocaleDateString("en-US", { dateStyle: "medium" })}
-                      {isAdmin && <span style={{ fontWeight: 400, color: "#4A6B82" }}> · {p.ownerName}</span>}
+                      {isAdmin && <span style={{ fontWeight: 400, color: "var(--cb-ink-2)" }}> · {p.ownerName}</span>}
                     </div>
-                    <div style={{ fontSize: 12, color: "#4A6B82", marginTop: 2 }}>
+                    <div style={{ fontSize: 12, color: "var(--cb-ink-2)", marginTop: 2 }}>
                       {p.method === "stripe" ? "Direct deposit" : p.method === "zelle" ? "Zelle" : "Check"}{p.reference && p.method !== "stripe" ? ` · ref ${p.reference}` : ""}
                     </div>
                   </div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: "#166534" }}>{formatCents(p.amountCents, p.currency)}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: "var(--cb-green)" }}>{formatCents(p.amountCents, p.currency)}</div>
                 </div>
               ))}
             </div>
@@ -182,14 +182,14 @@ export default async function EarningsPage() {
 
         {/* Ledger */}
         <div>
-          <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, fontWeight: 700, color: ACCENT, marginBottom: 12 }}>
+          <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, fontWeight: 700, color: "var(--cb-ink)", marginBottom: 12 }}>
             Earnings by Ad
           </h2>
           {rows.length === 0 ? (
-            <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: 48, textAlign: "center" }}>
+            <div style={{ background: "var(--cb-surface)", borderRadius: 12, border: "1px solid var(--cb-line)", padding: 48, textAlign: "center" }}>
               <div style={{ fontSize: 36, marginBottom: 12 }}>💰</div>
-              <h3 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: ACCENT, marginBottom: 8 }}>No earnings yet</h3>
-              <p style={{ color: "#4A6B82", fontSize: 14 }}>Earnings will appear here once advertisers pay for ads at your locations.</p>
+              <h3 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: "var(--cb-ink)", marginBottom: 8 }}>No earnings yet</h3>
+              <p style={{ color: "var(--cb-ink-2)", fontSize: 14 }}>Earnings will appear here once advertisers pay for ads at your locations.</p>
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -197,27 +197,27 @@ export default async function EarningsPage() {
                 const st = STATUS_STYLE[r.status] ?? STATUS_STYLE.pending;
                 const rate = `${r.shareRateBps / 100}%`;
                 return (
-                  <div key={r.id} style={{ background: "#fff", borderRadius: 10, border: "1px solid #D8E4EE", padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+                  <div key={r.id} style={{ background: "var(--cb-surface)", borderRadius: 10, border: "1px solid var(--cb-line)", padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
                     <div style={{ flex: "1 1 180px", minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 2 }}>
-                        <span style={{ fontSize: 14, fontWeight: 600, color: ACCENT }}>{r.adTitle}</span>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: "var(--cb-ink)" }}>{r.adTitle}</span>
                         <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: st.bg, color: st.color }}>{st.label}</span>
                       </div>
-                      <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 4 }}>
+                      <div style={{ fontSize: 11, color: "var(--cb-ink-3)", marginTop: 4 }}>
                         {r.locationName}{isAdmin && ` · ${r.ownerName}`} · paid {new Date(r.createdAt).toLocaleDateString()}
                         {r.status === "pending" && r.availableAt && ` · available ${new Date(r.availableAt).toLocaleDateString()}`}
                         {r.status === "pending" && !r.availableAt && " · awaiting ad approval"}
                       </div>
                     </div>
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <div style={{ fontSize: 11, color: "#4A6B82", marginBottom: 2 }}>
-                        Ad price: <span style={{ fontWeight: 600, color: ACCENT }}>{formatCents(r.grossCents, r.currency)}</span>
+                      <div style={{ fontSize: 11, color: "var(--cb-ink-2)", marginBottom: 2 }}>
+                        Ad price: <span style={{ fontWeight: 600, color: "var(--cb-ink)" }}>{formatCents(r.grossCents, r.currency)}</span>
                         {r.feeCents !== null && <> · fee {formatCents(r.feeCents, r.currency)}</>}
                       </div>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: "#166534" }}>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: "var(--cb-green)" }}>
                         {r.amountCents !== null ? formatCents(r.amountCents, r.currency) : `≈ ${formatCents(estimate(r), r.currency)}`}
                       </div>
-                      <div style={{ fontSize: 10, color: "#5B7D96" }}>
+                      <div style={{ fontSize: 10, color: "var(--cb-ink-3)" }}>
                         {r.amountCents !== null ? `your ${rate} share` : `your ${rate} share, before fees`}
                       </div>
                     </div>

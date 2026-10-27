@@ -17,11 +17,11 @@ function Badge({ children, bg, color }: { children: React.ReactNode; bg: string;
 
 // Admin quick reference — keep in sync with the limits in src/types and the locations API
 function AdminPricingNotes() {
-  const h: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: ACCENT, textTransform: "uppercase", letterSpacing: "0.05em", margin: "14px 0 6px" };
+  const h: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: "var(--cb-ink)", textTransform: "uppercase", letterSpacing: "0.05em", margin: "14px 0 6px" };
   const ul: React.CSSProperties = { margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 4 };
   return (
-    <details style={{ background: "#F7F9FC", border: "1px solid #D8E4EE", borderRadius: 12, padding: "12px 18px", marginTop: -16, marginBottom: 28, fontSize: 13, color: "#4A6B82", lineHeight: 1.55 }}>
-      <summary style={{ cursor: "pointer", fontWeight: 700, color: ACCENT, fontSize: 14 }}>
+    <details style={{ background: "var(--cb-surface-2)", border: "1px solid var(--cb-line)", borderRadius: 12, padding: "12px 18px", marginTop: -16, marginBottom: 28, fontSize: 13, color: "var(--cb-ink-2)", lineHeight: 1.55 }}>
+      <summary style={{ cursor: "pointer", fontWeight: 700, color: "var(--cb-ink)", fontSize: 14 }}>
         📝 Admin notes: how pricing &amp; revenue share work
       </summary>
 
@@ -118,7 +118,7 @@ export default async function StoreOwnerPage() {
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-        <h1 style={{ fontFamily: "Georgia,serif", fontSize: 26, fontWeight: 700, color: ACCENT }}>
+        <h1 style={{ fontFamily: "Georgia,serif", fontSize: 26, fontWeight: 700, color: "var(--cb-ink)" }}>
           {isAdmin ? "All Locations" : "My Locations"}
         </h1>
         <Link
@@ -128,17 +128,17 @@ export default async function StoreOwnerPage() {
           + Add Location
         </Link>
       </div>
-      <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 32 }}>
+      <p style={{ color: "var(--cb-ink-2)", fontSize: 14, marginBottom: 32 }}>
         {isAdmin ? "Manage all store locations across the platform." : "Manage your store locations and their active ad displays."}
       </p>
 
       {isAdmin && <AdminPricingNotes />}
 
       {locs.length === 0 ? (
-        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: 48, textAlign: "center" }}>
+        <div style={{ background: "var(--cb-surface)", borderRadius: 12, border: "1px solid var(--cb-line)", padding: 48, textAlign: "center" }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>🏪</div>
-          <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: ACCENT, marginBottom: 8 }}>No locations yet</h2>
-          <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 24 }}>Add your first store location to start accepting ads.</p>
+          <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: "var(--cb-ink)", marginBottom: 8 }}>No locations yet</h2>
+          <p style={{ color: "var(--cb-ink-2)", fontSize: 14, marginBottom: 24 }}>Add your first store location to start accepting ads.</p>
           <Link href="/dashboard/store-owner/locations/new" style={{ background: ACCENT, color: "#fff", padding: "10px 24px", borderRadius: 8, textDecoration: "none", fontSize: 14, fontWeight: 600 }}>
             Add first location
           </Link>
@@ -150,7 +150,7 @@ export default async function StoreOwnerPage() {
             const activeAds = adCountMap[loc.id] ?? 0;
 
             return (
-              <div key={loc.id} style={{ background: "#fff", borderRadius: 12, border: "1px solid #D8E4EE", padding: "20px 24px" }}>
+              <div key={loc.id} style={{ background: "var(--cb-surface)", borderRadius: 12, border: "1px solid var(--cb-line)", padding: "20px 24px" }}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
                   {/* Logo or icon */}
                   <div style={{ width: 52, height: 52, borderRadius: 12, background: "#F0F7FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
@@ -163,7 +163,7 @@ export default async function StoreOwnerPage() {
                   {/* Info */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
-                      <span style={{ fontWeight: 700, fontSize: 15, color: ACCENT }}>
+                      <span style={{ fontWeight: 700, fontSize: 15, color: "var(--cb-ink)" }}>
                         {loc.storeName}
                         {loc.storeNumber && <span style={{ color: "#E8563A", marginLeft: 6 }}>#{loc.storeNumber.replace(/^#/, "")}</span>}
                         {!loc.isActive && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, fontFamily: "system-ui, sans-serif", color: "#64748B", background: "#F1F5F9", border: "1px solid #E2E8F0", borderRadius: 999, padding: "2px 8px", verticalAlign: "middle" }}>Inactive</span>}
@@ -172,32 +172,32 @@ export default async function StoreOwnerPage() {
                       {loc.category && <Badge bg="#EEF2FF" color="#3730A3">{loc.category}</Badge>}
                       {isAdmin && <Badge bg="#E8EFF6" color="#1A3A5C">{loc.storeOwner.name}</Badge>}
                     </div>
-                    <div style={{ fontSize: 13, color: "#4A6B82" }}>
+                    <div style={{ fontSize: 13, color: "var(--cb-ink-2)" }}>
                       {loc.addressLine1} · {loc.city.name}, {loc.state.code} {loc.postalCode.code}
                     </div>
-                    <div style={{ fontSize: 11, color: "#5B7D96", marginTop: 4, fontFamily: "monospace" }}>
+                    <div style={{ fontSize: 11, color: "var(--cb-ink-3)", marginTop: 4, fontFamily: "monospace" }}>
                       /display/{loc.slug}
                     </div>
 
                     {/* Pricing + earnings row */}
                     <div style={{ display: "flex", gap: 20, marginTop: 10, flexWrap: "wrap" }}>
                       <div style={{ fontSize: 13 }}>
-                        <span style={{ color: "#4A6B82" }}>Price / week: </span>
-                        <span style={{ fontWeight: 600, color: ACCENT }}>{formatCents(loc.pricePerWeekCents, loc.currency)}</span>
+                        <span style={{ color: "var(--cb-ink-2)" }}>Price / week: </span>
+                        <span style={{ fontWeight: 600, color: "var(--cb-ink)" }}>{formatCents(loc.pricePerWeekCents, loc.currency)}</span>
                       </div>
                       <div style={{ fontSize: 13 }}>
-                        <span style={{ color: "#4A6B82" }}>Revenue share: </span>
-                        <span style={{ fontWeight: 600, color: "#166534" }}>
+                        <span style={{ color: "var(--cb-ink-2)" }}>Revenue share: </span>
+                        <span style={{ fontWeight: 600, color: "var(--cb-green)" }}>
                           {loc.shareRateBps / 100}%
                         </span>
-                        <span style={{ fontSize: 11, color: "#5B7D96", marginLeft: 4 }}>
+                        <span style={{ fontSize: 11, color: "var(--cb-ink-3)", marginLeft: 4 }}>
                           ({loc.equipmentProvided ? "owner provides equipment" : "platform equipment"})
                         </span>
                       </div>
                       {earningsCents > 0 && (
                         <div style={{ fontSize: 13 }}>
-                          <span style={{ color: "#4A6B82" }}>Your earnings: </span>
-                          <span style={{ fontWeight: 600, color: "#166534" }}>{formatCents(earningsCents, loc.currency)}</span>
+                          <span style={{ color: "var(--cb-ink-2)" }}>Your earnings: </span>
+                          <span style={{ fontWeight: 600, color: "var(--cb-green)" }}>{formatCents(earningsCents, loc.currency)}</span>
                         </div>
                       )}
                     </div>

@@ -4,6 +4,7 @@
 
 - **Branch:** `claude/ad-submission-payment-x36DJ` was synced with origin, `main` was merged into it, and it was then merged into `main` via PR. `main` now holds everything.
 - **Production:** deployed from `main` in Coolify (manual **Redeploy**; auto-deploy is not on). The deploy succeeded, and login and ad renewals work.
+  - On 2026-10-27 a Redeploy kept serving an older build until the app's **Git Source** settings were saved again (Branch `main`, Commit SHA `HEAD`) and it was redeployed. If a deploy doesn't show a merged change, check those two fields and the commit line in the deployment log.
 - **Database:** moved from the Coolify Postgres container to **Neon** (Postgres 18, `us-east-2`).
   - Data was copied with `pg_dump` / `pg_restore` (14 tables: users, ads, payments, sessions, locations, geography, etc.).
   - Coolify's `DATABASE_URL` now points to the Neon **pooled** connection string.
@@ -212,7 +213,6 @@
 - [ ] Optional: turn on **Auto Deploy** in Coolify (needs the GitHub App source or a webhook).
 - [ ] Put the Coolify dashboard behind a domain with HTTPS. It's currently plain HTTP on `:8000`.
 - [ ] `npm audit` reports 39 vulnerabilities (3 critical). Review with `npm audit` before running `npm audit fix`.
-- [ ] Remote has a stray `master` branch alongside `main`. Delete it if it isn't intentional.
 - [ ] Local `git stash@{0}` holds only lockfile `"peer": true` noise and can be dropped (`git stash drop`).
 - [ ] **Sales team role, later:** add a `sales` value to the `user_role` enum (migration), decide what sales staff can see and do, and add it to `ROLE_OPTIONS` in `UserCredentials.tsx` and the role menus.
 - [ ] **Home page stats, later:** the bar under the hero shows launch highlights (`HIGHLIGHTS` in `LandingPage.tsx`) instead of the old made-up figures. When the numbers are worth showing, add live stats (stores, cities, ads run) that switch on automatically above a chosen threshold, for example 25+ stores.

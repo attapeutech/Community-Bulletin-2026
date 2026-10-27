@@ -5,7 +5,7 @@ import { Menu } from "lucide-react";
 import { BrandMark } from "./BrandMark";
 import { SignOutButton } from "./SignOutButton";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 type NavItem = { href: string; label: string };
 
@@ -30,27 +30,30 @@ export function MobileNav({
       <SheetContent side="left" className="p-0 bg-[#1A3A5C] w-64 max-w-[80vw]">
         <div className="flex flex-col h-full px-4 py-6 gap-2">
           {/* Logo */}
-          <Link href="/dashboard/user" className="no-underline">
-            <div className="flex items-center gap-2.5 mb-8 pl-2">
-              <BrandMark size={40} className="shrink-0 ring-1 ring-white/15 rounded-[9px]" />
-              <div>
-                <div className="font-serif font-bold text-white text-[13px] leading-tight">Community</div>
-                <div className="font-serif font-bold text-[#E8563A] text-[13px] leading-tight">
-                  Bulletin<span className="text-[#4A90C4] text-[10px] font-normal">.com</span>
+          <SheetClose asChild>
+            <Link href="/dashboard/user" className="no-underline">
+              <div className="flex items-center gap-2.5 mb-8 pl-2">
+                <BrandMark size={40} className="shrink-0 ring-1 ring-white/15 rounded-[9px]" />
+                <div>
+                  <div className="font-serif font-bold text-white text-[13px] leading-tight">Community</div>
+                  <div className="font-serif font-bold text-[#E8563A] text-[13px] leading-tight">
+                    Bulletin<span className="text-[#4A90C4] text-[10px] font-normal">.com</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Link>
-
-          {/* Nav */}
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="block px-3.5 py-2.5 rounded-lg text-[#9DC4E0] no-underline text-sm font-medium hover:bg-white/10 transition-colors"
-            >
-              {item.label}
             </Link>
+          </SheetClose>
+
+          {/* Nav: each link closes the menu */}
+          {navItems.map((item) => (
+            <SheetClose asChild key={item.href}>
+              <Link
+                href={item.href}
+                className="block px-3.5 py-2.5 rounded-lg text-[#9DC4E0] no-underline text-sm font-medium hover:bg-white/10 transition-colors"
+              >
+                {item.label}
+              </Link>
+            </SheetClose>
           ))}
 
           {/* Bottom */}

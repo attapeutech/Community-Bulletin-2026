@@ -28,6 +28,8 @@
   - `0012_location_traffic`: `locations.daily_customers` and `traffic_updated_at`
   - `0013_screen_devices`
   - `0014_direct_deposits`
+  - `0015_sales_leads` (leads, lead_notes, `lead_stage` enum, `lead_follow_up` notification type)
+  - `0016_lead_locations` (`leads.location_id`)
 
 ## Store owner earnings and payouts (Phase 1, added 2026-10-23)
 
@@ -108,6 +110,20 @@
 - **Google Cloud:** OAuth client "Community Bulletin" (Web application) in the **laotech** project. Redirect URIs: `https://communitybulletin.com/api/auth/callback/google` and `http://localhost:3000/api/auth/callback/google`. The consent screen's Branding (app name, support email) and Audience (must be **In production**) are set there.
 - **Accounts:** a Google sign-in with the same email as an existing account links to it (Google confirms the email). New Google users get role `user`; store owners apply at `/partners/apply`.
 - **Errors** (e.g. suspended account) return to `/login?error=…`, which shows a message.
+
+## Sales leads (2026-10-27)
+
+- **Page:** **Sales** (`/dashboard/sales`), admin-only (the co-founder doing sales is an admin). A `sales` role can come later.
+- **Process (two tabs):** 1 · **Stores**: sign up store owners to host a screen (`kind = store_partner`). 2 · **Advertisers**: sign up businesses near each store (`kind = advertiser`). **Goal: 40 live ads per store** (`ADS_PER_STORE_GOAL` in `src/lib/leads.ts`).
+- **Tables** (migrations `0015_sales_leads`, `0016_lead_locations`): `leads` (kind, business, contact, phone, email, city, address, source, `stage`, `next_follow_up`, `lost_reason`, `location_id`, `owner_id`, linked customer `user_id`, `won_at`) and `lead_notes` (time-stamped history).
+- **`location_id`:** for an advertiser lead, the store they'd advertise at; for a store lead, the location it became. **Set up this store** on a store lead opens the new-location form pre-filled from the lead (`?lead=<id>`); the store belongs to the lead's linked account (promoted to store owner, agreement `not_sent`), or to the admin if none is linked, and the lead is marked Won with a note.
+- **Store goal cards** (Advertisers tab): per active store, ads live now (approved and inside their run dates) out of 40, plus paid ads awaiting review and open / interested advertiser leads. Clicking a card filters the leads to that store.
+- **Stages:** new → contacted → interested → won / lost. Stage changes add an automatic note; Won sets `won_at`; Won/Lost clear the follow-up; Lost asks for a reason.
+- **Follow-up dates** are calendar days in Pacific time (`src/lib/leads.ts`).
+- **List:** counts (due today, overdue, interested, won in 30 days) double as filters; search, stage (default: open leads), follow-up window, city, owner, sort; 25 per page. Filters are in the URL. Quick actions: stage, follow-up tomorrow / +1 week / date. Tap to call or email.
+- **Lead page:** details (edit), notes timeline, stage and follow-up, delete. **Link account** attaches the customer account (by email) and shows what it has paid: kept so sales credit or commission can be calculated later (payments from that account after `won_at`).
+- **Reminder:** the daily cron (`notifyLeadFollowUps`) sends each owner one bell notification when they have follow-ups due today or overdue (split into stores and advertisers), at most once a day.
+- **API:** `POST /api/admin/leads`, `PATCH`/`DELETE /api/admin/leads/[id]`, `POST /api/admin/leads/[id]/notes`.
 
 ## "Advertise here" slide on display screens
 

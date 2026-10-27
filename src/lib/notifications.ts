@@ -1,7 +1,8 @@
 import { db } from "@/lib/db/client";
-import { ads, locations, notifications, payments, users } from "@/lib/db/schema";
+import { ads, leads, locations, notifications, payments, users } from "@/lib/db/schema";
 import { and, eq, gt, inArray, lte, notExists, sql } from "drizzle-orm";
 import { notifyUserSocket } from "@/lib/socket/server";
+import { leadToday } from "@/lib/leads";
 
 type NotificationType = typeof notifications.$inferInsert["type"];
 
@@ -198,4 +199,50 @@ export async function notifyPayoutSent(ownerId: string, amountCents: number, met
       : method === "zelle" ? "Sent via Zelle." : "Sent by mailed check.",
     link: "/dashboard/store-owner/earnings",
   });
+}
+
+/**
+ * Daily job: one bell reminder per lead owner with follow-ups due today or overdue.
+ * At most one a day, even if the job runs more than once.
+ */
+export async function notifyLeadFollowUps(now = new Date()) {
+  const today = leadToday(now);
+  const rows = await db
+    .select({
+      ownerId: leads.ownerId,
+      stores: sql<number>`count(*) filter (where ${leads.kind} = 'store_partner')::int`,
+      advertisers: sql<number>`count(*) filter (where ${leads.kind} <> 'store_partner')::int`,
+    })
+    .from(leads)
+    .where(and(
+      inArray(leads.stage, ["new", "contacted", "interested"]),
+      lte(leads.nextFollowUp, today),
+      sql`${leads.ownerId} is not null`,
+    ))
+    .groupBy(leads.ownerId);
+
+  let sent = 0;
+  for (const r of rows) {
+    const due = r.stores + r.advertisers;
+    const [already] = await db
+      .select({ id: notifications.id })
+      .from(notifications)
+      .where(and(
+        eq(notifications.userId, r.ownerId!),
+        eq(notifications.type, "lead_follow_up"),
+        gt(notifications.createdAt, new Date(now.getTime() - 20 * 60 * 60 * 1000)),
+      ))
+      .limit(1);
+    if (already) continue;
+    await notifyUser(r.ownerId!, {
+      type: "lead_follow_up",
+      subject: `${due} lead${due !== 1 ? "s" : ""} to follow up today`,
+      body: [r.stores && `${r.stores} store${r.stores !== 1 ? "s" : ""}`, r.advertisers && `${r.advertisers} advertiser${r.advertisers !== 1 ? "s" : ""}`]
+        .filter(Boolean).join(", ") + " (includes overdue)",
+      // Open the tab that has follow-ups due (stores come first in the process)
+      link: `/dashboard/sales?${r.stores ? "kind=store_partner&" : ""}due=due&owner=me`,
+    });
+    sent++;
+  }
+  return sent;
 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db/client";
-import { locations, countries, states, cities, postalCodes, users, partnerApplications } from "@/lib/db/schema";
+import { locations, countries, states, cities, postalCodes, users, partnerApplications, leads, leadNotes } from "@/lib/db/schema";
 import { eq, and, ilike, or } from "drizzle-orm";
 import { getSession } from "@/lib/auth/session";
 import { MIN_PRICE_PER_WEEK_CENTS, MAX_PRICE_PER_WEEK_CENTS, MAX_SHARE_RATE_BPS, AD_PRICE_CENTS, DEFAULT_SHARE_RATE_BPS } from "@/types";
@@ -111,6 +111,8 @@ const createSchema = z.object({
   businessHours: z.string().max(500).optional(),
   // Admin-only: set up the first store for an approved partner application (owned by the applicant)
   applicationId: z.string().uuid().optional(),
+  // Admin-only: set up the store for a sales lead (owned by the lead's linked account, if any)
+  leadId: z.string().uuid().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -128,6 +130,7 @@ export async function POST(req: NextRequest) {
     const isAdmin = role === "admin";
 
     let ownerId = userId;
+    let leadStage: string | null = null;
     if (data.applicationId) {
       if (!isAdmin) return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
       const [app] = await db
@@ -139,6 +142,35 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: false, error: "Approve the application first" }, { status: 409 });
       }
       ownerId = app.userId;
+    } else if (data.leadId) {
+      if (!isAdmin) return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+      const [lead] = await db
+        .select({ kind: leads.kind, stage: leads.stage, locationId: leads.locationId, ownerId: users.id, ownerRole: users.role, agreementStatus: users.partnerAgreementStatus })
+        .from(leads)
+        .leftJoin(users, eq(leads.userId, users.id))
+        .where(eq(leads.id, data.leadId))
+        .limit(1);
+      if (!lead || lead.kind !== "store_partner") {
+        return NextResponse.json({ success: false, error: "Store lead not found" }, { status: 404 });
+      }
+      if (lead.locationId) {
+        return NextResponse.json({ success: false, error: "This lead already has a store location" }, { status: 409 });
+      }
+      leadStage = lead.stage;
+      // The lead's linked account owns the store and earns the owner share; without one, the admin does
+      if (lead.ownerId) {
+        ownerId = lead.ownerId;
+        if (lead.ownerRole === "user" || lead.agreementStatus === null) {
+          await db.update(users)
+            .set({
+              // Same as approving an application: advertisers become store owners; approvers/admins keep their role
+              ...(lead.ownerRole === "user" && { role: "store_owner" as const }),
+              ...(lead.agreementStatus === null && { partnerAgreementStatus: "not_sent" }),
+              updatedAt: new Date(),
+            })
+            .where(eq(users.id, lead.ownerId));
+        }
+      }
     }
 
     // Generate a unique slug from store name + short id
@@ -173,6 +205,19 @@ export async function POST(req: NextRequest) {
       await db.update(partnerApplications)
         .set({ locationId: location.id, updatedAt: new Date() })
         .where(eq(partnerApplications.id, data.applicationId));
+    }
+    if (data.leadId) {
+      // The store is set up, so the deal is won
+      const now = new Date();
+      const won = leadStage !== "won";
+      await db.update(leads)
+        .set({ locationId: location.id, ...(won && { stage: "won" as const, wonAt: now, nextFollowUp: null, lostReason: null }), updatedAt: now })
+        .where(eq(leads.id, data.leadId));
+      await db.insert(leadNotes).values({
+        leadId: data.leadId,
+        authorId: userId,
+        body: `Store set up: ${location.storeName}${won ? " (marked Won)" : ""}`,
+      });
     }
 
     return NextResponse.json({ success: true, data: location }, { status: 201 });

@@ -134,8 +134,8 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
           <div className="hidden md:flex items-center gap-2">
             <Link href="/live-ads" className="no-underline flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white dark:bg-white opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-white dark:bg-white" />
               </span>
               Live Ads
             </Link>
@@ -221,8 +221,8 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2 mb-1 md:hidden">
             <Link href="/live-ads" onClick={() => setMobileMenuOpen(false)} className="no-underline flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-4 py-2.5 rounded-full transition-colors">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white dark:bg-white opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-white dark:bg-white" />
               </span>
               Live Ads
             </Link>
@@ -282,8 +282,8 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               <div className="flex flex-wrap gap-2">
                 <Link href="/live-ads" className="no-underline flex items-center gap-1.5 bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors">
                   <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white dark:bg-white opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white dark:bg-white" />
                   </span>
                   Live Ads
                 </Link>

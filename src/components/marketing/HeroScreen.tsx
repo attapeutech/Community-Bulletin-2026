@@ -101,7 +101,7 @@ export default function HeroScreen() {
                     {shown.map((ad, i) => (
                       <span
                         key={ad.id}
-                        className={`h-1.5 rounded-full transition-all duration-500 ${i === index % shown.length ? "w-4 bg-white" : "w-1.5 bg-white/40"}`}
+                        className={`h-1.5 rounded-full transition-all duration-500 ${i === index % shown.length ? "w-4 bg-white dark:bg-white" : "w-1.5 bg-white/40"}`}
                       />
                     ))}
                   </div>

@@ -76,6 +76,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
       overdue: sql<number>`count(*) filter (where ${leads.nextFollowUp} < ${today} and ${open})::int`,
       interested: sql<number>`count(*) filter (where ${leads.stage} = 'interested')::int`,
       won30: sql<number>`count(*) filter (where ${leads.wonAt} >= ${new Date(Date.now() - 30 * 86400_000).toISOString()})::int`,
+      all: sql<number>`count(*)::int`,
     }).from(leads).where(ofKind),
     db.selectDistinct({ city: leads.city }).from(leads).where(and(ofKind, isNotNull(leads.city))).orderBy(asc(leads.city)),
     // Active stores and their progress toward the ads-per-store goal

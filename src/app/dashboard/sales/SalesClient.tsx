@@ -200,7 +200,7 @@ export default function SalesClient({ leads, filters, total, pages, today, summa
   total: number;
   pages: number;
   today: string;
-  summary: { dueToday: number; overdue: number; interested: number; won30: number };
+  summary: { dueToday: number; overdue: number; interested: number; won30: number; all: number };
   cities: string[];
   stores: StoreGoal[];
 }) {
@@ -413,7 +413,15 @@ export default function SalesClient({ leads, filters, total, pages, today, summa
         <CardContent className="p-0">
           {leads.length === 0 ? (
             <div className="py-12 text-center text-[#4A6B82] text-sm">
-              {hasFilters ? "No leads match these filters." : <>No {isAdvertisers ? "advertiser" : "store"} leads yet. <Link href={newLeadHref} className="text-[#4A90C4]">Add the first one</Link>.</>}
+              {hasFilters ? "No leads match these filters."
+                : summary.all > 0 ? (
+                  // Default view shows open leads only; say so when won / lost ones are hidden
+                  <>
+                    No open {isAdvertisers ? "advertiser" : "store"} leads. {summary.all} won or lost {summary.all !== 1 ? "are" : "is"} hidden.{" "}
+                    <button type="button" onClick={() => go({ stage: "all" })} className="text-[#4A90C4] hover:underline">Show all stages</button>
+                  </>
+                )
+                : <>No {isAdvertisers ? "advertiser" : "store"} leads yet. <Link href={newLeadHref} className="text-[#4A90C4]">Add the first one</Link>.</>}
             </div>
           ) : (
             <div className="divide-y divide-[#D8E4EE]">

@@ -47,7 +47,7 @@ export default function LandingPage({ price }: { price: LandingPrice }) {
         <div className="max-w-3xl mx-auto relative">
           <div className="inline-flex items-center gap-1.5 bg-[#E8563A]/15 border border-[#E8563A]/30 rounded-full px-3.5 py-1.5 mb-7">
             <span className="w-1.5 h-1.5 rounded-full bg-[#E8563A] inline-block" />
-            <span className="text-xs font-semibold text-[#E8563A] tracking-wide uppercase">Now live in 48 states</span>
+            <span className="text-xs font-semibold text-[#E8563A] tracking-wide uppercase">Now booking ad space</span>
           </div>
 
           <h1 className="font-serif text-[clamp(32px,6vw,64px)] font-bold text-white leading-[1.15] mb-6 tracking-tight">

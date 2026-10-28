@@ -33,6 +33,21 @@
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
 
+## 2026-10-28 (end of day): Post a New Ad, brand template mockup
+
+- **Post a New Ad, Choose a location** (PR #84): every active store is listed (A–Z) before searching; typing 2+ letters still searches. The picked store is outlined in blue with a "✓ Selected" tag; the separate "Selected:" box only shows when the pick isn't in the list on screen.
+- **Local-business rule** (PR #84): a note under the store list, and a required checkbox on the Review step ("my business is within about 10 miles of this store, or serves its area") before Submit & Pay unlocks. `LOCAL_AD_RADIUS_MILES` (`src/types`, currently 10) drives that wording, the Help answer "Can any business advertise at any store?", the Terms ad-review section, and the "Too far from store" one-tap deny reason in Review Ads (also "Low-resolution image", "Content guidelines"). Nothing measures distance yet; see the to-do "Distance check".
+- **Automatic image upload** (PR #85): choosing or dropping an image on step 3 uploads it right away (no Upload button), with "Uploading…", a Try again button on failure, and clear messages for files over 10 MB or of the wrong type.
+- **Privacy:** `GET /api/locations` no longer returns store owners' names and emails (only signed-in users could call it; nothing used them).
+- **Help:** store owner payouts now describe direct deposit through Stripe (it said Zelle/check and "coming soon").
+- **Earnings dark mode** (PR #83): "Monthly, 15th" on the store owner Earnings page is readable in dark mode.
+- **Agreement draft:** replacement wording for store owner agreement sections 6.4 (payment method and schedule) and 6.6 (taxes) is in a shared doc, [Store Owner Agreement: Sections 6.4 and 6.6](https://claude.ai/artifact/7SWPMaBbfQeXA9aXHUBym1), with [Company] placeholders and review notes.
+- **Brand template mockup:** `public/demo/brand-template.html`, a standalone page (GSAP 3.13 from jsDelivr, no data) showing a brand frame on every slide, a coral-sweep + CB-flip transition between ads, an animated Sale / Offer template ("Joe's Pizza", placeholder), an advertiser flyer shown inside the frame, and the "Advertise here" slide.
+  - Controls: Look (Clean channel / Bulletin card), Screen (Landscape / Portrait), Slide, Auto-play. URL options: `?kiosk` (no controls, as on a TV), `?fps` (frames-per-second meter), `?look=`, `?orient=` (default follows the screen's shape).
+  - Fits and centers on any screen size. Slides hold 8 s (template), 11 s (flyer), 10 s (advertise here).
+  - All motion is GSAP (timelines, SplitText headline); CSS only styles the layout. The live display screens still use their CSS animations (`globals.css`) and are unchanged.
+  - 60 fps on the dev machine. Public URL once deployed: `/demo/brand-template.html` (the proxy allows `/demo/*`).
+
 ## 2026-10-28 (later): direct deposits are live
 
 - **`STRIPE_CONNECT_ENABLED=true` and `STRIPE_CONNECT_WEBHOOK_SECRET` are set in Coolify** (live Connect webhook: `account.updated`, events on connected accounts, to `/api/payments/stripe/connect-webhook`). Store owners now see the Direct Deposit card on Earnings; admins see the Direct Deposits card on Payouts.
@@ -279,9 +294,14 @@
 - [ ] **Stripe: add the business bank account** (Home → Add bank), once the business partner provides it. Card revenue stays in the Stripe balance until then; direct deposits are paid from that balance, so they don't depend on it.
 - [ ] **Direct deposits, remaining:**
   1. Partner sign-off on direct deposits and Stripe's costs.
-  2. Update the store owner agreement, sections 6.4 and 6.6 (payouts by direct deposit through Stripe; owners handle their own taxes). The agreement lives outside the app.
+  2. Update the store owner agreement, sections 6.4 and 6.6: the draft is in [Store Owner Agreement: Sections 6.4 and 6.6](https://claude.ai/artifact/7SWPMaBbfQeXA9aXHUBym1). Fill in [Company], then partner and attorney review. The agreement lives outside the app.
   3. First real owner: they onboard from Earnings with their real details, an admin marks their agreement **Signed** on Payouts, and from the 15th their available balance (at least $25) is paid automatically.
   4. **1099 tax forms:** Stripe opens Connect → Tax forms only once there's a US connected account. After the first owner onboards and before January 2027, turn on 1099 reporting and pick the form type (MISC vs NEC: ask the accountant).
+- [ ] **Brand template (display screens):**
+  1. Test the mockup's speed on the store's mini PC: open `communitybulletin.com/demo/brand-template.html?kiosk&fps` for a minute (in person or by remote desktop), then reopen the store's display page. Meanwhile: Chrome DevTools → Performance → CPU 4× / 6× slowdown with `?fps`. Smooth = about 60 fps.
+  2. Partner and co-founder pick a look: **Clean channel** or **Bulletin card**.
+  3. Build it into the real screens in phases: (1) brand frame + signature transition on all ads; (2) three templates (Sale / Offer, Grand opening, Services) with a template picker and live preview in Post a New Ad; (3) more templates and seasonal themes, plus comparing QR scans of template ads vs flyers. Flyer uploads stay, shown inside the frame.
+- [ ] **Distance check (local-business rule, step 2):** ask for a business ZIP in Ad Details, load free US Census ZIP centroids, warn before payment when the business is farther than `LOCAL_AD_RADIUS_MILES` from the store, and show "~N mi from store" in Review Ads. Later: a per-store radius and a store list sorted by distance.
 - [ ] Optional: hide the clock on display screens while the tap/hover controls are showing (they overlap on desktop).
 
 - [ ] **About 1 week after 2026-10-23:** if Neon is stable, delete the old Postgres resource in Coolify (`postgresql-database-gt2gswqg8jmybj5l2ydntnfg`). Until then, don't reuse its password; it's in git history.

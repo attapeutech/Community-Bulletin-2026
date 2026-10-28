@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Brand Template Mockup</title>
+<!--
+  Community Bulletin: brand frame + signature transition + animated ad template (design mockup and hardware test).
+  Standalone page, no data. URL options:
+    ?fps        show a frames-per-second meter (run it on the store's mini PC)
+    ?kiosk      hide the control bar (full screen, as on a store TV)
+    ?look=bulletin | clean      ?orient=portrait | landscape   (default: follows the screen's shape)
+-->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+<style>
+  :root {
+    --navy: #1A3A5C; --navy-deep: #0F2540; --navy-ink: #0A1A2E;
+    --coral: #E8563A; --blue: #4A90C4; --cream: #FFFDF8; --mist: #9DC4E0;
+    --serif: Georgia, "Times New Roman", serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #05101C; color: #fff; font-family: var(--sans); overflow: hidden; }
+
+  /* ── Control bar (hidden with ?kiosk) ── */
+  #controls {
+    height: 52px; display: flex; align-items: center; gap: 18px; padding: 0 16px; flex-wrap: wrap;
+    background: #0B1A27; border-bottom: 1px solid #1E3550; font-size: 13px; color: var(--mist);
+  }
+  #controls b { color: #fff; font-family: var(--serif); font-size: 15px; margin-right: 6px; }
+  .seg { display: inline-flex; border: 1px solid #1E3550; border-radius: 999px; overflow: hidden; }
+  .seg button { background: transparent; color: var(--mist); border: 0; padding: 6px 12px; font: inherit; cursor: pointer; }
+  .seg button.on { background: var(--navy); color: #fff; font-weight: 600; }
+  body.kiosk #controls { display: none; }
+
+  /* ── Viewport + fixed-resolution stage scaled to fit ── */
+  #viewport { position: absolute; inset: 52px 0 0 0; overflow: hidden; }
+  body.kiosk #viewport { inset: 0; }
+  /* Fixed design size; JS scales it to fit the window and centers it (letterbox bars if the shape differs) */
+  #stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; overflow: hidden; background: var(--navy-ink); }
+  #stage.portrait { width: 1080px; height: 1920px; }
+
+  /* Board background: clean = deep navy gradient; bulletin = navy board with a soft dot grid */
+  .board { position: absolute; inset: 0; background: radial-gradient(120% 90% at 20% 10%, #1D4570 0%, var(--navy-deep) 55%, var(--navy-ink) 100%); }
+  .look-bulletin .board {
+    background:
+      radial-gradient(circle, rgba(157,196,224,.16) 2px, transparent 2.5px) 0 0 / 44px 44px,
+      radial-gradient(120% 90% at 20% 10%, #1D4570 0%, var(--navy-deep) 60%, var(--navy-ink) 100%);
+  }
+
+  /* ── Slides: the area above the brand frame ── */
+  .slides { position: absolute; left: 0; right: 0; top: 0; bottom: 120px; }
+  .portrait .slides { bottom: 150px; }
+  .slide { position: absolute; inset: 0; visibility: hidden; }
+  .slide.active { visibility: visible; }
+
+  /* Card: full-bleed in "clean", a pinned card in "bulletin" */
+  .card { position: absolute; inset: 0; overflow: hidden; }
+  .look-bulletin .card {
+    inset: 56px 72px 40px; border-radius: 18px; background: var(--cream); color: var(--navy);
+    box-shadow: 0 30px 60px rgba(0,0,0,.45), 0 4px 12px rgba(0,0,0,.3); transform: rotate(-0.6deg); overflow: visible;
+  }
+  .portrait.look-bulletin .card { inset: 64px 48px 40px; }
+  .pin { display: none; }
+  .look-bulletin .pin {
+    display: block; position: absolute; top: -18px; left: 50%; width: 38px; height: 38px; margin-left: -19px; z-index: 5; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #FF9A82, var(--coral) 55%, #A8331C); box-shadow: 0 8px 14px rgba(0,0,0,.45);
+  }
+  .clip { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; }
+
+  /* ── Template: Sale / Offer ── */
+  .sale .photo { position: absolute; top: 0; right: 0; bottom: 0; width: 46%; overflow: hidden; background: #2A1A12; }
+  .portrait .sale .photo { top: 0; left: 0; right: 0; bottom: auto; width: auto; height: 44%; }
+  .sale .photo svg { width: 100%; height: 100%; display: block; }
+  .sale .photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(10,26,46,.55), transparent 35%); }
+  .portrait .sale .photo::after { background: linear-gradient(0deg, rgba(10,26,46,.55), transparent 35%); }
+  .look-bulletin .sale .photo::after { background: none; }
+
+  .sale .body { position: absolute; left: 96px; top: 0; bottom: 0; width: 46%; display: flex; flex-direction: column; justify-content: center; }
+  .portrait .sale .body { left: 72px; right: 72px; top: 44%; width: auto; justify-content: flex-start; padding-top: 70px; }
+  .biz { font-size: 34px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--mist); }
+  .look-bulletin .biz { color: var(--blue); }
+  .offer { display: flex; align-items: baseline; gap: 22px; margin: 18px 0 4px; }
+  .offer .big { font-family: var(--serif); font-weight: 700; font-size: 230px; line-height: .9; color: var(--coral); letter-spacing: -6px; }
+  .offer .off { font-family: var(--serif); font-weight: 700; font-size: 96px; color: var(--coral); }
+  .headline { font-family: var(--serif); font-weight: 700; font-size: 96px; line-height: 1.05; margin: 0; }
+  .underline { height: 10px; width: 220px; background: var(--coral); border-radius: 5px; margin: 26px 0 30px; transform-origin: left center; }
+  .sub { font-size: 40px; line-height: 1.35; color: rgba(255,255,255,.82); }
+  .look-bulletin .sub { color: #3E5C76; }
+  .meta { display: flex; align-items: center; gap: 28px; margin-top: 46px; }
+  .chip { font-size: 32px; font-weight: 700; background: var(--coral); color: #fff; border-radius: 999px; padding: 10px 26px; white-space: nowrap; }
+  .addr { font-size: 30px; color: rgba(255,255,255,.75); }
+  .look-bulletin .addr { color: #3E5C76; }
+
+  /* QR block (placeholder pattern) */
+  .qr { background: #fff; border-radius: 14px; padding: 14px; box-shadow: 0 10px 24px rgba(0,0,0,.35); }
+  .qr svg { display: block; }
+  .qr-cap { font-size: 22px; font-weight: 700; color: var(--navy); text-align: center; margin-top: 8px; letter-spacing: .04em; }
+  .sale .qr-wrap { position: absolute; right: 56px; bottom: 56px; z-index: 3; }
+  .portrait .sale .qr-wrap { right: 72px; bottom: 72px; }
+
+  /* ── Flyer inside the frame ── */
+  .flyer .backdrop { position: absolute; inset: -40px; filter: blur(40px) saturate(1.2); opacity: .55; }
+  .flyer .backdrop svg, .flyer .poster svg { width: 100%; height: 100%; display: block; }
+  .flyer .poster { position: absolute; top: 50%; left: 50%; height: 86%; aspect-ratio: 8.5 / 11; transform: translate(-50%, -50%); box-shadow: 0 30px 60px rgba(0,0,0,.5); border-radius: 6px; overflow: hidden; }
+  .portrait .flyer .poster { height: auto; width: 84%; }
+  .look-bulletin .flyer .clip { background: #E8EEF4; }
+  .flyer .tag { position: absolute; left: 40px; top: 36px; font-size: 26px; font-weight: 700; color: #fff; background: rgba(10,26,46,.7); padding: 8px 18px; border-radius: 999px; z-index: 2; }
+
+  /* ── House slide: advertise here ── */
+  .house .body { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 110px; padding: 0 120px; }
+  .portrait .house .body { flex-direction: column; gap: 70px; text-align: center; }
+  .house h2 { font-family: var(--serif); font-size: 128px; line-height: 1.02; margin: 0 0 24px; }
+  .house h2 em { font-style: normal; color: var(--coral); }
+  .house p { font-size: 44px; color: rgba(255,255,255,.82); margin: 0; }
+  .look-bulletin .house p { color: #3E5C76; }
+
+  /* ── Brand frame: the same on every slide ── */
+  .frame {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 120px; z-index: 10;
+    display: flex; align-items: center; gap: 26px; padding: 0 48px;
+    background: linear-gradient(180deg, #13304F, var(--navy-deep)); border-top: 4px solid var(--coral);
+  }
+  .portrait .frame { height: 150px; padding: 0 40px; }
+  .frame .mark { width: 72px; height: 72px; flex-shrink: 0; }
+  .frame .name { font-family: var(--serif); font-weight: 700; font-size: 38px; line-height: 1; white-space: nowrap; }
+  .frame .name span { color: var(--coral); }
+  .frame .where { font-size: 26px; color: var(--mist); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .frame .spacer { flex: 1; }
+  .frame .clock { font-size: 40px; font-weight: 600; font-variant-numeric: tabular-nums; color: #fff; }
+  .portrait .frame .where { display: none; }
+
+  /* ── Signature transition: coral sweep + CB mark flip ── */
+  .wipe { position: absolute; inset: 0; z-index: 20; background: var(--coral); transform: translateX(-101%); display: grid; place-items: center; pointer-events: none; }
+  .wipe .wipe-mark { width: 260px; height: 260px; }
+
+  /* FPS meter (?fps) */
+  #fps { position: fixed; right: 12px; bottom: 12px; z-index: 50; font: 600 14px/1 ui-monospace, Consolas, monospace; background: rgba(0,0,0,.75); color: #6EE7A0; padding: 8px 10px; border-radius: 6px; display: none; }
+  body.show-fps #fps { display: block; }
+
+  @media (prefers-reduced-motion: reduce) { .wipe { display: none; } }
+</style>
+</head>
+<body>
+  <div id="controls">
+    <b>Brand template mockup</b>
+    <span>Look</span>
+    <span class="seg" data-ctl="look"><button data-v="clean">Clean channel</button><button data-v="bulletin">Bulletin card</button></span>
+    <span>Screen</span>
+    <span class="seg" data-ctl="orient"><button data-v="landscape">Landscape</button><button data-v="portrait">Portrait</button></span>
+    <span>Slide</span>
+    <span class="seg" data-ctl="slide"><button data-v="0">Template</button><button data-v="1">Flyer</button><button data-v="2">Advertise here</button></span>
+    <span class="seg" data-ctl="play"><button data-v="play">Auto-play</button><button data-v="pause">Pause</button></span>
+  </div>
+
+  <div id="viewport">
+    <div id="stage">
+      <div class="board"></div>
+
+      <div class="slides">
+        <!-- 1. Template: Sale / Offer (placeholder business) -->
+        <section class="slide sale">
+          <div class="card"><div class="pin"></div><div class="clip">
+            <div class="photo" data-svg="pizza"></div>
+            <div class="body">
+              <div class="biz">Joe's Pizza</div>
+              <div class="offer"><span class="big">20%</span><span class="off">OFF</span></div>
+              <h1 class="headline">any large pizza</h1>
+              <div class="underline"></div>
+              <div class="sub">Dine-in or takeout · this week only</div>
+              <div class="meta"><span class="chip">Ends Nov 9</span><span class="addr">1234 Hwy 99, Everett</span></div>
+            </div>
+            <div class="qr-wrap"><div class="qr"><div data-qr="180"></div><div class="qr-cap">SCAN FOR DEAL</div></div></div>
+          </div></div>
+        </section>
+
+        <!-- 2. Advertiser's own flyer, shown inside the brand frame -->
+        <section class="slide flyer">
+          <div class="card"><div class="pin"></div><div class="clip">
+            <div class="backdrop" data-svg="flyer"></div>
+            <div class="tag">Advertiser's own flyer, framed</div>
+            <div class="poster" data-svg="flyer"></div>
+          </div></div>
+        </section>
+
+        <!-- 3. House slide: advertise here -->
+        <section class="slide house">
+          <div class="card"><div class="pin"></div><div class="clip">
+            <div class="body">
+              <div>
+                <h2>Your business<br><em>could be here</em></h2>
+                <p>Reach ~500 shoppers a day · from $100 / 4 weeks</p>
+              </div>
+              <div class="qr"><div data-qr="300"></div><div class="qr-cap">SCAN TO POST AN AD</div></div>
+            </div>
+          </div></div>
+        </section>
+      </div>
+
+      <div class="frame">
+        <div class="mark" data-svg="mark"></div>
+        <div>
+          <div class="name">Community <span>Bulletin</span></div>
+          <div class="where">Ads from your neighbors · at Fast Eddies</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="clock" id="clock"></div>
+      </div>
+
+      <div class="wipe"><div class="wipe-mark" data-svg="mark-light"></div></div>
+    </div>
+  </div>
+  <div id="fps"></div>
+
+<script>
+(() => {
+  const params = new URLSearchParams(location.search);
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const stage = document.getElementById("stage");
+  const slides = [...document.querySelectorAll(".slide")];
+  if (params.has("kiosk")) document.body.classList.add("kiosk");
+  if (params.has("fps")) document.body.classList.add("show-fps");
+
+  // ── Artwork (inline, so the page needs nothing but GSAP) ──
+  const SVG = {
+    mark: `<svg viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#1A3A5C" stroke="rgba(255,255,255,.18)" stroke-width="8"/><text x="256" y="350" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="290" letter-spacing="-12"><tspan fill="#fff">C</tspan><tspan fill="#E8563A">B</tspan></text></svg>`,
+    "mark-light": `<svg viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#fff"/><text x="256" y="350" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="290" letter-spacing="-12"><tspan fill="#1A3A5C">C</tspan><tspan fill="#E8563A">B</tspan></text></svg>`,
+    pizza: `<svg viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice">
+      <defs><radialGradient id="wood" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="#6B4428"/><stop offset="1" stop-color="#2A1A12"/></radialGradient></defs>
+      <rect width="800" height="800" fill="url(#wood)"/>
+      <g transform="translate(400 410)">
+        <circle r="300" fill="#D9963F"/><circle r="262" fill="#C8452F"/>
+        <g fill="#F4D27A">${[[-90,-70,70],[60,-110,60],[120,40,72],[-40,90,66],[-150,60,52],[30,10,58],[150,-40,44],[-110,-150,40]].map(([x,y,r])=>`<circle cx="${x}" cy="${y}" r="${r}"/>`).join("")}</g>
+        <g fill="#A3322A">${[[-120,-20],[40,-160],[150,110],[-60,160],[90,-30],[-170,120],[180,-100],[-30,-110],[20,90]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="34"/>`).join("")}</g>
+        <g fill="#3C7A3A">${[[-10,-40],[110,-150],[-140,90],[70,150]].map(([x,y])=>`<ellipse cx="${x}" cy="${y}" rx="22" ry="11" transform="rotate(35 ${x} ${y})"/>`).join("")}</g>
+      </g></svg>`,
+    flyer: `<svg viewBox="0 0 850 1100" preserveAspectRatio="xMidYMid slice">
+      <rect width="850" height="1100" fill="#FFD23F"/><rect y="0" width="850" height="300" fill="#2B2D42"/>
+      <text x="425" y="180" text-anchor="middle" font-family="Impact,Arial Black,sans-serif" font-size="120" fill="#FFD23F">CAR WASH</text>
+      <text x="425" y="250" text-anchor="middle" font-family="Arial,sans-serif" font-size="40" fill="#fff">FUNDRAISER</text>
+      <text x="425" y="480" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="96" fill="#2B2D42">SAT 9AM–2PM</text>
+      <text x="425" y="600" text-anchor="middle" font-family="Arial,sans-serif" font-size="54" fill="#2B2D42">Everett High School Band</text>
+      <circle cx="425" cy="800" r="130" fill="#EF233C"/><text x="425" y="830" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="96" fill="#fff">$10</text>
+      <text x="425" y="1020" text-anchor="middle" font-family="Arial,sans-serif" font-size="40" fill="#2B2D42">Fast Eddies parking lot</text></svg>`,
+  };
+  document.querySelectorAll("[data-svg]").forEach(el => el.innerHTML = SVG[el.dataset.svg]);
+
+  // Placeholder QR: finder squares + a seeded pattern (not scannable; the real one is generated per ad)
+  function qrSvg(size) {
+    const n = 25; let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+    const cells = [];
+    const finder = (x, y) => cells.push(`<rect x="${x}" y="${y}" width="7" height="7" fill="#0A1A2E"/><rect x="${x+1}" y="${y+1}" width="5" height="5" fill="#fff"/><rect x="${x+2}" y="${y+2}" width="3" height="3" fill="#0A1A2E"/>`);
+    const inFinder = (x, y) => (x < 8 && y < 8) || (x > n - 9 && y < 8) || (x < 8 && y > n - 9);
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (!inFinder(x, y) && rnd() > .52) cells.push(`<rect x="${x}" y="${y}" width="1" height="1" fill="#0A1A2E"/>`);
+    finder(0, 0); finder(n - 7, 0); finder(0, n - 7);
+    return `<svg width="${size}" height="${size}" viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges">${cells.join("")}</svg>`;
+  }
+  document.querySelectorAll("[data-qr]").forEach(el => el.innerHTML = qrSvg(+el.dataset.qr));
+
+  // ── Clock in the frame ──
+  const clock = document.getElementById("clock");
+  const tick = () => clock.textContent = new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  tick(); setInterval(tick, 15000);
+
+  // ── Scale the fixed-resolution stage to the window ──
+  const viewport = document.getElementById("viewport");
+  function fit() {
+    const vw = viewport.clientWidth, vh = viewport.clientHeight;
+    const w = stage.offsetWidth, h = stage.offsetHeight;
+    const s = Math.min(vw / w, vh / h);
+    // Scale from the top-left corner, then move to the exact center
+    stage.style.transform = `translate(${(vw - w * s) / 2}px, ${(vh - h * s) / 2}px) scale(${s})`;
+  }
+  // Orientation follows the screen's shape until someone picks one (button or ?orient=)
+  let orientAuto = !params.get("orient");
+  const autoOrient = () => (viewport.clientHeight > viewport.clientWidth ? "portrait" : "landscape");
+  addEventListener("resize", () => {
+    const want = autoOrient();
+    if (orientAuto && want !== (stage.classList.contains("portrait") ? "portrait" : "landscape")) { setOrient(want); show(current); schedule(); }
+    else fit();
+  });
+
+  // ── Per-slide entrance timelines (1–2 s of motion, then hold still for reading) ──
+  let intro, split;
+  const intros = [
+    s => { // Sale / Offer
+      split = SplitText.create(s.querySelector(".headline"), { type: "words" });
+      return gsap.timeline()
+        .from(s.querySelector(".photo"), { xPercent: stage.classList.contains("portrait") ? 0 : 12, yPercent: stage.classList.contains("portrait") ? -12 : 0, scale: 1.12, opacity: 0, duration: 1.1, ease: "power3.out" })
+        .from(s.querySelector(".biz"), { y: 24, opacity: 0, duration: .5, ease: "power2.out" }, .15)
+        .from(s.querySelector(".offer .big"), { scale: 1.8, rotation: -8, opacity: 0, duration: .55, ease: "back.out(2.2)" }, .3)
+        .from(s.querySelector(".offer .off"), { x: -30, opacity: 0, duration: .4, ease: "power2.out" }, .55)
+        .from(split.words, { y: 50, opacity: 0, duration: .5, stagger: .09, ease: "power3.out" }, .6)
+        .from(s.querySelector(".underline"), { scaleX: 0, duration: .45, ease: "power2.out" }, .95)
+        .from([s.querySelector(".sub"), s.querySelector(".meta")], { y: 30, opacity: 0, duration: .5, stagger: .12, ease: "power2.out" }, 1.05)
+        .from(s.querySelector(".qr-wrap"), { scale: .6, opacity: 0, duration: .5, ease: "back.out(1.8)" }, 1.3)
+        // a gentle, slow push on the photo while the ad holds
+        .to(s.querySelector(".photo svg"), { scale: 1.06, duration: 8, ease: "none" }, 1.1);
+    },
+    s => gsap.timeline() // Flyer: settle into the frame
+      .from(s.querySelector(".poster"), { y: 60, scale: .94, opacity: 0, duration: .9, ease: "power3.out" })
+      .from(s.querySelector(".tag"), { opacity: 0, duration: .4 }, .5),
+    s => gsap.timeline() // House slide
+      .from(s.querySelectorAll("h2, p"), { y: 40, opacity: 0, duration: .6, stagger: .15, ease: "power3.out" })
+      .from(s.querySelector(".qr"), { scale: .6, rotation: 6, opacity: 0, duration: .6, ease: "back.out(1.8)" }, .35),
+  ];
+
+  let current = 0, playing = true, timer;
+  function show(i) {
+    intro && intro.revert(); split && split.revert(); split = null;
+    slides.forEach((s, k) => s.classList.toggle("active", k === i));
+    current = i;
+    intro = reduced ? null : intros[i](slides[i]);
+    syncButtons();
+  }
+
+  // Signature transition: coral sweeps in, the CB mark flips, the next slide is revealed
+  const wipe = stage.querySelector(".wipe"), wipeMark = stage.querySelector(".wipe-mark");
+  function go(i) {
+    clearTimeout(timer);
+    if (reduced) { show(i); return schedule(); }
+    gsap.timeline({ onComplete: schedule })
+      .set(wipe, { xPercent: -101 }).set(wipeMark, { rotationY: 0, scale: .7, opacity: 0 })
+      .to(wipe, { xPercent: 0, duration: .42, ease: "power3.in" })
+      .to(wipeMark, { opacity: 1, scale: 1, rotationY: 180, duration: .5, ease: "power2.inOut" }, "-=.1")
+      .call(() => show(i))
+      .to(wipe, { xPercent: 101, duration: .45, ease: "power3.out" }, "+=.08");
+  }
+  // Time on screen per slide (ms): flyers carry more small text, and the house slide's QR needs time to scan
+  const HOLD_MS = [8000, 11000, 10000];
+  function schedule() { clearTimeout(timer); if (playing) timer = setTimeout(() => go((current + 1) % slides.length), HOLD_MS[current]); }
+
+  // ── Controls ──
+  function setLook(v) { stage.classList.toggle("look-bulletin", v === "bulletin"); stage.classList.toggle("look-clean", v !== "bulletin"); }
+  function setOrient(v) { stage.classList.toggle("portrait", v === "portrait"); fit(); }
+  function syncButtons() {
+    const state = {
+      look: stage.classList.contains("look-bulletin") ? "bulletin" : "clean",
+      orient: stage.classList.contains("portrait") ? "portrait" : "landscape",
+      slide: String(current), play: playing ? "play" : "pause",
+    };
+    document.querySelectorAll(".seg").forEach(seg => seg.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === state[seg.dataset.ctl])));
+  }
+  document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => {
+    const ctl = b.parentElement.dataset.ctl, v = b.dataset.v;
+    if (ctl === "look") { setLook(v); show(current); schedule(); }
+    if (ctl === "orient") { orientAuto = false; setOrient(v); show(current); schedule(); }
+    if (ctl === "slide") go(+v);
+    if (ctl === "play") { playing = v === "play"; playing ? schedule() : clearTimeout(timer); syncButtons(); }
+  }));
+
+  // ── FPS meter (?fps) ──
+  if (params.has("fps")) {
+    const out = document.getElementById("fps"); let frames = 0, last = performance.now(), min = 999;
+    const start = performance.now();
+    (function loop(t) {
+      frames++;
+      if (t - last >= 1000) { const fps = Math.round(frames * 1000 / (t - last)); if (t - start > 2000) min = Math.min(min, fps); out.textContent = `${fps} fps · low ${min === 999 ? "–" : min}`; frames = 0; last = t; }
+      requestAnimationFrame(loop);
+    })(performance.now());
+  }
+
+  setLook(params.get("look") === "bulletin" ? "bulletin" : "clean");
+  setOrient(orientAuto ? autoOrient() : params.get("orient") === "portrait" ? "portrait" : "landscape");
+  show(0); schedule();
+})();
+</script>
+</body>
+</html>

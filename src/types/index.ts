@@ -69,6 +69,7 @@ export const PAYMENT_STATUS_LABELS: Record<Ad["paymentStatus"], string> = {
 
 export const AD_PRICE_CENTS = 10000; // $100.00
 export const AD_DURATION_DAYS = 28;   // one paid run = 4 weeks; locations are priced per run
+export const LOCAL_AD_RADIUS_MILES = 10; // ads are for businesses near the store (or serving its area); farther ones may be denied
 // Location pricing and revenue share — admin-controlled, enforced by the locations API
 export const MIN_PRICE_PER_RUN_CENTS = 1000;    // $10
 export const MAX_PRICE_PER_RUN_CENTS = 100000;  // $1,000

@@ -67,7 +67,6 @@ export async function GET(req: NextRequest) {
         currency: locations.currency,
         isActive: locations.isActive,
         createdAt: locations.createdAt,
-        storeOwner: { id: users.id, name: users.name, email: users.email },
         country: { id: countries.id, name: countries.name, code: countries.code },
         state: { id: states.id, name: states.name, code: states.code },
         city: { id: cities.id, name: cities.name },

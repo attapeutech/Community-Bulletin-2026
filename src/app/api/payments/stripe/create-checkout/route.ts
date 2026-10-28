@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     const [row] = await db
       .select({
         ad: ads,
-        location: { storeName: locations.storeName, slug: locations.slug, pricePerMonthCents: locations.pricePerMonthCents },
+        location: { storeName: locations.storeName, slug: locations.slug, pricePerRunCents: locations.pricePerRunCents },
       })
       .from(ads)
       .innerJoin(locations, eq(ads.locationId, locations.id))
@@ -56,10 +56,10 @@ export async function POST(req: NextRequest) {
         {
           price_data: {
             currency: "usd",
-            unit_amount: row.location.pricePerMonthCents,
+            unit_amount: row.location.pricePerRunCents,
             product_data: {
               name: `Community Bulletin Ad — ${row.ad.title}`,
-              description: `1-month (30-day) display at ${row.location.storeName}`,
+              description: `4-week display at ${row.location.storeName}`,
             },
           },
           quantity: 1,

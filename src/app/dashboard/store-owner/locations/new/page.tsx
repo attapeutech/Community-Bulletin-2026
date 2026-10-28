@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/lib/auth/client";
-import { AD_PRICE_CENTS, DEFAULT_SHARE_RATE_BPS, MIN_PRICE_PER_MONTH_CENTS, MAX_PRICE_PER_MONTH_CENTS, MAX_SHARE_RATE_BPS } from "@/types";
+import { AD_PRICE_CENTS, DEFAULT_SHARE_RATE_BPS, MIN_PRICE_PER_RUN_CENTS, MAX_PRICE_PER_RUN_CENTS, MAX_SHARE_RATE_BPS } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,9 +32,9 @@ const schema = z.object({
   cityId:            z.string().min(1,  "Select a city"),
   postalCodeId:      z.string().min(1,  "Select a postal code"),
   currency:          z.enum(["USD", "CAD", "GBP", "EUR"]),
-  pricePerMonthCents: z.number().int()
-    .min(MIN_PRICE_PER_MONTH_CENTS, `Minimum $${MIN_PRICE_PER_MONTH_CENTS / 100}/month`)
-    .max(MAX_PRICE_PER_MONTH_CENTS, `Maximum $${(MAX_PRICE_PER_MONTH_CENTS / 100).toLocaleString()}/month`),
+  pricePerRunCents: z.number().int()
+    .min(MIN_PRICE_PER_RUN_CENTS, `Minimum $${MIN_PRICE_PER_RUN_CENTS / 100} per 4 weeks`)
+    .max(MAX_PRICE_PER_RUN_CENTS, `Maximum $${(MAX_PRICE_PER_RUN_CENTS / 100).toLocaleString()} per 4 weeks`),
   shareRateBps:      z.number().int().min(0, "Cannot be negative").max(MAX_SHARE_RATE_BPS, `Maximum ${MAX_SHARE_RATE_BPS / 100}%`),
   equipmentProvided: z.boolean(),
   description:       z.string().max(1000).optional(),
@@ -67,7 +67,7 @@ export default function NewLocationPage() {
     resolver: zodResolver(schema),
     defaultValues: {
       currency: "USD",
-      pricePerMonthCents: AD_PRICE_CENTS,
+      pricePerRunCents: AD_PRICE_CENTS,
       shareRateBps: DEFAULT_SHARE_RATE_BPS,
       equipmentProvided: false,
     },
@@ -94,7 +94,7 @@ export default function NewLocationPage() {
   const watchedCountry    = watch("countryId");
   const watchedState      = watch("stateId");
   const watchedCity       = watch("cityId");
-  const priceWatch        = watch("pricePerMonthCents");
+  const priceWatch        = watch("pricePerRunCents");
   const shareWatch        = watch("shareRateBps");
 
   useEffect(() => {
@@ -388,22 +388,22 @@ export default function NewLocationPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
                     <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
-                      Ad price per month *
+                      Ad price per 4 weeks *
                     </Label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4A6B82] text-sm">$</span>
                       <Input
                         type="number"
-                        min={MIN_PRICE_PER_MONTH_CENTS / 100}
-                        max={MAX_PRICE_PER_MONTH_CENTS / 100}
+                        min={MIN_PRICE_PER_RUN_CENTS / 100}
+                        max={MAX_PRICE_PER_RUN_CENTS / 100}
                         step={1}
                         value={Math.round(priceWatch / 100)}
-                        onChange={(e) => setValue("pricePerMonthCents", Math.round(Number(e.target.value) * 100), { shouldValidate: true })}
-                        className={cn("h-10 pl-6 text-sm bg-[#F7F9FC] border-[#D1DDE8]", errors.pricePerMonthCents && "border-red-300 bg-red-50")}
+                        onChange={(e) => setValue("pricePerRunCents", Math.round(Number(e.target.value) * 100), { shouldValidate: true })}
+                        className={cn("h-10 pl-6 text-sm bg-[#F7F9FC] border-[#D1DDE8]", errors.pricePerRunCents && "border-red-300 bg-red-50")}
                       />
                     </div>
-                    <FieldError msg={errors.pricePerMonthCents?.message} />
-                    <p className="text-[10px] text-[#5B7D96] mt-1">What advertisers pay for one month (30 days) here.</p>
+                    <FieldError msg={errors.pricePerRunCents?.message} />
+                    <p className="text-[10px] text-[#5B7D96] mt-1">What advertisers pay for one 4-week run here.</p>
                   </div>
 
                   <div>
@@ -455,7 +455,7 @@ export default function NewLocationPage() {
               </>
             ) : (
               <div className="rounded-lg p-3 text-[13px] bg-[#F7F9FC] border border-[#D8E4EE] text-[#4A6B82]">
-                New locations start at <strong className="text-[#1A3A5C]">${AD_PRICE_CENTS / 100}/month</strong> with a{" "}
+                New locations start at <strong className="text-[#1A3A5C]">${AD_PRICE_CENTS / 100} per 4 weeks</strong> with a{" "}
                 <strong className="text-[#1A3A5C]">{DEFAULT_SHARE_RATE_BPS / 100}% revenue share</strong> for you.
                 CommunityBulletin confirms final pricing and your share with you, for example if you provide the screen and hardware.
               </div>

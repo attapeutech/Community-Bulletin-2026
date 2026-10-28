@@ -77,7 +77,7 @@ export default async function AdDetailPage({
         id: locations.id,
         storeName: locations.storeName,
         slug: locations.slug,
-        pricePerMonthCents: locations.pricePerMonthCents,
+        pricePerRunCents: locations.pricePerRunCents,
         addressLine1: locations.addressLine1,
         addressLine2: locations.addressLine2,
         cityName: cities.name,
@@ -182,7 +182,7 @@ export default async function AdDetailPage({
           status={ad.status}
           isOwner={isOwner}
           isAdmin={role === "admin"}
-          renewPriceCents={location.pricePerMonthCents}
+          renewPriceCents={location.pricePerRunCents}
         />
       </div>
 

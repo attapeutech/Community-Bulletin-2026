@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     const [row] = await db
       .select({
         ad: ads,
-        location: { storeName: locations.storeName, pricePerMonthCents: locations.pricePerMonthCents },
+        location: { storeName: locations.storeName, pricePerRunCents: locations.pricePerRunCents },
       })
       .from(ads)
       .innerJoin(locations, eq(ads.locationId, locations.id))
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     }
 
     const order = await createPayPalOrder(
-      row.location.pricePerMonthCents,
+      row.location.pricePerRunCents,
       `Community Bulletin Ad — ${row.ad.title} @ ${row.location.storeName}`
     );
 

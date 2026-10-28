@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MIN_PRICE_PER_MONTH_CENTS, MAX_PRICE_PER_MONTH_CENTS, MAX_SHARE_RATE_BPS } from "@/types";
+import { MIN_PRICE_PER_RUN_CENTS, MAX_PRICE_PER_RUN_CENTS, MAX_SHARE_RATE_BPS } from "@/types";
 import { costPerThousandCents, formatCostPerThousand, formatShoppers, formatTrafficDate } from "@/lib/traffic";
 
 const editSchema = z.object({
@@ -28,9 +28,9 @@ const editSchema = z.object({
   stateId:           z.string().min(1, "Select a state"),
   cityId:            z.string().min(1, "Select a city"),
   postalCodeId:      z.string().min(1, "Select a postal code"),
-  pricePerMonthCents: z.number().int()
-    .min(MIN_PRICE_PER_MONTH_CENTS, `Minimum $${MIN_PRICE_PER_MONTH_CENTS / 100}/month`)
-    .max(MAX_PRICE_PER_MONTH_CENTS, `Maximum $${(MAX_PRICE_PER_MONTH_CENTS / 100).toLocaleString()}/month`),
+  pricePerRunCents: z.number().int()
+    .min(MIN_PRICE_PER_RUN_CENTS, `Minimum $${MIN_PRICE_PER_RUN_CENTS / 100} per 4 weeks`)
+    .max(MAX_PRICE_PER_RUN_CENTS, `Maximum $${(MAX_PRICE_PER_RUN_CENTS / 100).toLocaleString()} per 4 weeks`),
   shareRateBps:      z.number().int().min(0, "Cannot be negative").max(MAX_SHARE_RATE_BPS, `Maximum ${MAX_SHARE_RATE_BPS / 100}%`),
   equipmentProvided: z.boolean(),
   dailyCustomers:    z.number().int().min(0, "Cannot be negative").max(1_000_000).nullable(),
@@ -54,7 +54,7 @@ type Location = {
   id: string; storeName: string; storeNumber: string | null;
   addressLine1: string; addressLine2: string | null; displayName: string | null;
   slug: string; currency: string; isActive: boolean;
-  pricePerMonthCents: number; shareRateBps: number; equipmentProvided: boolean;
+  pricePerRunCents: number; shareRateBps: number; equipmentProvided: boolean;
   description: string | null; category: string | null;
   logoUrl: string | null; businessHours: string | null;
   countryId: string; stateId: string; cityId: string; postalCodeId: string;
@@ -251,7 +251,7 @@ export default function LocationDetailClient({
       stateId:           location.stateId,
       cityId:            location.cityId,
       postalCodeId:      location.postalCodeId,
-      pricePerMonthCents: location.pricePerMonthCents,
+      pricePerRunCents: location.pricePerRunCents,
       shareRateBps:      location.shareRateBps,
       equipmentProvided: location.equipmentProvided,
       dailyCustomers:    location.dailyCustomers,
@@ -263,7 +263,7 @@ export default function LocationDetailClient({
   });
 
   // price in dollars / share in percent for display in inputs
-  const priceWatch = watch("pricePerMonthCents");
+  const priceWatch = watch("pricePerRunCents");
   const shareWatch = watch("shareRateBps");
   const trafficWatch = watch("dailyCustomers");
 
@@ -427,8 +427,8 @@ export default function LocationDetailClient({
       {!editMode && (
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
           <div className="bg-white rounded-xl border border-[#D8E4EE] p-4">
-            <div className="text-[10px] font-semibold text-[#4A6B82] uppercase tracking-wider mb-1">Price / Month</div>
-            <div className="text-lg font-bold text-[#1A3A5C]">{formatCents(location.pricePerMonthCents, location.currency)}</div>
+            <div className="text-[10px] font-semibold text-[#4A6B82] uppercase tracking-wider mb-1">Price / 4 Weeks</div>
+            <div className="text-lg font-bold text-[#1A3A5C]">{formatCents(location.pricePerRunCents, location.currency)}</div>
           </div>
           <div className="bg-white rounded-xl border border-[#D8E4EE] p-4">
             <div className="text-[10px] font-semibold text-[#4A6B82] uppercase tracking-wider mb-1">Revenue Share</div>
@@ -442,7 +442,7 @@ export default function LocationDetailClient({
             <div className="text-lg font-bold text-[#1A3A5C]">{location.dailyCustomers ? `~${formatShoppers(location.dailyCustomers)}` : "—"}</div>
             <div className="text-[10px] text-[#5B7D96] mt-0.5">
               {location.dailyCustomers
-                ? `${formatCostPerThousand(costPerThousandCents(location.pricePerMonthCents, location.dailyCustomers)!)} per 1,000 · ${formatTrafficDate(location.trafficUpdatedAt) ?? "store-reported"}`
+                ? `${formatCostPerThousand(costPerThousandCents(location.pricePerRunCents, location.dailyCustomers)!)} per 1,000 · ${formatTrafficDate(location.trafficUpdatedAt) ?? "store-reported"}`
                 : isAdmin ? "Add in Edit" : "Not set"}
             </div>
           </div>
@@ -600,22 +600,22 @@ export default function LocationDetailClient({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
-                        Price per month ($) *
+                        Price per 4 weeks ($) *
                       </Label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4A6B82] text-sm">$</span>
                         <Input
                           type="number"
-                          min={MIN_PRICE_PER_MONTH_CENTS / 100}
-                          max={MAX_PRICE_PER_MONTH_CENTS / 100}
+                          min={MIN_PRICE_PER_RUN_CENTS / 100}
+                          max={MAX_PRICE_PER_RUN_CENTS / 100}
                           step={1}
                           value={Math.round(priceWatch / 100)}
-                          onChange={(e) => setValue("pricePerMonthCents", Math.round(Number(e.target.value) * 100), { shouldValidate: true })}
-                          className={cn("h-10 pl-6 text-sm bg-white border-[#D1DDE8]", errors.pricePerMonthCents && "border-red-300 bg-red-50")}
+                          onChange={(e) => setValue("pricePerRunCents", Math.round(Number(e.target.value) * 100), { shouldValidate: true })}
+                          className={cn("h-10 pl-6 text-sm bg-white border-[#D1DDE8]", errors.pricePerRunCents && "border-red-300 bg-red-50")}
                         />
                       </div>
-                      <FieldError msg={errors.pricePerMonthCents?.message} />
-                      <p className="text-[10px] text-[#5B7D96] mt-1.5">What advertisers pay for one month (30 days) at this store. Applies to new purchases and renewals.</p>
+                      <FieldError msg={errors.pricePerRunCents?.message} />
+                      <p className="text-[10px] text-[#5B7D96] mt-1.5">What advertisers pay for one 4-week run at this store. Applies to new purchases and renewals.</p>
                     </div>
                     <div>
                       <Label className="mb-1.5 text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em]">
@@ -670,7 +670,7 @@ export default function LocationDetailClient({
                       />
                       {trafficWatch ? (
                         <span className="text-xs text-[#4A6B82]">
-                          ≈ <strong className="text-[#1A3A5C]">{formatCostPerThousand(costPerThousandCents(priceWatch, trafficWatch)!)}</strong> per 1,000 shoppers at {formatCents(priceWatch, location.currency)}/month
+                          ≈ <strong className="text-[#1A3A5C]">{formatCostPerThousand(costPerThousandCents(priceWatch, trafficWatch)!)}</strong> per 1,000 shoppers at {formatCents(priceWatch, location.currency)} per 4 weeks
                         </span>
                       ) : null}
                     </div>
@@ -689,7 +689,7 @@ export default function LocationDetailClient({
               ) : (
                 <div className="bg-[#F7F9FC] rounded-xl p-4 border border-[#D8E4EE] text-sm text-[#4A6B82]">
                   <div className="flex flex-wrap gap-x-6 gap-y-1">
-                    <span>Price / month: <strong className="text-[#1A3A5C]">{formatCents(location.pricePerMonthCents, location.currency)}</strong></span>
+                    <span>Price / 4 weeks: <strong className="text-[#1A3A5C]">{formatCents(location.pricePerRunCents, location.currency)}</strong></span>
                     <span>Your share: <strong className="text-[#1A3A5C]">{location.shareRateBps / 100}%</strong></span>
                   </div>
                   <p className="text-[11px] text-[#5B7D96] mt-1.5 mb-0">Pricing and revenue share are set by CommunityBulletin. Contact us to discuss changes.</p>

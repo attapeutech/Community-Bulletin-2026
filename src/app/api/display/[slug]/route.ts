@@ -40,7 +40,7 @@ async function allLocationsResponse(now: Date) {
     ))
     .orderBy(asc(ads.startedAt));
   const [{ fromPriceCents }] = await db
-    .select({ fromPriceCents: min(locations.pricePerMonthCents) })
+    .select({ fromPriceCents: min(locations.pricePerRunCents) })
     .from(locations)
     .where(eq(locations.isActive, true));
 
@@ -52,7 +52,7 @@ async function allLocationsResponse(now: Date) {
         name: "All locations",
         storeName: "Community Bulletin",
         storeNumber: null,
-        pricePerMonthCents: fromPriceCents ?? undefined,
+        pricePerRunCents: fromPriceCents ?? undefined,
         allLocations: true,
         address: "", address2: null, city: "", stateCode: "", postalCode: "",
       },
@@ -88,7 +88,7 @@ export async function GET(
         slug: locations.slug,
         storeName: locations.storeName,
         storeNumber: locations.storeNumber,
-        pricePerMonthCents: locations.pricePerMonthCents,
+        pricePerRunCents: locations.pricePerRunCents,
         dailyCustomers: locations.dailyCustomers,
         displayName: locations.displayName,
         addressLine1: locations.addressLine1,
@@ -133,7 +133,7 @@ export async function GET(
           name: location.displayName || location.storeName,
           storeName: location.storeName,
           storeNumber: location.storeNumber ?? null,
-          pricePerMonthCents: location.pricePerMonthCents,
+          pricePerRunCents: location.pricePerRunCents,
           dailyCustomers: location.dailyCustomers,
           address: location.addressLine1,
           address2: location.addressLine2,

@@ -5,13 +5,13 @@ import { AD_PRICE_CENTS } from "@/types";
 
 export type PriceRange = { minCents: number; maxCents: number };
 
-/** Lowest and highest monthly price across active store locations (falls back to the default price). */
+/** Lowest and highest 4-week price across active store locations (falls back to the default price). */
 export async function getPriceRange(): Promise<PriceRange> {
   try {
     const [row] = await db
       .select({
-        minCents: sql<number | null>`min(${locations.pricePerMonthCents})::int`,
-        maxCents: sql<number | null>`max(${locations.pricePerMonthCents})::int`,
+        minCents: sql<number | null>`min(${locations.pricePerRunCents})::int`,
+        maxCents: sql<number | null>`max(${locations.pricePerRunCents})::int`,
       })
       .from(locations)
       .where(eq(locations.isActive, true));

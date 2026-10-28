@@ -15,7 +15,7 @@ type AdSummary = {
   imageUrl: string;
   status: string;
   paymentStatus: string;
-  location: { storeName: string; slug: string; pricePerWeekCents: number };
+  location: { storeName: string; slug: string; pricePerMonthCents: number };
 };
 
 // ─── PayPal script loader ─────────────────────────────────────────────────────
@@ -217,9 +217,9 @@ export default function PaymentPage() {
             />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 700, fontSize: 15, color: ACCENT, marginBottom: 2 }}>{ad.title}</div>
-              <div style={{ fontSize: 12, color: "#4A6B82" }}>{ad.location.storeName} · 1-week display</div>
+              <div style={{ fontSize: 12, color: "#4A6B82" }}>{ad.location.storeName} · 1-month display</div>
             </div>
-            <div style={{ fontWeight: 700, fontSize: 20, color: "#E8563A", flexShrink: 0 }}>${(ad.location.pricePerWeekCents / 100).toFixed(2)}</div>
+            <div style={{ fontWeight: 700, fontSize: 20, color: "#E8563A", flexShrink: 0 }}>${(ad.location.pricePerMonthCents / 100).toFixed(2)}</div>
           </div>
         </div>
 
@@ -265,7 +265,7 @@ export default function PaymentPage() {
                 opacity: payLoading ? 0.7 : 1,
               }}
             >
-              {payLoading ? "Redirecting…" : `Pay ${ad ? `$${(ad.location.pricePerWeekCents / 100).toFixed(2)} ` : ""}with Stripe →`}
+              {payLoading ? "Redirecting…" : `Pay ${ad ? `$${(ad.location.pricePerMonthCents / 100).toFixed(2)} ` : ""}with Stripe →`}
             </button>
           </div>
 

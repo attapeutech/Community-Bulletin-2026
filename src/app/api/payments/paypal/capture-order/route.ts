@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
         location: {
           storeName: locations.storeName,
           storeNumber: locations.storeNumber,
-          pricePerWeekCents: locations.pricePerWeekCents,
+          pricePerMonthCents: locations.pricePerMonthCents,
           addressLine1: locations.addressLine1,
           cityName: cities.name,
           stateCode: states.code,
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
     const feeCents = paypalFee ? Math.round(parseFloat(paypalFee) * 100) : null;
     // Record what PayPal actually captured; fall back to the location's price
     const capturedValue = captureUnit?.amount?.value;
-    const amountCents = capturedValue ? Math.round(parseFloat(capturedValue) * 100) : row.location.pricePerWeekCents;
+    const amountCents = capturedValue ? Math.round(parseFloat(capturedValue) * 100) : row.location.pricePerMonthCents;
 
     const now = new Date();
 

@@ -4,7 +4,7 @@ import { db } from "@/lib/db/client";
 import { locations, states, cities, postalCodes, ads, payments, ownerEarnings } from "@/lib/db/schema";
 import { and, eq, count } from "drizzle-orm";
 import { getSession } from "@/lib/auth/session";
-import { MIN_PRICE_PER_WEEK_CENTS, MAX_PRICE_PER_WEEK_CENTS, MAX_SHARE_RATE_BPS } from "@/types";
+import { MIN_PRICE_PER_MONTH_CENTS, MAX_PRICE_PER_MONTH_CENTS, MAX_SHARE_RATE_BPS } from "@/types";
 
 const updateSchema = z.object({
   storeName: z.string().min(2).max(120).optional(),
@@ -20,7 +20,7 @@ const updateSchema = z.object({
   cityId: z.string().uuid().optional(),
   postalCodeId: z.string().uuid().optional(),
   // Admin-only fields (stripped for store owners below)
-  pricePerWeekCents: z.number().int().min(MIN_PRICE_PER_WEEK_CENTS).max(MAX_PRICE_PER_WEEK_CENTS).optional(),
+  pricePerMonthCents: z.number().int().min(MIN_PRICE_PER_MONTH_CENTS).max(MAX_PRICE_PER_MONTH_CENTS).optional(),
   shareRateBps: z.number().int().min(0).max(MAX_SHARE_RATE_BPS).optional(),
   equipmentProvided: z.boolean().optional(),
   description: z.string().max(1000).nullable().optional(),
@@ -55,7 +55,7 @@ export async function PATCH(
 
     // Pricing and revenue share are set by CommunityBulletin, not the store owner
     if (role !== "admin") {
-      delete data.pricePerWeekCents;
+      delete data.pricePerMonthCents;
       delete data.shareRateBps;
       delete data.equipmentProvided;
       delete data.dailyCustomers;

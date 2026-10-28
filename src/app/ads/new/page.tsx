@@ -300,6 +300,33 @@ export default function NewAdPage() {
   const shownLocations = searching ? locations : allLocations ?? [];
 
   // ── Step 3: Image upload via R2 presigned URL ───────────────────────────────
+  // Uploads as soon as an image is chosen. Each upload gets a number, so if another image is
+  // picked mid-upload, the older upload's late result is ignored.
+  const uploadSeq = useRef(0);
+
+  const uploadImage = useCallback(async (file: File) => {
+    const seq = ++uploadSeq.current;
+    setUploading(true);
+    setError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "ads");
+
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+
+      if (seq !== uploadSeq.current) return;
+      setUploadedImageUrl(json.data.publicUrl);
+      setUploadedImageKey(json.data.key);
+    } catch (e: any) {
+      if (seq === uploadSeq.current) setError(e.message || "Image upload failed");
+    } finally {
+      if (seq === uploadSeq.current) setUploading(false);
+    }
+  }, []);
+
   const onDrop = useCallback((accepted: File[]) => {
     if (!accepted.length) return;
     const file = accepted[0];
@@ -307,36 +334,22 @@ export default function NewAdPage() {
     setImagePreview(URL.createObjectURL(file));
     setUploadedImageUrl(null);
     setUploadedImageKey(null);
-  }, []);
+    uploadImage(file);
+  }, [uploadImage]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
+    // Wrong type or over 10 MB: say why instead of silently ignoring the file
+    onDropRejected: (rejections) => {
+      const code = rejections[0]?.errors[0]?.code;
+      setError(code === "file-too-large" ? "That image is over 10 MB. Please choose a smaller one."
+        : code === "file-invalid-type" ? "Please choose a JPEG, PNG or WebP image."
+        : "That file can't be used. Please choose a JPEG, PNG or WebP image under 10 MB.");
+    },
     accept: { "image/jpeg": [], "image/png": [], "image/webp": [] },
     maxFiles: 1,
     maxSize: 10 * 1024 * 1024, // 10 MB
   });
-
-  const uploadImage = async () => {
-    if (!imageFile) return;
-    setUploading(true);
-    setError("");
-    try {
-      const formData = new FormData();
-      formData.append("file", imageFile);
-      formData.append("folder", "ads");
-
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const json = await res.json();
-      if (!json.success) throw new Error(json.error);
-
-      setUploadedImageUrl(json.data.publicUrl);
-      setUploadedImageKey(json.data.key);
-    } catch (e: any) {
-      setError(e.message || "Image upload failed");
-    } finally {
-      setUploading(false);
-    }
-  };
 
   // ── Step 4: Submit ad ───────────────────────────────────────────────────────
   const submitAd = async () => {
@@ -597,12 +610,16 @@ export default function NewAdPage() {
                 )}
               </div>
 
-              {imageFile && !uploadedImageUrl && (
+              {imageFile && uploading && (
+                <div style={{ background: "#F0F7FF", border: "1px solid #C9DFF2", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: "#1A3A5C" }}>
+                  Uploading {imageFile.name}…
+                </div>
+              )}
+
+              {/* Upload failed: offer a retry with the same image */}
+              {imageFile && !uploading && !uploadedImageUrl && (
                 <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontSize: 12, color: "#4A6B82", marginBottom: 8 }}>{imageFile.name}</div>
-                  <Btn onClick={uploadImage} disabled={uploading}>
-                    {uploading ? "Uploading…" : "Upload Image"}
-                  </Btn>
+                  <Btn onClick={() => uploadImage(imageFile)}>Try again</Btn>
                 </div>
               )}
 

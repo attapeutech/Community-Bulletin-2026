@@ -18,6 +18,7 @@ export type OwnerBalance = {
   payoutZelle: string | null;
   payoutMailingAddress: string | null;
   agreementStatus: string | null;   // null = not tracked; payouts held while not_sent / sent
+  agreementSignedAt: Date | string | null;
   stripeAccountId: string | null;
   stripePayoutsEnabled: boolean;
   manualPayoutAllowed: boolean;     // admin-approved Zelle/check exception
@@ -72,6 +73,56 @@ function ManualExceptionToggle({ o }: { o: OwnerBalance }) {
     <button onClick={toggle} disabled={busy} className="text-[11px] text-[#4A90C4] hover:underline bg-transparent border-0 p-0 cursor-pointer disabled:opacity-50">
       {o.manualPayoutAllowed ? "Switch back to direct deposit" : "Allow Zelle/check instead"}
     </button>
+  );
+}
+
+const AGREEMENT = [
+  { value: "not_sent", label: "Not sent" },
+  { value: "sent", label: "Sent" },
+  { value: "signed", label: "Signed" },
+] as const;
+
+/** Partner agreement status for any store owner (Applications has the same control, but only for owners who applied) */
+function AgreementControl({ o }: { o: OwnerBalance }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  async function set(status: string) {
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/admin/direct-deposits/owner/${o.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ agreementStatus: status }),
+      });
+      if ((await res.json()).success) router.refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
+      <span className="font-semibold text-[#1A3A5C]">Agreement:</span>
+      {AGREEMENT.map(a => (
+        <button
+          key={a.value}
+          type="button"
+          disabled={busy || o.agreementStatus === a.value}
+          onClick={() => set(a.value)}
+          className={cn(
+            "px-2.5 py-0.5 rounded-full border",
+            o.agreementStatus === a.value
+              ? "bg-[#1A3A5C] border-[#1A3A5C] text-white font-semibold"
+              : "bg-white border-[#D8E4EE] text-[#4A6B82] hover:border-[#1A3A5C] cursor-pointer disabled:opacity-50"
+          )}
+        >
+          {a.label}
+        </button>
+      ))}
+      {o.agreementStatus === "signed" && o.agreementSignedAt && (
+        <span className="text-green-800">signed {new Date(o.agreementSignedAt).toLocaleDateString("en-US", { dateStyle: "medium" })}</span>
+      )}
+      {o.agreementStatus === null && <span className="text-[#4A6B82]">not tracked</span>}
+    </div>
   );
 }
 
@@ -363,10 +414,10 @@ export default function PayoutsClient({ balances, history, directDeposits }: { b
                         )}
                       </div>
                     </div>
+                    <div className="mt-2"><AgreementControl o={o} /></div>
                     {agreementPending && (
                       <div className="mt-2 text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-2.5 py-1.5 inline-block">
-                        Agreement {o.agreementStatus === "sent" ? "sent, awaiting signature" : "not sent yet"} — payouts are held until it&apos;s signed.{" "}
-                        <Link href="/dashboard/admin/applications" className="underline">Update on Applications</Link>
+                        Agreement {o.agreementStatus === "sent" ? "sent, awaiting signature" : "not sent yet"} — payouts are held until it&apos;s marked Signed.
                       </div>
                     )}
                     {o.availableCents > 0 && openOwner !== o.id && !agreementPending && !paidAutomatically && (

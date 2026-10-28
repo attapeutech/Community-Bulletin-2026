@@ -31,6 +31,7 @@ export default async function AdminPayoutsPage() {
       payoutZelle: users.payoutZelle,
       payoutMailingAddress: users.payoutMailingAddress,
       agreementStatus: users.partnerAgreementStatus,
+      agreementSignedAt: users.partnerAgreementSignedAt,
       stripeAccountId: users.stripeAccountId,
       stripePayoutsEnabled: users.stripePayoutsEnabled,
       manualPayoutAllowed: users.manualPayoutAllowed,

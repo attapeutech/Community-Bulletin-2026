@@ -40,7 +40,7 @@ export async function GET(
           storeName: locations.storeName,
           slug: locations.slug,
           addressLine1: locations.addressLine1,
-          pricePerMonthCents: locations.pricePerMonthCents,
+          pricePerRunCents: locations.pricePerRunCents,
         },
       })
       .from(ads)

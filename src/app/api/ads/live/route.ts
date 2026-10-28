@@ -74,11 +74,11 @@ export async function GET(req: NextRequest) {
       endedAt: r.endedAt.toISOString(),
     }));
 
-    // Nothing live: the "Your ad could be here" headline the screens use, and the lowest monthly price
+    // Nothing live: the "Your ad could be here" headline the screens use, and the lowest 4-week price
     let advertise: { headline: string; fromPriceCents: number | null } | null = null;
     if (!data.length) {
       const [{ fromPriceCents }] = await db
-        .select({ fromPriceCents: min(locations.pricePerMonthCents) })
+        .select({ fromPriceCents: min(locations.pricePerRunCents) })
         .from(locations)
         .where(eq(locations.isActive, true));
       advertise = { headline: (await getAdvertiseSlideSettings()).headline, fromPriceCents };

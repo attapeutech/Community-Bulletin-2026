@@ -4,7 +4,7 @@ import { db } from "@/lib/db/client";
 import { locations, countries, states, cities, postalCodes, users, partnerApplications, leads, leadNotes } from "@/lib/db/schema";
 import { eq, and, ilike, or } from "drizzle-orm";
 import { getSession } from "@/lib/auth/session";
-import { MIN_PRICE_PER_MONTH_CENTS, MAX_PRICE_PER_MONTH_CENTS, MAX_SHARE_RATE_BPS, AD_PRICE_CENTS, DEFAULT_SHARE_RATE_BPS } from "@/types";
+import { MIN_PRICE_PER_RUN_CENTS, MAX_PRICE_PER_RUN_CENTS, MAX_SHARE_RATE_BPS, AD_PRICE_CENTS, DEFAULT_SHARE_RATE_BPS } from "@/types";
 import slugify from "slugify";
 import { nanoid } from "nanoid";
 
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
         id: locations.id,
         storeName: locations.storeName,
         storeNumber: locations.storeNumber,
-        pricePerMonthCents: locations.pricePerMonthCents,
+        pricePerRunCents: locations.pricePerRunCents,
         dailyCustomers: locations.dailyCustomers,
         addressLine1: locations.addressLine1,
         addressLine2: locations.addressLine2,
@@ -102,7 +102,7 @@ const createSchema = z.object({
   postalCodeId: z.string().uuid(),
   currency: z.string().length(3).default("USD"),
   // Admin-only fields (defaults applied for store owners below)
-  pricePerMonthCents: z.number().int().min(MIN_PRICE_PER_MONTH_CENTS).max(MAX_PRICE_PER_MONTH_CENTS).default(AD_PRICE_CENTS),
+  pricePerRunCents: z.number().int().min(MIN_PRICE_PER_RUN_CENTS).max(MAX_PRICE_PER_RUN_CENTS).default(AD_PRICE_CENTS),
   shareRateBps: z.number().int().min(0).max(MAX_SHARE_RATE_BPS).default(DEFAULT_SHARE_RATE_BPS),
   equipmentProvided: z.boolean().default(false),
   description: z.string().max(1000).optional(),
@@ -192,7 +192,7 @@ export async function POST(req: NextRequest) {
       slug,
       isActive: true,
       // Store owners always start on the standard price and share; an admin adjusts later
-      pricePerMonthCents: isAdmin ? data.pricePerMonthCents : AD_PRICE_CENTS,
+      pricePerRunCents: isAdmin ? data.pricePerRunCents : AD_PRICE_CENTS,
       shareRateBps: isAdmin ? data.shareRateBps : DEFAULT_SHARE_RATE_BPS,
       equipmentProvided: isAdmin ? data.equipmentProvided : false,
       description: data.description ?? null,

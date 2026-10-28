@@ -15,20 +15,20 @@ const FEATURES = (price: LandingPrice) => [
   { icon: "⚡", title: "Goes live instantly", desc: "Once approved, your ad pushes live to the display screen in real-time via Socket.io — no delays." },
   { icon: "🔄", title: "Carousel slideshow", desc: "Multiple approved ads rotate in a smooth carousel so every advertiser gets equal screen time." },
   { icon: "✅", title: "Human review process", desc: "Every ad is reviewed by our team before going live, keeping the platform trusted and high quality." },
-  { icon: "💳", title: "Simple, upfront pricing", desc: `Priced per store, from ${price.amount} for 1 month — you see the exact price before you pay. Full refund if your ad is not approved.` },
+  { icon: "💳", title: "Simple, upfront pricing", desc: `Priced per store, from ${price.amount} for 4 weeks — you see the exact price before you pay. Full refund if your ad is not approved.` },
 ];
 
 const HOW_IT_WORKS = [
   { step: "01", title: "Pick a location", desc: "Browse store locations near you and select where you want your ad to display." },
   { step: "02", title: "Upload your ad", desc: "Upload your poster or image. We support all formats and sizes — we handle the rest." },
-  { step: "03", title: "Pay & submit", desc: `Secure card payment via Stripe${paypalEnabled() ? " or PayPal" : ""} at the store's monthly price. Your ad is submitted for review instantly.` },
+  { step: "03", title: "Pay & submit", desc: `Secure card payment via Stripe${paypalEnabled() ? " or PayPal" : ""} at the store's 4-week price. Your ad is submitted for review instantly.` },
   { step: "04", title: "Go live", desc: "Once approved you get an email with a link to see your ad live on the display screen." },
 ];
 
 // Launch-stage selling points. Swap for live numbers (stores, cities, ads run) once they're worth showing.
 const HIGHLIGHTS = [
   { icon: "📍", title: "Local stores", label: "Screens in stores near you" },
-  { icon: "📅", title: "1-month campaigns", label: "No contracts or subscriptions" },
+  { icon: "📅", title: "4-week campaigns", label: "No contracts or subscriptions" },
   { icon: "✅", title: "Human-reviewed", label: "Every ad checked before it goes live" },
   { icon: "💸", title: "Full refund", label: "If your ad isn't approved" },
 ];
@@ -148,12 +148,12 @@ export default function LandingPage({ price }: { price: LandingPrice }) {
             <div className="relative bg-white dark:bg-[#0F1E2E] rounded-2xl border-2 border-[#1A3A5C] dark:border-[#4A90C4] p-8 sm:p-10 max-w-sm w-full">
               <div className="text-sm font-semibold text-[#4A6B82] dark:text-[#7AA8C4] -mb-1">Starting at</div>
               <div className="font-serif text-5xl font-bold text-[#1A3A5C] dark:text-white">{price.amount}</div>
-              <div className="text-sm text-[#4A6B82] dark:text-[#7AA8C4]">per location / 1 month</div>
+              <div className="text-sm text-[#4A6B82] dark:text-[#7AA8C4]">per location / 4 weeks</div>
               <p className="text-xs text-[#5B7D96] dark:text-[#7AA8C4] mt-2 mb-6">
                 Price varies by store — you&apos;ll see the exact price before you pay.
               </p>
               <ul className="text-left mb-8 space-y-2">
-                {["1 store location", "1-month display period", "Full carousel rotation", "Real-time approval status", "Email notifications", "Full refund if denied"].map((item) => (
+                {["1 store location", "4-week display period", "Full carousel rotation", "Real-time approval status", "Email notifications", "Full refund if denied"].map((item) => (
                   <li key={item} className="text-sm text-[#4A5568] dark:text-[#9DC4E0] flex items-center gap-2">
                     <span className="text-[#1D9E75] font-bold">✓</span> {item}
                   </li>

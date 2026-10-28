@@ -23,13 +23,14 @@
 - **Sales** page for the field sales process (section below), with migrations `0015` and `0016` applied to Neon.
 - **Coolify:** all `.env.local` variables were checked against Coolify; the Git Source settings were re-saved (see Production above).
 
-## Monthly pricing (2026-10-27)
+## 4-week pricing (2026-10-27)
 
-- **Ads are priced per month and run 30 days** (`AD_DURATION_DAYS = 30` in `src/types`). Approve, renew, the admin approve path and new-ad end dates all use it.
-- **The price field is now `pricePerMonthCents`** (also `MIN_/MAX_PRICE_PER_MONTH_CENTS`). The database column is still `price_per_week_cents`, so no migration was needed.
-- **Copy:** says "per month" / "1 month (30 days)" everywhere (checkout description, emails, screens, Help, Terms, landing).
-- **Cost per 1,000 shoppers** is now worked out over 30 days. For Fast Eddies: $100 / (500 x 30) x 1,000 = $6.67.
-- **Demo page projections** were recalculated at 40 ads x $100/month with about 3% card fees: ~$1,940/mo (~$23,300/yr) at a 50% share, ~$970/mo (~$11,600/yr) at 25%.
+- **Ads are priced per 4-week run and run 28 days** (`AD_DURATION_DAYS = 28` in `src/types`). This was briefly "per month / 30 days" earlier on 2026-10-27. The partner preferred 4 weeks, because "a month" varies in length and 13 runs a year earn about 7% more than 12.
+- **The price field is now `pricePerRunCents`** (also `MIN_/MAX_PRICE_PER_RUN_CENTS`). The database column is still `price_per_week_cents`, so no migration was needed.
+- **Copy:** says "per 4 weeks" / "4 weeks (28 days)" everywhere. Owner payouts stay **monthly** (on the 15th).
+- **Cost per 1,000 shoppers** is worked out over 28 days. For Fast Eddies: $100 / (500 x 28) x 1,000 = $7.14.
+- **Demo page projections** use 40 ads x $100 per 4 weeks, 13 runs a year and about 3% card fees: ~$2,100/mo average (~$25,200/yr) at a 50% share, ~$1,050/mo (~$12,600/yr) at 25%.
+- **First live payment test passed on 2026-10-28:** a $10 card payment, then an admin cancel with automatic refund, at Fast Eddies. Afterwards, set the Fast Eddies price back to $100.
 
 ## Environment and config
 

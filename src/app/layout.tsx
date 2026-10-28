@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
+import { LeaveFrame } from "@/components/layout/LeaveFrame";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </ThemeProvider>
         <ScrollToTop />
+        <LeaveFrame />
         <Toaster richColors position="top-right" />
       </body>
     </html>

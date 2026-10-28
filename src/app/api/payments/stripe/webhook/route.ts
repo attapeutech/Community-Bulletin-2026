@@ -37,12 +37,18 @@ export async function POST(req: NextRequest) {
 
   console.log("[Stripe webhook] received event:", event.type);
 
-  if (event.type === "checkout.session.completed") {
+  // Cards are paid when checkout completes. Delayed methods (bank payments via Link) complete
+  // with payment_status "unpaid" and are recorded only when async_payment_succeeded arrives.
+  if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
     const session = event.data.object as Stripe.Checkout.Session;
     const adId = session.metadata?.adId;
     const userId = session.metadata?.userId;
 
     if (!adId || !userId) {
+      return NextResponse.json({ received: true });
+    }
+    if (session.payment_status !== "paid") {
+      console.log(`[Stripe webhook] checkout ${session.id} completed but not paid yet (${session.payment_status}); waiting for async_payment_succeeded`);
       return NextResponse.json({ received: true });
     }
 
@@ -65,7 +71,7 @@ export async function POST(req: NextRequest) {
       userId,
       provider: "stripe",
       providerTxId: paymentIntentId,
-      status: session.payment_status ?? "paid",
+      status: "paid",
       amountCents: session.amount_total ?? 10000,
       currency: (session.currency ?? "usd").toUpperCase(),
     }).returning({ id: payments.id });

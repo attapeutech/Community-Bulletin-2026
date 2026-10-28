@@ -21,7 +21,7 @@ const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }>
   paid:      { bg: "#DCFCE7", color: "#166534", label: "Paid out" },
 };
 
-function Card({ label, value, sub, color = ACCENT }: { label: string; value: string; sub: string; color?: string }) {
+function Card({ label, value, sub, color = "var(--cb-ink)" }: { label: string; value: string; sub: string; color?: string }) {
   return (
     <div style={{ background: "var(--cb-surface)", borderRadius: 12, border: "1px solid var(--cb-line)", padding: "16px 20px" }}>
       <div style={{ fontSize: 10, fontWeight: 600, color: "var(--cb-ink-2)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>{label}</div>

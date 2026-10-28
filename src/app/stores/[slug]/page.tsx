@@ -25,7 +25,7 @@ export default async function PublicStorePage({
       addressLine2: locations.addressLine2,
       slug: locations.slug,
       currency: locations.currency,
-      pricePerWeekCents: locations.pricePerWeekCents,
+      pricePerMonthCents: locations.pricePerMonthCents,
       equipmentProvided: locations.equipmentProvided,
       description: locations.description,
       category: locations.category,
@@ -113,8 +113,8 @@ export default async function PublicStorePage({
           {/* Pricing */}
           <div className="bg-white rounded-xl border border-[#D8E4EE] p-5">
             <div className="text-[10px] font-semibold text-[#4A6B82] uppercase tracking-wider mb-2">Ad Price</div>
-            <div className="text-2xl font-bold text-[#1A3A5C]">{formatCents(loc.pricePerWeekCents, loc.currency)}</div>
-            <div className="text-[12px] text-[#5B7D96] mt-0.5">per week</div>
+            <div className="text-2xl font-bold text-[#1A3A5C]">{formatCents(loc.pricePerMonthCents, loc.currency)}</div>
+            <div className="text-[12px] text-[#5B7D96] mt-0.5">per month</div>
           </div>
           {/* Active ads */}
           <div className="bg-white rounded-xl border border-[#D8E4EE] p-5">
@@ -153,7 +153,7 @@ export default async function PublicStorePage({
               href={`/ads/new?locationId=${loc.id}`}
               className="bg-[#E8563A] text-white text-sm font-semibold px-6 py-3 rounded-xl no-underline hover:bg-[#d14a30] transition-colors"
             >
-              Post an Ad Here — {formatCents(loc.pricePerWeekCents, loc.currency)}/week
+              Post an Ad Here — {formatCents(loc.pricePerMonthCents, loc.currency)}/month
             </Link>
             <Link
               href="/ads/new"

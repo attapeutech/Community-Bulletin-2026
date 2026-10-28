@@ -3,7 +3,7 @@ import { db } from "@/lib/db/client";
 import { locations, ads, users, countries, states, cities, postalCodes, ownerEarnings } from "@/lib/db/schema";
 import { eq, and, count, sum, desc, inArray } from "drizzle-orm";
 import Link from "next/link";
-import { AD_PRICE_CENTS, DEFAULT_SHARE_RATE_BPS, MIN_PRICE_PER_WEEK_CENTS, MAX_PRICE_PER_WEEK_CENTS, MAX_SHARE_RATE_BPS } from "@/types";
+import { AD_PRICE_CENTS, DEFAULT_SHARE_RATE_BPS, MIN_PRICE_PER_MONTH_CENTS, MAX_PRICE_PER_MONTH_CENTS, MAX_SHARE_RATE_BPS } from "@/types";
 
 const ACCENT = "#1A3A5C";
 
@@ -30,7 +30,7 @@ function AdminPricingNotes() {
         Go to <strong>Manage → Edit</strong> on any location. The <strong>Pricing &amp; Revenue Share · admin only</strong> section has:
       </p>
       <ul style={ul}>
-        <li><strong>Price per week:</strong> {formatCents(MIN_PRICE_PER_WEEK_CENTS)}–{formatCents(MAX_PRICE_PER_WEEK_CENTS)}</li>
+        <li><strong>Price per month:</strong> {formatCents(MIN_PRICE_PER_MONTH_CENTS)}–{formatCents(MAX_PRICE_PER_MONTH_CENTS)}</li>
         <li><strong>Store owner share (%):</strong> 25% and 50% quick buttons, or any value from 0 to {MAX_SHARE_RATE_BPS / 100}%</li>
         <li><strong>&ldquo;Store owner provides the TV, Wi-Fi &amp; hardware&rdquo;:</strong> for information only; it does not set the share</li>
         <li>Changing a share affects <strong>new payments only</strong>; earnings already recorded keep their original rate</li>
@@ -40,7 +40,7 @@ function AdminPricingNotes() {
       <ul style={ul}>
         <li>See price and share as read-only, with &ldquo;Set by CommunityBulletin. Contact us to discuss changes.&rdquo;</li>
         <li>The server ignores any attempt to change them, even outside the form</li>
-        <li>New locations they create start at {formatCents(AD_PRICE_CENTS)}/week and {DEFAULT_SHARE_RATE_BPS / 100}%</li>
+        <li>New locations they create start at {formatCents(AD_PRICE_CENTS)}/month and {DEFAULT_SHARE_RATE_BPS / 100}%</li>
       </ul>
 
       <div style={h}>Advertisers</div>
@@ -79,7 +79,7 @@ export default async function StoreOwnerPage() {
       isActive: locations.isActive,
       createdAt: locations.createdAt,
       currency: locations.currency,
-      pricePerWeekCents: locations.pricePerWeekCents,
+      pricePerMonthCents: locations.pricePerMonthCents,
       equipmentProvided: locations.equipmentProvided,
       shareRateBps: locations.shareRateBps,
       category: locations.category,
@@ -182,8 +182,8 @@ export default async function StoreOwnerPage() {
                     {/* Pricing + earnings row */}
                     <div style={{ display: "flex", gap: 20, marginTop: 10, flexWrap: "wrap" }}>
                       <div style={{ fontSize: 13 }}>
-                        <span style={{ color: "var(--cb-ink-2)" }}>Price / week: </span>
-                        <span style={{ fontWeight: 600, color: "var(--cb-ink)" }}>{formatCents(loc.pricePerWeekCents, loc.currency)}</span>
+                        <span style={{ color: "var(--cb-ink-2)" }}>Price / month: </span>
+                        <span style={{ fontWeight: 600, color: "var(--cb-ink)" }}>{formatCents(loc.pricePerMonthCents, loc.currency)}</span>
                       </div>
                       <div style={{ fontSize: 13 }}>
                         <span style={{ color: "var(--cb-ink-2)" }}>Revenue share: </span>

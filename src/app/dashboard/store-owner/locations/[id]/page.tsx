@@ -29,7 +29,7 @@ export default async function LocationDetailPage({
       currency: locations.currency,
       isActive: locations.isActive,
       storeOwnerId: locations.storeOwnerId,
-      pricePerWeekCents: locations.pricePerWeekCents,
+      pricePerMonthCents: locations.pricePerMonthCents,
       shareRateBps: locations.shareRateBps,
       equipmentProvided: locations.equipmentProvided,
       description: locations.description,

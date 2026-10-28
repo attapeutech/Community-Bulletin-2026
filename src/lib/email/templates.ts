@@ -148,7 +148,7 @@ export async function sendPaymentReceiptEmail({
         { label: "Location", value: locationName },
         { label: "Amount paid", value: `<strong style="color:${CORAL_COLOR}">${amountFormatted}</strong>` },
         { label: "Payment method", value: provider.charAt(0).toUpperCase() + provider.slice(1) },
-        { label: "Duration", value: "1 week" },
+        { label: "Duration", value: "1 month (30 days)" },
       ])}
       ${primaryButton(`${APP_URL}/dashboard/user/ads/${adId}`, "View Ad Details")}
     `),

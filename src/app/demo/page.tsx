@@ -156,23 +156,23 @@ export default function DemoPage() {
         <div className="d-wrap">
           <div className="d-rev-eyebrow">Revenue Potential</div>
           <h2 className="d-rev-h2">Passive income from space<br />you already own.</h2>
-          <p className="d-rev-sub">A typical ad slot is $100 per week. Each location targets 40 active ads — about $4,000/week in ad revenue per screen. Your share, paid on ad revenue after card processing fees, depends on one factor: who provides and sets up the display equipment.</p>
+          <p className="d-rev-sub">A typical ad slot is $100 per month. Each location targets 40 active ads — about $4,000/month in ad revenue per screen. Your share, paid on ad revenue after card processing fees, depends on one factor: who provides and sets up the display equipment.</p>
           <div className="d-rev-grid">
             <div className="d-rev-scenarios">
               <div className="d-rev-card d-rev-card-hi">
                 <div className="d-rev-card-lbl">You provide &amp; set up the screen <span className="d-pref-badge">Preferred</span></div>
-                <div className="d-rev-card-amt">~$7,750<span className="d-rev-card-mo">/mo</span></div>
-                <div className="d-rev-card-desc">50% share after card fees · 40 active ads at $100/week · about $93,000/year</div>
+                <div className="d-rev-card-amt">~$1,940<span className="d-rev-card-mo">/mo</span></div>
+                <div className="d-rev-card-desc">50% share after card fees · 40 active ads at $100/month · about $23,300/year</div>
               </div>
               <div className="d-rev-card">
                 <div className="d-rev-card-lbl">We provide &amp; install the screen</div>
-                <div className="d-rev-card-amt">~$3,880<span className="d-rev-card-mo">/mo</span></div>
-                <div className="d-rev-card-desc">25% share after card fees · 40 active ads at $100/week · about $46,500/year</div>
+                <div className="d-rev-card-amt">~$970<span className="d-rev-card-mo">/mo</span></div>
+                <div className="d-rev-card-desc">25% share after card fees · 40 active ads at $100/month · about $11,600/year</div>
               </div>
             </div>
             <div className="d-rev-detail">
-              <p>A typical ad costs <strong style={{color:"#fff"}}>$100 per week</strong> — a fraction of what print media or social advertising costs for comparable local reach. Each location targets <strong style={{color:"#fff"}}>40 active ads</strong>, generating about $4,000 per week in ad revenue per screen.</p>
-              <p>Your revenue share depends on one factor: <strong style={{color:"#fff"}}>who provides the display equipment.</strong> Store owners who supply a TV, mini PC, and WiFi — and handle the setup themselves — earn <strong style={{color:"#fff"}}>50% of ad revenue after card processing fees (about $7,750/month)</strong>. When Community Bulletin provides and installs the equipment, the share is <strong style={{color:"#fff"}}>25% (about $3,880/month)</strong> to offset our hardware and contractor costs. Payout costs are on us — you receive your full share.</p>
+              <p>A typical ad costs <strong style={{color:"#fff"}}>$100 per month</strong> — a fraction of what print media or social advertising costs for comparable local reach. Each location targets <strong style={{color:"#fff"}}>40 active ads</strong>, generating about $4,000 per month in ad revenue per screen.</p>
+              <p>Your revenue share depends on one factor: <strong style={{color:"#fff"}}>who provides the display equipment.</strong> Store owners who supply a TV, mini PC, and WiFi — and handle the setup themselves — earn <strong style={{color:"#fff"}}>50% of ad revenue after card processing fees (about $1,940/month)</strong>. When Community Bulletin provides and installs the equipment, the share is <strong style={{color:"#fff"}}>25% (about $970/month)</strong> to offset our hardware and contractor costs. Payout costs are on us — you receive your full share.</p>
               <p>We strongly prefer the store-provides model. It eliminates the need for us to coordinate licensed contractors and specialized installation — keeping the partnership simple on both sides and putting significantly more money in your pocket.</p>
               <div className="d-rev-note">
                 <strong>What &ldquo;providing your own equipment&rdquo; means:</strong><br />
@@ -181,7 +181,7 @@ export default function DemoPage() {
             </div>
           </div>
           <p style={{marginTop:"32px",fontSize:"12px",color:"rgba(255,255,255,.6)",lineHeight:"1.6"}}>
-            <strong style={{color:"rgba(255,255,255,.8)"}}>Disclaimer:</strong> Revenue figures are projections based on full capacity (40 active ads at $100/week, after card processing fees of about 3%) — not a guarantee. Actual results will vary based on advertiser demand at your location.
+            <strong style={{color:"rgba(255,255,255,.8)"}}>Disclaimer:</strong> Revenue figures are projections based on full capacity (40 active ads at $100/month, after card processing fees of about 3%) — not a guarantee. Actual results will vary based on advertiser demand at your location.
           </p>
         </div>
       </section>
@@ -273,9 +273,9 @@ export default function DemoPage() {
                   <div className="d-mini-rev">
                     <div className="d-mini-sec">August Revenue</div>
                     <div className="d-mini-rev-num">
-                      $7,760<span style={{fontSize:"13px",color:"var(--d-text-faint)",fontFamily:"var(--d-sans)"}}>.00</span>
+                      $1,940<span style={{fontSize:"13px",color:"var(--d-text-faint)",fontFamily:"var(--d-sans)"}}>.00</span>
                     </div>
-                    <div className="d-mini-rev-sub">40 active ads · $100/wk each · 50% share after card fees</div>
+                    <div className="d-mini-rev-sub">40 active ads · $100/month each · 50% share after card fees</div>
                   </div>
                 </div>
               </div>

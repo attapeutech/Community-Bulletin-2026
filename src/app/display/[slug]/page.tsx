@@ -45,7 +45,7 @@ type LocationInfo = {
   name: string;
   storeName: string;
   storeNumber: string | null;
-  pricePerWeekCents?: number;
+  pricePerMonthCents?: number;
   allLocations?: boolean;   // the /display/all screen (every store's ads)
   dailyCustomers?: number | null;
   address: string;
@@ -383,7 +383,7 @@ export default function DisplayPage() {
           <p style={{ fontSize: 22, color: "#4A90C4", letterSpacing: "0.05em" }}>No active ads at this time</p>
           <p style={{ fontSize: 14, color: "#2A4A6C" }}>Ads will appear here once approved</p>
         </div>
-        <FooterBar priceCents={location?.pricePerWeekCents} allLocations={location?.allLocations} portrait={portrait || short} />
+        <FooterBar priceCents={location?.pricePerMonthCents} allLocations={location?.allLocations} portrait={portrait || short} />
       </div>
     );
   }
@@ -407,7 +407,7 @@ export default function DisplayPage() {
                       ? "Reach shoppers on in-store screens at local businesses near you"
                       : advertiseSlide!.subline.replace(/\{store\}/g, location?.name ?? "this store")}
                     reach={location?.dailyCustomers ? `~${location.dailyCustomers.toLocaleString("en-US")} shoppers a day` : null}
-                    price={location?.pricePerWeekCents ? formatPrice(location.pricePerWeekCents) : null}
+                    price={location?.pricePerMonthCents ? formatPrice(location.pricePerMonthCents) : null}
                     pricePrefix={location?.allLocations ? "From " : ""}
                     postUrl={typeof window === "undefined" ? "" : location?.allLocations
                       ? `${window.location.origin}/ads/new`
@@ -495,7 +495,7 @@ export default function DisplayPage() {
         </div>
       )}
 
-      <FooterBar priceCents={location?.pricePerWeekCents} allLocations={location?.allLocations} portrait={portrait || short} />
+      <FooterBar priceCents={location?.pricePerMonthCents} allLocations={location?.allLocations} portrait={portrait || short} />
     </div>
   );
 }
@@ -932,7 +932,7 @@ function FooterBar({ priceCents, allLocations, portrait }: { priceCents?: number
       <p style={{ fontSize: 12, color: "#2A4A6C" }}>
         {allLocations ? "Advertise at local stores" : "Advertise at this location"} — <span style={{ color: "#4A90C4" }}>communitybulletin.com</span>
       </p>
-      <p style={{ fontSize: 11, color: "#1A2A3C" }}>{price ? `${allLocations ? "From " : ""}${price} · ` : ""}1 week · No contracts</p>
+      <p style={{ fontSize: 11, color: "#1A2A3C" }}>{price ? `${allLocations ? "From " : ""}${price} · ` : ""}1 month · No contracts</p>
     </div>
   );
 }

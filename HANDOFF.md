@@ -2,7 +2,7 @@
 
 ## Where things stand
 
-- **Branch:** everything is merged into `main` (latest: PR #80). Work goes on a short-lived branch per change and is merged by PR; `gh` isn't installed locally, so PRs are opened from the GitHub link that `git push` prints.
+- **Branch:** everything is merged into `main`. Work goes on a short-lived branch per change and is merged by PR; `gh` isn't installed locally, so PRs are opened from the GitHub link that `git push` prints.
 - **Production:** deployed from `main` in Coolify (manual **Redeploy**; auto-deploy is not on). The deploy succeeded, and login and ad renewals work.
   - On 2026-10-27 a Redeploy kept serving an older build until the app's **Git Source** settings were saved again (Branch `main`, Commit SHA `HEAD`) and it was redeployed. If a deploy doesn't show a merged change, check those two fields and the commit line in the deployment log.
 - **Database:** moved from the Coolify Postgres container to **Neon** (Postgres 18, `us-east-2`).
@@ -32,6 +32,15 @@
   - `LeaveFrame` (`src/components/layout/LeaveFrame.tsx`, in the root layout) moves any non-display page out of a frame
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
+
+## 2026-10-28 (later): direct deposits are live
+
+- **`STRIPE_CONNECT_ENABLED=true` and `STRIPE_CONNECT_WEBHOOK_SECRET` are set in Coolify** (live Connect webhook: `account.updated`, events on connected accounts, to `/api/payments/stripe/connect-webhook`). Store owners now see the Direct Deposit card on Earnings; admins see the Direct Deposits card on Payouts.
+- **Stripe live Connect:** the platform profile is complete; branding is set (Community Bulletin, the CB icon from `src/app/icon.png`, navy `#1A3A5C`, coral `#E8563A`). The EIN is available.
+- **The DD test owner was deleted** (`dd-test-owner@example.com`, their test store, 2 earnings rows and the test payout) by a one-off script, so no account holds a test-mode Stripe id.
+- **First automatic run** (daily cron, 2026-10-28 8:00 AM): 0 paid, as expected: no owner has finished onboarding or has a signed agreement.
+- **Agreement status on Payouts:** each owner row has Not sent / Sent / Signed buttons (`PATCH /api/admin/direct-deposits/owner/[id]` with `agreementStatus`). Owners set up from a Sales lead have no partner application, so before this their agreement could never be marked Signed and payouts stayed held.
+- **Onboarding is real now:** Express onboarding asks for a real name, date of birth, SSN and bank. The test values further down only work in test mode.
 
 ## 2026-10-27 summary
 
@@ -93,11 +102,11 @@
 - **Requires** the Coolify scheduled task that calls the cron endpoint daily. Without it, earnings never leave *pending*.
 - **Phase 2 (direct deposits)** is built; see the next section.
 
-## Direct deposits (Phase 2, built 2026-10-26, off in production)
+## Direct deposits (Phase 2, built 2026-10-26, live since 2026-10-28)
 
-- **On/off switch:** `STRIPE_CONNECT_ENABLED=true`. It's set only in local `.env.local`, not in Coolify, so live owners see nothing yet. Production is on live Stripe keys now, so turning it on in Coolify means **real** owner onboarding and transfers: finish the Stage 2 checklist first.
+- **On/off switch:** `STRIPE_CONNECT_ENABLED=true`, set in Coolify since 2026-10-28 (live keys, so onboarding and transfers are real).
 - **Stripe account:** **Bulletin Board** (`acct_1QVftJIAfIVqJj1P`), the account customers pay through.
-  - Connect is set up in **test mode**: platform; "buyers purchase from you"; payouts split between sellers; Stripe-hosted onboarding; Express Dashboard.
+  - Connect is set up in **live and test mode** the same way: platform; "buyers purchase from you"; payouts split between sellers; Stripe-hosted onboarding; Express Dashboard.
   - A second, unused account (`acct_1UUztilbfkCF3OIq`) was created by mistake and can be closed.
 - **Owner setup** (`/dashboard/store-owner/earnings`, `DirectDepositCard`):
   - `POST /api/stripe/connect/onboard` creates the Express account once (`users.stripe_account_id`) and returns a Stripe onboarding link.
@@ -115,14 +124,11 @@
 - **Schedule:** the daily `POST /api/cron/expire-ads` job calls the run when it's day 15 or later (Pacific). Each owner is paid once a month, a missed day catches up, and there's no extra Coolify task.
 - **Admin run:** `POST /api/admin/direct-deposits/run`, the "Run direct deposits now" button.
 - **Saved and sent:** the last run is saved in `app_settings` (`direct_deposit_last_run`), and admins get a summary email when anything was paid or failed.
-- **Admin Payouts page:** shows each owner's direct deposit status and the exception toggle (`PATCH /api/admin/direct-deposits/owner/[id]`). Mark paid is hidden for owners on direct deposit, and the payouts API refuses it.
+- **Admin Payouts page:** shows each owner's direct deposit status, the exception toggle and the agreement buttons (`PATCH /api/admin/direct-deposits/owner/[id]`). Mark paid is hidden for owners on direct deposit, and the payouts API refuses it.
 - **Connect webhook:** `POST /api/payments/stripe/connect-webhook` (`account.updated`) needs `STRIPE_CONNECT_WEBHOOK_SECRET`.
 - **Middleware fix:** both Stripe webhooks are now public (they check signatures). The payment webhook was previously redirected to `/login`, so payments were only recorded by the browser-side confirm call.
-- **Test data left on purpose:**
-  - owner `dd-test-owner@example.com` (password not recorded here; reset it from the Admin Panel if needed), with an inactive "DD Test Store (ignore)"
-  - $38.69 in earnings, paid by test transfer `tr_1UV0jg…`
-  - Stripe test account `acct_1UV0boIYAyzHtHLa`
-- **Test values for Express onboarding:**
+- **Test data:** the test-mode owner, store, earnings and payout were deleted on 2026-10-28 (the Stripe test-mode account `acct_1UV0boIYAyzHtHLa` and transfer `tr_1UV0jg…` remain in Stripe's test mode only).
+- **Test values for Express onboarding (test mode only):**
   - SMS code `000000`
   - date of birth `01/01/1901`
   - address line `address_full_match`
@@ -270,14 +276,12 @@
 - [ ] In Stripe → Webhooks (live), check that deliveries to `/api/payments/stripe/webhook` succeed. The test payment was recorded; confirm the webhook also returned 200, not only the browser confirm call.
 - [ ] Optional: turn off Link's **Bank** and **Klarna** options in Stripe (Settings → Payment methods) to keep checkout to cards. Bank payments work, but the advertiser sees "payment not confirmed" until the payment clears.
 - [ ] **Local checkouts:** local `.env.local` (test keys) points at the production database, so a local test checkout would create a fake "paid" ad and owner earnings in production. Avoid local test checkouts, or set up a Neon branch for local development.
-- [ ] **Direct deposits go-live (Stage 2; Stage 1, live card payments, is done):**
-  1. Partner sign-off.
-  2. Finish Stripe's live-mode steps (activate account, verify ID, branding, 1099 reporting).
-  3. Add a Connect webhook (`account.updated`, "events on Connected accounts") at `https://communitybulletin.com/api/payments/stripe/connect-webhook`, and put its secret in Coolify as `STRIPE_CONNECT_WEBHOOK_SECRET`.
-  4. Update agreement sections 6.4 and 6.6.
-  5. Delete the direct-deposit test owner (`dd-test-owner@example.com`), their store, earnings and payout. Their `stripe_account_id` is a test-mode account and won't work with live keys.
-  6. Set `STRIPE_CONNECT_ENABLED=true` in Coolify and redeploy.
-  7. Onboard one real owner and run the first payout.
+- [ ] **Stripe: add the business bank account** (Home → Add bank), once the business partner provides it. Card revenue stays in the Stripe balance until then; direct deposits are paid from that balance, so they don't depend on it.
+- [ ] **Direct deposits, remaining:**
+  1. Partner sign-off on direct deposits and Stripe's costs.
+  2. Update the store owner agreement, sections 6.4 and 6.6 (payouts by direct deposit through Stripe; owners handle their own taxes). The agreement lives outside the app.
+  3. First real owner: they onboard from Earnings with their real details, an admin marks their agreement **Signed** on Payouts, and from the 15th their available balance (at least $25) is paid automatically.
+  4. **1099 tax forms:** Stripe opens Connect → Tax forms only once there's a US connected account. After the first owner onboards and before January 2027, turn on 1099 reporting and pick the form type (MISC vs NEC: ask the accountant).
 - [ ] Optional: hide the clock on display screens while the tap/hover controls are showing (they overlap on desktop).
 
 - [ ] **About 1 week after 2026-10-23:** if Neon is stable, delete the old Postgres resource in Coolify (`postgresql-database-gt2gswqg8jmybj5l2ydntnfg`). Until then, don't reuse its password; it's in git history.

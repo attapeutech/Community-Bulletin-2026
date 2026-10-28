@@ -1,8 +1,8 @@
-# Handoff: 2026-10-22 (updated 2026-10-27)
+# Handoff: 2026-10-22 (updated 2026-10-28)
 
 ## Where things stand
 
-- **Branch:** everything is merged into `main` (latest: PR #75). Work goes on a short-lived branch per change and is merged by PR; `gh` isn't installed locally, so PRs are opened from the GitHub link that `git push` prints.
+- **Branch:** everything is merged into `main` (latest: PR #80). Work goes on a short-lived branch per change and is merged by PR; `gh` isn't installed locally, so PRs are opened from the GitHub link that `git push` prints.
 - **Production:** deployed from `main` in Coolify (manual **Redeploy**; auto-deploy is not on). The deploy succeeded, and login and ad renewals work.
   - On 2026-10-27 a Redeploy kept serving an older build until the app's **Git Source** settings were saved again (Branch `main`, Commit SHA `HEAD`) and it was redeployed. If a deploy doesn't show a merged change, check those two fields and the commit line in the deployment log.
 - **Database:** moved from the Coolify Postgres container to **Neon** (Postgres 18, `us-east-2`).
@@ -10,6 +10,28 @@
   - Coolify's `DATABASE_URL` now points to the Neon **pooled** connection string.
   - Verified after cutover: two ad renewals on 2026-10-23 were written to Neon (payments 55 → 57).
 - **Socket.io:** runs inside the main Next.js server (`server.ts`, port 3000). No separate service is needed.
+
+## 2026-10-28 summary
+
+- **Stripe is live.** Coolify has the live `STRIPE_SECRET_KEY` and a live-mode `STRIPE_WEBHOOK_SECRET`. The account (**Bulletin Board**, `acct_1QVftJIAfIVqJj1P`) shows card payments as Active.
+  - Its public business name is now **Community Bulletin** (it showed "ADS EZ").
+  - Stripe's review was still in progress.
+  - **Open task:** provide the tax ID (EIN), or Stripe pauses payouts to our bank on 2026-11-27 or after $600 in volume.
+- **Live webhook events:** `checkout.session.completed` and `checkout.session.async_payment_succeeded`, sent to `/api/payments/stripe/webhook`.
+- **Webhook fix:** the webhook now records a payment only when `payment_status` is `paid`. Bank payments offered through Link complete as "unpaid" and are recorded on `async_payment_succeeded`. Before this, it marked any completed checkout as paid.
+- **First live test passed at Fast Eddies:**
+  - a $10 real card payment, recorded once
+  - Approve put the ad on the store TV
+  - admin cancel refunded it (Stripe live refund `re_3UV…`) and removed it from the screen
+  - no owner earnings were created (Fast Eddies is admin-owned)
+  - the cancelled test ad "Test--please ignorer!!!" stays in the database as history
+  - Fast Eddies was set back to $100
+- **Pricing is $100 per 4 weeks** (28-day runs); see "4-week pricing" below.
+- **Live Ads frame fix:**
+  - the display screen's logo and Home links use `target="_top"`
+  - `LeaveFrame` (`src/components/layout/LeaveFrame.tsx`, in the root layout) moves any non-display page out of a frame
+  - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
+- **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
 
 ## 2026-10-27 summary
 
@@ -40,7 +62,7 @@
 - `drizzle.config.ts` loads `.env.local` first, then `.env`.
 - **`DATABASE_URL`** ends with `?sslmode=verify-full&channel_binding=require` (locally and in Coolify).
 - **Google sign-in:** `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (a Coolify **build variable**) and `GOOGLE_CLIENT_SECRET`, in both `.env.local` and Coolify.
-- **Stripe** still runs on **test** keys in production. Live mode needs only `STRIPE_SECRET_KEY` (`sk_live_…`) and a new live-mode `STRIPE_WEBHOOK_SECRET`; checkout uses Stripe-hosted pages, so no publishable key is needed (`NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` and `APP_URL` in `.env.local` are unused).
+- **Stripe** runs on **live** keys in production (since 2026-10-28): `STRIPE_SECRET_KEY` (`sk_live_…`) and the live-mode `STRIPE_WEBHOOK_SECRET`. Checkout uses Stripe-hosted pages, so no publishable key is needed (`NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` and `APP_URL` in `.env.local` are unused). **Keep test keys in `.env.local`:** it points at the production database. With test keys, local scripts can't look up live payments.
 - **PayPal is off** (2026-10-26) unless `NEXT_PUBLIC_PAYPAL_ENABLED=true` (`src/lib/payment-options.ts`). While it's off, checkout shows card only, `create-order` refuses, and the Help and home page text drops PayPal. Refunds of older PayPal payments still work. Turning it on needs a redeploy (build-time variable), plus `PAYPAL_MODE=live` and live credentials.
 
 ## Migrations
@@ -73,7 +95,7 @@
 
 ## Direct deposits (Phase 2, built 2026-10-26, off in production)
 
-- **On/off switch:** `STRIPE_CONNECT_ENABLED=true`. It's set only in local `.env.local`, not in Coolify, so live owners see nothing yet. Production also runs on Stripe **test** keys, which is why the switch exists.
+- **On/off switch:** `STRIPE_CONNECT_ENABLED=true`. It's set only in local `.env.local`, not in Coolify, so live owners see nothing yet. Production is on live Stripe keys now, so turning it on in Coolify means **real** owner onboarding and transfers: finish the Stage 2 checklist first.
 - **Stripe account:** **Bulletin Board** (`acct_1QVftJIAfIVqJj1P`), the account customers pay through.
   - Connect is set up in **test mode**: platform; "buyers purchase from you"; payouts split between sellers; Stripe-hosted onboarding; Express Dashboard.
   - A second, unused account (`acct_1UUztilbfkCF3OIq`) was created by mistake and can be closed.
@@ -243,22 +265,19 @@
 
 ## To do
 
-- [ ] **Stripe live card payments (Stage 1), waiting on the EIN from the business partner:**
-  1. In the Stripe Dashboard (account **Bulletin Board**, Test mode off), finish activation: business details, ID verification, payout bank account, statement descriptor (e.g. `COMMUNITYBULLETIN`), support email, website `https://communitybulletin.com`.
-  2. Copy the live secret key (`sk_live_…`).
-  3. Create a live-mode webhook at `https://communitybulletin.com/api/payments/stripe/webhook` with event `checkout.session.completed`, and copy its signing secret.
-  4. In Coolify, replace `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`, then Redeploy. Keep test keys in `.env.local`.
-  5. Make one real payment with a real card, check the ad is marked paid, the receipt email arrives and the webhook delivery succeeded in Stripe, then refund it from the Admin Panel.
-- [ ] **Before Stripe goes live:** local `.env.local` points at the production database, so a local test checkout would create a fake "paid" ad and owner earnings in production. Avoid local test checkouts, or set up a Neon branch for local development.
-- [ ] **Direct deposits go-live (Stage 2, after Stage 1):**
+- [ ] **Stripe: enter the EIN** (Dashboard → Settings → Business → Account status → "Provide a tax ID for Bulletin Board"). If it's missing, payouts to our bank pause on 2026-11-27 or after $600 in volume.
+- [ ] Watch for the email saying Stripe's account review is complete (it said 2–3 days on 2026-10-27).
+- [ ] In Stripe → Webhooks (live), check that deliveries to `/api/payments/stripe/webhook` succeed. The test payment was recorded; confirm the webhook also returned 200, not only the browser confirm call.
+- [ ] Optional: turn off Link's **Bank** and **Klarna** options in Stripe (Settings → Payment methods) to keep checkout to cards. Bank payments work, but the advertiser sees "payment not confirmed" until the payment clears.
+- [ ] **Local checkouts:** local `.env.local` (test keys) points at the production database, so a local test checkout would create a fake "paid" ad and owner earnings in production. Avoid local test checkouts, or set up a Neon branch for local development.
+- [ ] **Direct deposits go-live (Stage 2; Stage 1, live card payments, is done):**
   1. Partner sign-off.
   2. Finish Stripe's live-mode steps (activate account, verify ID, branding, 1099 reporting).
   3. Add a Connect webhook (`account.updated`, "events on Connected accounts") at `https://communitybulletin.com/api/payments/stripe/connect-webhook`, and put its secret in Coolify as `STRIPE_CONNECT_WEBHOOK_SECRET`.
-  4. Switch the live site to Stripe live keys.
-  5. Update agreement sections 6.4 and 6.6.
-  6. Set `STRIPE_CONNECT_ENABLED=true` in Coolify.
-  7. Delete the direct-deposit test owner and their data.
-- [ ] Check that `STRIPE_WEBHOOK_SECRET` in Coolify matches the payment webhook endpoint in Stripe. Stripe can reach the webhook now.
+  4. Update agreement sections 6.4 and 6.6.
+  5. Delete the direct-deposit test owner (`dd-test-owner@example.com`), their store, earnings and payout. Their `stripe_account_id` is a test-mode account and won't work with live keys.
+  6. Set `STRIPE_CONNECT_ENABLED=true` in Coolify and redeploy.
+  7. Onboard one real owner and run the first payout.
 - [ ] Optional: hide the clock on display screens while the tap/hover controls are showing (they overlap on desktop).
 
 - [ ] **About 1 week after 2026-10-23:** if Neon is stable, delete the old Postgres resource in Coolify (`postgresql-database-gt2gswqg8jmybj5l2ydntnfg`). Until then, don't reuse its password; it's in git history.

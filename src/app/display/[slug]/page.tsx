@@ -530,7 +530,7 @@ function HeaderBar({ locationName, storeNumber, portrait }: { locationName: stri
     }}>
       {/* Logo */}
       <div style={{ display: "flex", alignItems: "center", gap: portrait ? 8 : 12, minWidth: 0 }}>
-        <a href="/" style={{ textDecoration: "none", flexShrink: 0 }}>
+        <a href="/" target="_top" style={{ textDecoration: "none", flexShrink: 0 }}>
           <div style={{
             fontFamily: "Georgia,serif",
             fontSize: portrait ? 14 : 16,
@@ -811,9 +811,10 @@ function FullscreenOverlay({ show: showFromActivity, isFullscreen, onToggle, can
           />
         )}
 
-        {/* Home */}
+        {/* Home (target _top: leaves the Live Ads frame instead of loading the site inside it) */}
         <a
           href="/"
+          target="_top"
           style={{
             display: "flex",
             alignItems: "center",

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { paypalEnabled } from "@/lib/payment-options";
+import { LOCAL_AD_RADIUS_MILES } from "@/types";
 import Link from "next/link";
 import {
   HelpCircle, BookOpen, CreditCard, Store,
@@ -38,8 +39,9 @@ const FAQ_CATEGORIES = [
     color: "#10B981",
     faqs: [
       { q: "How long does approval take?", a: "Most ads are reviewed within 24 hours (often faster). You'll receive an email notification as soon as a decision is made." },
-      { q: "Why was my ad denied?", a: "Ads are denied when they don't meet our content guidelines — e.g. prohibited content, low resolution images, or misleading claims. The denial email will include a specific reason, and you're welcome to revise and resubmit." },
+      { q: "Why was my ad denied?", a: "Ads are denied when they don't meet our content guidelines — e.g. prohibited content, low resolution images, misleading claims, or a business too far from the chosen store. The denial email will include a specific reason, and you're welcome to revise and resubmit." },
       { q: "Can I edit my ad after submitting?", a: "Ads cannot be edited once submitted for review. If you need to make changes, contact support to cancel the current submission (and receive a refund), then resubmit." },
+      { q: "Can any business advertise at any store?", a: `Screens are for local businesses. Choose a store within about ${LOCAL_AD_RADIUS_MILES} miles of your business, or one whose area you serve (for example a plumber or caterer who works there). Ads for businesses farther away may be declined, with a full refund.` },
       { q: "Can I run the same ad at multiple locations?", a: "Yes! Submit a separate campaign for each store location you'd like to target. Each location is billed independently at its own 4-week price." },
     ],
   },
@@ -51,7 +53,7 @@ const FAQ_CATEGORIES = [
       { q: "How do I become a store partner?", a: <>When you <Link href="/register" className="text-[#4A90C4] font-medium hover:underline">create your account</Link>, tick <strong>&ldquo;I own or manage a store&rdquo;</strong> and add your store details. Already have an account? Use <Link href="/partners/apply" className="text-[#4A90C4] font-medium hover:underline">Become a Store Partner</Link>. We review every store, then email you once you&apos;re approved and contact you to set up your screen. You can see your application status on your dashboard.</> },
       { q: "Do I need to buy any equipment?", a: "No. There are no fees. Use a TV and WiFi you already have plus an inexpensive streaming device, or we provide and install the screen at no cost to you. Setup takes about an hour." },
       { q: "How much will I earn?", a: "You earn a share of every ad shown at your store: the percentage agreed for your location (typically 50% if you provide the screen, or 25% if we do), calculated on the ad price after card processing fees. Your Earnings page shows every ad and what you've earned." },
-      { q: "When and how do I get paid?", a: <>Earnings from an ad become available once its 4-week run ends, and are paid out monthly; balances under $25 roll over to the next month. Add your payout details (Zelle or mailed check) on your <Link href="/dashboard/store-owner/earnings" className="text-[#4A90C4] font-medium hover:underline">Earnings page</Link>. Payouts start once your store partner agreement is signed. Direct deposit is coming soon.</> },
+      { q: "When and how do I get paid?", a: <>Earnings from an ad become available once its 4-week run ends, and are paid out monthly; balances under $25 roll over to the next month. Set up direct deposit on your <Link href="/dashboard/store-owner/earnings" className="text-[#4A90C4] font-medium hover:underline">Earnings page</Link>: our payment partner Stripe collects your bank details securely, and you're paid on or after the 15th of each month. Payouts start once your store partner agreement is signed.</> },
       { q: "Do I need to sign an agreement?", a: "Yes. After you're approved we'll send a store partner agreement covering the screen space, your revenue share and payouts. Payouts begin once it's signed." },
       { q: "How does the display screen work?", a: "Once your location is set up, open the Display Screen URL on any TV or screen browser at your store. Approved ads for your location rotate automatically — no app install required. If the internet drops briefly, the screen keeps showing ads and reconnects on its own." },
       { q: "What screen sizes are supported?", a: "The display works on any screen that runs a modern browser: TVs, tablets, monitors and phones, in landscape or portrait. It scales to fit. On an iPhone or iPad, tap Share → Add to Home Screen and open it from the icon for full screen." },

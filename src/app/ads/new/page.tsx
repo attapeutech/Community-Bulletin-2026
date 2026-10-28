@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { LOCAL_AD_RADIUS_MILES } from "@/types";
 import { useRouter } from "next/navigation";
 import { useDropzone } from "react-dropzone";
 import { costPerThousandCents, formatCostPerThousand, formatShoppers } from "@/lib/traffic";
@@ -210,8 +211,10 @@ export default function NewAdPage() {
   }, [showPreview]);
 
   // Form state
-  const [locations, setLocations] = useState<Location[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);   // search results
+  const [allLocations, setAllLocations] = useState<Location[] | null>(null); // every active store, shown before searching
   const [locSearch, setLocSearch] = useState("");
+  const [localConfirmed, setLocalConfirmed] = useState(false); // "my business is near this store", required before paying
   const [locLoading, setLocLoading] = useState(false);
   const [locSearched, setLocSearched] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
@@ -263,6 +266,17 @@ export default function NewAdPage() {
       .catch(() => {});
   }, []);
 
+  // Show every active store up front, so advertisers can pick without knowing what to search for
+  useEffect(() => {
+    fetch("/api/locations")
+      .then(r => r.json())
+      .then(json => {
+        if (json.success) setAllLocations([...json.data].sort((a: Location, b: Location) => a.storeName.localeCompare(b.storeName)));
+        else setAllLocations([]);
+      })
+      .catch(() => setAllLocations([]));
+  }, []);
+
   const handleLocSearch = (val: string) => {
     setLocSearch(val);
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
@@ -280,6 +294,10 @@ export default function NewAdPage() {
       }
     }, 350);
   };
+
+  // A search (2+ letters) narrows the list; otherwise every store is shown
+  const searching = locSearch.trim().length >= 2;
+  const shownLocations = searching ? locations : allLocations ?? [];
 
   // ── Step 3: Image upload via R2 presigned URL ───────────────────────────────
   const onDrop = useCallback((accepted: File[]) => {
@@ -380,7 +398,7 @@ export default function NewAdPage() {
           {step === 1 && (
             <div>
               <h2 style={{ fontFamily: "Georgia,serif", fontSize: 20, color: ACCENT, marginBottom: 4 }}>Choose a location</h2>
-              <p style={{ fontSize: 13, color: "#4A6B82", marginBottom: 24 }}>Search for a store where your ad will be displayed.</p>
+              <p style={{ fontSize: 13, color: "#4A6B82", marginBottom: 24 }}>Pick the store where your ad will be displayed, or search by name, city or ZIP.</p>
 
               <div style={{ marginBottom: 8 }}>
                 <Label>Search locations</Label>
@@ -402,25 +420,41 @@ export default function NewAdPage() {
                 </div>
               )}
 
-              {locations.length > 0 && (
-                <div style={{ border: "1px solid #D8E4EE", borderRadius: 8, overflow: "hidden", margin: "8px 0" }}>
-                  {locations.map((loc, i) => (
+              {!searching && allLocations === null && (
+                <p style={{ fontSize: 13, color: "#4A6B82", margin: "8px 0" }}>Loading stores…</p>
+              )}
+
+              {shownLocations.length > 0 && (
+                <div style={{ border: "1px solid #D8E4EE", borderRadius: 8, overflow: "hidden", margin: "8px 0", maxHeight: 380, overflowY: "auto" }}>
+                  {shownLocations.map((loc, i) => {
+                    const picked = selectedLocation?.id === loc.id;
+                    return (
                     <button
                       key={loc.id}
                       onClick={() => { setSelectedLocation(loc); setLocations([]); setLocSearch(""); setLocSearched(false); }}
+                      aria-pressed={picked}
                       style={{
                         width: "100%",
                         padding: "12px 16px",
                         textAlign: "left",
-                        background: "#fff",
+                        background: picked ? "#E3F0FB" : "#fff",
                         border: "none",
-                        borderBottom: i < locations.length - 1 ? "1px solid #D8E4EE" : "none",
+                        borderBottom: i < shownLocations.length - 1 ? "1px solid #D8E4EE" : "none",
+                        // Picked store: blue outline drawn inside the row so the list doesn't shift
+                        boxShadow: picked ? "inset 0 0 0 2px #4A90C4" : "none",
                         cursor: "pointer",
                         fontSize: 14,
                       }}
                     >
                       <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                        <span style={{ fontWeight: 600, color: ACCENT }}>{loc.storeName}</span>
+                        <span style={{ fontWeight: 600, color: ACCENT }}>
+                          {loc.storeName}
+                          {picked && (
+                            <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: "#fff", background: "#4A90C4", borderRadius: 999, padding: "2px 8px", verticalAlign: "middle" }}>
+                              ✓ Selected
+                            </span>
+                          )}
+                        </span>
                         <span style={{ fontWeight: 700, color: "#E8563A", whiteSpace: "nowrap" }}>{formatPrice(loc.pricePerRunCents)}<span style={{ fontWeight: 400, fontSize: 12, color: "#4A6B82" }}> / 4 weeks</span></span>
                       </div>
                       <div style={{ fontSize: 12, color: "#4A6B82" }}>
@@ -429,11 +463,17 @@ export default function NewAdPage() {
                       </div>
                       {loc.dailyCustomers ? <ShopperReach loc={loc} /> : null}
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
-              {selectedLocation && (
+              <p style={{ fontSize: 12, color: "#4A6B82", margin: "10px 0 0", lineHeight: 1.5 }}>
+                📍 Screens are for <strong>local businesses</strong>: choose a store within about {LOCAL_AD_RADIUS_MILES} miles of your business, or one whose area you serve. Ads for businesses farther away may be declined and refunded.
+              </p>
+
+              {/* Only when the picked store isn't in the list on screen (e.g. while searching for another) */}
+              {selectedLocation && !shownLocations.some(l => l.id === selectedLocation.id) && (
                 <div style={{ background: "#F0F7FF", border: "1px solid #4A90C4", borderRadius: 8, padding: "12px 16px", marginTop: 16 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: "#1A3A5C" }}>Selected: {selectedLocation.storeName}</div>
                   <div style={{ fontSize: 12, color: "#4A6B82" }}>
@@ -665,9 +705,21 @@ export default function NewAdPage() {
                 </div>
               </div>
 
+              <label style={{ display: "flex", gap: 10, alignItems: "flex-start", background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 8, padding: "12px 14px", marginBottom: 20, fontSize: 13, color: "#1A3A5C", cursor: "pointer", lineHeight: 1.5 }}>
+                <input
+                  type="checkbox"
+                  checked={localConfirmed}
+                  onChange={e => setLocalConfirmed(e.target.checked)}
+                  style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0, accentColor: "#1A3A5C" }}
+                />
+                <span>
+                  My business is within about {LOCAL_AD_RADIUS_MILES} miles of <strong>{selectedLocation?.storeName ?? "this store"}</strong>, or serves customers in its area. I understand ads for businesses farther away may be declined and refunded.
+                </span>
+              </label>
+
               <div style={{ display: "flex", gap: 12, justifyContent: "space-between" }}>
                 <Btn secondary onClick={() => setStep(3)}>← Back</Btn>
-                <Btn onClick={submitAd} disabled={loading}>
+                <Btn onClick={submitAd} disabled={loading || !localConfirmed}>
                   {loading ? "Submitting…" : "Submit & Pay →"}
                 </Btn>
               </div>

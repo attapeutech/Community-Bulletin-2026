@@ -5,6 +5,7 @@ import { useDashboardSocket } from "@/lib/socket/client";
 import { Check, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { LOCAL_AD_RADIUS_MILES } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -281,6 +282,23 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
                   <label className="block text-[13px] font-semibold text-red-800 mb-1.5">
                     Reason for denial *
                   </label>
+                  {/* One-tap reasons; the text can still be edited before denying */}
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {[
+                      `This business is too far from this store. Screens are for local businesses within about ${LOCAL_AD_RADIUS_MILES} miles; please choose a store closer to your business.`,
+                      "The image is too low in resolution to display clearly. Please upload a sharper image (1920×1080 recommended).",
+                      "The ad doesn't meet our content guidelines.",
+                    ].map((r, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setReviewNote(r)}
+                        className="text-[11px] font-semibold text-red-800 bg-white border border-red-300 rounded-full px-2.5 py-0.5 hover:bg-red-100"
+                      >
+                        {["Too far from store", "Low-resolution image", "Content guidelines"][i]}
+                      </button>
+                    ))}
+                  </div>
                   <textarea
                     value={reviewNote}
                     onChange={(e) => setReviewNote(e.target.value)}

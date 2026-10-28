@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LOCAL_AD_RADIUS_MILES } from "@/types";
 
 export default function TermsPage() {
   return (
@@ -22,7 +23,7 @@ export default function TermsPage() {
           },
           {
             title: "Ad Submission and Review",
-            body: "All ads are subject to review before display. We reserve the right to reject any ad that violates our content guidelines, including ads containing prohibited content, misleading claims, low-resolution images, or material that infringes on third-party rights. Rejected ads will receive a full refund.",
+            body: `All ads are subject to review before display. We reserve the right to reject any ad that violates our content guidelines, including ads containing prohibited content, misleading claims, low-resolution images, or material that infringes on third-party rights. Screens are intended for local businesses: we may also reject an ad for a business located far from the chosen store (generally more than about ${LOCAL_AD_RADIUS_MILES} miles) unless it serves that area. Rejected ads will receive a full refund.`,
           },
           {
             title: "Prohibited Content",

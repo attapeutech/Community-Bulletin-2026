@@ -5,7 +5,7 @@ import { LOCAL_AD_RADIUS_MILES } from "@/types";
 import { SaleTemplate } from "@/components/display/templates/SaleTemplate";
 import { EMPTY_SALE, SALE_LIMITS, saleTemplateSchema, saleTitle, type SaleTemplateData } from "@/lib/ad-templates";
 import { useRouter } from "next/navigation";
-import { useDropzone } from "react-dropzone";
+import { useDropzone, type FileRejection } from "react-dropzone";
 import { costPerThousandCents, formatCostPerThousand, formatShoppers } from "@/lib/traffic";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -161,16 +161,13 @@ function Btn({
 }
 
 // ─── Step indicator ───────────────────────────────────────────────────────────
+// The image is added on the Details step, so there's no separate image step
 const STEPS: { label: string; step: Step }[] = [
-  { label: "Location", step: 1 }, { label: "Details", step: 2 }, { label: "Image", step: 3 }, { label: "Review", step: 4 },
-];
-// Template ads add their photo on the Details step, so they have no separate image step
-const TEMPLATE_STEPS: { label: string; step: Step }[] = [
-  { label: "Location", step: 1 }, { label: "Details & photo", step: 2 }, { label: "Review", step: 4 },
+  { label: "Location", step: 1 }, { label: "Details & image", step: 2 }, { label: "Review", step: 4 },
 ];
 
-function StepBar({ current, template }: { current: Step; template: boolean }) {
-  const steps = template ? TEMPLATE_STEPS : STEPS;
+function StepBar({ current }: { current: Step }) {
+  const steps = STEPS;
   return (
     <div style={{ display: "flex", gap: 0, marginBottom: 32 }}>
       {steps.map(({ label, step }, i) => {
@@ -199,6 +196,59 @@ function StepBar({ current, template }: { current: Step; template: boolean }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+const IMAGE_ACCEPT = { "image/jpeg": [], "image/png": [], "image/webp": [] };
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB
+
+/**
+ * Wraps the screen preview so it doubles as the image upload: click to browse or drop an image on it.
+ * Each preview has its own dropzone (the desktop panel and the phone preview are both mounted).
+ */
+function PreviewDropTarget({ onDrop, onDropRejected, hasImage, uploading, failed, children }: {
+  onDrop: (files: File[]) => void;
+  onDropRejected: (rejections: FileRejection[]) => void;
+  hasImage: boolean;
+  uploading: boolean;
+  failed: boolean;
+  children: React.ReactNode;
+}) {
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, onDropRejected, accept: IMAGE_ACCEPT, maxFiles: 1, maxSize: MAX_IMAGE_BYTES });
+  const [hover, setHover] = useState(false);
+  const pill: React.CSSProperties = {
+    position: "absolute", left: "50%", transform: "translateX(-50%)", zIndex: 6, pointerEvents: "none",
+    background: "rgba(10,26,46,0.85)", color: "#fff", fontSize: 13, fontWeight: 600, whiteSpace: "nowrap",
+    padding: "8px 16px", borderRadius: 999, border: "1px solid rgba(255,255,255,0.25)", backdropFilter: "blur(4px)",
+  };
+  return (
+    <div
+      {...getRootProps({
+        onMouseEnter: () => setHover(true),
+        onMouseLeave: () => setHover(false),
+        style: {
+          position: "relative", cursor: "pointer", borderRadius: 10,
+          outline: isDragActive ? "3px dashed #E8563A" : "none", outlineOffset: 3,
+        },
+      })}
+      aria-label={hasImage ? "Click or drop an image to replace it" : "Click to upload or drag and drop your image"}
+    >
+      <input {...getInputProps()} />
+      {children}
+      {isDragActive ? (
+        <div style={{ position: "absolute", inset: 0, zIndex: 7, borderRadius: 10, background: "rgba(232,86,58,0.25)", display: "grid", placeItems: "center", pointerEvents: "none" }}>
+          <span style={{ ...pill, position: "static", transform: "none", background: "#E8563A", border: "none" }}>Drop to upload</span>
+        </div>
+      ) : uploading ? (
+        <span style={{ ...pill, bottom: 14 }}>Uploading…</span>
+      ) : failed ? (
+        <span style={{ ...pill, bottom: 14, background: "rgba(153,27,27,0.9)" }}>Upload failed. Click to try another image</span>
+      ) : !hasImage ? (
+        <span style={{ ...pill, top: "50%", marginTop: -18, background: "#1A3A5C" }}>⬆ Click to upload or drag &amp; drop your image here</span>
+      ) : hover ? (
+        <span style={{ ...pill, bottom: 14 }}>Click or drop to replace the image</span>
+      ) : null}
     </div>
   );
 }
@@ -359,19 +409,13 @@ export default function NewAdPage() {
     uploadImage(file);
   }, [uploadImage]);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    // Wrong type or over 10 MB: say why instead of silently ignoring the file
-    onDropRejected: (rejections) => {
-      const code = rejections[0]?.errors[0]?.code;
-      setError(code === "file-too-large" ? "That image is over 10 MB. Please choose a smaller one."
-        : code === "file-invalid-type" ? "Please choose a JPEG, PNG or WebP image."
-        : "That file can't be used. Please choose a JPEG, PNG or WebP image under 10 MB.");
-    },
-    accept: { "image/jpeg": [], "image/png": [], "image/webp": [] },
-    maxFiles: 1,
-    maxSize: 10 * 1024 * 1024, // 10 MB
-  });
+  // Wrong type or over 10 MB: say why instead of silently ignoring the file
+  const onDropRejected = useCallback((rejections: FileRejection[]) => {
+    const code = rejections[0]?.errors[0]?.code;
+    setError(code === "file-too-large" ? "That image is over 10 MB. Please choose a smaller one."
+      : code === "file-invalid-type" ? "Please choose a JPEG, PNG or WebP image."
+      : "That file can't be used. Please choose a JPEG, PNG or WebP image under 10 MB.");
+  }, []);
 
   // ── Step 4: Submit ad ───────────────────────────────────────────────────────
   const submitAd = async () => {
@@ -411,6 +455,19 @@ export default function NewAdPage() {
     }
   };
 
+  // The screen preview doubles as the image upload on the Details step (and in the desktop panel)
+  const droppablePreview = (node: React.ReactNode) => (
+    <PreviewDropTarget
+      onDrop={onDrop}
+      onDropRejected={onDropRejected}
+      hasImage={!!(uploadedImageUrl ?? imagePreview)}
+      uploading={uploading}
+      failed={!!imageFile && !uploading && !uploadedImageUrl}
+    >
+      {node}
+    </PreviewDropTarget>
+  );
+
   // The ad as it will look on a store screen: the animated template, the advertiser's own image
   // (with contact details beside it when turned on), or a placeholder until there's something to show
   // showFullscreen: the "Preview on display screen" button on the image (the desktop panel has its own in its header)
@@ -418,13 +475,12 @@ export default function NewAdPage() {
     const placeholder = (text: string) => (
       <div style={{ width: "100%", aspectRatio: "16 / 9", borderRadius: 10, background: "#0A1A2E", display: "grid", placeItems: "center", textAlign: "center", padding: 24 }}>
         <div style={{ color: "#9DC4E0", fontSize: 14, lineHeight: 1.5 }}>
-          <div style={{ fontSize: 30, marginBottom: 8 }}>🖼️</div>
-          {text}
+          {text && <><div style={{ fontSize: 30, marginBottom: 8 }}>🖼️</div>{text}</>}
         </div>
       </div>
     );
     const templateStarted = !!(previewSale.offerBig || previewSale.headline || previewSale.businessName || uploadedImageUrl || imagePreview);
-    if (isTemplate && !templateStarted) return placeholder("Your ad preview appears here as you fill in your offer and add a photo.");
+    if (isTemplate && !templateStarted) return placeholder("");
     if (isTemplate) {
       return (
         <div style={{ position: "relative", width: "100%", aspectRatio: "16 / 9", borderRadius: 10, overflow: "hidden", background: "#0A1A2E" }}>
@@ -442,7 +498,10 @@ export default function NewAdPage() {
       );
     }
     const img = uploadedImageUrl ?? imagePreview;
-    if (!img) return placeholder("Your ad preview appears here once you add your image.");
+    // Same rule as the screen: title and description show only beside contact details (split layout)
+    if (!img && !(contactPhone || contactAddress || contactWebsite)) {
+      return placeholder("");
+    }
 
                   const hasSplit = !!(contactPhone || contactAddress || contactWebsite);
                   const titleLen = title.length;
@@ -469,13 +528,15 @@ export default function NewAdPage() {
                             </div>
                           </div>
                           <div style={{ flex: 1, overflow: "hidden" }}>
-                            <img src={img} alt={title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                            {img
+                              ? <img src={img} alt={title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                              : <div style={{ width: "100%", height: "100%", background: "#13304F" }} /* the upload pill sits over this */ />}
                           </div>
                         </div>
                       ) : (
                         /* Full-screen preview */
                         <>
-                          <img src={img} alt={title} style={{ width: "100%", aspectRatio: "16 / 9", objectFit: "contain", display: "block" }} />
+                          <img src={img ?? undefined} alt={title} style={{ width: "100%", aspectRatio: "16 / 9", objectFit: "contain", display: "block" }} />
                           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,26,46,0.75) 0%, transparent 30%)", pointerEvents: "none" }} />
                           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "10px 14px", display: "flex", justifyContent: "flex-end" }}>
                             <span style={{ fontSize: 10, color: "rgba(255,255,255,0.6)" }}>Ad #Preview</span>
@@ -484,7 +545,7 @@ export default function NewAdPage() {
                       )}
                       {/* Preview button */}
                       {showFullscreen && <button
-                        onClick={() => setShowPreview(true)}
+                        onClick={(e) => { e.stopPropagation(); setShowPreview(true); }}
                         style={{
                           position: "absolute", top: 10, right: 10,
                           background: "rgba(10,26,46,0.75)", color: "#fff",
@@ -514,7 +575,7 @@ export default function NewAdPage() {
           {selectedLocation ? `${formatPrice(selectedLocation.pricePerRunCents)} / 4 weeks` : "Priced per store · 4 weeks"} · Displayed on in-store screens at your chosen location.
         </p>
 
-        <StepBar current={step} template={isTemplate} />
+        <StepBar current={step} />
 
         <div className="grid gap-6 items-start lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
         <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #D8E4EE", padding: "clamp(18px, 4vw, 32px)", minWidth: 0 }}>
@@ -673,48 +734,15 @@ export default function NewAdPage() {
                       </div>
                     ))}
                   </div>
-                  {/* Photo: drop it here and it uploads and appears in the preview right away */}
-                  <div style={{ marginTop: 8 }}>
-                    <Label>Photo *</Label>
-                    <div
-                      {...getRootProps()}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 14, marginTop: 6,
-                        border: `2px dashed ${isDragActive ? ACCENT : "#D8E4EE"}`, borderRadius: 10,
-                        padding: "10px 14px", cursor: "pointer",
-                        background: isDragActive ? "#F0F7FF" : "#FAFCFF", transition: "all 0.2s",
-                      }}
-                    >
-                      <input {...getInputProps()} />
-                      {imagePreview ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={imagePreview} alt="" style={{ width: 72, height: 48, objectFit: "cover", borderRadius: 6, flexShrink: 0 }} />
-                      ) : (
-                        <div style={{ width: 72, height: 48, borderRadius: 6, background: "#E8EFF6", display: "grid", placeItems: "center", fontSize: 22, flexShrink: 0 }}>🖼️</div>
-                      )}
-                      <div style={{ fontSize: 13, color: "#4A6B82", lineHeight: 1.45 }}>
-                        {isDragActive ? "Drop the photo here"
-                          : uploading ? `Uploading ${imageFile?.name ?? "photo"}…`
-                          : uploadedImageUrl ? <><span style={{ color: "#166534", fontWeight: 600 }}>✓ Photo added</span> · drag another or click to change</>
-                          : <>Drag &amp; drop a photo of your product, food or shop, or <span style={{ color: "#4A90C4", fontWeight: 600 }}>click to browse</span><br /><span style={{ fontSize: 11 }}>JPEG, PNG or WebP · up to 10 MB</span></>}
-                      </div>
-                    </div>
-                    {imageFile && !uploading && !uploadedImageUrl && (
-                      <button type="button" onClick={() => uploadImage(imageFile)} style={{ marginTop: 6, fontSize: 12, fontWeight: 600, color: "#4A90C4", background: "none", border: "none", cursor: "pointer" }}>
-                        Upload failed. Try again
-                      </button>
-                    )}
-                  </div>
-
                   <div className="lg:hidden">
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "14px 0 6px" }}>
-                      <Label>Live preview</Label>
+                      <Label>Live preview · photo *</Label>
                       <button type="button" onClick={() => setReplay(r => r + 1)} style={{ fontSize: 12, fontWeight: 600, color: "#4A90C4", background: "none", border: "none", cursor: "pointer" }}>↻ Replay</button>
                     </div>
-                    {screenPreview()}
+                    {droppablePreview(screenPreview())}
                   </div>
                   <p style={{ fontSize: 11, color: "#5B7D96", marginTop: 6 }}>
-                    Below, the address appears on the ad and the website becomes a QR code.
+                    Add your photo by clicking the screen preview or dropping it there. Below, the address appears on the ad and the website becomes a QR code.
                   </p>
                 </div>
               )}
@@ -740,6 +768,14 @@ export default function NewAdPage() {
                   maxLength={500}
                 />
                 <div style={{ fontSize: 11, color: "#4A6B82", marginTop: 4, textAlign: "right" }}>{description.length}/500</div>
+              </div>
+
+              <p style={{ fontSize: 11, color: "#5B7D96", marginBottom: 16 }}>
+                Add your image by clicking the screen preview or dropping it there. The screen shows your title and description beside the image only when a contact detail below is filled in; otherwise the image fills the screen.
+              </p>
+              <div className="lg:hidden" style={{ marginBottom: 20 }}>
+                <Label>Live preview · image *</Label>
+                <div style={{ marginTop: 6 }}>{droppablePreview(screenPreview())}</div>
               </div>
               </>)}
 
@@ -779,82 +815,12 @@ export default function NewAdPage() {
                   if (isTemplate) {
                     const check = saleTemplateSchema.safeParse(sale);
                     if (!check.success) { setError(check.error.issues[0]?.message ?? "Please fill in the template."); return; }
-                    if (uploading) { setError("Your photo is still uploading. One moment."); return; }
-                    if (!uploadedImageUrl) { setError("Please add a photo for your ad."); return; }
-                    // The template's photo is added here, so it skips the separate image step
-                    setError(""); setStep(4); return;
                   } else if (title.trim().length < 3) { setError("Title must be at least 3 characters."); return; }
-                  setError(""); setStep(3);
-                }}>
-                  {isTemplate ? "Next: Review →" : "Next: Upload Image →"}
-                </Btn>
-              </div>
-            </div>
-          )}
-
-          {/* ── STEP 3: Image ── */}
-          {step === 3 && (
-            <div>
-              <h2 style={{ fontFamily: "Georgia,serif", fontSize: 20, color: ACCENT, marginBottom: 4 }}>{isTemplate ? "Add a photo" : "Upload your image"}</h2>
-              <p style={{ fontSize: 13, color: "#4A6B82", marginBottom: 24 }}>
-                {isTemplate
-                  ? "A photo of your product, food or shop. It fills half the screen, so a clear, bright photo works best. JPEG, PNG or WebP · Max 10 MB"
-                  : "JPEG, PNG or WebP · Max 10 MB · Recommended: 1920×1080px (16:9)"}
-              </p>
-
-              {/* Dropzone */}
-              <div
-                {...getRootProps()}
-                style={{
-                  border: `2px dashed ${isDragActive ? ACCENT : "#D8E4EE"}`,
-                  borderRadius: 12,
-                  padding: 32,
-                  textAlign: "center",
-                  cursor: "pointer",
-                  background: isDragActive ? "#F0F7FF" : "#FAFCFF",
-                  transition: "all 0.2s",
-                  marginBottom: 16,
-                }}
-              >
-                <input {...getInputProps()} />
-                {imagePreview ? (
-                  <img src={imagePreview} alt="Preview" style={{ maxHeight: 240, maxWidth: "100%", borderRadius: 8, objectFit: "contain" }} />
-                ) : (
-                  <>
-                    <div style={{ fontSize: 32, marginBottom: 8 }}>🖼️</div>
-                    <div style={{ fontSize: 14, color: "#4A6B82" }}>
-                      {isDragActive ? "Drop image here" : "Drag & drop or click to browse"}
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {imageFile && uploading && (
-                <div style={{ background: "#F0F7FF", border: "1px solid #C9DFF2", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: "#1A3A5C" }}>
-                  Uploading {imageFile.name}…
-                </div>
-              )}
-
-              {/* Upload failed: offer a retry with the same image */}
-              {imageFile && !uploading && !uploadedImageUrl && (
-                <div style={{ marginBottom: 16 }}>
-                  <Btn onClick={() => uploadImage(imageFile)}>Try again</Btn>
-                </div>
-              )}
-
-              {uploadedImageUrl && (
-                <div style={{ background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: "#166534" }}>
-                  ✓ Image uploaded successfully
-                </div>
-              )}
-
-              <div style={{ display: "flex", gap: 12, justifyContent: "space-between" }}>
-                <Btn secondary onClick={() => setStep(2)}>← Back</Btn>
-                <Btn onClick={() => {
-                  if (!uploadedImageUrl) { setError("Please upload an image first."); return; }
+                  if (uploading) { setError("Your image is still uploading. One moment."); return; }
+                  if (!uploadedImageUrl) { setError(`Please add your ${isTemplate ? "photo" : "image"}: click the screen preview or drop it there.`); return; }
                   setError(""); setStep(4);
-                }} disabled={!uploadedImageUrl}>
-                  Next: Review →
+                }}>
+                  Next: Review &amp; Pay →
                 </Btn>
               </div>
             </div>
@@ -918,7 +884,7 @@ export default function NewAdPage() {
               )}
 
               <div style={{ display: "flex", gap: 12, justifyContent: "space-between" }}>
-                <Btn secondary onClick={() => setStep(isTemplate ? 2 : 3)}>← Back</Btn>
+                <Btn secondary onClick={() => setStep(2)}>← Back</Btn>
                 <Btn onClick={submitAd} disabled={loading || (!asTest && !localConfirmed)}>
                   {loading ? "Submitting…" : asTest ? "Post test ad →" : "Submit & Pay →"}
                 </Btn>
@@ -938,7 +904,7 @@ export default function NewAdPage() {
                 <button type="button" onClick={() => setShowPreview(true)} style={{ fontSize: 12, fontWeight: 600, color: "#4A90C4", background: "none", border: "none", cursor: "pointer" }}>⛶ Full screen</button>
               ) : null}
             </div>
-            {screenPreview({ showFullscreen: false })}
+            {step >= 2 ? droppablePreview(screenPreview({ showFullscreen: false })) : screenPreview({ showFullscreen: false })}
             <div style={{ fontSize: 12, color: "#4A6B82", marginTop: 10 }}>
               {selectedLocation
                 ? <>Showing at <strong style={{ color: ACCENT }}>{selectedLocation.storeName}</strong> · {formatPrice(selectedLocation.pricePerRunCents)} / 4 weeks</>

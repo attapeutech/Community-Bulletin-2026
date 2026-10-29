@@ -70,7 +70,11 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
       : selectedLocation.stateName || selectedLocation.stateCode
     : null;
 
-  const user = session?.user;
+  // Signed-out links on the server and the first client render, signed-in ones after mount,
+  // so hydration matches even when the browser already knows the session
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const user = mounted ? session?.user : undefined;
   const initials = user?.name
     ? user.name.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2)
     : "?";

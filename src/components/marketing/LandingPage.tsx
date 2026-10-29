@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { paypalEnabled } from "@/lib/payment-options";
 import { useSession } from "@/lib/auth/client";
@@ -34,7 +35,12 @@ const HIGHLIGHTS = [
 ];
 
 export default function LandingPage({ price }: { price: LandingPrice }) {
-  const { data: session } = useSession();
+  const { data: sessionData } = useSession();
+  // The server renders signed-out links; switch to the signed-in ones after mount so the first
+  // client render matches the server (the session can already be known in the browser)
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const session = mounted ? sessionData : null;
 
   return (
     <div className="font-sans text-[#1A3A5C] dark:text-[#DEEAF4] overflow-x-hidden">

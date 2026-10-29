@@ -7,6 +7,7 @@ import { eq, and } from "drizzle-orm";
 import { AD_DURATION_DAYS } from "@/types";
 import { addDays } from "date-fns";
 import { pushDashboardUpdate } from "@/lib/socket/notify";
+import { saleTemplateSchema, saleTitle } from "@/lib/ad-templates";
 
 const createAdSchema = z.object({
   locationId: z.string().uuid(),
@@ -22,6 +23,9 @@ const createAdSchema = z.object({
   showWebsite: z.boolean().optional(),
   // Admin only: a test ad skips payment and review and shows only on display previews (?preview=)
   isTest: z.boolean().optional(),
+  // Built-in template drawn by the screen (the image is then the template's photo)
+  template: z.literal("sale").optional(),
+  templateData: z.unknown().optional(),
 });
 
 // POST /api/ads — create a new ad (status=pending, paymentStatus=unpaid)
@@ -34,6 +38,17 @@ export async function POST(req: NextRequest) {
     const data = createAdSchema.parse(body);
     if (data.isTest && (session.user as any).role !== "admin") {
       return NextResponse.json({ success: false, error: "Only admins can post test ads" }, { status: 403 });
+    }
+    // Template ads: check the fields; the title shown elsewhere is built from them ("20% OFF any large pizza")
+    let templateData = null;
+    if (data.template === "sale") {
+      const parsedTemplate = saleTemplateSchema.safeParse(data.templateData);
+      if (!parsedTemplate.success) {
+        return NextResponse.json({ success: false, error: parsedTemplate.error.issues[0]?.message ?? "Template details are incomplete" }, { status: 422 });
+      }
+      templateData = parsedTemplate.data;
+      data.title = saleTitle(templateData).slice(0, 120);
+      data.description = templateData.details || undefined;
     }
 
     // Verify location exists and is active
@@ -65,6 +80,8 @@ export async function POST(req: NextRequest) {
         status: data.isTest ? "approved" : "pending",
         paymentStatus: "unpaid",
         isTest: data.isTest ?? false,
+        template: data.template ?? null,
+        templateData,
         reviewedBy: data.isTest ? userId : null,
         reviewedAt: data.isTest ? now : null,
         startedAt: now,

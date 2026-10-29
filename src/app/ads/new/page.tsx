@@ -2,6 +2,8 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { LOCAL_AD_RADIUS_MILES } from "@/types";
+import { SaleTemplate } from "@/components/display/templates/SaleTemplate";
+import { EMPTY_SALE, SALE_LIMITS, saleTemplateSchema, saleTitle, type SaleTemplateData } from "@/lib/ad-templates";
 import { useRouter } from "next/navigation";
 import { useDropzone } from "react-dropzone";
 import { costPerThousandCents, formatCostPerThousand, formatShoppers } from "@/lib/traffic";
@@ -159,15 +161,22 @@ function Btn({
 }
 
 // ─── Step indicator ───────────────────────────────────────────────────────────
-const STEPS = ["Location", "Details", "Image", "Review"];
+const STEPS: { label: string; step: Step }[] = [
+  { label: "Location", step: 1 }, { label: "Details", step: 2 }, { label: "Image", step: 3 }, { label: "Review", step: 4 },
+];
+// Template ads add their photo on the Details step, so they have no separate image step
+const TEMPLATE_STEPS: { label: string; step: Step }[] = [
+  { label: "Location", step: 1 }, { label: "Details & photo", step: 2 }, { label: "Review", step: 4 },
+];
 
-function StepBar({ current }: { current: Step }) {
+function StepBar({ current, template }: { current: Step; template: boolean }) {
+  const steps = template ? TEMPLATE_STEPS : STEPS;
   return (
     <div style={{ display: "flex", gap: 0, marginBottom: 32 }}>
-      {STEPS.map((label, i) => {
-        const num = (i + 1) as Step;
-        const done = current > num;
-        const active = current === num;
+      {steps.map(({ label, step }, i) => {
+        const num = i + 1;
+        const done = current > step;
+        const active = current === step;
         return (
           <div key={label} style={{ flex: 1, display: "flex", alignItems: "center" }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1 }}>
@@ -184,7 +193,7 @@ function StepBar({ current }: { current: Step }) {
                 {label}
               </div>
             </div>
-            {i < STEPS.length - 1 && (
+            {i < steps.length - 1 && (
               <div style={{ flex: 1, height: 2, background: done ? "#16a34a" : "#D8E4EE", marginBottom: 20 }} />
             )}
           </div>
@@ -223,6 +232,16 @@ export default function NewAdPage() {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  // Ad design: the built-in Sale template (default) or the advertiser's own image
+  const [design, setDesign] = useState<"template" | "own">("template");
+  const [sale, setSale] = useState<SaleTemplateData>(EMPTY_SALE);
+  const setSaleField = (k: keyof SaleTemplateData, v: string) => setSale(prev => ({ ...prev, [k]: v }));
+  // The live preview follows the fields a moment after typing stops, so the animation isn't restarted per keystroke
+  const [previewSale, setPreviewSale] = useState<SaleTemplateData>(EMPTY_SALE);
+  useEffect(() => { const t = setTimeout(() => setPreviewSale(sale), 600); return () => clearTimeout(t); }, [sale]);
+  const [replay, setReplay] = useState(0);
+  const isTemplate = design === "template";
+  const adTitle = isTemplate ? saleTitle(sale) : title;
 
   // Contact info
   const [contactPhone,   setContactPhone]   = useState("");
@@ -365,8 +384,10 @@ export default function NewAdPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           locationId: selectedLocation.id,
-          title,
-          description: description || undefined,
+          title: adTitle,
+          description: (isTemplate ? sale.details : description) || undefined,
+          template: isTemplate ? "sale" : undefined,
+          templateData: isTemplate ? sale : undefined,
           imageUrl: uploadedImageUrl,
           imageKey: uploadedImageKey,
           contactPhone:   contactPhone   || undefined,
@@ -390,11 +411,99 @@ export default function NewAdPage() {
     }
   };
 
+  // The ad as it will look on a store screen: the animated template, the advertiser's own image
+  // (with contact details beside it when turned on), or a placeholder until there's something to show
+  // showFullscreen: the "Preview on display screen" button on the image (the desktop panel has its own in its header)
+  const screenPreview = ({ showFullscreen = true }: { showFullscreen?: boolean } = {}): React.ReactNode => {
+    const placeholder = (text: string) => (
+      <div style={{ width: "100%", aspectRatio: "16 / 9", borderRadius: 10, background: "#0A1A2E", display: "grid", placeItems: "center", textAlign: "center", padding: 24 }}>
+        <div style={{ color: "#9DC4E0", fontSize: 14, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 30, marginBottom: 8 }}>🖼️</div>
+          {text}
+        </div>
+      </div>
+    );
+    const templateStarted = !!(previewSale.offerBig || previewSale.headline || previewSale.businessName || uploadedImageUrl || imagePreview);
+    if (isTemplate && !templateStarted) return placeholder("Your ad preview appears here as you fill in your offer and add a photo.");
+    if (isTemplate) {
+      return (
+        <div style={{ position: "relative", width: "100%", aspectRatio: "16 / 9", borderRadius: 10, overflow: "hidden", background: "#0A1A2E" }}>
+          <SaleTemplate
+            key={replay}
+            data={previewSale}
+            photoUrl={uploadedImageUrl ?? imagePreview}
+            qrValue={showWebsite && contactWebsite ? contactWebsite : null}
+            address={showAddress && contactAddress ? contactAddress : null}
+            phone={showPhone && contactPhone ? contactPhone : null}
+            website={showWebsite && contactWebsite ? contactWebsite : null}
+            play
+          />
+        </div>
+      );
+    }
+    const img = uploadedImageUrl ?? imagePreview;
+    if (!img) return placeholder("Your ad preview appears here once you add your image.");
+
+                  const hasSplit = !!(contactPhone || contactAddress || contactWebsite);
+                  const titleLen = title.length;
+                  const titleSize = titleLen <= 20 ? "clamp(18px, 3vw, 40px)" : titleLen <= 40 ? "clamp(14px, 2.2vw, 30px)" : "clamp(12px, 1.6vw, 22px)";
+                  return (
+                    <div style={{ position: "relative", background: "#0A1A2E", borderRadius: 8, overflow: "hidden" }}>
+                      {hasSplit ? (
+                        /* Split layout preview, in a screen's 16:9 shape; "safe center" keeps a long title visible
+                           (any overflow is cut at the bottom, not the top) */
+                        <div style={{ display: "flex", aspectRatio: "16 / 9" }}>
+                          <div style={{ width: "42%", background: "#0A1A2E", display: "flex", flexDirection: "column", justifyContent: "safe center", overflow: "hidden", padding: "16px 20px", position: "relative", flexShrink: 0, borderRight: "1px solid rgba(74,144,196,0.2)" }}>
+                            <div style={{ fontFamily: "Georgia,serif", fontSize: titleSize, fontWeight: 700, color: "#fff", lineHeight: 1.2, marginBottom: 8 }}>{title}</div>
+                            {description && <div style={{ fontSize: "clamp(10px, 1vw, 13px)", color: "rgba(255,255,255,0.6)", lineHeight: 1.5, marginBottom: 10 }}>{description}</div>}
+                            {(showPhone || showAddress || showWebsite) && (
+                              <>
+                                <div style={{ width: 28, height: 2, background: "#E8563A", borderRadius: 1, marginBottom: 8 }} />
+                                <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 8 }}>Contact Info</div>
+                              </>
+                            )}
+                            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                              {showPhone && contactPhone && <div style={{ fontSize: "clamp(10px, 1vw, 13px)", color: "#fff", fontWeight: 600 }}>📞 {contactPhone}</div>}
+                              {showAddress && contactAddress && <div style={{ fontSize: "clamp(10px, 1vw, 13px)", color: "#fff", fontWeight: 600 }}>📍 {contactAddress}</div>}
+                              {showWebsite && contactWebsite && <div style={{ fontSize: "clamp(10px, 1vw, 13px)", color: "#4A90C4", fontWeight: 600 }}>🌐 {contactWebsite}</div>}
+                            </div>
+                          </div>
+                          <div style={{ flex: 1, overflow: "hidden" }}>
+                            <img src={img} alt={title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                          </div>
+                        </div>
+                      ) : (
+                        /* Full-screen preview */
+                        <>
+                          <img src={img} alt={title} style={{ width: "100%", aspectRatio: "16 / 9", objectFit: "contain", display: "block" }} />
+                          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,26,46,0.75) 0%, transparent 30%)", pointerEvents: "none" }} />
+                          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "10px 14px", display: "flex", justifyContent: "flex-end" }}>
+                            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.6)" }}>Ad #Preview</span>
+                          </div>
+                        </>
+                      )}
+                      {/* Preview button */}
+                      {showFullscreen && <button
+                        onClick={() => setShowPreview(true)}
+                        style={{
+                          position: "absolute", top: 10, right: 10,
+                          background: "rgba(10,26,46,0.75)", color: "#fff",
+                          border: "none", borderRadius: 6, padding: "6px 12px",
+                          fontSize: 12, fontWeight: 600, cursor: "pointer",
+                          backdropFilter: "blur(4px)", display: "flex", alignItems: "center", gap: 6,
+                        }}
+                      >
+                        <span>⛶</span> Preview on display screen
+                      </button>}
+                    </div>
+                  );
+  };
+
   // ─── Render ─────────────────────────────────────────────────────────────────
   return (
     <div style={{ minHeight: "100vh", background: "#F4F7FB", display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 16px" }}>
-      {/* Header */}
-      <div style={{ width: "100%", maxWidth: 640 }}>
+      {/* Header + form: wide on desktop (form left, screen preview right); one column on phones */}
+      <div style={{ width: "100%", maxWidth: 1400 }}>
         <a href="/dashboard/user" style={{ fontSize: 13, color: "#4A6B82", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 24 }}>
           ← Back to dashboard
         </a>
@@ -405,9 +514,10 @@ export default function NewAdPage() {
           {selectedLocation ? `${formatPrice(selectedLocation.pricePerRunCents)} / 4 weeks` : "Priced per store · 4 weeks"} · Displayed on in-store screens at your chosen location.
         </p>
 
-        <StepBar current={step} />
+        <StepBar current={step} template={isTemplate} />
 
-        <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #D8E4EE", padding: 32 }}>
+        <div className="grid gap-6 items-start lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+        <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #D8E4EE", padding: "clamp(18px, 4vw, 32px)", minWidth: 0 }}>
           {error && (
             <div style={{ background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 8, padding: "10px 14px", marginBottom: 20, fontSize: 13, color: "#b91c1c" }}>
               {error}
@@ -516,8 +626,100 @@ export default function NewAdPage() {
           {step === 2 && (
             <div>
               <h2 style={{ fontFamily: "Georgia,serif", fontSize: 20, color: ACCENT, marginBottom: 4 }}>Ad details</h2>
-              <p style={{ fontSize: 13, color: "#4A6B82", marginBottom: 24 }}>Write a short title and optional description.</p>
+              <p style={{ fontSize: 13, color: "#4A6B82", marginBottom: 16 }}>Use our template and we&apos;ll design and animate your ad, or upload your own design.</p>
 
+              {/* Design choice */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10, marginBottom: 22 }}>
+                {([
+                  { v: "template", t: "✨ Use the Sale template", d: "Sharp, animated and easy to read from across the store. Just fill in your offer." },
+                  { v: "own", t: "🖼️ Upload your own design", d: "Already have a flyer or graphic? Upload it as an image." },
+                ] as const).map(o => (
+                  <button
+                    key={o.v}
+                    type="button"
+                    onClick={() => setDesign(o.v)}
+                    style={{
+                      textAlign: "left", padding: "12px 14px", borderRadius: 10, cursor: "pointer",
+                      border: design === o.v ? "2px solid #4A90C4" : "1px solid #D8E4EE",
+                      background: design === o.v ? "#E3F0FB" : "#fff",
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, fontSize: 14, color: ACCENT }}>{o.t}</div>
+                    <div style={{ fontSize: 12, color: "#4A6B82", marginTop: 3, lineHeight: 1.45 }}>{o.d}</div>
+                  </button>
+                ))}
+              </div>
+
+              {isTemplate && (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px 14px" }}>
+                    {([
+                      { k: "businessName", label: "Business name *", ph: "Joe's Pizza" },
+                      { k: "headline", label: "Headline *", ph: "any large pizza" },
+                      { k: "offerBig", label: "Offer, big *", ph: "20%  ·  $5  ·  BOGO" },
+                      { k: "offerSmall", label: "Offer, small", ph: "OFF" },
+                      { k: "details", label: "Details", ph: "Dine-in or takeout · this week only" },
+                      { k: "ends", label: "Ends", ph: "Ends Nov 9" },
+                    ] as const).map(f => (
+                      <div key={f.k}>
+                        <Label>{f.label}</Label>
+                        <Input
+                          placeholder={f.ph}
+                          value={sale[f.k]}
+                          maxLength={SALE_LIMITS[f.k]}
+                          onChange={e => setSaleField(f.k, e.target.value)}
+                        />
+                        <div style={{ fontSize: 11, color: "#4A6B82", marginTop: 3, textAlign: "right" }}>{sale[f.k].length}/{SALE_LIMITS[f.k]}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Photo: drop it here and it uploads and appears in the preview right away */}
+                  <div style={{ marginTop: 8 }}>
+                    <Label>Photo *</Label>
+                    <div
+                      {...getRootProps()}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 14, marginTop: 6,
+                        border: `2px dashed ${isDragActive ? ACCENT : "#D8E4EE"}`, borderRadius: 10,
+                        padding: "10px 14px", cursor: "pointer",
+                        background: isDragActive ? "#F0F7FF" : "#FAFCFF", transition: "all 0.2s",
+                      }}
+                    >
+                      <input {...getInputProps()} />
+                      {imagePreview ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={imagePreview} alt="" style={{ width: 72, height: 48, objectFit: "cover", borderRadius: 6, flexShrink: 0 }} />
+                      ) : (
+                        <div style={{ width: 72, height: 48, borderRadius: 6, background: "#E8EFF6", display: "grid", placeItems: "center", fontSize: 22, flexShrink: 0 }}>🖼️</div>
+                      )}
+                      <div style={{ fontSize: 13, color: "#4A6B82", lineHeight: 1.45 }}>
+                        {isDragActive ? "Drop the photo here"
+                          : uploading ? `Uploading ${imageFile?.name ?? "photo"}…`
+                          : uploadedImageUrl ? <><span style={{ color: "#166534", fontWeight: 600 }}>✓ Photo added</span> · drag another or click to change</>
+                          : <>Drag &amp; drop a photo of your product, food or shop, or <span style={{ color: "#4A90C4", fontWeight: 600 }}>click to browse</span><br /><span style={{ fontSize: 11 }}>JPEG, PNG or WebP · up to 10 MB</span></>}
+                      </div>
+                    </div>
+                    {imageFile && !uploading && !uploadedImageUrl && (
+                      <button type="button" onClick={() => uploadImage(imageFile)} style={{ marginTop: 6, fontSize: 12, fontWeight: 600, color: "#4A90C4", background: "none", border: "none", cursor: "pointer" }}>
+                        Upload failed. Try again
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="lg:hidden">
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "14px 0 6px" }}>
+                      <Label>Live preview</Label>
+                      <button type="button" onClick={() => setReplay(r => r + 1)} style={{ fontSize: 12, fontWeight: 600, color: "#4A90C4", background: "none", border: "none", cursor: "pointer" }}>↻ Replay</button>
+                    </div>
+                    {screenPreview()}
+                  </div>
+                  <p style={{ fontSize: 11, color: "#5B7D96", marginTop: 6 }}>
+                    Below, the address appears on the ad and the website becomes a QR code.
+                  </p>
+                </div>
+              )}
+
+              {!isTemplate && (<>
               <div style={{ marginBottom: 20 }}>
                 <Label>Ad title *</Label>
                 <Input
@@ -539,6 +741,7 @@ export default function NewAdPage() {
                 />
                 <div style={{ fontSize: 11, color: "#4A6B82", marginTop: 4, textAlign: "right" }}>{description.length}/500</div>
               </div>
+              </>)}
 
               {/* Contact info */}
               <div style={{ borderTop: "1px solid #D8E4EE", paddingTop: 20, marginBottom: 20 }}>
@@ -573,10 +776,17 @@ export default function NewAdPage() {
               <div style={{ display: "flex", gap: 12, justifyContent: "space-between" }}>
                 <Btn secondary onClick={() => setStep(1)}>← Back</Btn>
                 <Btn onClick={() => {
-                  if (title.trim().length < 3) { setError("Title must be at least 3 characters."); return; }
+                  if (isTemplate) {
+                    const check = saleTemplateSchema.safeParse(sale);
+                    if (!check.success) { setError(check.error.issues[0]?.message ?? "Please fill in the template."); return; }
+                    if (uploading) { setError("Your photo is still uploading. One moment."); return; }
+                    if (!uploadedImageUrl) { setError("Please add a photo for your ad."); return; }
+                    // The template's photo is added here, so it skips the separate image step
+                    setError(""); setStep(4); return;
+                  } else if (title.trim().length < 3) { setError("Title must be at least 3 characters."); return; }
                   setError(""); setStep(3);
                 }}>
-                  Next: Upload Image →
+                  {isTemplate ? "Next: Review →" : "Next: Upload Image →"}
                 </Btn>
               </div>
             </div>
@@ -585,9 +795,11 @@ export default function NewAdPage() {
           {/* ── STEP 3: Image ── */}
           {step === 3 && (
             <div>
-              <h2 style={{ fontFamily: "Georgia,serif", fontSize: 20, color: ACCENT, marginBottom: 4 }}>Upload your image</h2>
+              <h2 style={{ fontFamily: "Georgia,serif", fontSize: 20, color: ACCENT, marginBottom: 4 }}>{isTemplate ? "Add a photo" : "Upload your image"}</h2>
               <p style={{ fontSize: 13, color: "#4A6B82", marginBottom: 24 }}>
-                JPEG, PNG or WebP · Max 10 MB · Recommended: 1920×1080px (16:9)
+                {isTemplate
+                  ? "A photo of your product, food or shop. It fills half the screen, so a clear, bright photo works best. JPEG, PNG or WebP · Max 10 MB"
+                  : "JPEG, PNG or WebP · Max 10 MB · Recommended: 1920×1080px (16:9)"}
               </p>
 
               {/* Dropzone */}
@@ -658,64 +870,12 @@ export default function NewAdPage() {
 
               {/* Summary */}
               <div style={{ background: "#F4F7FB", borderRadius: 12, padding: 20, marginBottom: 24 }}>
-                {uploadedImageUrl && (() => {
-                  const hasSplit = !!(contactPhone || contactAddress || contactWebsite);
-                  const titleLen = title.length;
-                  const titleSize = titleLen <= 20 ? "clamp(18px, 3vw, 40px)" : titleLen <= 40 ? "clamp(14px, 2.2vw, 30px)" : "clamp(12px, 1.6vw, 22px)";
-                  return (
-                    <div style={{ position: "relative", marginBottom: 16, background: "#0A1A2E", borderRadius: 8, overflow: "hidden" }}>
-                      {hasSplit ? (
-                        /* Split layout preview */
-                        <div style={{ display: "flex", height: 240 }}>
-                          <div style={{ width: "42%", background: "#0A1A2E", display: "flex", flexDirection: "column", justifyContent: "center", padding: "16px 20px", position: "relative", flexShrink: 0, borderRight: "1px solid rgba(74,144,196,0.2)" }}>
-                            <div style={{ fontFamily: "Georgia,serif", fontSize: titleSize, fontWeight: 700, color: "#fff", lineHeight: 1.2, marginBottom: 8 }}>{title}</div>
-                            {description && <div style={{ fontSize: "clamp(10px, 1vw, 13px)", color: "rgba(255,255,255,0.6)", lineHeight: 1.5, marginBottom: 10 }}>{description}</div>}
-                            {(showPhone || showAddress || showWebsite) && (
-                              <>
-                                <div style={{ width: 28, height: 2, background: "#E8563A", borderRadius: 1, marginBottom: 8 }} />
-                                <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 8 }}>Contact Info</div>
-                              </>
-                            )}
-                            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                              {showPhone && contactPhone && <div style={{ fontSize: "clamp(10px, 1vw, 13px)", color: "#fff", fontWeight: 600 }}>📞 {contactPhone}</div>}
-                              {showAddress && contactAddress && <div style={{ fontSize: "clamp(10px, 1vw, 13px)", color: "#fff", fontWeight: 600 }}>📍 {contactAddress}</div>}
-                              {showWebsite && contactWebsite && <div style={{ fontSize: "clamp(10px, 1vw, 13px)", color: "#4A90C4", fontWeight: 600 }}>🌐 {contactWebsite}</div>}
-                            </div>
-                          </div>
-                          <div style={{ flex: 1, overflow: "hidden" }}>
-                            <img src={uploadedImageUrl} alt={title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                          </div>
-                        </div>
-                      ) : (
-                        /* Full-screen preview */
-                        <>
-                          <img src={uploadedImageUrl} alt={title} style={{ width: "100%", maxHeight: 240, objectFit: "contain", display: "block" }} />
-                          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,26,46,0.75) 0%, transparent 30%)", pointerEvents: "none" }} />
-                          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "10px 14px", display: "flex", justifyContent: "flex-end" }}>
-                            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.6)" }}>Ad #Preview</span>
-                          </div>
-                        </>
-                      )}
-                      {/* Preview button */}
-                      <button
-                        onClick={() => setShowPreview(true)}
-                        style={{
-                          position: "absolute", top: 10, right: 10,
-                          background: "rgba(10,26,46,0.75)", color: "#fff",
-                          border: "none", borderRadius: 6, padding: "6px 12px",
-                          fontSize: 12, fontWeight: 600, cursor: "pointer",
-                          backdropFilter: "blur(4px)", display: "flex", alignItems: "center", gap: 6,
-                        }}
-                      >
-                        <span>⛶</span> Preview on display screen
-                      </button>
-                    </div>
-                  );
-                })()}
+                {/* Phones: the screen preview sits here; on desktop it's pinned in the right column */}
+                {uploadedImageUrl && <div className="lg:hidden" style={{ marginBottom: 16 }}>{screenPreview()}</div>}
                 <div style={{ display: "grid", gap: 10, fontSize: 14 }}>
                   <div><span style={{ color: "#4A6B82" }}>Location:</span> <strong>{selectedLocation?.storeName}</strong>{selectedLocation?.storeNumber && <StoreNumber value={selectedLocation.storeNumber} />}</div>
-                  <div><span style={{ color: "#4A6B82" }}>Title:</span> <strong>{title}</strong></div>
-                  {description && <div><span style={{ color: "#4A6B82" }}>Description:</span> {description}</div>}
+                  <div><span style={{ color: "#4A6B82" }}>Title:</span> <strong>{adTitle}</strong>{isTemplate && <span style={{ color: "#4A6B82" }}> · Sale template</span>}</div>
+                  {!isTemplate && description && <div><span style={{ color: "#4A6B82" }}>Description:</span> {description}</div>}
                   <div><span style={{ color: "#4A6B82" }}>Duration:</span> 4 weeks (28 days)</div>
                   <div><span style={{ color: "#4A6B82" }}>Price:</span> <strong style={{ color: RED }}>{selectedLocation ? `$${(selectedLocation.pricePerRunCents / 100).toFixed(2)}` : ""}</strong> <span style={{ color: "#4A6B82" }}>/ 4 weeks</span></div>
                   {(showPhone || showAddress || showWebsite) && (
@@ -758,7 +918,7 @@ export default function NewAdPage() {
               )}
 
               <div style={{ display: "flex", gap: 12, justifyContent: "space-between" }}>
-                <Btn secondary onClick={() => setStep(3)}>← Back</Btn>
+                <Btn secondary onClick={() => setStep(isTemplate ? 2 : 3)}>← Back</Btn>
                 <Btn onClick={submitAd} disabled={loading || (!asTest && !localConfirmed)}>
                   {loading ? "Submitting…" : asTest ? "Post test ad →" : "Submit & Pay →"}
                 </Btn>
@@ -766,10 +926,31 @@ export default function NewAdPage() {
             </div>
           )}
         </div>
+
+        {/* Desktop: the screen preview stays in view while the form scrolls */}
+        <aside className="hidden lg:block sticky top-6">
+          <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #D8E4EE", padding: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <div style={{ fontFamily: "Georgia,serif", fontSize: 16, fontWeight: 700, color: ACCENT }}>Screen preview</div>
+              {isTemplate ? (
+                <button type="button" onClick={() => setReplay(r => r + 1)} style={{ fontSize: 12, fontWeight: 600, color: "#4A90C4", background: "none", border: "none", cursor: "pointer" }}>↻ Replay</button>
+              ) : uploadedImageUrl ? (
+                <button type="button" onClick={() => setShowPreview(true)} style={{ fontSize: 12, fontWeight: 600, color: "#4A90C4", background: "none", border: "none", cursor: "pointer" }}>⛶ Full screen</button>
+              ) : null}
+            </div>
+            {screenPreview({ showFullscreen: false })}
+            <div style={{ fontSize: 12, color: "#4A6B82", marginTop: 10 }}>
+              {selectedLocation
+                ? <>Showing at <strong style={{ color: ACCENT }}>{selectedLocation.storeName}</strong> · {formatPrice(selectedLocation.pricePerRunCents)} / 4 weeks</>
+                : "Choose a store to see where your ad will run."}
+            </div>
+          </div>
+        </aside>
+        </div>
       </div>
 
       {/* ── Display screen preview modal ── */}
-      {showPreview && uploadedImageUrl && (() => {
+      {showPreview && !isTemplate && uploadedImageUrl && (() => {
         const hasSplit = !!(contactPhone || contactAddress || contactWebsite);
         const titleLen = title.length;
         const titleSize = titleLen <= 20 ? "clamp(28px, 4vw, 58px)" : titleLen <= 40 ? "clamp(20px, 2.8vw, 42px)" : "clamp(15px, 2vw, 30px)";

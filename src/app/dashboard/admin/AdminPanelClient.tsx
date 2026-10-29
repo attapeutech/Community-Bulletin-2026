@@ -793,7 +793,8 @@ export default function AdminPanelClient({
             value="ads"
             className="rounded-lg text-[13px] px-[18px] py-2 data-[state=active]:bg-[#1A3A5C] data-[state=active]:text-white data-[state=active]:shadow-none data-[state=inactive]:text-[#4A6B82] data-[state=inactive]:bg-transparent"
           >
-            All Ads ({stats.totalAds})
+            {/* From the loaded list, so it updates after deletes and refreshes */}
+            All Ads ({ads.length})
           </TabsTrigger>
         </TabsList>
 
@@ -802,7 +803,7 @@ export default function AdminPanelClient({
           {/* Stat cards */}
           <div className="flex flex-wrap gap-4 mb-8">
             <StatCard label="Total Revenue" value={`$${(stats.totalRevenueCents / 100).toFixed(2)}`} sub="from paid ads" accentClass="text-green-800" />
-            <StatCard label="Total Ads" value={stats.totalAds} onClick={() => { setStatusFilter("all"); setAdSearch(""); setActiveTab("ads"); }} />
+            <StatCard label="Total Ads" value={ads.length} onClick={() => { setStatusFilter("all"); setAdSearch(""); setActiveTab("ads"); }} />
             <StatCard label="Pending Review" value={stats.pendingAds} accentClass={stats.pendingAds > 0 ? "text-yellow-800" : "text-[#1A3A5C]"} onClick={() => { setStatusFilter("pending"); setAdSearch(""); setActiveTab("ads"); }} />
             <StatCard label="Approved" value={stats.approvedAds} accentClass="text-green-800" onClick={() => { setStatusFilter("approved"); setAdSearch(""); setActiveTab("ads"); }} />
             <StatCard label="Denied" value={stats.deniedAds} accentClass="text-red-800" onClick={() => { setStatusFilter("denied"); setAdSearch(""); setActiveTab("ads"); }} />

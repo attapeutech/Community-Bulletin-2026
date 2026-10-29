@@ -62,6 +62,7 @@ export default async function UserDashboard() {
       saveCount: sql<number>`(select count(*)::int from ${savedAds} where ${savedAds.adId} = ${ads.id})`,
       showWebsite: ads.showWebsite,
       contactWebsite: ads.contactWebsite,
+      isTest: ads.isTest,
       location: {
         storeName: locations.storeName,
         slug: locations.slug,
@@ -210,8 +211,7 @@ export default async function UserDashboard() {
                       >
                         {ad.title}
                       </Link>
-                      <Badge {...adStatus} />
-                      <Badge {...payStatus} />
+                      {ad.isTest ? <Badge bg="#FEF3C7" color="#92400E" label="Test ad" /> : (<><Badge {...adStatus} /><Badge {...payStatus} /></>)}
                     </div>
                     <div style={{ fontSize: 12, color: "var(--cb-ink-2)" }}>
                       {ad.location.storeName} · {ad.location.addressLine1}, {ad.location.cityName}, {ad.location.stateCode} {ad.location.postalCode}

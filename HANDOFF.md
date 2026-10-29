@@ -33,6 +33,13 @@
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
 
+## Test ads (Phase 2, step 1, 2026-10-29)
+
+- **Admins** can tick "Post as a test ad" on Post a New Ad's Review step: no payment or review; the ad is saved `approved` + `unpaid` with `is_test = true`, and the browser opens the store's preview screen on it.
+- **Where they show:** only on display previews (`/api/display/<slug>?preview=1`, which the display page requests when the URL has `?preview=`), with an amber "TEST AD" tag. Because they stay unpaid, every paid-ads query ignores them (store TVs, Live Ads, public ad page, earnings); counts that only check `approved` exclude `is_test` explicitly (admin stats, Admin Panel, store owner counts, public store page, Sales live count, "ends soon" notices); the cron expires them without an "expired" notice.
+- **My Ads** labels them "Test ad"; the ad page links to the preview screen and has **Delete test ad** (admin `DELETE /api/ads/[id]`).
+- **Next (step 2):** the Sale / Offer template (`ads.template = "sale"`, fields in `ads.template_data`), drawn and animated with GSAP on both designs, with an editor and live preview in Post a New Ad.
+
 ## Display screens: new "Clean channel" design (Phase 1, 2026-10-29)
 
 - **Preview first, then switch:** store TVs keep the current design until an admin clicks **Switch all screens to the new design** on Admin Panel → Overview → **Screen design** (setting `display_design` in `app_settings`; switching refreshes every screen within seconds, and switching back works the same way).
@@ -101,12 +108,13 @@
 - Production had been built with `db:push`, so Drizzle's migration history was empty. All migrations up to `0004_ad_analytics` were recorded as applied in Neon's `drizzle.__drizzle_migrations`, so `npm run db:migrate` works normally from here.
 - **Run migrations against the direct (non-pooled) Neon host:** remove `-pooler` from the hostname. Restores and DDL can fail through the pooler.
 - `0003` and `0004` have hand-written timestamps (`when: 1750…`) that are older than `0002`. They are already applied, so this is harmless, but generate future migrations with `npm run db:generate` rather than writing them by hand.
-- **Applied to Neon through `0016`** (17 rows in `drizzle.__drizzle_migrations`):
+- **Applied to Neon through `0017`** (18 rows in `drizzle.__drizzle_migrations`):
   - `0012_location_traffic`: `locations.daily_customers` and `traffic_updated_at`
   - `0013_screen_devices`
   - `0014_direct_deposits`
   - `0015_sales_leads` (leads, lead_notes, `lead_stage` enum, `lead_follow_up` notification type)
   - `0016_lead_locations` (`leads.location_id`)
+  - `0017_ad_templates_and_tests` (`ads.is_test`, `ads.template`, `ads.template_data`), applied 2026-10-29
 
 ## Store owner earnings and payouts (Phase 1, added 2026-10-23)
 

@@ -15,6 +15,7 @@ export async function GET() {
         defaultPhone:   users.defaultPhone,
         defaultAddress: users.defaultAddress,
         defaultWebsite: users.defaultWebsite,
+        role: users.role,
       })
       .from(users)
       .where(eq(users.id, userId))
@@ -26,6 +27,7 @@ export async function GET() {
         phone:   user?.defaultPhone   ?? null,
         address: user?.defaultAddress ?? null,
         website: user?.defaultWebsite ?? null,
+        role: user?.role ?? "user",
       },
     });
   } catch {

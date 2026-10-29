@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, timestamp, pgEnum, boolean } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, integer, timestamp, pgEnum, boolean, jsonb } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { users } from "./users";
 import { locations } from "./locations";
@@ -51,6 +51,11 @@ export const ads = pgTable("ads", {
   // Analytics counters
   viewCount:         integer("view_count").default(0).notNull(),
   websiteClickCount: integer("website_click_count").default(0).notNull(),
+  // Admin test ad: no payment or review, shown only on display previews (?preview=), never on store screens
+  isTest: boolean("is_test").default(false).notNull(),
+  // Built-in template ("sale", …) drawn by the screen from templateData; null = the advertiser's own image
+  template: text("template"),
+  templateData: jsonb("template_data"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

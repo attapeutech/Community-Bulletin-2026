@@ -20,7 +20,7 @@ export async function GET() {
     ] = await Promise.all([
       db.select({ count: count() }).from(ads),
       db.select({ count: count() }).from(ads).where(eq(ads.status, "pending")),
-      db.select({ count: count() }).from(ads).where(eq(ads.status, "approved")),
+      db.select({ count: count() }).from(ads).where(and(eq(ads.status, "approved"), eq(ads.isTest, false))),
       db.select({ count: count() }).from(ads).where(eq(ads.status, "denied")),
       db.select({ count: count() }).from(users),
       db.select({ count: count() }).from(locations),

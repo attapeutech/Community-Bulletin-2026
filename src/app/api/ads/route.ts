@@ -20,6 +20,8 @@ const createAdSchema = z.object({
   showPhone:   z.boolean().optional(),
   showAddress: z.boolean().optional(),
   showWebsite: z.boolean().optional(),
+  // Admin only: a test ad skips payment and review and shows only on display previews (?preview=)
+  isTest: z.boolean().optional(),
 });
 
 // POST /api/ads — create a new ad (status=pending, paymentStatus=unpaid)
@@ -30,6 +32,9 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const data = createAdSchema.parse(body);
+    if (data.isTest && (session.user as any).role !== "admin") {
+      return NextResponse.json({ success: false, error: "Only admins can post test ads" }, { status: 403 });
+    }
 
     // Verify location exists and is active
     const [location] = await db
@@ -55,8 +60,13 @@ export async function POST(req: NextRequest) {
         description: data.description ?? null,
         imageUrl: data.imageUrl,
         imageKey: data.imageKey,
-        status: "pending",
+        // Test ads are approved straight away but stay unpaid, so every "paid ads" query (store screens,
+        // Live Ads, the public ad page, earnings) ignores them; only display previews include them
+        status: data.isTest ? "approved" : "pending",
         paymentStatus: "unpaid",
+        isTest: data.isTest ?? false,
+        reviewedBy: data.isTest ? userId : null,
+        reviewedAt: data.isTest ? now : null,
         startedAt: now,
         endedAt: addDays(now, AD_DURATION_DAYS),
         displayOrder: 0,
@@ -79,7 +89,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Notify dashboard so admin sees new submission instantly (when socket is up)
-    pushDashboardUpdate({ adId: ad.id, status: "pending", locationSlug: location.slug }).catch(console.error);
+    if (!data.isTest) pushDashboardUpdate({ adId: ad.id, status: "pending", locationSlug: location.slug }).catch(console.error);
 
     return NextResponse.json({ success: true, data: ad }, { status: 201 });
   } catch (error: any) {

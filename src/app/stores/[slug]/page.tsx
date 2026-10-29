@@ -50,7 +50,7 @@ export default async function PublicStorePage({
   const [adCountRow] = await db
     .select({ total: count() })
     .from(ads)
-    .where(and(eq(ads.locationId, loc.id), eq(ads.status, "approved")));
+    .where(and(eq(ads.locationId, loc.id), eq(ads.status, "approved"), eq(ads.isTest, false)));
 
   const activeAdCount = adCountRow?.total ?? 0;
 

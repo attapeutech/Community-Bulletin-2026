@@ -129,7 +129,8 @@ export function SaleTemplate({ data, photoUrl, qrValue, address, phone, website,
                 </span>
               )}
             </div>
-            <h2 data-t="headline" style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: 96, lineHeight: 1.05, margin: 0, overflowWrap: "break-word" }}>
+            {/* Keyed by its text: the word animation splits this element, so a changed headline gets a fresh one */}
+            <h2 key={data.headline} data-t="headline" style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: 96, lineHeight: 1.05, margin: 0, overflowWrap: "break-word" }}>
               {data.headline}
             </h2>
             <div data-t="bar" style={{ height: 10, width: 220, background: "#E8563A", borderRadius: 5, margin: "26px 0 30px", transformOrigin: "left center" }} />

@@ -1,4 +1,4 @@
-# Handoff: 2026-10-22 (updated 2026-10-28)
+# Handoff: 2026-10-22 (updated 2026-10-29)
 
 ## Where things stand
 
@@ -33,6 +33,16 @@
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
 
+## 2026-10-29 summary
+
+- **The new "Clean channel" screen design is live** on every store screen (switched on 2026-10-29 at about 2:20 PM in Admin Panel → Screen design). Fast Eddies has no paid ads yet, so its TV shows the "Advertise here" slide with the new brand bar; the coral sweep starts once a second slide (a real ad) exists. Switch back on the same card if anything looks wrong.
+- **Phase 2 shipped:** admin test ads (preview-only; migration `0017`) and the **Sale / Offer template** (sections below), plus Post a New Ad's two-column desktop layout with a pinned screen preview.
+- **Brand bar:** slim (~8% of the screen), with the full date and time and "Powered by ADSEZ.com" centred.
+- **Admin Panel:** "All Ads (N)" and Total Ads count the loaded list, so they update after deletes (PR `fix/admin-ads-count`).
+- **Remote access:** to reach the store's mini PC from a laptop, install a remote desktop host on it once (e.g. Chrome Remote Desktop: remotedesktop.google.com/access, a dedicated Google account, a 6+ digit PIN, Windows set to never sleep). Anything done remotely shows on the store TV.
+- **Sales:** the salesperson reports a deal with **Pada Express**; as of 2026-10-29 2:15 PM they had no account, lead, ad or payment yet.
+- **Test data:** the two test ads made today were deleted; no ads are in the database.
+
 ## Sale / Offer template (Phase 2, step 2, 2026-10-29)
 
 - **What it is:** a built-in ad template the screen draws itself (`ads.template = "sale"`, fields in `ads.template_data`; photo in `ads.image_url`). Fields and limits: business name 40, offer big 8 ("20%", "$5", "BOGO"), offer small 10 ("OFF"), headline 40, details 80, ends 20 (`src/lib/ad-templates.ts`, checked by `POST /api/ads`). The ad's title elsewhere is built from them ("20% OFF any large pizza"); details become the description.
@@ -49,10 +59,10 @@
 
 ## Display screens: new "Clean channel" design (Phase 1, 2026-10-29)
 
-- **Preview first, then switch:** store TVs keep the current design until an admin clicks **Switch all screens to the new design** on Admin Panel → Overview → **Screen design** (setting `display_design` in `app_settings`; switching refreshes every screen within seconds, and switching back works the same way).
+- **Switch:** Admin Panel → Overview → **Screen design** (setting `display_design` in `app_settings`; switching refreshes every screen within seconds, and switching back works the same way). **On since 2026-10-29**: store TVs show the new design.
 - **Preview links:** `/display/<slug>?preview=brand` (new) and `?preview=classic` (current) show either design with the store's real ads, with an orange "Preview" tag. Previews don't count ad views and don't check in on Admin → Screens. Add `&fps` for a frame-rate meter (`FpsMeter`).
 - **New design:** `BrandFrame` (slim bottom brand bar, about 8% of the screen: CB mark, Community Bulletin, "Ads from your neighbors · at <store>", "Powered by ADSEZ.com" centred, "Advertise here · $X / 4 weeks", time and full date) replaces the header and footer bars; `BrandWipe` (GSAP 3.13, the coral sweep + CB flip) replaces Embla's glide, every 8 s. The ads themselves are unchanged (their CSS animations still play). Screens set to reduce motion skip the sweep.
-- **Not yet:** the speed test on the store's mini PC (`/display/<slug>?preview=brand&fps`), then the switch. Phase 2 = templates (Sale / Offer first) drawn and animated with GSAP, plus admin-only test ads visible only in preview.
+- **Not yet:** the speed test on the store's mini PC (`/display/<slug>?preview=brand&fps`), best once ads are rotating. Phase 2 (test ads, Sale template) is done; step 3 = more templates.
 
 ## 2026-10-28 (end of day): Post a New Ad, brand template mockup
 
@@ -321,8 +331,9 @@
   4. **1099 tax forms:** Stripe opens Connect → Tax forms only once there's a US connected account. After the first owner onboards and before January 2027, turn on 1099 reporting and pick the form type (MISC vs NEC: ask the accountant).
 - [ ] **Brand template (display screens):**
   1. Test the speed on the store's mini PC with the real new design: open `communitybulletin.com/display/<store slug>?preview=brand&fps` for a minute (in person or by remote desktop), then reopen the store's display page. The mockup (`/demo/brand-template.html?kiosk&fps`) tests the heavier Phase 2 template animation. Meanwhile: Chrome DevTools → Performance → CPU 4× / 6× slowdown with `?fps`. Smooth = about 60 fps.
-  2. Look chosen: **Clean channel** (2026-10-29). Phase 1 (brand frame + transition) is built behind the Screen design switch; flip it after the speed test.
-  3. Build it into the real screens in phases: (1) brand frame + signature transition on all ads; (2) three templates (Sale / Offer, Grand opening, Services) with a template picker and live preview in Post a New Ad; (3) more templates and seasonal themes, plus comparing QR scans of template ads vs flyers. Flyer uploads stay, shown inside the frame.
+  2. Done: look chosen (**Clean channel**), Phase 1 (brand frame + transition) live on all screens since 2026-10-29, Phase 2 steps 1–2 (test ads, Sale / Offer template) live.
+  3. Next: **Grand opening** and **Services** templates (same pattern as `SaleTemplate` + `src/lib/ad-templates.ts`, then a template picker in Post a New Ad); show the template on the ad's page under My Ads (it still shows the photo); later seasonal themes and comparing QR scans of template ads vs flyers.
+- [ ] **Pada Express:** have the salesperson add them in Sales (Advertisers tab, store Fast Eddies) and, once they sign up, link their account on the lead. Their ad will arrive in Review Ads after payment; with the Sale template it shows animated there.
 - [ ] **Distance check (local-business rule, step 2):** ask for a business ZIP in Ad Details, load free US Census ZIP centroids, warn before payment when the business is farther than `LOCAL_AD_RADIUS_MILES` from the store, and show "~N mi from store" in Review Ads. Later: a per-store radius and a store list sorted by distance.
 - [ ] Optional: hide the clock on display screens while the tap/hover controls are showing (they overlap on desktop).
 

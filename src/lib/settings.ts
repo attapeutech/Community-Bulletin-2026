@@ -35,3 +35,28 @@ export async function saveAdvertiseSlideSettings(value: AdvertiseSlideSettings) 
     .values({ key: KEY, value, updatedAt: new Date() })
     .onConflictDoUpdate({ target: appSettings.key, set: { value, updatedAt: new Date() } });
 }
+
+// Display screen design: "classic" (header + footer, sliding carousel) or "brand"
+// (Clean channel: brand frame + coral transition). Any screen can preview the other with
+// ?preview=brand / ?preview=classic before an admin switches every screen.
+export type DisplayDesign = "classic" | "brand";
+
+const DESIGN_KEY = "display_design";
+
+export async function getDisplayDesign(): Promise<DisplayDesign> {
+  try {
+    const [row] = await db.select({ value: appSettings.value }).from(appSettings).where(eq(appSettings.key, DESIGN_KEY)).limit(1);
+    return (row?.value as { design?: DisplayDesign } | undefined)?.design === "brand" ? "brand" : "classic";
+  } catch (err) {
+    console.error("[settings] getDisplayDesign failed", err);
+    return "classic";
+  }
+}
+
+export async function saveDisplayDesign(design: DisplayDesign) {
+  const value = { design };
+  await db
+    .insert(appSettings)
+    .values({ key: DESIGN_KEY, value, updatedAt: new Date() })
+    .onConflictDoUpdate({ target: appSettings.key, set: { value, updatedAt: new Date() } });
+}

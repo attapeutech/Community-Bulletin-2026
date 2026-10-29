@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { ads, locations, cities, states, postalCodes } from "@/lib/db/schema";
 import { eq, and, or, lte, gte, asc, min } from "drizzle-orm";
-import { getAdvertiseSlideSettings } from "@/lib/settings";
+import { getAdvertiseSlideSettings, getDisplayDesign } from "@/lib/settings";
 
 // One value per running server process (shared across route bundles)
 const SERVER_VERSION: string = ((globalThis as any).__cbServerVersion ??= String(Date.now()));
@@ -58,6 +58,7 @@ async function allLocationsResponse(now: Date) {
       },
       ads: liveAds,
       advertiseSlide: await getAdvertiseSlideSettings(),
+      design: await getDisplayDesign(),
       version: SERVER_VERSION,
     },
   });
@@ -143,6 +144,7 @@ export async function GET(
         },
         ads: activeAds,
         advertiseSlide: await getAdvertiseSlideSettings(),
+        design: await getDisplayDesign(),
         // Changes on every deploy/restart; screens reload themselves when it changes
         version: SERVER_VERSION,
       },

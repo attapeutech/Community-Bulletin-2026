@@ -87,6 +87,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
       live: sql<number>`(
         select count(*)::int from ${ads}
         where ${ads.locationId} = ${locations.id} and ${ads.status} = 'approved'
+          and ${ads.paymentStatus} = 'paid' and ${ads.isTest} = false
           and ${ads.startedAt} <= ${now} and ${ads.endedAt} > ${now}
       )`,
       pendingReview: sql<number>`(

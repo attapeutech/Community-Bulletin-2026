@@ -6,6 +6,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import AdImagePreview from "./AdImagePreview";
 import AdActions from "./AdActions";
+import DeleteTestAdButton from "./DeleteTestAdButton";
 import { ShareButton } from "@/components/ui/ShareButton";
 
 const STATUS_COLORS: Record<string, { bg: string; color: string; label: string }> = {
@@ -116,7 +117,7 @@ export default async function AdDetailPage({
     : basePayStatus;
 
   const isOwner = row.user.id === userId;
-  const needsPayment = ad.paymentStatus === "unpaid";
+  const needsPayment = ad.paymentStatus === "unpaid" && !ad.isTest;
 
   return (
     <div style={{ maxWidth: 720 }}>
@@ -133,9 +134,13 @@ export default async function AdDetailPage({
             {ad.title}
           </h1>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <Badge {...adStatus} />
-            <Badge {...payStatus} />
+            {ad.isTest ? <Badge bg="#FEF3C7" color="#92400E" label="Test ad" /> : (<><Badge {...adStatus} /><Badge {...payStatus} /></>)}
           </div>
+          {ad.isTest && (
+            <div style={{ fontSize: 13, color: "var(--cb-ink-2)", marginTop: 8 }}>
+              Shows only on preview screens, never on the store TV, and doesn&apos;t count anywhere.
+            </div>
+          )}
         </div>
 
         {isOwner && needsPayment && (
@@ -157,7 +162,7 @@ export default async function AdDetailPage({
         )}
         {ad.status === "approved" && (
           <Link
-            href={`/display/${location.slug}?ad=${ad.id}`}
+            href={ad.isTest ? `/display/${location.slug}?preview=brand&ad=${ad.id}` : `/display/${location.slug}?ad=${ad.id}`}
             target="_blank"
             style={{
               display: "inline-block",
@@ -170,20 +175,20 @@ export default async function AdDetailPage({
               fontWeight: 600,
             }}
           >
-            View Live Display ↗
+            {ad.isTest ? "View on preview screen ↗" : "View Live Display ↗"}
           </Link>
         )}
         {/* Share the ad's public page while it's live */}
         {ad.status === "approved" && ad.paymentStatus === "paid" && (
           <ShareButton adId={ad.id} title={ad.title} text={`At ${location.storeName}`} />
         )}
-        <AdActions
+        {ad.isTest ? (role === "admin" && <DeleteTestAdButton adId={ad.id} />) : <AdActions
           adId={ad.id}
           status={ad.status}
           isOwner={isOwner}
           isAdmin={role === "admin"}
           renewPriceCents={location.pricePerRunCents}
-        />
+        />}
       </div>
 
       {/* Ad image — display screen style with preview modal */}

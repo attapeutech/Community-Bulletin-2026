@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
 
   // Find all approved ads whose run window has ended
   const expired = await db
-    .select({ id: ads.id, locationId: ads.locationId })
+    .select({ id: ads.id, locationId: ads.locationId, isTest: ads.isTest })
     .from(ads)
     .where(and(eq(ads.status, "approved"), lt(ads.endedAt, now)));
 
@@ -72,7 +72,8 @@ export async function POST(req: NextRequest) {
     .set({ status: "expired", updatedAt: now })
     .where(inArray(ads.id, adIds));
 
-  await notifyAdsExpired(adIds);
+  // Test ads expire quietly
+  await notifyAdsExpired(expired.filter(a => !a.isTest).map(a => a.id));
 
   // Push display refresh for each affected location
   const affectedLocations = await db

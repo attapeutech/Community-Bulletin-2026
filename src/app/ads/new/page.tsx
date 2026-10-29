@@ -215,6 +215,8 @@ export default function NewAdPage() {
   const [allLocations, setAllLocations] = useState<Location[] | null>(null); // every active store, shown before searching
   const [locSearch, setLocSearch] = useState("");
   const [localConfirmed, setLocalConfirmed] = useState(false); // "my business is near this store", required before paying
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [asTest, setAsTest] = useState(false); // admin: post as a test ad (no payment, preview screens only)
   const [locLoading, setLocLoading] = useState(false);
   const [locSearched, setLocSearched] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
@@ -239,6 +241,7 @@ export default function NewAdPage() {
           if (j.data.phone)   setContactPhone(j.data.phone);
           if (j.data.address) setContactAddress(j.data.address);
           if (j.data.website) setContactWebsite(j.data.website);
+          setIsAdmin(j.data.role === "admin");
         }
       })
       .catch(() => {});
@@ -372,11 +375,15 @@ export default function NewAdPage() {
           showPhone,
           showAddress,
           showWebsite,
+          isTest: asTest || undefined,
         }),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
-      router.push(`/ads/${json.data.id}/payment`);
+      // A test ad skips payment: open the store's preview screen on it
+      router.push(asTest
+        ? `/display/${selectedLocation.slug}?preview=brand&ad=${json.data.id}`
+        : `/ads/${json.data.id}/payment`);
     } catch (e: any) {
       setError(e.message || "Failed to submit ad");
       setLoading(false);
@@ -722,6 +729,21 @@ export default function NewAdPage() {
                 </div>
               </div>
 
+              {isAdmin && (
+                <label style={{ display: "flex", gap: 10, alignItems: "flex-start", background: "#F0F7FF", border: "1px solid #C9DFF2", borderRadius: 8, padding: "12px 14px", marginBottom: 12, fontSize: 13, color: "#1A3A5C", cursor: "pointer", lineHeight: 1.5 }}>
+                  <input
+                    type="checkbox"
+                    checked={asTest}
+                    onChange={e => setAsTest(e.target.checked)}
+                    style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0, accentColor: "#1A3A5C" }}
+                  />
+                  <span>
+                    <strong>Post as a test ad</strong> (admins only): no payment or review. It shows only on preview screens (<code>?preview=</code>), never on the store TV, and doesn&apos;t count anywhere.
+                  </span>
+                </label>
+              )}
+
+              {!asTest && (
               <label style={{ display: "flex", gap: 10, alignItems: "flex-start", background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 8, padding: "12px 14px", marginBottom: 20, fontSize: 13, color: "#1A3A5C", cursor: "pointer", lineHeight: 1.5 }}>
                 <input
                   type="checkbox"
@@ -733,11 +755,12 @@ export default function NewAdPage() {
                   My business is within about {LOCAL_AD_RADIUS_MILES} miles of <strong>{selectedLocation?.storeName ?? "this store"}</strong>, or serves customers in its area. I understand ads for businesses farther away may be declined and refunded.
                 </span>
               </label>
+              )}
 
               <div style={{ display: "flex", gap: 12, justifyContent: "space-between" }}>
                 <Btn secondary onClick={() => setStep(3)}>← Back</Btn>
-                <Btn onClick={submitAd} disabled={loading || !localConfirmed}>
-                  {loading ? "Submitting…" : "Submit & Pay →"}
+                <Btn onClick={submitAd} disabled={loading || (!asTest && !localConfirmed)}>
+                  {loading ? "Submitting…" : asTest ? "Post test ad →" : "Submit & Pay →"}
                 </Btn>
               </div>
             </div>

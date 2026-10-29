@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import { ads, users, locations, payments } from "@/lib/db/schema";
-import { eq, desc, count, sum } from "drizzle-orm";
+import { eq, and, desc, count, sum } from "drizzle-orm";
 import AdminPanelClient from "./AdminPanelClient";
 
 export default async function AdminDashboard() {
@@ -22,7 +22,7 @@ export default async function AdminDashboard() {
   ] = await Promise.all([
     db.select({ count: count() }).from(ads),
     db.select({ count: count() }).from(ads).where(eq(ads.status, "pending")),
-    db.select({ count: count() }).from(ads).where(eq(ads.status, "approved")),
+    db.select({ count: count() }).from(ads).where(and(eq(ads.status, "approved"), eq(ads.isTest, false))),
     db.select({ count: count() }).from(ads).where(eq(ads.status, "denied")),
     db.select({ count: count() }).from(users),
     db.select({ count: count() }).from(locations),

@@ -101,7 +101,7 @@ export default async function StoreOwnerPage() {
   const adCounts = await db
     .select({ locationId: ads.locationId, total: count() })
     .from(ads)
-    .where(eq(ads.status, "approved"))
+    .where(and(eq(ads.status, "approved"), eq(ads.isTest, false)))
     .groupBy(ads.locationId);
   const adCountMap = Object.fromEntries(adCounts.map((r) => [r.locationId, r.total]));
 

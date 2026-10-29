@@ -27,6 +27,7 @@ type Ad = {
   showPhone:   boolean;
   showAddress: boolean;
   showWebsite: boolean;
+  isTest?: boolean;   // admin test ad: only on ?preview= screens
 };
 
 type AdvertiseSlideSettings = {
@@ -201,7 +202,9 @@ export default function DisplayPage() {
   const versionRef = useRef<string | null>(null);
   const fetchAds = useCallback(async () => {
     try {
-      const res = await fetch(`/api/display/${slug}`, { cache: "no-store" });
+      // Previews also load admin test ads
+      const previewing = new URLSearchParams(window.location.search).has("preview");
+      const res = await fetch(`/api/display/${slug}${previewing ? "?preview=1" : ""}`, { cache: "no-store" });
       if (res.status === 404) {
         const j = await res.json().catch(() => null);
         setError(j?.error || "Location not found");
@@ -459,6 +462,7 @@ export default function DisplayPage() {
                 key={ad.id}
                 style={{ flex: "0 0 100%", minWidth: 0, height: "100%", position: "relative", display: "flex", flexDirection: "column" }}
               >
+                {ad.isTest && <TestAdTag />}
                 {hasSplit ? (
                   <SplitAdSlide ad={ad} idx={idx} total={slides.length} portrait={portrait} short={short} zooming={idx === selectedIndex} motion={motionFor(idx)} />
                 ) : (
@@ -539,6 +543,20 @@ export default function DisplayPage() {
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
+
+// Admin test ads (only ever loaded on preview screens) carry this tag, under the Preview tag
+// (top left, clear of the tap/hover controls on the right)
+function TestAdTag() {
+  return (
+    <div style={{
+      position: "absolute", top: 48, left: 12, zIndex: 41, pointerEvents: "none",
+      background: "#F59E0B", color: "#1A1205", fontSize: 12, fontWeight: 800, letterSpacing: "0.08em",
+      padding: "5px 12px", borderRadius: 999,
+    }}>
+      TEST AD
+    </div>
+  );
+}
 
 // Shown only on ?preview= screens, so nobody mistakes a preview for the live design
 function PreviewTag({ design }: { design: "classic" | "brand" }) {

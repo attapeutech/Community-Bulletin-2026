@@ -24,9 +24,13 @@ const adColumns = {
   showPhone:   ads.showPhone,
   showAddress: ads.showAddress,
   showWebsite: ads.showWebsite,
+  isTest: ads.isTest,
 };
 
-async function allLocationsResponse(now: Date) {
+// Paid ads; display previews (?preview=) also get admin test ads
+const shownAds = (preview: boolean) => (preview ? or(eq(ads.paymentStatus, "paid"), eq(ads.isTest, true)) : eq(ads.paymentStatus, "paid"));
+
+async function allLocationsResponse(now: Date, preview: boolean) {
   const liveAds = await db
     .select(adColumns)
     .from(ads)
@@ -34,7 +38,7 @@ async function allLocationsResponse(now: Date) {
     .where(and(
       eq(locations.isActive, true),
       eq(ads.status, "approved"),
-      eq(ads.paymentStatus, "paid"),
+      shownAds(preview),
       lte(ads.startedAt, now),
       gte(ads.endedAt, now)
     ))
@@ -66,13 +70,14 @@ async function allLocationsResponse(now: Date) {
 
 // GET /api/display/[slug] — public: approved, currently-running ads for a location
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const { slug } = await params;
     const now = new Date();
-    if (slug === ALL_LOCATIONS_SLUG) return await allLocationsResponse(now);
+    const preview = req.nextUrl.searchParams.has("preview");
+    if (slug === ALL_LOCATIONS_SLUG) return await allLocationsResponse(now, preview);
 
     // Accept both slug ("store-name-abc123") and raw UUID (for direct TV links)
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
@@ -119,7 +124,7 @@ export async function GET(
         and(
           eq(ads.locationId, location.id),
           eq(ads.status, "approved"),
-          eq(ads.paymentStatus, "paid"),
+          shownAds(preview),
           lte(ads.startedAt, now),
           gte(ads.endedAt, now)
         )

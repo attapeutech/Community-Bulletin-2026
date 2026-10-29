@@ -157,6 +157,7 @@ export async function notifyAdsExpiringSoon(now = new Date()) {
     .from(ads)
     .where(and(
       eq(ads.status, "approved"),
+      eq(ads.isTest, false),
       gt(ads.endedAt, now),
       lte(ads.endedAt, in24h),
       notExists(

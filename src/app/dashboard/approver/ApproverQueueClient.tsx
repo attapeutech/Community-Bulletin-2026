@@ -5,6 +5,8 @@ import { useDashboardSocket } from "@/lib/socket/client";
 import { Check, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { SaleTemplate } from "@/components/display/templates/SaleTemplate";
+import { readSaleData } from "@/lib/ad-templates";
 import { LOCAL_AD_RADIUS_MILES } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,6 +18,8 @@ type Ad = {
   title: string;
   description: string | null;
   imageUrl: string;
+  template?: string | null;      // "sale" = drawn by the screen from templateData
+  templateData?: unknown;
   status: string;
   paymentStatus: string;
   createdAt: string;
@@ -188,7 +192,21 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
           {/* Detail panel */}
           {selected && (
             <div className="bg-white rounded-xl border border-[#D8E4EE] p-6 sticky top-6">
-              {/* Ad preview */}
+              {/* Ad preview: template ads as the screen will draw them */}
+              {selected.template === "sale" ? (
+                <div className="relative w-full mb-4 rounded-lg overflow-hidden" style={{ aspectRatio: "16 / 9" }}>
+                  <SaleTemplate
+                    key={selected.id}
+                    data={readSaleData(selected.templateData)}
+                    photoUrl={selected.imageUrl}
+                    qrValue={selected.showWebsite && selected.contactWebsite ? selected.contactWebsite : null}
+                    address={selected.showAddress ? selected.contactAddress : null}
+                    phone={selected.showPhone ? selected.contactPhone : null}
+                    website={selected.showWebsite ? selected.contactWebsite : null}
+                    play
+                  />
+                </div>
+              ) : (
               <div
                 className="relative cursor-pointer group mb-4"
                 onClick={() => setPreviewAd(selected)}
@@ -204,6 +222,7 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
                   </span>
                 </div>
               </div>
+              )}
 
               <h3 className="font-serif text-[18px] text-[#1A3A5C] mb-1">{selected.title}</h3>
               {selected.description && (

@@ -15,6 +15,8 @@ export async function GET() {
         title: ads.title,
         description: ads.description,
         imageUrl: ads.imageUrl,
+        template: ads.template,
+        templateData: ads.templateData,
         status: ads.status,
         paymentStatus: ads.paymentStatus,
         createdAt: ads.createdAt,

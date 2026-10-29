@@ -13,6 +13,8 @@ import { ShareButton } from "@/components/ui/ShareButton";
 import { BrandFrame } from "@/components/display/BrandFrame";
 import { BrandWipe, type BrandWipeHandle } from "@/components/display/BrandWipe";
 import { FpsMeter } from "@/components/display/FpsMeter";
+import { SaleTemplate } from "@/components/display/templates/SaleTemplate";
+import { readSaleData } from "@/lib/ad-templates";
 import { AdvertiseHereSlide, REVEAL_START_MS, TITLE_WORD_STEP_MS, motionClass, usePortraitPhone, useShortLandscape, type SlideMotion } from "@/components/display/AdvertiseHereSlide";
 
 type Ad = {
@@ -28,6 +30,8 @@ type Ad = {
   showAddress: boolean;
   showWebsite: boolean;
   isTest?: boolean;   // admin test ad: only on ?preview= screens
+  template?: string | null;    // "sale" = drawn by the screen from templateData
+  templateData?: unknown;
 };
 
 type AdvertiseSlideSettings = {
@@ -463,7 +467,20 @@ export default function DisplayPage() {
                 style={{ flex: "0 0 100%", minWidth: 0, height: "100%", position: "relative", display: "flex", flexDirection: "column" }}
               >
                 {ad.isTest && <TestAdTag />}
-                {hasSplit ? (
+                {ad.template === "sale" ? (
+                  /* Built-in template, drawn and animated by the screen */
+                  <div style={{ flex: 1, position: "relative" }}>
+                    <SaleTemplate
+                      data={readSaleData(ad.templateData)}
+                      photoUrl={ad.imageUrl}
+                      qrValue={ad.showWebsite && ad.contactWebsite && typeof window !== "undefined" ? `${window.location.origin}/go/${ad.id}` : null}
+                      address={ad.showAddress ? ad.contactAddress : null}
+                      phone={ad.showPhone ? ad.contactPhone : null}
+                      website={ad.showWebsite ? ad.contactWebsite : null}
+                      play={idx === selectedIndex}
+                    />
+                  </div>
+                ) : hasSplit ? (
                   <SplitAdSlide ad={ad} idx={idx} total={slides.length} portrait={portrait} short={short} zooming={idx === selectedIndex} motion={motionFor(idx)} />
                 ) : (
                   /* Full-screen image layout */

@@ -33,6 +33,13 @@
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
 
+## Sale / Offer template (Phase 2, step 2, 2026-10-29)
+
+- **What it is:** a built-in ad template the screen draws itself (`ads.template = "sale"`, fields in `ads.template_data`; photo in `ads.image_url`). Fields and limits: business name 40, offer big 8 ("20%", "$5", "BOGO"), offer small 10 ("OFF"), headline 40, details 80, ends 20 (`src/lib/ad-templates.ts`, checked by `POST /api/ads`). The ad's title elsewhere is built from them ("20% OFF any large pizza"); details become the description.
+- **Drawing:** `SaleTemplate` (`src/components/display/templates/SaleTemplate.tsx`): fixed design size whose long side stretches to the space (no letterbox strips), landscape and portrait layouts, GSAP entrance (photo, offer stamp, SplitText headline, underline, details, QR) then a slow photo push; reduced motion shows it still. Shows address, phone and website (as text) when turned on; the website is also the "Scan for deal" QR (`/go/<id>` on screens, so scans count as website visits). Used on display screens (both designs), in Post a New Ad and in Review Ads.
+- **Post a New Ad:** Details offers "Use the Sale template" (default) or "Upload your own design". The template has its fields plus a photo drop area (uploads immediately) and skips the separate image step (Location · Details & photo · Review). On desktop the page is up to 1,400 px wide with the form on the left and a pinned **Screen preview** on the right (template, own design, or a placeholder); on phones the previews sit inside the steps. The own-design Review preview is now 16:9.
+- **Next (step 3):** more templates (Grand opening, Services); the user's ad page under My Ads still shows the photo rather than the template.
+
 ## Test ads (Phase 2, step 1, 2026-10-29)
 
 - **Admins** can tick "Post as a test ad" on Post a New Ad's Review step: no payment or review; the ad is saved `approved` + `unpaid` with `is_test = true`, and the browser opens the store's preview screen on it.

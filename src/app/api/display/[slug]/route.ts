@@ -25,6 +25,8 @@ const adColumns = {
   showAddress: ads.showAddress,
   showWebsite: ads.showWebsite,
   isTest: ads.isTest,
+  template: ads.template,
+  templateData: ads.templateData,
 };
 
 // Paid ads; display previews (?preview=) also get admin test ads

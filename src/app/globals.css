@@ -207,13 +207,16 @@
 :where(.dark) .bg-\[\#F4F7FB\],
 :where(.dark) .bg-\[\#F0F5FA\],
 :where(.dark) .bg-\[\#F0F7FF\],
-:where(.dark) .bg-\[\#E8EFF6\] { background-color: hsl(var(--muted)); }
+:where(.dark) .bg-\[\#E8EFF6\],
+:where(.dark) .bg-\[\#F7FAFC\],
+:where(.dark) .bg-\[\#F1F5F9\] { background-color: hsl(var(--muted)); }
 :where(.dark) .hover\:bg-\[\#F7F9FC\]:hover,
 :where(.dark) .hover\:bg-\[\#F4F7FB\]:hover,
 :where(.dark) .hover\:bg-\[\#F0F5FA\]:hover,
 :where(.dark) .hover\:bg-\[\#F0F7FF\]:hover,
 :where(.dark) .hover\:bg-\[\#E8EFF6\]:hover,
-:where(.dark) .hover\:bg-\[\#D8E4EE\]:hover { background-color: hsl(var(--secondary)); }
+:where(.dark) .hover\:bg-\[\#D8E4EE\]:hover,
+:where(.dark) .hover\:bg-\[\#F7FAFD\]:hover { background-color: hsl(var(--secondary)); }
 
 /* Borders */
 :where(.dark) .border-\[\#D8E4EE\],

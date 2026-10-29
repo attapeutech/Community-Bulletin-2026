@@ -10,6 +10,9 @@ import { QRCodeSVG } from "qrcode.react";
 import { BrandMark } from "@/components/layout/BrandMark";
 import { HeartButton } from "@/components/ui/HeartButton";
 import { ShareButton } from "@/components/ui/ShareButton";
+import { BrandFrame } from "@/components/display/BrandFrame";
+import { BrandWipe, type BrandWipeHandle } from "@/components/display/BrandWipe";
+import { FpsMeter } from "@/components/display/FpsMeter";
 import { AdvertiseHereSlide, REVEAL_START_MS, TITLE_WORD_STEP_MS, motionClass, usePortraitPhone, useShortLandscape, type SlideMotion } from "@/components/display/AdvertiseHereSlide";
 
 type Ad = {
@@ -175,10 +178,22 @@ export default function DisplayPage() {
     else enterFullscreen();
   }
 
-  const [emblaRef, emblaApi] = useEmblaCarousel(
-    { loop: true, duration: 30 },
-    [Autoplay({ delay: 8000, stopOnInteraction: false })]
-  );
+  // Screen design: the admin setting, unless this screen is previewing one with ?preview=brand|classic
+  // (previews don't count ad views or check in as a store screen)
+  const [design, setDesign] = useState<"classic" | "brand">("classic");
+  const [preview, setPreview] = useState<"classic" | "brand" | null>(null);
+  const [showFps, setShowFps] = useState(false); // ?fps: frame-rate meter for hardware checks
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const p = q.get("preview");
+    if (p === "brand" || p === "classic") setPreview(p);
+    setShowFps(q.has("fps"));
+  }, []);
+  const brand = (preview ?? design) === "brand";
+
+  // Classic design glides on Embla's autoplay; the brand design jumps between slides under its coral sweep
+  const plugins = useMemo(() => (brand ? [] : [Autoplay({ delay: 8000, stopOnInteraction: false })]), [brand]);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 30 }, plugins);
 
   // If the server is briefly unreachable (a deploy, a Wi-Fi blip), keep showing the current ads
   // and retry on the next poll; only a screen that has never loaded shows "Connecting…"
@@ -208,6 +223,7 @@ export default function DisplayPage() {
       setLocation(json.data.location);
       setAds(json.data.ads);
       setAdvertiseSlide(json.data.advertiseSlide ?? null);
+      setDesign(json.data.design === "brand" ? "brand" : "classic");
     } catch {
       if (!loadedOnceRef.current) setError(RECONNECTING);
     } finally {
@@ -224,6 +240,7 @@ export default function DisplayPage() {
   const locationSlugRef = useRef<string | null>(null);
   locationSlugRef.current = location?.slug ?? null;
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).has("preview")) return;
     const check = () => {
       screenCheckin(`/display/${slug}`)
         .then((assigned) => {
@@ -303,8 +320,8 @@ export default function DisplayPage() {
   const trackShownSlide = useCallback(() => {
     if (!emblaApi) return;
     const slide = slidesRef.current[emblaApi.selectedScrollSnap()];
-    // The "Advertise here" slide is not an ad view; nor is the all-locations (website) screen
-    if (slide?.kind !== "ad" || slug === "all") return;
+    // The "Advertise here" slide is not an ad view; nor is the all-locations (website) screen, or a design preview
+    if (slide?.kind !== "ad" || slug === "all" || new URLSearchParams(window.location.search).has("preview")) return;
     fetch(`/api/ads/${slide.ad.id}/track`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -331,6 +348,19 @@ export default function DisplayPage() {
     }
     trackShownSlide();
   }, [emblaApi, slides, trackShownSlide]);
+
+  // Brand design: hold each slide 8 s, then sweep to the next one
+  const wipeRef = useRef<BrandWipeHandle>(null);
+  const goToSlide = useCallback((i: number) => {
+    if (!emblaApi) return;
+    if (wipeRef.current) wipeRef.current.play(() => emblaApi.scrollTo(i, true));
+    else emblaApi.scrollTo(i, true);
+  }, [emblaApi]);
+  useEffect(() => {
+    if (!brand || !emblaApi || slides.length < 2) return;
+    const t = setTimeout(() => goToSlide((emblaApi.selectedScrollSnap() + 1) % slides.length), 8000);
+    return () => clearTimeout(t);
+  }, [brand, emblaApi, selectedIndex, slides.length, goToSlide]);
 
   // Socket.io: join location room, refresh ads on push
   useDisplaySocket(slug, fetchAds);
@@ -376,14 +406,17 @@ export default function DisplayPage() {
     return (
       <div className="cb-display-root" style={fullscreen("#0A1A2E")} onMouseMove={handleMouseMove} onTouchStart={handleMouseMove}>
         <FullscreenOverlay show={showControls} isFullscreen={isFullscreen} onToggle={toggleFullscreen} canFullscreen={canFullscreen} standalone={standalone} />
+        {preview && <PreviewTag design={preview} />}
         {/* Header bar */}
-        <HeaderBar locationName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} portrait={portrait || short} />
+        {!brand && <HeaderBar locationName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} portrait={portrait || short} />}
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
           <div style={{ fontSize: 64 }}>📋</div>
           <p style={{ fontSize: 22, color: "#4A90C4", letterSpacing: "0.05em" }}>No active ads at this time</p>
           <p style={{ fontSize: 14, color: "#2A4A6C" }}>Ads will appear here once approved</p>
         </div>
-        <FooterBar priceCents={location?.pricePerRunCents} allLocations={location?.allLocations} portrait={portrait || short} />
+        {brand
+          ? <BrandFrame storeName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} priceCents={location?.pricePerRunCents} allLocations={location?.allLocations} portrait={portrait || short} />
+          : <FooterBar priceCents={location?.pricePerRunCents} allLocations={location?.allLocations} portrait={portrait || short} />}
       </div>
     );
   }
@@ -392,7 +425,9 @@ export default function DisplayPage() {
   return (
     <div className="cb-display-root" style={fullscreen("#0A1A2E")} onMouseMove={handleMouseMove} onTouchStart={handleMouseMove}>
       <FullscreenOverlay show={showControls} isFullscreen={isFullscreen} onToggle={toggleFullscreen} canFullscreen={canFullscreen} standalone={standalone} currentAdId={currentAdId} currentAdTitle={currentAdTitle} storeName={location?.name} slug={slug} />
-      <HeaderBar locationName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} portrait={portrait || short} />
+      {preview && <PreviewTag design={preview} />}
+      {showFps && <FpsMeter />}
+      {!brand && <HeaderBar locationName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} portrait={portrait || short} />}
 
       {/* Carousel */}
       <div style={{ flex: 1, overflow: "hidden", position: "relative" }} ref={emblaRef}>
@@ -463,10 +498,11 @@ export default function DisplayPage() {
             );
           })}
         </div>
+        {brand && <BrandWipe ref={wipeRef} />}
       </div>
 
-      {/* Dot indicators */}
-      {slides.length > 1 && (
+      {/* Dot indicators (classic design) */}
+      {!brand && slides.length > 1 && (
         <div style={{
           position: "absolute",
           bottom: 56,
@@ -495,12 +531,27 @@ export default function DisplayPage() {
         </div>
       )}
 
-      <FooterBar priceCents={location?.pricePerRunCents} allLocations={location?.allLocations} portrait={portrait || short} />
+      {brand
+        ? <BrandFrame storeName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} priceCents={location?.pricePerRunCents} allLocations={location?.allLocations} portrait={portrait || short} />
+        : <FooterBar priceCents={location?.pricePerRunCents} allLocations={location?.allLocations} portrait={portrait || short} />}
     </div>
   );
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
+
+// Shown only on ?preview= screens, so nobody mistakes a preview for the live design
+function PreviewTag({ design }: { design: "classic" | "brand" }) {
+  return (
+    <div style={{
+      position: "absolute", top: 12, left: 12, zIndex: 40, pointerEvents: "none",
+      background: "rgba(232,86,58,0.92)", color: "#fff", fontSize: 12, fontWeight: 700, letterSpacing: "0.06em",
+      padding: "5px 12px", borderRadius: 999, textTransform: "uppercase",
+    }}>
+      Preview · {design === "brand" ? "new design" : "current design"}
+    </div>
+  );
+}
 
 // Built-in slide selling this screen's ad space; QR opens Post a New Ad with this store pre-selected
 

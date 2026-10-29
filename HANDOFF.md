@@ -33,6 +33,13 @@
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
 
+## Display screens: new "Clean channel" design (Phase 1, 2026-10-29)
+
+- **Preview first, then switch:** store TVs keep the current design until an admin clicks **Switch all screens to the new design** on Admin Panel → Overview → **Screen design** (setting `display_design` in `app_settings`; switching refreshes every screen within seconds, and switching back works the same way).
+- **Preview links:** `/display/<slug>?preview=brand` (new) and `?preview=classic` (current) show either design with the store's real ads, with an orange "Preview" tag. Previews don't count ad views and don't check in on Admin → Screens. Add `&fps` for a frame-rate meter (`FpsMeter`).
+- **New design:** `BrandFrame` (bottom brand bar: CB mark, Community Bulletin, "Ads from your neighbors · at <store>", "Advertise here · $X / 4 weeks", clock, "Powered by ADSEZ.com") replaces the header and footer bars; `BrandWipe` (GSAP 3.13, the coral sweep + CB flip) replaces Embla's glide, every 8 s. The ads themselves are unchanged (their CSS animations still play). Screens set to reduce motion skip the sweep.
+- **Not yet:** the speed test on the store's mini PC (`/display/<slug>?preview=brand&fps`), then the switch. Phase 2 = templates (Sale / Offer first) drawn and animated with GSAP, plus admin-only test ads visible only in preview.
+
 ## 2026-10-28 (end of day): Post a New Ad, brand template mockup
 
 - **Post a New Ad, Choose a location** (PR #84): every active store is listed (A–Z) before searching; typing 2+ letters still searches. The picked store is outlined in blue with a "✓ Selected" tag; the separate "Selected:" box only shows when the pick isn't in the list on screen.
@@ -298,8 +305,8 @@
   3. First real owner: they onboard from Earnings with their real details, an admin marks their agreement **Signed** on Payouts, and from the 15th their available balance (at least $25) is paid automatically.
   4. **1099 tax forms:** Stripe opens Connect → Tax forms only once there's a US connected account. After the first owner onboards and before January 2027, turn on 1099 reporting and pick the form type (MISC vs NEC: ask the accountant).
 - [ ] **Brand template (display screens):**
-  1. Test the mockup's speed on the store's mini PC: open `communitybulletin.com/demo/brand-template.html?kiosk&fps` for a minute (in person or by remote desktop), then reopen the store's display page. Meanwhile: Chrome DevTools → Performance → CPU 4× / 6× slowdown with `?fps`. Smooth = about 60 fps.
-  2. Partner and co-founder pick a look: **Clean channel** or **Bulletin card**.
+  1. Test the speed on the store's mini PC with the real new design: open `communitybulletin.com/display/<store slug>?preview=brand&fps` for a minute (in person or by remote desktop), then reopen the store's display page. The mockup (`/demo/brand-template.html?kiosk&fps`) tests the heavier Phase 2 template animation. Meanwhile: Chrome DevTools → Performance → CPU 4× / 6× slowdown with `?fps`. Smooth = about 60 fps.
+  2. Look chosen: **Clean channel** (2026-10-29). Phase 1 (brand frame + transition) is built behind the Screen design switch; flip it after the speed test.
   3. Build it into the real screens in phases: (1) brand frame + signature transition on all ads; (2) three templates (Sale / Offer, Grand opening, Services) with a template picker and live preview in Post a New Ad; (3) more templates and seasonal themes, plus comparing QR scans of template ads vs flyers. Flyer uploads stay, shown inside the frame.
 - [ ] **Distance check (local-business rule, step 2):** ask for a business ZIP in Ad Details, load free US Census ZIP centroids, warn before payment when the business is farther than `LOCAL_AD_RADIUS_MILES` from the store, and show "~N mi from store" in Review Ads. Later: a per-store radius and a store list sorted by distance.
 - [ ] Optional: hide the clock on display screens while the tap/hover controls are showing (they overlap on desktop).

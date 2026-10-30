@@ -1,0 +1,1 @@
+ALTER TABLE "locations" ALTER COLUMN "share_rate_bps" SET DEFAULT 5000;

@@ -33,7 +33,7 @@ export const locations = pgTable("locations", {
   currency: text("currency").default("USD").notNull(), // ISO 4217 per location
   pricePerRunCents: integer("price_per_week_cents").default(10000).notNull(), // default $100 per 4-week run (column name predates 4-week pricing)
   equipmentProvided: boolean("equipment_provided").default(false).notNull(),   // store owner supplied the screen (informational)
-  shareRateBps: integer("share_rate_bps").default(2500).notNull(),            // owner revenue share, 2500 = 25%; admin-set
+  shareRateBps: integer("share_rate_bps").default(5000).notNull(),            // owner revenue share, 5000 = 50%; admin-set
   description: text("description"),
   category: text("category"),
   logoUrl: text("logo_url"),

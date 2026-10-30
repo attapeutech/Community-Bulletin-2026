@@ -634,7 +634,7 @@ export default function LocationDetailClient({
                           />
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4A6B82] text-sm">%</span>
                         </div>
-                        {[25, 50].map(pct => (
+                        {[50].map(pct => (
                           <button
                             key={pct}
                             type="button"

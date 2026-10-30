@@ -4,6 +4,32 @@ import { eq, and, count, sum } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { BrandMark } from "@/components/layout/BrandMark";
+import type { Metadata } from "next";
+
+// Search result and link preview: "Advertise at <store>, <city>"
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const [loc] = await db
+    .select({ storeName: locations.storeName, displayName: locations.displayName, description: locations.description, logoUrl: locations.logoUrl, cityName: cities.name, stateCode: states.code })
+    .from(locations)
+    .innerJoin(cities, eq(locations.cityId, cities.id))
+    .innerJoin(states, eq(locations.stateId, states.id))
+    .where(and(eq(locations.slug, slug), eq(locations.isActive, true)))
+    .limit(1)
+    .catch(() => []);
+  if (!loc) return { title: "Store not found", robots: { index: false } };
+
+  const name = loc.displayName || loc.storeName;
+  const title = `Advertise at ${name}, ${loc.cityName}, ${loc.stateCode}`;
+  const description = `Put your business on the screen inside ${name} in ${loc.cityName}, ${loc.stateCode}. 4-week local ad runs, seen by shoppers near you.${loc.description ? ` ${loc.description}` : ""}`;
+  return {
+    title,
+    description,
+    alternates: { canonical: `/stores/${slug}` },
+    // Setting openGraph here replaces the site-wide preview image, so name one: the store logo, or the site image
+    openGraph: { title, description, url: `/stores/${slug}`, images: [loc.logoUrl || "/opengraph-image"] },
+  };
+}
 
 function formatCents(cents: number, currency = "USD") {
   return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(cents / 100);

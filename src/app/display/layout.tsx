@@ -3,7 +3,8 @@ import type { Metadata, Viewport } from "next";
 // Display screens: when added to an iPhone/iPad home screen, open full screen without browser bars.
 // The manifest has no start_url, so each store's screen opens to its own page.
 export const metadata: Metadata = {
-  title: "CommunityBulletin Display",
+  title: { absolute: "CommunityBulletin Display" },
+  robots: { index: false, follow: false },  // store screens, not for search results
   manifest: "/display.webmanifest",
   appleWebApp: {
     capable: true,

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { requireAuth } from "@/lib/auth/session";
 import Link from "next/link";
 import { BrandMark } from "@/components/layout/BrandMark";
@@ -5,6 +6,8 @@ import { SignOutButton } from "@/components/layout/SignOutButton";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { Badge } from "@/components/ui/badge";
+
+export const metadata: Metadata = { title: "Dashboard", robots: { index: false, follow: false } };
 
 export default async function DashboardLayout({
   children,

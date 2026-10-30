@@ -3,11 +3,17 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { LeaveFrame } from "@/components/layout/LeaveFrame";
+import { GoogleAnalytics } from "@/components/layout/GoogleAnalytics";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CommunityBulletin.com – Digital In-Store Advertising",
-  description: "Post and display digital ads at local store locations in your community.",
+  metadataBase: new URL(SITE_URL),
+  title: { default: "Community Bulletin – Local Ads on In-Store Screens", template: `%s · ${SITE_NAME}` },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  openGraph: { type: "website", siteName: SITE_NAME, locale: "en_US" },
+  twitter: { card: "summary_large_image" },
 };
 
 export const viewport: Viewport = {
@@ -24,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </ThemeProvider>
         <ScrollToTop />
         <LeaveFrame />
+        <GoogleAnalytics />
         <Toaster richColors position="top-right" />
       </body>
     </html>

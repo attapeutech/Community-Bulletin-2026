@@ -18,6 +18,10 @@ const PUBLIC_ROUTES = [
   "/contact",
   "/demo",        // franchise partner pitch page (linked from the public navbar)
   "/go",          // QR code short links from display screens
+  "/stores",      // each store's public page (linked as "Public Page" from the store owner dashboard)
+  "/robots.txt",  // SEO: search engines read these logged out
+  "/sitemap.xml",
+  "/opengraph-image",    // link preview image when the site is shared
   "/icon.png",           // site icons (logged-out visitors and store screens need these)
   "/apple-icon.png",
   "/display.webmanifest", // home-screen settings for display screens

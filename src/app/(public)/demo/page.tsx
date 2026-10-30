@@ -11,13 +11,6 @@ export const metadata: Metadata = {
 export default function DemoPage() {
   return (
     <div className="d-page">
-      <nav className="d-nav" aria-label="Site navigation">
-        <div className="d-nav-inner">
-          <a href="/" className="d-nav-brand">Community <em>Bulletin</em></a>
-          <a href="#contact" className="d-nav-cta">Schedule a Call</a>
-        </div>
-      </nav>
-
       <section className="d-hero">
         <div className="d-wrap d-hero-inner">
           <div>
@@ -328,13 +321,6 @@ export default function DemoPage() {
           </div>
         </div>
       </section>
-
-      <footer className="d-footer">
-        <div className="d-foot-inner">
-          <a href="/" className="d-foot-brand">Community <em>Bulletin</em></a>
-          <div className="d-foot-copy">© 2026 Community Bulletin. All rights reserved.</div>
-        </div>
-      </footer>
     </div>
   );
 }

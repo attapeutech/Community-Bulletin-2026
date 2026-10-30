@@ -1,5 +1,12 @@
 import Link from "next/link";
 import { LOCAL_AD_RADIUS_MILES } from "@/types";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description: "The terms for advertising on and hosting Community Bulletin in-store screens.",
+  alternates: { canonical: "/terms" },
+};
 
 export default function TermsPage() {
   return (

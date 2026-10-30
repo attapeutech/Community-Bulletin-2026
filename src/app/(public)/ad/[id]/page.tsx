@@ -8,6 +8,7 @@ import { TrackedWebsiteLink } from "@/components/ui/TrackedWebsiteLink";
 import { HeartButton } from "@/components/ui/HeartButton";
 import { ShareButton } from "@/components/ui/ShareButton";
 import type { Metadata } from "next";
+import { SITE_NAME } from "@/lib/site";
 
 // Link previews when the page is shared: ad photo, title, store and description
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -21,19 +22,19 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     .where(and(eq(ads.id, id), eq(ads.status, "approved"), eq(ads.paymentStatus, "paid")))
     .limit(1)
     .catch(() => []);
-  if (!ad) return { title: "Ad not found · CommunityBulletin" };
+  if (!ad) return { title: "Ad not found", robots: { index: false } };
 
   const where = `${ad.displayName || ad.storeName}, ${ad.cityName}, ${ad.stateCode}`;
   const description = ad.description ? `${ad.description} · Now showing at ${where}` : `Now showing at ${where}`;
-  const base = process.env.NEXT_PUBLIC_APP_URL || "https://communitybulletin.com";
   return {
-    title: `${ad.title} · CommunityBulletin`,
+    title: ad.title,
     description,
+    alternates: { canonical: `/ad/${id}` },
     openGraph: {
       title: ad.title,
       description,
-      url: `${base}/ad/${id}`,
-      siteName: "CommunityBulletin",
+      url: `/ad/${id}`,
+      siteName: SITE_NAME,
       images: [{ url: ad.imageUrl, alt: ad.title }],
       type: "website",
     },

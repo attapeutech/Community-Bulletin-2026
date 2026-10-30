@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import "./demo.css";
 
 export const metadata: Metadata = {
-  title: "Community Bulletin — Store Partner Opportunity",
+  title: { absolute: "Community Bulletin — Store Partner Opportunity" },
+  alternates: { canonical: "/demo" },
   description:
     "See how Community Bulletin generates passive revenue for neighborhood store owners — gas stations, convenience stores and grocers — through locally-targeted digital in-store ads.",
 };

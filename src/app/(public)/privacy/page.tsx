@@ -1,4 +1,11 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description: "How Community Bulletin collects, uses and protects your information.",
+  alternates: { canonical: "/privacy" },
+};
 
 export default function PrivacyPage() {
   return (
@@ -26,7 +33,7 @@ export default function PrivacyPage() {
           },
           {
             title: "Cookies",
-            body: "We use cookies and similar technologies to maintain your session and remember your preferences. We do not use tracking cookies for advertising purposes.",
+            body: "We use cookies and similar technologies to maintain your session and remember your preferences. We also use Google Analytics, which sets cookies to count visits and show us how people find and use our public pages; Google processes that data under its own privacy policy, and you can opt out with Google's browser add-on (tools.google.com/dlpage/gaoptout). We do not use tracking cookies for advertising purposes.",
           },
           {
             title: "Security",

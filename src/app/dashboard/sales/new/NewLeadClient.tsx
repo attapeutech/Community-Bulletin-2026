@@ -10,10 +10,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { addDays, type LeadKind } from "@/lib/leads";
-import { EMPTY_LEAD, LeadForm } from "../LeadForm";
+import { EMPTY_LEAD, LeadForm, type LeadDetails } from "../LeadForm";
 import type { StoreOption } from "../store-options";
 
 const fieldLabel = "block mb-1.5 text-[11px] font-semibold text-[#4A6B82] uppercase tracking-[0.04em]";
+
+type Draft = { details: LeadDetails; nextFollowUp: string; note: string };
 
 export default function NewLeadClient({ today, stores, initialKind, initialLocationId }: {
   today: string;
@@ -24,9 +26,12 @@ export default function NewLeadClient({ today, stores, initialKind, initialLocat
   const router = useRouter();
   const [kind, setKind] = useState<LeadKind>(initialKind);
   const [locationId, setLocationId] = useState(initialLocationId);
-  // Default: check back in a few days
-  const [nextFollowUp, setNextFollowUp] = useState(addDays(today, 3));
-  const [note, setNote] = useState("");
+  // Each type keeps its own draft, so switching Store ↔ Advertiser never carries one business's details into the other
+  // Default follow-up: check back in a few days
+  const blank = (): Draft => ({ details: EMPTY_LEAD, nextFollowUp: addDays(today, 3), note: "" });
+  const [drafts, setDrafts] = useState<Record<LeadKind, Draft>>(() => ({ store_partner: blank(), advertiser: blank() }));
+  const { nextFollowUp, note } = drafts[kind];
+  const setDraft = (changes: Partial<Draft>) => setDrafts(prev => ({ ...prev, [kind]: { ...prev[kind], ...changes } }));
   const isAdvertiser = kind === "advertiser";
   const back = `/dashboard/sales${isAdvertiser ? (locationId ? `?store=${locationId}` : "") : "?kind=store_partner"}`;
 
@@ -75,18 +80,20 @@ export default function NewLeadClient({ today, stores, initialKind, initialLocat
           )}
 
           <LeadForm
-            initial={EMPTY_LEAD}
+            key={kind}
+            initial={drafts[kind].details}
+            onChange={details => setDraft({ details })}
             submitLabel={isAdvertiser ? "Add advertiser lead" : "Add store lead"}
             onCancel={() => router.push(back)}
             extra={
               <>
                 <div>
                   <Label className={fieldLabel}>Next follow-up</Label>
-                  <Input type="date" value={nextFollowUp} onChange={e => setNextFollowUp(e.target.value)} className="h-10 w-48 bg-white" />
+                  <Input type="date" value={nextFollowUp} onChange={e => setDraft({ nextFollowUp: e.target.value })} className="h-10 w-48 bg-white" />
                 </div>
                 <div>
                   <Label className={fieldLabel}>First note</Label>
-                  <Textarea value={note} onChange={e => setNote(e.target.value)} rows={3} placeholder="What did you talk about? What do they need?" className="bg-white" />
+                  <Textarea value={note} onChange={e => setDraft({ note: e.target.value })} rows={3} placeholder="What did you talk about? What do they need?" className="bg-white" />
                 </div>
               </>
             }

@@ -134,7 +134,7 @@ export default function DemoPage() {
               <div className="d-step-num">01</div>
               <div className="d-step-rule"></div>
               <div className="d-step-title">Set up a screen in your store</div>
-              <div className="d-step-body"><strong>Two ways to get started.</strong> Use a TV and WiFi you already have, plus an inexpensive streaming device, and earn a 50% revenue share. Or we supply and install everything at no cost to you, for a 25% share. Either way, setup takes about an hour.</div>
+              <div className="d-step-body"><strong>Two ways to get started.</strong> Use a TV and WiFi you already have, plus an inexpensive streaming device, or we supply and install everything at no cost to you. Either way, you earn a 50% revenue share, and setup takes about an hour.</div>
             </div>
             <div>
               <div className="d-step-num">02</div>
@@ -156,27 +156,27 @@ export default function DemoPage() {
         <div className="d-wrap">
           <div className="d-rev-eyebrow">Revenue Potential</div>
           <h2 className="d-rev-h2">Passive income from space<br />you already own.</h2>
-          <p className="d-rev-sub">A typical ad slot is $100 per 4 weeks. Each location targets 40 active ads — about $4,000 every 4 weeks (about $52,000 a year) in ad revenue per screen. Your share, paid on ad revenue after card processing fees, depends on one factor: who provides and sets up the display equipment.</p>
+          <p className="d-rev-sub">A typical ad slot is $100 per 4 weeks. Each location targets 40 active ads — about $4,000 every 4 weeks (about $52,000 a year) in ad revenue per screen. Every store owner earns 50% of that ad revenue after card processing fees, whoever provides the display equipment.</p>
           <div className="d-rev-grid">
             <div className="d-rev-scenarios">
               <div className="d-rev-card d-rev-card-hi">
-                <div className="d-rev-card-lbl">You provide &amp; set up the screen <span className="d-pref-badge">Preferred</span></div>
+                <div className="d-rev-card-lbl">You provide &amp; set up the screen</div>
                 <div className="d-rev-card-amt">~$2,100<span className="d-rev-card-mo">/mo</span></div>
                 <div className="d-rev-card-desc">50% share after card fees · 40 active ads at $100 per 4 weeks · about $25,200/year</div>
               </div>
               <div className="d-rev-card">
                 <div className="d-rev-card-lbl">We provide &amp; install the screen</div>
-                <div className="d-rev-card-amt">~$1,050<span className="d-rev-card-mo">/mo</span></div>
-                <div className="d-rev-card-desc">25% share after card fees · 40 active ads at $100 per 4 weeks · about $12,600/year</div>
+                <div className="d-rev-card-amt">~$2,100<span className="d-rev-card-mo">/mo</span></div>
+                <div className="d-rev-card-desc">50% share after card fees · 40 active ads at $100 per 4 weeks · about $25,200/year</div>
               </div>
             </div>
             <div className="d-rev-detail">
               <p>A typical ad costs <strong style={{color:"#fff"}}>$100 per 4 weeks</strong> — a fraction of what print media or social advertising costs for comparable local reach. Each location targets <strong style={{color:"#fff"}}>40 active ads</strong>, generating about $4,000 every 4 weeks in ad revenue per screen.</p>
-              <p>Your revenue share depends on one factor: <strong style={{color:"#fff"}}>who provides the display equipment.</strong> Store owners who supply a TV, mini PC, and WiFi — and handle the setup themselves — earn <strong style={{color:"#fff"}}>50% of ad revenue after card processing fees (about $2,100/month on average)</strong>. When Community Bulletin provides and installs the equipment, the share is <strong style={{color:"#fff"}}>25% (about $1,050/month on average)</strong> to offset our hardware and contractor costs. Payout costs are on us — you receive your full share.</p>
-              <p>We strongly prefer the store-provides model. It eliminates the need for us to coordinate licensed contractors and specialized installation — keeping the partnership simple on both sides and putting significantly more money in your pocket.</p>
+              <p>Every store owner earns <strong style={{color:"#fff"}}>50% of ad revenue after card processing fees (about $2,100/month on average)</strong>, whether you supply a TV, mini PC and WiFi yourself or Community Bulletin provides and installs the equipment. Payout costs are on us — you receive your full share.</p>
+              <p>Using equipment you already have gets your screen running sooner, because there's no installation to schedule.</p>
               <div className="d-rev-note">
                 <strong>What &ldquo;providing your own equipment&rdquo; means:</strong><br />
-                A standard flat-screen TV · a mini PC or streaming device · your existing WiFi connection. Most stores already have two of the three. That&rsquo;s all it takes to qualify for the 50% share.
+                A standard flat-screen TV · a mini PC or streaming device · your existing WiFi connection. Most stores already have two of the three. If you don&rsquo;t, we provide it — your share stays 50%.
               </div>
             </div>
           </div>

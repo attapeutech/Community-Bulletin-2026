@@ -73,6 +73,6 @@ export const LOCAL_AD_RADIUS_MILES = 10; // ads are for businesses near the stor
 // Location pricing and revenue share — admin-controlled, enforced by the locations API
 export const MIN_PRICE_PER_RUN_CENTS = 1000;    // $10
 export const MAX_PRICE_PER_RUN_CENTS = 100000;  // $1,000
-export const DEFAULT_SHARE_RATE_BPS = 2500;      // 25%
+export const DEFAULT_SHARE_RATE_BPS = 5000;      // 50% for every store owner (since 2026-10-29)
 export const MAX_SHARE_RATE_BPS = 9000;          // 90%
 export const MIN_PAYOUT_CENTS = 2500; // $25 — smaller owner balances roll over to next month

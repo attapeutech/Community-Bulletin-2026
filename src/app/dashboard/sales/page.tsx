@@ -137,6 +137,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
 
   return (
     <SalesClient
+      key={`${f.kind}|${f.q}`}  // reset the search box when the tab or search changes, including via Back / Forward
       leads={data}
       filters={{ ...f, page }}
       total={total}

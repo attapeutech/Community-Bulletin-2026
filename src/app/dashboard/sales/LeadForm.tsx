@@ -22,16 +22,21 @@ const fieldLabel = "block mb-1.5 text-[11px] font-semibold text-[#4A6B82] upperc
 const selectClass = "h-10 w-full rounded-md border border-[#D8E4EE] bg-white px-2.5 text-sm text-[#1A3A5C]";
 
 /** Business and contact fields, shared by New lead and Edit details. `extra` renders above the buttons. */
-export function LeadForm({ initial, submitLabel, onSubmit, onCancel, extra }: {
+export function LeadForm({ initial, submitLabel, onSubmit, onCancel, onChange, extra }: {
   initial: LeadDetails;
   submitLabel: string;
   onSubmit: (values: LeadDetails) => Promise<void>;
   onCancel?: () => void;
+  onChange?: (values: LeadDetails) => void;  // lets New lead keep a draft per type
   extra?: React.ReactNode;
 }) {
   const [v, setV] = useState(initial);
   const [busy, setBusy] = useState(false);
-  const set = (k: keyof LeadDetails) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setV(prev => ({ ...prev, [k]: e.target.value }));
+  const set = (k: keyof LeadDetails) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const next = { ...v, [k]: e.target.value };
+    setV(next);
+    onChange?.(next);
+  };
 
   return (
     <form

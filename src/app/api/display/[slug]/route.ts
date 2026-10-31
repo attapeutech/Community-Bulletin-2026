@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
-import { ads, locations, cities, states, postalCodes } from "@/lib/db/schema";
-import { eq, and, or, lte, gte, asc, min } from "drizzle-orm";
+import { ads, demos, locations, cities, states, postalCodes } from "@/lib/db/schema";
+import { eq, and, or, lte, gte, gt, asc, min, isNull } from "drizzle-orm";
 import { getAdvertiseSlideSettings, getDisplayDesign } from "@/lib/settings";
 
 // One value per running server process (shared across route bundles)
@@ -29,8 +29,13 @@ const adColumns = {
   templateData: ads.templateData,
 };
 
-// Paid ads; display previews (?preview=) also get admin test ads
-const shownAds = (preview: boolean) => (preview ? or(eq(ads.paymentStatus, "paid"), eq(ads.isTest, true)) : eq(ads.paymentStatus, "paid"));
+// Paid ads; display previews (?preview=) also get admin test ads, and a sales demo link (?demo=) gets
+// that demo's ads. Demo ads never show on previews.
+const shownAds = (preview: boolean, demoId?: string | null) => or(
+  eq(ads.paymentStatus, "paid"),
+  preview ? and(eq(ads.isTest, true), isNull(ads.demoId)) : undefined,
+  demoId ? eq(ads.demoId, demoId) : undefined,
+);
 
 async function allLocationsResponse(now: Date, preview: boolean) {
   const liveAds = await db
@@ -79,6 +84,7 @@ export async function GET(
     const { slug } = await params;
     const now = new Date();
     const preview = req.nextUrl.searchParams.has("preview");
+    const demoToken = req.nextUrl.searchParams.get("demo");
     if (slug === ALL_LOCATIONS_SLUG) return await allLocationsResponse(now, preview);
 
     // Accept both slug ("store-name-abc123") and raw UUID (for direct TV links)
@@ -119,6 +125,16 @@ export async function GET(
       );
     }
 
+    // Sales demo link: only while it hasn't expired, and only on its own store's screen
+    let demoId: string | null = null;
+    if (demoToken) {
+      const [demo] = await db.select({ id: demos.id }).from(demos)
+        .where(and(eq(demos.token, demoToken), eq(demos.locationId, location.id), gt(demos.expiresAt, now)))
+        .limit(1);
+      if (!demo) return NextResponse.json({ success: false, error: "This demo link has expired or was removed" }, { status: 404 });
+      demoId = demo.id;
+    }
+
     const activeAds = await db
       .select(adColumns)
       .from(ads)
@@ -126,7 +142,7 @@ export async function GET(
         and(
           eq(ads.locationId, location.id),
           eq(ads.status, "approved"),
-          shownAds(preview),
+          shownAds(preview, demoId),
           lte(ads.startedAt, now),
           gte(ads.endedAt, now)
         )

@@ -2,7 +2,7 @@ import { getSession } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
 import { ads, locations, cities, states, postalCodes, savedAds } from "@/lib/db/schema";
-import { eq, and, desc, gte, sql } from "drizzle-orm";
+import { eq, and, desc, gte, sql, isNull } from "drizzle-orm";
 import Link from "next/link";
 import { RenewAdButton } from "./RenewAdButton";
 import { UserDashboardRefresher } from "./UserDashboardRefresher";
@@ -77,7 +77,8 @@ export default async function UserDashboard() {
     .innerJoin(cities, eq(locations.cityId, cities.id))
     .innerJoin(states, eq(locations.stateId, states.id))
     .innerJoin(postalCodes, eq(locations.postalCodeId, postalCodes.id))
-    .where(eq(ads.userId, userId))
+    // Sales demo ads live on their lead's page in Sales, not in My Ads
+    .where(and(eq(ads.userId, userId), isNull(ads.demoId)))
     .orderBy(desc(ads.createdAt))
     .limit(50);
 

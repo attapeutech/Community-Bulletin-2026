@@ -14,6 +14,7 @@ import { LEAD_STAGES, addDays, isOpenStage, sourceLabel, stageLabel, type LeadSt
 import { STAGE_BADGE, fmtDay, followUpText, patchLead } from "../SalesClient";
 import { LeadForm } from "../LeadForm";
 import type { StoreOption } from "../store-options";
+import LeadDemos, { type LeadDemo } from "./LeadDemos";
 
 export type LeadDetail = {
   id: string;
@@ -62,7 +63,7 @@ function NoteBody({ body }: { body: string }) {
 
 const selectClass = "h-9 rounded-md border border-[#D8E4EE] bg-white px-2.5 text-[13px] text-[#1A3A5C]";
 
-export default function LeadDetailClient({ lead, today, stores }: { lead: LeadDetail; today: string; stores: StoreOption[] }) {
+export default function LeadDetailClient({ lead, today, stores, demos }: { lead: LeadDetail; today: string; stores: StoreOption[]; demos: LeadDemo[] }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -202,6 +203,15 @@ export default function LeadDetailClient({ lead, today, stores }: { lead: LeadDe
               )}
             </CardContent>
           </Card>
+
+          {isAdvertiser && (
+            <LeadDemos
+              leadId={lead.id}
+              locationId={lead.locationId}
+              storeLabel={stores.find(s => s.id === lead.locationId)?.label ?? lead.storeLabel}
+              demos={demos}
+            />
+          )}
 
           {/* Notes timeline */}
           <Card className="rounded-xl border-[#D8E4EE]">

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db/client";
 import { ads, users, locations, cities, states, postalCodes } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/auth/session";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, isNull } from "drizzle-orm";
 import { addDays } from "date-fns";
 import { AD_DURATION_DAYS } from "@/types";
 import { pushDisplayRefresh, pushDashboardUpdate } from "@/lib/socket/notify";
@@ -21,7 +21,8 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get("status") as typeof ads.$inferSelect["status"] | null;
     const paymentStatus = searchParams.get("paymentStatus") as typeof ads.$inferSelect["paymentStatus"] | null;
 
-    const conditions = [];
+    // Sales demo ads are managed on their lead's page in Sales
+    const conditions = [isNull(ads.demoId)];
     if (status) conditions.push(eq(ads.status, status));
     if (paymentStatus) conditions.push(eq(ads.paymentStatus, paymentStatus));
 
@@ -51,7 +52,7 @@ export async function GET(req: NextRequest) {
       .from(ads)
       .innerJoin(users, eq(ads.userId, users.id))
       .innerJoin(locations, eq(ads.locationId, locations.id))
-      .where(conditions.length ? and(...conditions) : undefined)
+      .where(and(...conditions))
       .orderBy(desc(ads.createdAt))
       .limit(200);
 

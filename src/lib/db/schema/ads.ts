@@ -4,6 +4,7 @@ import { users } from "./users";
 import { locations } from "./locations";
 import { payments } from "./payments";
 import { notifications } from "./notifications";
+import { demos } from "./demos";
 
 export const adStatusEnum = pgEnum("ad_status", [
   "pending",
@@ -53,6 +54,8 @@ export const ads = pgTable("ads", {
   websiteClickCount: integer("website_click_count").default(0).notNull(),
   // Admin test ad: no payment or review, shown only on display previews (?preview=), never on store screens
   isTest: boolean("is_test").default(false).notNull(),
+  // Sales demo ad (also isTest): shown only on that demo's private link, not on ?preview= screens
+  demoId: uuid("demo_id").references(() => demos.id, { onDelete: "cascade" }),
   // Built-in template ("sale", …) drawn by the screen from templateData; null = the advertiser's own image
   template: text("template"),
   templateData: jsonb("template_data"),
@@ -72,6 +75,10 @@ export const adsRelations = relations(ads, ({ one, many }) => ({
   reviewer: one(users, {
     fields: [ads.reviewedBy],
     references: [users.id],
+  }),
+  demo: one(demos, {
+    fields: [ads.demoId],
+    references: [demos.id],
   }),
   payments: many(payments),
   notifications: many(notifications),

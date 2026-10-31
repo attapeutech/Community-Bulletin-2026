@@ -188,11 +188,13 @@ export default function DisplayPage() {
   const [design, setDesign] = useState<"classic" | "brand">("classic");
   const [preview, setPreview] = useState<"classic" | "brand" | null>(null);
   const [showFps, setShowFps] = useState(false); // ?fps: frame-rate meter for hardware checks
+  const [demo, setDemo] = useState(false);       // ?demo=<token>: a sales demo link, live ads + that demo's ads
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     const p = q.get("preview");
     if (p === "brand" || p === "classic") setPreview(p);
     setShowFps(q.has("fps"));
+    setDemo(q.has("demo"));
   }, []);
   const brand = (preview ?? design) === "brand";
 
@@ -206,9 +208,10 @@ export default function DisplayPage() {
   const versionRef = useRef<string | null>(null);
   const fetchAds = useCallback(async () => {
     try {
-      // Previews also load admin test ads
-      const previewing = new URLSearchParams(window.location.search).has("preview");
-      const res = await fetch(`/api/display/${slug}${previewing ? "?preview=1" : ""}`, { cache: "no-store" });
+      // Previews also load admin test ads; a demo link loads its demo ads
+      const q = new URLSearchParams(window.location.search);
+      const extra = q.get("demo") ? `?demo=${encodeURIComponent(q.get("demo")!)}` : q.has("preview") ? "?preview=1" : "";
+      const res = await fetch(`/api/display/${slug}${extra}`, { cache: "no-store" });
       if (res.status === 404) {
         const j = await res.json().catch(() => null);
         setError(j?.error || "Location not found");
@@ -247,7 +250,7 @@ export default function DisplayPage() {
   const locationSlugRef = useRef<string | null>(null);
   locationSlugRef.current = location?.slug ?? null;
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).has("preview")) return;
+    if (isPrivateView()) return;
     const check = () => {
       screenCheckin(`/display/${slug}`)
         .then((assigned) => {
@@ -327,8 +330,8 @@ export default function DisplayPage() {
   const trackShownSlide = useCallback(() => {
     if (!emblaApi) return;
     const slide = slidesRef.current[emblaApi.selectedScrollSnap()];
-    // The "Advertise here" slide is not an ad view; nor is the all-locations (website) screen, or a design preview
-    if (slide?.kind !== "ad" || slug === "all" || new URLSearchParams(window.location.search).has("preview")) return;
+    // The "Advertise here" slide is not an ad view; nor is the all-locations (website) screen, a design preview or a demo
+    if (slide?.kind !== "ad" || slug === "all" || isPrivateView()) return;
     fetch(`/api/ads/${slide.ad.id}/track`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -414,6 +417,7 @@ export default function DisplayPage() {
       <div className="cb-display-root" style={fullscreen("#0A1A2E")} onMouseMove={handleMouseMove} onTouchStart={handleMouseMove}>
         <FullscreenOverlay show={showControls} isFullscreen={isFullscreen} onToggle={toggleFullscreen} canFullscreen={canFullscreen} standalone={standalone} />
         {preview && <PreviewTag design={preview} />}
+        {demo && <DemoTag />}
         {/* Header bar */}
         {!brand && <HeaderBar locationName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} portrait={portrait || short} />}
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
@@ -433,6 +437,7 @@ export default function DisplayPage() {
     <div className="cb-display-root" style={fullscreen("#0A1A2E")} onMouseMove={handleMouseMove} onTouchStart={handleMouseMove}>
       <FullscreenOverlay show={showControls} isFullscreen={isFullscreen} onToggle={toggleFullscreen} canFullscreen={canFullscreen} standalone={standalone} currentAdId={currentAdId} currentAdTitle={currentAdTitle} storeName={location?.name} slug={slug} />
       {preview && <PreviewTag design={preview} />}
+      {demo && <DemoTag />}
       {showFps && <FpsMeter />}
       {!brand && <HeaderBar locationName={location?.name ?? slug} storeNumber={location?.storeNumber ?? null} portrait={portrait || short} />}
 
@@ -466,7 +471,7 @@ export default function DisplayPage() {
                 key={ad.id}
                 style={{ flex: "0 0 100%", minWidth: 0, height: "100%", position: "relative", display: "flex", flexDirection: "column" }}
               >
-                {ad.isTest && <TestAdTag />}
+                {ad.isTest && !demo && <TestAdTag />}
                 {ad.template === "sale" ? (
                   /* Built-in template, drawn and animated by the screen */
                   <div style={{ flex: 1, position: "relative" }}>
@@ -560,6 +565,25 @@ export default function DisplayPage() {
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
+
+// Previews and sales demo links aren't a store screen: no check-in, no ad view counts
+function isPrivateView() {
+  const q = new URLSearchParams(window.location.search);
+  return q.has("preview") || q.has("demo");
+}
+
+// Sales demo links: a small corner tag, so a screenshot isn't mistaken for a live ad
+function DemoTag() {
+  return (
+    <div style={{
+      position: "absolute", top: 12, left: 12, zIndex: 40, pointerEvents: "none",   // left: the screen controls are on the right
+      background: "rgba(10,26,46,0.72)", color: "#fff", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em",
+      padding: "4px 10px", borderRadius: 999, border: "1px solid rgba(255,255,255,0.25)",
+    }}>
+      DEMO
+    </div>
+  );
+}
 
 // Admin test ads (only ever loaded on preview screens) carry this tag, under the Preview tag
 // (top left, clear of the tap/hover controls on the right)

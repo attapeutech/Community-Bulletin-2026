@@ -188,7 +188,7 @@ export default function DisplayPage() {
   const [design, setDesign] = useState<"classic" | "brand">("classic");
   const [preview, setPreview] = useState<"classic" | "brand" | null>(null);
   const [showFps, setShowFps] = useState(false); // ?fps: frame-rate meter for hardware checks
-  const [demo, setDemo] = useState(false);       // ?demo=<token>: a sales demo link, live ads + that demo's ads
+  const [demo, setDemo] = useState(false);       // ?demo=<token>: a sales demo link, only that demo's ads
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     const p = q.get("preview");

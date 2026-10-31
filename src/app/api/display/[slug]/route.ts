@@ -29,13 +29,11 @@ const adColumns = {
   templateData: ads.templateData,
 };
 
-// Paid ads; display previews (?preview=) also get admin test ads, and a sales demo link (?demo=) gets
-// that demo's ads. Demo ads never show on previews.
-const shownAds = (preview: boolean, demoId?: string | null) => or(
-  eq(ads.paymentStatus, "paid"),
-  preview ? and(eq(ads.isTest, true), isNull(ads.demoId)) : undefined,
-  demoId ? eq(ads.demoId, demoId) : undefined,
-);
+// Paid ads; display previews (?preview=) also get admin test ads. A sales demo link (?demo=) shows only
+// that demo's ads, the one advertiser being pitched. Demo ads never show on previews.
+const shownAds = (preview: boolean, demoId?: string | null) => demoId
+  ? eq(ads.demoId, demoId)
+  : or(eq(ads.paymentStatus, "paid"), preview ? and(eq(ads.isTest, true), isNull(ads.demoId)) : undefined);
 
 async function allLocationsResponse(now: Date, preview: boolean) {
   const liveAds = await db
@@ -166,7 +164,8 @@ export async function GET(
           postalCode: location.postalCode,
         },
         ads: activeAds,
-        advertiseSlide: await getAdvertiseSlideSettings(),
+        // A demo shows the advertiser's ads only, without the "Advertise here" slide
+        advertiseSlide: demoId ? null : await getAdvertiseSlideSettings(),
         design: await getDisplayDesign(),
         // Changes on every deploy/restart; screens reload themselves when it changes
         version: SERVER_VERSION,

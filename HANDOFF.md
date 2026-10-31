@@ -1,4 +1,4 @@
-# Handoff: 2026-10-22 (updated 2026-10-29)
+# Handoff: 2026-10-22 (updated 2026-10-30)
 
 ## Where things stand
 
@@ -32,6 +32,23 @@
   - `LeaveFrame` (`src/components/layout/LeaveFrame.tsx`, in the root layout) moves any non-display page out of a frame
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
+
+## 2026-10-30 summary
+
+- **Sales ad demos** (PRs #99–#101): a sales manager makes demo ads for an advertiser lead and shows them on the lead's store screen through a private link. See "Sales ad demos" below. Tested on **Cemitas Tepeaca** (advertiser lead, store Fast Eddies): one demo with one demo ad ("10 % OFF Demo AD - 1"), kept as a real demo.
+- **Brand sweep fix:** the CB mark in the coral transition between slides now spins a full turn (`rotationY: 360` in `BrandWipe.tsx`); a half turn left it mirrored for a moment on every store screen.
+- **Migrations `0018` and `0019` applied** to Neon (20 rows). The permission classifier blocks Claude from running migrations against production even with the user's OK, so the user ran it in a terminal; see "Migrations".
+
+## 2026-10-29 (evening) summary
+
+- **50% revenue share for every store owner** (PR #95): `DEFAULT_SHARE_RATE_BPS = 5000`, the column default is 5000 (migration `0018`), the store setup form has one 50% quick button, and Help and the demo page say "50% whether you provide the screen or we do" (~$2,100/mo at 40 ads). Admins can still set a special percentage per location. Fast Eddies was already at 50%; no existing data changed.
+- **Store owner agreement docs** (outside the app, Claude Docs):
+  - Full agreement: [Store Display Space Sublease Agreement](https://claude.ai/artifact/D7zij44Lef7iLjq1QQjCqX). Now says 50% (6.2), $100 per 4-week run (6.1), "4-week ad placements" (2.2), and direct deposit through Stripe (6.3 refund-after-payout sentence, 6.4 (a)–(f), 6.6 taxes / W-9 / 1099).
+  - One-page plain-English summary for the business partner: [Store Partner Agreement at a Glance](https://claude.ai/artifact/RWAbFSbBzYyQ9CPyQPW8jA). Contact line at the bottom filled in by the user.
+  - The 6.4 / 6.6 draft ([link](https://claude.ai/artifact/7SWPMaBbfQeXA9aXHUBym1)) is merged into the full agreement and says so at the top.
+- **Sales New lead fix** (PR #96): Store and Advertiser each keep their own draft on New lead (switching types no longer carries one business's details into the other); the Sales list search box resets with the tab, including on Back / Forward.
+- **SEO and Google Analytics** (PR #97): see "SEO and analytics" below. The sitemap was submitted in Google Search Console.
+- **Demo page** (`/demo`, PR #98) now lives under `src/app/(public)/demo` and uses the site's header and footer; its colours follow the site's light/dark switch (`.dark` on `<html>`), not the OS setting.
 
 ## 2026-10-29 summary
 
@@ -110,6 +127,27 @@
 - **Demo page projections** use 40 ads x $100 per 4 weeks, 13 runs a year and about 3% card fees: ~$2,100/mo average (~$25,200/yr) at a 50% share, ~$1,050/mo (~$12,600/yr) at 25%.
 - **First live payment test passed on 2026-10-28:** a $10 card payment, then an admin cancel with automatic refund, at Fast Eddies. Afterwards, set the Fast Eddies price back to $100.
 
+## Sales ad demos (2026-10-30)
+
+- **What it is:** demo ads made for an **advertiser lead**, shown on the lead's store screen design through a private link, to pitch the advertiser before they pay. Admin-only (the sales manager needs an admin account).
+- **Where:** the advertiser lead page in Sales has an **Ad demos** card (`src/app/dashboard/sales/[id]/LeadDemos.tsx`): Make a demo at <store> (needs the lead's store set), Show demo, Copy link, Add a demo ad, Extend 30 days (or "Turn back on" once expired), delete a demo ad, Delete demo.
+- **Data:** `demos` (lead, store at creation, `token`, `created_by`, `expires_at`; migration `0019`) and `ads.demo_id`. Demo ads are test ads (`is_test`, unpaid, approved) with `demo_id` set and `ended_at` = the demo's expiry. Deleting a lead deletes its demos and their ads (FK cascade). Helpers in `src/lib/demos.ts` (30 days, token = `crypto.randomUUID()` without dashes, `demoPath`).
+- **The link:** `/display/<store slug>?demo=<token>`. `GET /api/display/<slug>?demo=` returns **only that demo's ads**, no "Advertise here" slide, and 404 "This demo link has expired or was removed" when the token is unknown, expired or for another store. The screen shows a small **DEMO** tag top-left, cuts between ads without the brand sweep, and (like `?preview=`) doesn't check in as a store screen or count views.
+- **Adding a demo ad:** `/ads/new?demo=<id>` starts at the Details step with the store fixed and the business name, phone and address filled in from the lead (not the admin's profile, and the admin's profile isn't overwritten); no payment; returns to the lead page. `POST /api/ads` with `demoId` (admin only, demo must be open).
+- **Kept out of:** store screens, `?preview=` screens (they show only test ads without `demo_id`), My Ads, the admin ad list (`/api/admin/ads`), and the store owner's location ad list.
+- **API:** `POST /api/admin/demos` `{ leadId }`; `GET / PATCH { extend: true } / DELETE /api/admin/demos/[id]`.
+
+## SEO and analytics (2026-10-29)
+
+- **Site address:** `src/lib/site.ts` (`SITE_URL` from `NEXT_PUBLIC_APP_URL`, fallback `https://communitybulletin.com`; `SITE_NAME`, `SITE_DESCRIPTION`).
+- **`/robots.txt`** (`src/app/robots.ts`): disallows `/dashboard`, `/api/`, `/display/`, `/ads/`, `/go/`, `/partners/`; points to the sitemap.
+- **`/sitemap.xml`** (`src/app/sitemap.ts`, rebuilt hourly): public pages, every active store page, every running paid non-test ad.
+- **Metadata:** root `metadataBase`, title template `%s · Community Bulletin`, Open Graph / Twitter defaults; per-page titles, descriptions and canonicals (help, contact and live-ads get them from small `layout.tsx` files because the pages are client components); store pages "Advertise at <store>, <city>, <ST>" with the store logo or the site image; dashboards, sign-in pages (`(auth)/layout.tsx`) and display screens are `noindex`; Organization + WebSite JSON-LD on the home page.
+- **Link preview image:** `src/app/opengraph-image.tsx` (generated 1200×630 card). A page that sets its own `openGraph` must name `images` too, or it loses the site image.
+- **`proxy.ts` public routes** now include `/stores` (store pages had required login, though the dashboard calls them "Public Page"), `/robots.txt`, `/sitemap.xml` and `/opengraph-image`.
+- **Google Analytics 4:** measurement ID `G-TRMHS7J1CJ` (public) in `src/components/layout/GoogleAnalytics.tsx`, loaded from the root layout; skipped on `/display` and `/dashboard`. Realtime showed visits after deploy. The privacy policy's Cookies section mentions it.
+- **Search Console:** sitemap submitted 2026-10-29 (it first failed to fetch because the code wasn't deployed yet).
+
 ## Environment and config
 
 - Local config is in **`.env.local`** (git-ignored). It points at the **production** Neon database (pooled), so admin actions taken locally change live data.
@@ -126,13 +164,17 @@
 - Production had been built with `db:push`, so Drizzle's migration history was empty. All migrations up to `0004_ad_analytics` were recorded as applied in Neon's `drizzle.__drizzle_migrations`, so `npm run db:migrate` works normally from here.
 - **Run migrations against the direct (non-pooled) Neon host:** remove `-pooler` from the hostname. Restores and DDL can fail through the pooler.
 - `0003` and `0004` have hand-written timestamps (`when: 1750…`) that are older than `0002`. They are already applied, so this is harmless, but generate future migrations with `npm run db:generate` rather than writing them by hand.
-- **Applied to Neon through `0017`** (18 rows in `drizzle.__drizzle_migrations`):
+- **Applied to Neon through `0019`** (20 rows in `drizzle.__drizzle_migrations`):
   - `0012_location_traffic`: `locations.daily_customers` and `traffic_updated_at`
   - `0013_screen_devices`
   - `0014_direct_deposits`
   - `0015_sales_leads` (leads, lead_notes, `lead_stage` enum, `lead_follow_up` notification type)
   - `0016_lead_locations` (`leads.location_id`)
   - `0017_ad_templates_and_tests` (`ads.is_test`, `ads.template`, `ads.template_data`), applied 2026-10-29
+  - `0018_share_50_default` (`locations.share_rate_bps` default 5000) and `0019_sales_demos` (`demos` table, `ads.demo_id`), applied 2026-10-30 (20 rows)
+- **Who runs them:** Claude's permission classifier refuses migrations against production ("Production Deploy"), so the user runs this in a PowerShell terminal in the project folder (it reads `.env.local`, uses the direct host, then clears the variable):
+  `$env:DATABASE_URL = ((Get-Content .env.local | Select-String '^DATABASE_URL=').Line -replace '^DATABASE_URL=','' -replace '"','' -replace '-pooler',''); npx drizzle-kit migrate; Remove-Item Env:DATABASE_URL`
+  Apply a migration **before** deploying code that reads its columns.
 
 ## Store owner earnings and payouts (Phase 1, added 2026-10-23)
 
@@ -327,7 +369,7 @@
 - [ ] **Stripe: add the business bank account** (Home → Add bank), once the business partner provides it. Card revenue stays in the Stripe balance until then; direct deposits are paid from that balance, so they don't depend on it.
 - [ ] **Direct deposits, remaining:**
   1. Partner sign-off on direct deposits and Stripe's costs.
-  2. Update the store owner agreement, sections 6.4 and 6.6: the draft is in [Store Owner Agreement: Sections 6.4 and 6.6](https://claude.ai/artifact/7SWPMaBbfQeXA9aXHUBym1). Fill in [Company], then partner and attorney review. The agreement lives outside the app.
+  2. Store owner agreement: the direct-deposit wording (6.3, 6.4, 6.6) and 50% share are now in the [full agreement](https://claude.ai/artifact/D7zij44Lef7iLjq1QQjCqX). Fill in the blanks and the legal entity, then partner and attorney review (especially 6.3 and 6.4). The agreement lives outside the app.
   3. First real owner: they onboard from Earnings with their real details, an admin marks their agreement **Signed** on Payouts, and from the 15th their available balance (at least $25) is paid automatically.
   4. **1099 tax forms:** Stripe opens Connect → Tax forms only once there's a US connected account. After the first owner onboards and before January 2027, turn on 1099 reporting and pick the form type (MISC vs NEC: ask the accountant).
 - [ ] **Brand template (display screens):**
@@ -337,6 +379,9 @@
 - [ ] **Pada Express:** have the salesperson add them in Sales (Advertisers tab, store Fast Eddies) and, once they sign up, link their account on the lead. Their ad will arrive in Review Ads after payment; with the Sale template it shows animated there.
 - [ ] **Distance check (local-business rule, step 2):** ask for a business ZIP in Ad Details, load free US Census ZIP centroids, warn before payment when the business is farther than `LOCAL_AD_RADIUS_MILES` from the store, and show "~N mi from store" in Review Ads. Later: a per-store radius and a store list sorted by distance.
 - [ ] Optional: hide the clock on display screens while the tap/hover controls are showing (they overlap on desktop).
+- [ ] **Search Console:** check the sitemap shows "Success" and pages start appearing under Pages → Indexed. Optional: in Google Analytics, define internal traffic (office / home IPs) and turn on the Internal traffic filter.
+- [ ] **Sales demos, ideas:** a "Sales" role (see below) so the sales manager needn't be an admin; show a demo count on advertiser cards in the Sales list; when a demo's advertiser pays, offer to turn the demo ad into their real ad.
+- [ ] **This computer:** `.env.local` still lacks the Google sign-in variables (`NEXT_PUBLIC_GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`), so Google sign-in fails locally.
 
 - [ ] **About 1 week after 2026-10-23:** if Neon is stable, delete the old Postgres resource in Coolify (`postgresql-database-gt2gswqg8jmybj5l2ydntnfg`). Until then, don't reuse its password; it's in git history.
 - [ ] If a separate Socket.io service still exists in the Coolify project, stop and remove it.

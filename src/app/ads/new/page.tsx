@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { LOCAL_AD_RADIUS_MILES } from "@/types";
 import { SaleTemplate } from "@/components/display/templates/SaleTemplate";
-import { EMPTY_SALE, SALE_LIMITS, saleTemplateSchema, saleTitle, type SaleTemplateData } from "@/lib/ad-templates";
+import { EMPTY_SALE, SALE_LIMITS, readSaleData, saleTemplateSchema, saleTitle, type SaleTemplateData } from "@/lib/ad-templates";
 import { useRouter } from "next/navigation";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { costPerThousandCents, formatCostPerThousand, formatShoppers } from "@/lib/traffic";
@@ -277,6 +277,7 @@ export default function NewAdPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [asTest, setAsTest] = useState(false); // admin: post as a test ad (no payment, preview screens only)
   const [demo, setDemo] = useState<{ id: string; name: string; leadId: string } | null>(null); // ?demo=<id>: a sales demo ad
+  const [editingAdId, setEditingAdId] = useState<string | null>(null); // ?demo=<id>&edit=<ad id>: change an existing demo ad
   const [locLoading, setLocLoading] = useState(false);
   const [locSearched, setLocSearched] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
@@ -327,9 +328,11 @@ export default function NewAdPage() {
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Adding an ad to a sales demo (from an advertiser lead in Sales): the store is the demo's, so start at the
-  // details step, filled in from the lead
+  // details step, filled in from the lead. With &edit=<ad id>, filled in from that demo ad instead.
   useEffect(() => {
-    const demoId = new URLSearchParams(window.location.search).get("demo");
+    const q = new URLSearchParams(window.location.search);
+    const demoId = q.get("demo");
+    const editId = q.get("edit");
     if (!demoId) return;
     (async () => {
       const dj = await fetch(`/api/admin/demos/${encodeURIComponent(demoId)}`).then(r => r.json()).catch(() => null);
@@ -339,14 +342,32 @@ export default function NewAdPage() {
       if (!loc) { setError("The demo's store isn't available."); return; }
       const d = dj.data;
       setDemo({ id: d.id, name: d.businessName, leadId: d.leadId });
+      setSelectedLocation(loc);
+      setAsTest(true);
+      setStep(2);
+
+      if (editId) {
+        const aj = await fetch(`/api/admin/demos/${encodeURIComponent(demoId)}/ads/${encodeURIComponent(editId)}`).then(r => r.json()).catch(() => null);
+        if (!aj?.success) { setError(aj?.error ?? "Couldn't load the demo ad."); return; }
+        const a = aj.data;
+        setEditingAdId(a.id);
+        if (a.template === "sale") {
+          const t = readSaleData(a.templateData);
+          setDesign("template"); setSale(t); setPreviewSale(t);
+        } else {
+          setDesign("own"); setTitle(a.title); setDescription(a.description ?? "");
+        }
+        setUploadedImageUrl(a.imageUrl); setUploadedImageKey(a.imageKey);
+        setContactPhone(a.contactPhone ?? ""); setContactAddress(a.contactAddress ?? ""); setContactWebsite(a.contactWebsite ?? "");
+        setShowPhone(a.showPhone); setShowAddress(a.showAddress); setShowWebsite(a.showWebsite);
+        return;
+      }
+
       setSaleField("businessName", d.businessName.slice(0, SALE_LIMITS.businessName));
       setTitle(d.businessName.slice(0, 120));
       if (d.phone) { setContactPhone(d.phone); setShowPhone(true); }
       const address = [d.address, d.city].filter(Boolean).join(", ");
       if (address) { setContactAddress(address); setShowAddress(true); }
-      setSelectedLocation(loc);
-      setAsTest(true);
-      setStep(2);
     })();
   }, []);
 
@@ -449,8 +470,9 @@ export default function NewAdPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/ads", {
-        method: "POST",
+      // Editing a demo ad saves over it; everything else posts a new ad
+      const res = await fetch(editingAdId && demo ? `/api/admin/demos/${demo.id}/ads/${editingAdId}` : "/api/ads", {
+        method: editingAdId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           locationId: selectedLocation.id,
@@ -596,7 +618,7 @@ export default function NewAdPage() {
           {demo ? `← Back to ${demo.name}` : "← Back to dashboard"}
         </a>
         <h1 style={{ fontFamily: "Georgia,serif", fontSize: 28, fontWeight: 700, color: ACCENT, marginBottom: 4 }}>
-          {demo ? `Demo ad · ${demo.name}` : "Post a New Ad"}
+          {demo ? `${editingAdId ? "Edit demo ad" : "Demo ad"} · ${demo.name}` : "Post a New Ad"}
         </h1>
         <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 32 }}>
           {demo
@@ -927,7 +949,7 @@ export default function NewAdPage() {
               <div style={{ display: "flex", gap: 12, justifyContent: "space-between" }}>
                 <Btn secondary onClick={() => setStep(2)}>← Back</Btn>
                 <Btn onClick={submitAd} disabled={loading || (!asTest && !localConfirmed)}>
-                  {loading ? "Submitting…" : demo ? "Add to demo →" : asTest ? "Post test ad →" : "Submit & Pay →"}
+                  {loading ? "Submitting…" : editingAdId ? "Save changes →" : demo ? "Add to demo →" : asTest ? "Post test ad →" : "Submit & Pay →"}
                 </Btn>
               </div>
             </div>

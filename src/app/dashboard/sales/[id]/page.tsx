@@ -2,11 +2,12 @@ import { notFound } from "next/navigation";
 import { alias } from "drizzle-orm/pg-core";
 import { requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
-import { leads, leadNotes, users, payments, ads, locations } from "@/lib/db/schema";
-import { and, asc, desc, eq, notInArray, sql } from "drizzle-orm";
+import { leads, leadNotes, users, payments, ads, locations, demos } from "@/lib/db/schema";
+import { and, asc, desc, eq, inArray, notInArray, sql } from "drizzle-orm";
 import { leadToday } from "@/lib/leads";
 import { storeOptions } from "../store-options";
 import LeadDetailClient, { type LeadDetail } from "./LeadDetailClient";
+import type { LeadDemo } from "./LeadDemos";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +37,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
     .limit(1);
   if (!row) notFound();
 
-  const [notes, [spend], storeRows] = await Promise.all([
+  const [notes, [spend], storeRows, demoRows] = await Promise.all([
     db.select({ id: leadNotes.id, body: leadNotes.body, createdAt: leadNotes.createdAt, authorName: users.name })
       .from(leadNotes)
       .leftJoin(users, eq(leadNotes.authorId, users.id))
@@ -57,7 +58,30 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
       .from(locations)
       .where(eq(locations.isActive, true))
       .orderBy(asc(locations.storeName)),
+    // Advertiser: demos made for them, newest first
+    row.lead.kind === "advertiser"
+      ? db.select({ id: demos.id, token: demos.token, locationId: demos.locationId, expiresAt: demos.expiresAt, storeName: locations.storeName, storeNumber: locations.storeNumber, storeSlug: locations.slug })
+          .from(demos)
+          .innerJoin(locations, eq(demos.locationId, locations.id))
+          .where(eq(demos.leadId, id))
+          .orderBy(desc(demos.createdAt))
+      : Promise.resolve([]),
   ]);
+  const demoAds = demoRows.length
+    ? await db.select({ id: ads.id, demoId: ads.demoId, title: ads.title, imageUrl: ads.imageUrl })
+        .from(ads)
+        .where(inArray(ads.demoId, demoRows.map(d => d.id)))
+        .orderBy(asc(ads.createdAt))
+    : [];
+  const leadDemos: LeadDemo[] = demoRows.map(d => ({
+    id: d.id,
+    token: d.token,
+    locationId: d.locationId,
+    storeLabel: storeOptions([{ id: d.locationId, storeName: d.storeName, storeNumber: d.storeNumber }])[0].label,
+    storeSlug: d.storeSlug,
+    expiresAt: d.expiresAt.toISOString(),
+    ads: demoAds.filter(a => a.demoId === d.id).map(a => ({ id: a.id, title: a.title, imageUrl: a.imageUrl })),
+  }));
 
   const l = row.lead;
   const data: LeadDetail = {
@@ -82,5 +106,5 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
     notes: notes.map(n => ({ id: n.id, body: n.body, authorName: n.authorName, createdAt: n.createdAt.toISOString() })),
   };
 
-  return <LeadDetailClient lead={data} today={leadToday()} stores={storeOptions(storeRows)} />;
+  return <LeadDetailClient lead={data} today={leadToday()} stores={storeOptions(storeRows)} demos={leadDemos} />;
 }

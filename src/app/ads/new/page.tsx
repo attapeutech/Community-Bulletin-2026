@@ -276,6 +276,7 @@ export default function NewAdPage() {
   const [localConfirmed, setLocalConfirmed] = useState(false); // "my business is near this store", required before paying
   const [isAdmin, setIsAdmin] = useState(false);
   const [asTest, setAsTest] = useState(false); // admin: post as a test ad (no payment, preview screens only)
+  const [demo, setDemo] = useState<{ id: string; name: string; leadId: string } | null>(null); // ?demo=<id>: a sales demo ad
   const [locLoading, setLocLoading] = useState(false);
   const [locSearched, setLocSearched] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
@@ -301,17 +302,18 @@ export default function NewAdPage() {
   const [showAddress, setShowAddress] = useState(false);
   const [showWebsite, setShowWebsite] = useState(false);
 
-  // Pre-fill contact info from user profile
+  // Pre-fill contact info from user profile (not on a demo ad: that's the prospect's business, not the admin's)
   useEffect(() => {
+    const forDemo = new URLSearchParams(window.location.search).has("demo");
     fetch("/api/users/me")
       .then(r => r.json())
       .then(j => {
-        if (j.success) {
+        if (j.success && !forDemo) {
           if (j.data.phone)   setContactPhone(j.data.phone);
           if (j.data.address) setContactAddress(j.data.address);
           if (j.data.website) setContactWebsite(j.data.website);
-          setIsAdmin(j.data.role === "admin");
         }
+        if (j.success) setIsAdmin(j.data.role === "admin");
       })
       .catch(() => {});
   }, []);
@@ -323,6 +325,30 @@ export default function NewAdPage() {
   const [uploading, setUploading] = useState(false);
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Adding an ad to a sales demo (from an advertiser lead in Sales): the store is the demo's, so start at the
+  // details step, filled in from the lead
+  useEffect(() => {
+    const demoId = new URLSearchParams(window.location.search).get("demo");
+    if (!demoId) return;
+    (async () => {
+      const dj = await fetch(`/api/admin/demos/${encodeURIComponent(demoId)}`).then(r => r.json()).catch(() => null);
+      if (!dj?.success) { setError(dj?.error ?? "Couldn't load the demo."); return; }
+      const lj = await fetch(`/api/locations?slug=${encodeURIComponent(dj.data.locationSlug)}`).then(r => r.json()).catch(() => null);
+      const loc = lj?.success ? lj.data?.[0] : null;
+      if (!loc) { setError("The demo's store isn't available."); return; }
+      const d = dj.data;
+      setDemo({ id: d.id, name: d.businessName, leadId: d.leadId });
+      setSaleField("businessName", d.businessName.slice(0, SALE_LIMITS.businessName));
+      setTitle(d.businessName.slice(0, 120));
+      if (d.phone) { setContactPhone(d.phone); setShowPhone(true); }
+      const address = [d.address, d.city].filter(Boolean).join(", ");
+      if (address) { setContactAddress(address); setShowAddress(true); }
+      setSelectedLocation(loc);
+      setAsTest(true);
+      setStep(2);
+    })();
+  }, []);
 
   // ── Step 1: Location search ─────────────────────────────────────────────────
   // Arriving from a display screen's "Advertise here" QR code: ?location=<store slug> pre-selects the store
@@ -441,12 +467,13 @@ export default function NewAdPage() {
           showAddress,
           showWebsite,
           isTest: asTest || undefined,
+          demoId: demo?.id,
         }),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
-      // A test ad skips payment: open the store's preview screen on it
-      router.push(asTest
+      // A demo ad goes back to the demo; a test ad skips payment: open the store's preview screen on it
+      router.push(demo ? `/dashboard/sales/${demo.leadId}#demos` : asTest
         ? `/display/${selectedLocation.slug}?preview=brand&ad=${json.data.id}`
         : `/ads/${json.data.id}/payment`);
     } catch (e: any) {
@@ -565,20 +592,23 @@ export default function NewAdPage() {
     <div style={{ minHeight: "100vh", background: "#F4F7FB", display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 16px" }}>
       {/* Header + form: wide on desktop (form left, screen preview right); one column on phones */}
       <div style={{ width: "100%", maxWidth: 1400 }}>
-        <a href="/dashboard/user" style={{ fontSize: 13, color: "#4A6B82", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 24 }}>
-          ← Back to dashboard
+        <a href={demo ? `/dashboard/sales/${demo.leadId}` : "/dashboard/user"} style={{ fontSize: 13, color: "#4A6B82", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 24 }}>
+          {demo ? `← Back to ${demo.name}` : "← Back to dashboard"}
         </a>
         <h1 style={{ fontFamily: "Georgia,serif", fontSize: 28, fontWeight: 700, color: ACCENT, marginBottom: 4 }}>
-          Post a New Ad
+          {demo ? `Demo ad · ${demo.name}` : "Post a New Ad"}
         </h1>
         <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 32 }}>
-          {selectedLocation ? `${formatPrice(selectedLocation.pricePerRunCents)} / 4 weeks` : "Priced per store · 4 weeks"} · Displayed on in-store screens at your chosen location.
+          {demo
+            ? `${selectedLocation?.storeName ?? ""} · Shown only on this demo's private link, never on the store TV. No payment.`
+            : <>{selectedLocation ? `${formatPrice(selectedLocation.pricePerRunCents)} / 4 weeks` : "Priced per store · 4 weeks"} · Displayed on in-store screens at your chosen location.</>}
         </p>
 
         <StepBar current={step} />
 
         <div className="grid gap-6 items-start lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
-        <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #D8E4EE", padding: "clamp(18px, 4vw, 32px)", minWidth: 0 }}>
+        {/* Always a white card, so give it dark text too (the inherited colour is light in dark mode) */}
+        <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #D8E4EE", padding: "clamp(18px, 4vw, 32px)", minWidth: 0, color: ACCENT }}>
           {error && (
             <div style={{ background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 8, padding: "10px 14px", marginBottom: 20, fontSize: 13, color: "#b91c1c" }}>
               {error}
@@ -804,13 +834,15 @@ export default function NewAdPage() {
                     />
                   </div>
                 ))}
+                {!demo && (
                 <p style={{ fontSize: 11, color: "#5B7D96", marginTop: 4 }}>
                   Contact info is saved to your profile and pre-filled on future ads.
                 </p>
+                )}
               </div>
 
               <div style={{ display: "flex", gap: 12, justifyContent: "space-between" }}>
-                <Btn secondary onClick={() => setStep(1)}>← Back</Btn>
+                <Btn secondary onClick={() => (demo ? router.push(`/dashboard/sales/${demo.leadId}`) : setStep(1))}>← Back</Btn>
                 <Btn onClick={() => {
                   if (isTemplate) {
                     const check = saleTemplateSchema.safeParse(sale);
@@ -820,7 +852,7 @@ export default function NewAdPage() {
                   if (!uploadedImageUrl) { setError(`Please add your ${isTemplate ? "photo" : "image"}: click the screen preview or drop it there.`); return; }
                   setError(""); setStep(4);
                 }}>
-                  Next: Review &amp; Pay →
+                  {demo ? "Next: Review →" : <>Next: Review &amp; Pay →</>}
                 </Btn>
               </div>
             </div>
@@ -831,19 +863,28 @@ export default function NewAdPage() {
             <div>
               <h2 style={{ fontFamily: "Georgia,serif", fontSize: 20, color: ACCENT, marginBottom: 4 }}>Review & submit</h2>
               <p style={{ fontSize: 13, color: "#4A6B82", marginBottom: 24 }}>
-                Confirm your ad details. Payment of <strong>{selectedLocation ? `$${(selectedLocation.pricePerRunCents / 100).toFixed(2)}` : ""}</strong> is collected on the next step.
+                {demo
+                  ? <>Confirm the demo ad. No payment: it shows only on this demo&apos;s private link.</>
+                  : <>Confirm your ad details. Payment of <strong>{selectedLocation ? `$${(selectedLocation.pricePerRunCents / 100).toFixed(2)}` : ""}</strong> is collected on the next step.</>}
               </p>
 
               {/* Summary */}
               <div style={{ background: "#F4F7FB", borderRadius: 12, padding: 20, marginBottom: 24 }}>
                 {/* Phones: the screen preview sits here; on desktop it's pinned in the right column */}
                 {uploadedImageUrl && <div className="lg:hidden" style={{ marginBottom: 16 }}>{screenPreview()}</div>}
-                <div style={{ display: "grid", gap: 10, fontSize: 14 }}>
+                {/* Own text colour: the page's inherited text colour is light in dark mode, on this light box */}
+                <div style={{ display: "grid", gap: 10, fontSize: 14, color: ACCENT }}>
                   <div><span style={{ color: "#4A6B82" }}>Location:</span> <strong>{selectedLocation?.storeName}</strong>{selectedLocation?.storeNumber && <StoreNumber value={selectedLocation.storeNumber} />}</div>
                   <div><span style={{ color: "#4A6B82" }}>Title:</span> <strong>{adTitle}</strong>{isTemplate && <span style={{ color: "#4A6B82" }}> · Sale template</span>}</div>
                   {!isTemplate && description && <div><span style={{ color: "#4A6B82" }}>Description:</span> {description}</div>}
-                  <div><span style={{ color: "#4A6B82" }}>Duration:</span> 4 weeks (28 days)</div>
-                  <div><span style={{ color: "#4A6B82" }}>Price:</span> <strong style={{ color: RED }}>{selectedLocation ? `$${(selectedLocation.pricePerRunCents / 100).toFixed(2)}` : ""}</strong> <span style={{ color: "#4A6B82" }}>/ 4 weeks</span></div>
+                  {demo ? (
+                    <div><span style={{ color: "#4A6B82" }}>Shown:</span> on the demo link only, until it expires · no payment</div>
+                  ) : (
+                    <>
+                      <div><span style={{ color: "#4A6B82" }}>Duration:</span> 4 weeks (28 days)</div>
+                      <div><span style={{ color: "#4A6B82" }}>Price:</span> <strong style={{ color: RED }}>{selectedLocation ? `$${(selectedLocation.pricePerRunCents / 100).toFixed(2)}` : ""}</strong> <span style={{ color: "#4A6B82" }}>/ 4 weeks</span></div>
+                    </>
+                  )}
                   {(showPhone || showAddress || showWebsite) && (
                     <div style={{ marginTop: 8, borderTop: "1px solid #D8E4EE", paddingTop: 8 }}>
                       <div style={{ fontSize: 12, color: "#4A6B82", marginBottom: 4, fontWeight: 600 }}>Shown on display:</div>
@@ -855,7 +896,7 @@ export default function NewAdPage() {
                 </div>
               </div>
 
-              {isAdmin && (
+              {isAdmin && !demo && (
                 <label style={{ display: "flex", gap: 10, alignItems: "flex-start", background: "#F0F7FF", border: "1px solid #C9DFF2", borderRadius: 8, padding: "12px 14px", marginBottom: 12, fontSize: 13, color: "#1A3A5C", cursor: "pointer", lineHeight: 1.5 }}>
                   <input
                     type="checkbox"
@@ -886,7 +927,7 @@ export default function NewAdPage() {
               <div style={{ display: "flex", gap: 12, justifyContent: "space-between" }}>
                 <Btn secondary onClick={() => setStep(2)}>← Back</Btn>
                 <Btn onClick={submitAd} disabled={loading || (!asTest && !localConfirmed)}>
-                  {loading ? "Submitting…" : asTest ? "Post test ad →" : "Submit & Pay →"}
+                  {loading ? "Submitting…" : demo ? "Add to demo →" : asTest ? "Post test ad →" : "Submit & Pay →"}
                 </Btn>
               </div>
             </div>

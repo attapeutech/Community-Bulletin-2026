@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Copy, ExternalLink, Plus, Trash2 } from "lucide-react";
+import { Copy, ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { demoPath } from "@/lib/demos";
@@ -118,15 +118,22 @@ export default function LeadDemos({ leadId, locationId, storeLabel, demos }: {
                       <img src={ad.imageUrl} alt="" className="w-full aspect-video object-cover bg-[#EEF4F9]" />
                       <div className="px-2.5 py-2 flex items-start justify-between gap-2">
                         <span className="text-[12px] text-[#1A3A5C] leading-snug line-clamp-2">{ad.title}</span>
+                        <div className="flex items-center gap-2 shrink-0">
+                        {!expired && (
+                          <Link href={`/ads/new?demo=${d.id}&edit=${ad.id}`} aria-label={`Edit demo ad ${ad.title}`} className="text-[#4A6B82] hover:text-[#1A3A5C]">
+                            <Pencil size={14} />
+                          </Link>
+                        )}
                         <button
                           type="button"
                           aria-label={`Delete demo ad ${ad.title}`}
                           disabled={busy}
                           onClick={() => window.confirm("Delete this demo ad?") && call(`/api/ads/${ad.id}`, "DELETE")}
-                          className="shrink-0 text-[#4A6B82] hover:text-red-700 disabled:opacity-50"
+                          className="text-[#4A6B82] hover:text-red-700 disabled:opacity-50"
                         >
                           <Trash2 size={14} />
                         </button>
+                        </div>
                       </div>
                     </div>
                   ))}

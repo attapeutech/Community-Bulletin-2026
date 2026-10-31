@@ -10,7 +10,7 @@ export type BrandWipeHandle = {
 
 /**
  * The new design's signature transition between slides: a coral panel sweeps across, the CB mark
- * flips in its centre, and the next slide is revealed. Screens set to reduce motion skip it.
+ * spins a full turn in its centre (a half turn would leave it mirrored), and the next slide is revealed. Screens set to reduce motion skip it.
  */
 export const BrandWipe = forwardRef<BrandWipeHandle>(function BrandWipe(_props, ref) {
   const panel = useRef<HTMLDivElement>(null);
@@ -26,7 +26,7 @@ export const BrandWipe = forwardRef<BrandWipeHandle>(function BrandWipe(_props, 
         .set(panel.current, { xPercent: -101, visibility: "visible" })
         .set(mark.current, { rotationY: 0, scale: 0.7, opacity: 0 })
         .to(panel.current, { xPercent: 0, duration: 0.42, ease: "power3.in" })
-        .to(mark.current, { opacity: 1, scale: 1, rotationY: 180, duration: 0.5, ease: "power2.inOut" }, "-=0.1")
+        .to(mark.current, { opacity: 1, scale: 1, rotationY: 360, duration: 0.5, ease: "power2.inOut" }, "-=0.1")
         .call(onCovered)
         .to(panel.current, { xPercent: 101, duration: 0.45, ease: "power3.out" }, "+=0.08")
         .set(panel.current, { visibility: "hidden" });

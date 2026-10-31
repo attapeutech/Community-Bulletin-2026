@@ -6,7 +6,7 @@ import { leads } from "./leads";
 import { ads } from "./ads";
 
 // Sales demos: demo ads made for an advertiser lead, shown to them on their store's real screen design
-// (mixed with its live ads) at /display/<store>?demo=<token>. Admin-only. Its ads are test ads
+// (only those ads) at /display/<store>?demo=<token>. Admin-only. Its ads are test ads
 // (isTest, unpaid) with demoId set, so no store screen, preview or report ever includes them.
 export const demos = pgTable("demos", {
   id: uuid("id").primaryKey().defaultRandom(),

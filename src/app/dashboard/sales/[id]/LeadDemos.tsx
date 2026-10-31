@@ -68,7 +68,7 @@ export default function LeadDemos({ leadId, locationId, storeLabel, demos }: {
       <CardHeader className="px-5 py-4 border-b border-[#D8E4EE]">
         <CardTitle className="font-serif text-[18px] text-[#1A3A5C]">Ad demos</CardTitle>
         <p className="text-[12px] text-[#4A6B82] m-0 mt-1">
-          Make sample ads for this business and show them on the store&apos;s real screen, mixed with its live ads. Only people with the link can see it; the store TV never shows them. Links work for 30 days.
+          Make sample ads for this business and show them on the store&apos;s real screen design, on their own. Only people with the link can see it; the store TV never shows them. Links work for 30 days.
         </p>
       </CardHeader>
       <CardContent className="p-5 flex flex-col gap-4">

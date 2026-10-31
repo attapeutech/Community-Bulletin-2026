@@ -1,4 +1,4 @@
-# Handoff: 2026-10-22 (updated 2026-10-30)
+# Handoff: 2026-10-22 (updated 2026-10-31)
 
 ## Where things stand
 
@@ -32,6 +32,12 @@
   - `LeaveFrame` (`src/components/layout/LeaveFrame.tsx`, in the root layout) moves any non-display page out of a frame
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
+
+## 2026-10-31 summary
+
+- **Admin Panel hides Sales demo ads** (PR #103): its first load, Overview counts (total, denied, views, clicks) and `/api/admin/stats` skip ads with a `demo_id`, matching `/api/admin/ads`. Before, demo ads showed on load and vanished on the panel's refresh.
+- **Edit a demo ad** (PR #104): a pencil on each demo ad in the lead's Ad demos card opens `/ads/new?demo=<id>&edit=<ad id>`, filled in from the ad; Save changes updates the same ad, so the demo link doesn't change (`GET / PATCH /api/admin/demos/[id]/ads/[adId]`).
+- **Local dev:** a dev server whose background workers crashed ("Jest worker encountered 2 child process exceptions" in `.next/dev/logs/next-development.log`) still serves pages but fails real work such as sign-in; restart it. Only one dev server can hold port 3000.
 
 ## 2026-10-30 summary
 
@@ -133,8 +139,9 @@
 - **Where:** the advertiser lead page in Sales has an **Ad demos** card (`src/app/dashboard/sales/[id]/LeadDemos.tsx`): Make a demo at <store> (needs the lead's store set), Show demo, Copy link, Add a demo ad, Extend 30 days (or "Turn back on" once expired), delete a demo ad, Delete demo.
 - **Data:** `demos` (lead, store at creation, `token`, `created_by`, `expires_at`; migration `0019`) and `ads.demo_id`. Demo ads are test ads (`is_test`, unpaid, approved) with `demo_id` set and `ended_at` = the demo's expiry. Deleting a lead deletes its demos and their ads (FK cascade). Helpers in `src/lib/demos.ts` (30 days, token = `crypto.randomUUID()` without dashes, `demoPath`).
 - **The link:** `/display/<store slug>?demo=<token>`. `GET /api/display/<slug>?demo=` returns **only that demo's ads**, no "Advertise here" slide, and 404 "This demo link has expired or was removed" when the token is unknown, expired or for another store. The screen shows a small **DEMO** tag top-left, cuts between ads without the brand sweep, and (like `?preview=`) doesn't check in as a store screen or count views.
+- **Editing a demo ad:** `/ads/new?demo=<id>&edit=<ad id>` (pencil on the thumbnail; hidden on expired demos) loads the ad's design, image, offer and contact details and saves with `PATCH /api/admin/demos/[id]/ads/[adId]` (admin; the ad must belong to the demo; store, payment and status stay).
 - **Adding a demo ad:** `/ads/new?demo=<id>` starts at the Details step with the store fixed and the business name, phone and address filled in from the lead (not the admin's profile, and the admin's profile isn't overwritten); no payment; returns to the lead page. `POST /api/ads` with `demoId` (admin only, demo must be open).
-- **Kept out of:** store screens, `?preview=` screens (they show only test ads without `demo_id`), My Ads, the admin ad list (`/api/admin/ads`), and the store owner's location ad list.
+- **Kept out of:** store screens, `?preview=` screens (they show only test ads without `demo_id`), My Ads, the Admin Panel (its ad list, Overview counts and `/api/admin/stats`), and the store owner's location ad list.
 - **API:** `POST /api/admin/demos` `{ leadId }`; `GET / PATCH { extend: true } / DELETE /api/admin/demos/[id]`.
 
 ## SEO and analytics (2026-10-29)

@@ -359,13 +359,13 @@ export default function DisplayPage() {
     trackShownSlide();
   }, [emblaApi, slides, trackShownSlide]);
 
-  // Brand design: hold each slide 8 s, then sweep to the next one
+  // Brand design: hold each slide 8 s, then sweep to the next one (a sales demo just cuts to the next ad)
   const wipeRef = useRef<BrandWipeHandle>(null);
   const goToSlide = useCallback((i: number) => {
     if (!emblaApi) return;
-    if (wipeRef.current) wipeRef.current.play(() => emblaApi.scrollTo(i, true));
+    if (wipeRef.current && !demo) wipeRef.current.play(() => emblaApi.scrollTo(i, true));
     else emblaApi.scrollTo(i, true);
-  }, [emblaApi]);
+  }, [emblaApi, demo]);
   useEffect(() => {
     if (!brand || !emblaApi || slides.length < 2) return;
     const t = setTimeout(() => goToSlide((emblaApi.selectedScrollSnap() + 1) % slides.length), 8000);

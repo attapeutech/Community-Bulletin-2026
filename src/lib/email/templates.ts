@@ -369,3 +369,31 @@ export async function sendPartnerDeclinedEmail({ to, name, businessName, reason 
     `),
   });
 }
+
+// ─── Sales proposals ─────────────────────────────────────────────────────────
+
+const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+/** A sales proposal: the manager's message, the offer, and a button to the advertiser's proposal page */
+export async function sendProposalEmail({ to, replyTo, subject, message, businessName, storeName, price, url }: {
+  to: string; replyTo: string; subject: string; message: string; businessName: string; storeName: string; price: string; url: string;
+}) {
+  // The message is the manager's plain text: escape it and keep its paragraphs
+  const paragraphs = escapeHtml(message).split(/\n{2,}/).map(p => `<p style="color:#1A3A5C;font-size:14px;line-height:1.6;margin:0 0 14px">${p.replace(/\n/g, "<br>")}</p>`).join("");
+  return sendEmail({
+    to,
+    replyTo,
+    subject,
+    text: `${message}\n\nSee your ad: ${url}`,
+    html: emailWrapper(`
+      ${paragraphs}
+      ${detailTable([
+        { label: "Your ad", value: escapeHtml(businessName) },
+        { label: "Screen", value: escapeHtml(storeName) },
+        { label: "Price", value: `<strong>${escapeHtml(price)}</strong> for 4 weeks` },
+      ])}
+      ${primaryButton(url, "See your ad &amp; accept", CORAL_COLOR)}
+      <p style="color:#9DC4E0;font-size:12px;margin-top:24px">Questions? Reply to this email and our sales team will get back to you.</p>
+    `),
+  });
+}

@@ -16,6 +16,7 @@ type AdSummary = {
   status: string;
   paymentStatus: string;
   location: { storeName: string; slug: string; pricePerRunCents: number };
+  fromProposal?: boolean;   // a sales proposal's ad: live when paid, no review
 };
 
 // ─── PayPal script loader ─────────────────────────────────────────────────────
@@ -146,7 +147,9 @@ export default function PaymentPage() {
           <div style={{ fontSize: 56, marginBottom: 16 }}>🎉</div>
           <h1 style={{ fontFamily: "Georgia,serif", fontSize: 24, color: ACCENT, marginBottom: 8 }}>Payment received!</h1>
           <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 24 }}>
-            Your ad has been submitted for review. You'll receive an email once it's approved (typically within 1–2 business days).
+            {ad?.fromProposal
+              ? "Your ad is going live on the store's screen now. We've emailed you the details."
+              : "Your ad has been submitted for review. You'll receive an email once it's approved (typically within 1–2 business days)."}
           </p>
           <a
             href="/dashboard/user"
@@ -183,7 +186,7 @@ export default function PaymentPage() {
         <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #D8E4EE", padding: 48, maxWidth: 480, textAlign: "center" }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
           <h2 style={{ fontFamily: "Georgia,serif", fontSize: 20, color: ACCENT, marginBottom: 8 }}>Already paid</h2>
-          <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 24 }}>This ad has been paid and is pending review.</p>
+          <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 24 }}>{ad.fromProposal ? "This ad has been paid and is live." : "This ad has been paid and is pending review."}</p>
           <a href="/dashboard/user" style={{ display: "inline-block", background: ACCENT, color: "#fff", padding: "10px 24px", borderRadius: 8, textDecoration: "none", fontSize: 14, fontWeight: 600 }}>
             View My Ads
           </a>
@@ -204,7 +207,7 @@ export default function PaymentPage() {
           Complete Payment
         </h1>
         <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 32 }}>
-          Your ad will be submitted for review once payment is confirmed.
+          {ad.fromProposal ? "Your ad goes live on the store's screen as soon as payment is confirmed." : "Your ad will be submitted for review once payment is confirmed."}
         </p>
 
         {/* Ad summary card */}

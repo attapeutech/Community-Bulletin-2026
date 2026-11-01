@@ -4,10 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Copy, ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
+import { Copy, ExternalLink, Pencil, Plus, Send, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { demoPath } from "@/lib/demos";
+import { PROPOSAL_STATUS, proposalPath, proposalStatus } from "@/lib/proposals";
 
 export type LeadDemo = {
   id: string;
@@ -17,6 +18,7 @@ export type LeadDemo = {
   storeSlug: string;
   expiresAt: string;
   ads: { id: string; title: string; imageUrl: string }[];
+  proposals: { id: string; token: string; email: string; sentAt: string; viewedAt: string | null; acceptedAt: string | null; paidAt: string | null }[];
 };
 
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -97,6 +99,14 @@ export default function LeadDemos({ leadId, locationId, storeLabel, demos }: {
                       <button type="button" onClick={() => copyLink(d)} className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md border border-[#D8E4EE] bg-white text-[12px] text-[#1A3A5C] hover:bg-[#F0F5FA]">
                         <Copy size={13} /> Copy link
                       </button>
+                      {d.ads.length > 0 && (
+                        <Link
+                          href={`/dashboard/sales/${leadId}/proposal?demo=${d.id}`}
+                          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-[#E8563A] text-white text-[12px] font-semibold no-underline"
+                        >
+                          <Send size={13} /> Send proposal
+                        </Link>
+                      )}
                     </>
                   )}
                   <button
@@ -137,6 +147,23 @@ export default function LeadDemos({ leadId, locationId, storeLabel, demos }: {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* Proposals sent from this demo, newest first */}
+              {d.proposals.length > 0 && (
+                <div className="flex flex-col gap-1.5">
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-[#4A6B82]">Proposals</div>
+                  {d.proposals.map(p => {
+                    const st = PROPOSAL_STATUS[proposalStatus(p, d.expiresAt)];
+                    return (
+                      <div key={p.id} className="flex items-center gap-2 flex-wrap text-[12px] text-[#1A3A5C]">
+                        <span className={cn("text-[10px] font-bold uppercase tracking-wide border rounded-full px-2 py-0.5", st.chip)}>{st.label}</span>
+                        <span className="truncate">{p.email} · sent {fmtDate(p.sentAt)}{p.viewedAt ? ` · opened ${fmtDate(p.viewedAt)}` : ""}{p.paidAt ? ` · paid ${fmtDate(p.paidAt)}` : ""}</span>
+                        <a href={proposalPath(p.token)} target="_blank" rel="noopener noreferrer" className="ml-auto text-[#4A90C4] no-underline hover:underline">View</a>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 

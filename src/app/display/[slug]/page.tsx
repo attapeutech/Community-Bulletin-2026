@@ -231,7 +231,9 @@ export default function DisplayPage() {
       loadedOnceRef.current = true;
       setError(""); // clear any prior error on success
       setLocation(json.data.location);
-      setAds(json.data.ads);
+      // A demo link with &only&ad=<id> (a sales proposal's preview) plays just that ad
+      const only = q.get("demo") && q.has("only") ? q.get("ad") : null;
+      setAds(only ? json.data.ads.filter((a: Ad) => a.id === only) : json.data.ads);
       setAdvertiseSlide(json.data.advertiseSlide ?? null);
       setDesign(json.data.design === "brand" ? "brand" : "classic");
     } catch {

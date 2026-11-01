@@ -2,8 +2,8 @@ import { notFound } from "next/navigation";
 import { alias } from "drizzle-orm/pg-core";
 import { requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
-import { leads, leadNotes, users, payments, ads, locations, demos, appointments } from "@/lib/db/schema";
-import { and, asc, desc, eq, gte, inArray, notInArray, sql } from "drizzle-orm";
+import { leads, leadNotes, users, payments, ads, locations, demos, appointments, proposals } from "@/lib/db/schema";
+import { and, asc, desc, eq, gte, inArray, isNotNull, notInArray, sql } from "drizzle-orm";
 import { leadToday } from "@/lib/leads";
 import { storeOptions } from "../store-options";
 import LeadDetailClient, { type LeadDetail } from "./LeadDetailClient";
@@ -88,6 +88,14 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
         .where(inArray(ads.demoId, demoRows.map(d => d.id)))
         .orderBy(asc(ads.createdAt))
     : [];
+  // Proposals sent from this lead's demos
+  const proposalRows = demoRows.length
+    ? await db.select({ id: proposals.id, demoId: proposals.demoId, token: proposals.token, email: proposals.email, sentAt: proposals.sentAt, viewedAt: proposals.viewedAt, acceptedAt: proposals.acceptedAt, paidAt: proposals.paidAt })
+        .from(proposals)
+        .where(and(eq(proposals.leadId, id), isNotNull(proposals.sentAt)))
+        .orderBy(desc(proposals.sentAt))
+    : [];
+  const iso = (d: Date | null) => d?.toISOString() ?? null;
   const leadDemos: LeadDemo[] = demoRows.map(d => ({
     id: d.id,
     token: d.token,
@@ -96,6 +104,9 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
     storeSlug: d.storeSlug,
     expiresAt: d.expiresAt.toISOString(),
     ads: demoAds.filter(a => a.demoId === d.id).map(a => ({ id: a.id, title: a.title, imageUrl: a.imageUrl })),
+    proposals: proposalRows.filter(p => p.demoId === d.id).map(p => ({
+      id: p.id, token: p.token, email: p.email, sentAt: p.sentAt!.toISOString(), viewedAt: iso(p.viewedAt), acceptedAt: iso(p.acceptedAt), paidAt: iso(p.paidAt),
+    })),
   }));
 
   const l = row.lead;

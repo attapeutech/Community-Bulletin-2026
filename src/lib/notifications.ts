@@ -53,8 +53,9 @@ export async function notifyRoles(roles: ("approver" | "admin")[], input: Notify
 
 // ─── Events ──────────────────────────────────────────────────────────────────
 
-/** A payment was recorded: tell the advertiser, the reviewers, and the store owner. */
-export async function notifyPaymentRecorded(paymentId: string) {
+/** A payment was recorded: tell the advertiser, the reviewers, and the store owner.
+ *  `live`: a sales proposal ad, which goes live without review (so no "waiting for review"). */
+export async function notifyPaymentRecorded(paymentId: string, { live = false }: { live?: boolean } = {}) {
   try {
     const [row] = await db
       .select({
@@ -78,11 +79,11 @@ export async function notifyPaymentRecorded(paymentId: string) {
       type: "payment_received",
       adId: row.adId,
       subject: `Payment received for "${row.adTitle}"`,
-      body: `${money(row.amountCents)} paid. Your ad is now waiting for review.`,
+      body: `${money(row.amountCents)} paid. ${live ? "Your ad is going live now." : "Your ad is now waiting for review."}`,
       link: `/dashboard/user/ads/${row.adId}`,
     });
 
-    await notifyRoles(["approver", "admin"], {
+    if (!live) await notifyRoles(["approver", "admin"], {
       type: "ad_pending_review",
       adId: row.adId,
       subject: `New ad to review: "${row.adTitle}"`,
@@ -96,7 +97,7 @@ export async function notifyPaymentRecorded(paymentId: string) {
         type: "store_ad_paid",
         adId: row.adId,
         subject: `New ad booked at ${row.storeName}`,
-        body: `"${row.adTitle}" was paid for and will run once approved.`,
+        body: live ? `"${row.adTitle}" was paid for and is running now.` : `"${row.adTitle}" was paid for and will run once approved.`,
         link: "/dashboard/store-owner/earnings",
       });
     }

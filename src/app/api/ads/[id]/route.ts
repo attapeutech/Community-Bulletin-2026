@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
-import { ads, locations, users, payments } from "@/lib/db/schema";
+import { ads, locations, users, payments, proposals } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth/session";
 import { eq } from "drizzle-orm";
 
@@ -74,7 +74,10 @@ export async function GET(
       .from(payments)
       .where(eq(payments.adId, id));
 
-    return NextResponse.json({ success: true, data: { ...row, payments: adPayments } });
+    // A sales proposal's ad goes live when paid (no review), so the payment page says so
+    const [fromProposal] = await db.select({ id: proposals.id }).from(proposals).where(eq(proposals.adId, id)).limit(1);
+
+    return NextResponse.json({ success: true, data: { ...row, payments: adPayments, fromProposal: !!fromProposal } });
   } catch (error: any) {
     console.error("[GET /api/ads/[id]]", error);
     return NextResponse.json(

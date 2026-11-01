@@ -21,3 +21,4 @@ export * from "./screens";
 export * from "./leads";
 export * from "./demos";
 export * from "./appointments";
+export * from "./proposals";

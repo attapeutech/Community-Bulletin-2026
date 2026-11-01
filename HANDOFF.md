@@ -1,4 +1,4 @@
-# Handoff: 2026-10-22 (updated 2026-10-31)
+# Handoff: 2026-10-22 (updated 2026-10-31, evening)
 
 ## Where things stand
 
@@ -38,6 +38,10 @@
 - **Admin Panel hides Sales demo ads** (PR #103): its first load, Overview counts (total, denied, views, clicks) and `/api/admin/stats` skip ads with a `demo_id`, matching `/api/admin/ads`. Before, demo ads showed on load and vanished on the panel's refresh.
 - **Edit a demo ad** (PR #104): a pencil on each demo ad in the lead's Ad demos card opens `/ads/new?demo=<id>&edit=<ad id>`, filled in from the ad; Save changes updates the same ad, so the demo link doesn't change (`GET / PATCH /api/admin/demos/[id]/ads/[adId]`).
 - **Local dev:** a dev server whose background workers crashed ("Jest worker encountered 2 child process exceptions" in `.next/dev/logs/next-development.log`) still serves pages but fails real work such as sign-in; restart it. Only one dev server can hold port 3000.
+- **Sales Email opens Gmail** (PR #106): the Email buttons (Sales list and lead page) open a Gmail compose tab sent as `sales@communitybulletin.com` (`gmailComposeUrl` in `src/lib/leads.ts`, `authuser` picks that signed-in Google account).
+- **Lead form autofill fix** (PR #107): `LeadForm` field changes now build on the latest values, so browser / phone autofill that fills several fields at once keeps them all (a regression from #96's per-type drafts).
+- **Sales calendar, Phases 1 and 2** (PRs #108, #109): see "Sales calendar" below. Migrations `0020` and `0021` applied by the user (22 rows).
+- **Coolify scheduled tasks:** the daily Expire Ads task's command was missing the `$` in `$CRON_SECRET` (it sent the literal text, so every run got 401 and nothing ran). Fixed today; harmless so far because no paid ads are live. A second task, **appointment-reminders**, runs every 15 minutes. Both commands: `curl -X POST https://communitybulletin.com/api/cron/<expire-ads | appointment-reminders> -H "Authorization: Bearer $CRON_SECRET"` (double quotes; Coolify runs tasks in the app container, where `CRON_SECRET` is set).
 
 ## 2026-10-30 summary
 
@@ -133,6 +137,17 @@
 - **Demo page projections** use 40 ads x $100 per 4 weeks, 13 runs a year and about 3% card fees: ~$2,100/mo average (~$25,200/yr) at a 50% share, ~$1,050/mo (~$12,600/yr) at 25%.
 - **First live payment test passed on 2026-10-28:** a $10 card payment, then an admin cancel with automatic refund, at Fast Eddies. Afterwards, set the Fast Eddies price back to $100.
 
+## Sales calendar (2026-10-31)
+
+- **Where:** Sales → **Calendar** tab (`/dashboard/sales/calendar?month=YYYY-MM&owner=me`; `calendar/page.tsx` + `CalendarClient.tsx`). Desktop: month grid (today circled; click a day to see it in full below; double-click or **New appointment** to add; drag a chip to another day to move it). Phones: day-by-day list from today. Filter My leads / Everyone (by lead owner).
+- **Shows:** appointments (coloured by type) and open leads' follow-up dates (grey ↻, click → lead; dragging one moves `leads.next_follow_up`).
+- **Appointments:** `appointments` table (lead, `type` visit | call | demo | meeting, `starts_at` / `ends_at` timestamptz, place, notes, `created_by`, `reminder_sent_at`); deleting a lead deletes them. Form: `AppointmentDialog.tsx` (Radix Dialog; date and times in the browser's time zone; place suggested from the lead's address). API: `POST /api/admin/appointments`, `PATCH / DELETE /api/admin/appointments/[id]` (PATCH takes every field; a new start clears `reminder_sent_at`).
+- **Google Calendar:** "Add to Google Calendar" on a saved appointment opens a filled-in event in the sales account (`googleCalendarUrl` in `src/lib/appointments.ts`); no API sync.
+- **Lead page:** an **Upcoming** box (`LeadAppointments.tsx`) with the lead's appointments and **Schedule**.
+- **Times:** shown in the browser's time zone only after the first render (the server is UTC), to avoid wrong times and hydration warnings. Reminders format times in Pacific (`LEADS_TZ`).
+- **Bell reminders:** the daily job sends each salesperson (appointment creator, else lead owner) today's appointments, once a day (`notifyTodaysAppointments`); `POST /api/cron/appointment-reminders` (every 15 minutes) reminds once about each appointment starting within the hour (`notifyAppointmentsSoon`).
+- **Dark mode:** the chips and out-of-month days carry their own `dark:` classes (the global dark-mode map doesn't cover emerald, orange, violet or slate-700).
+
 ## Sales ad demos (2026-10-30)
 
 - **What it is:** demo ads made for an **advertiser lead**, shown on the lead's store screen design through a private link, to pitch the advertiser before they pay. Admin-only (the sales manager needs an admin account).
@@ -171,7 +186,7 @@
 - Production had been built with `db:push`, so Drizzle's migration history was empty. All migrations up to `0004_ad_analytics` were recorded as applied in Neon's `drizzle.__drizzle_migrations`, so `npm run db:migrate` works normally from here.
 - **Run migrations against the direct (non-pooled) Neon host:** remove `-pooler` from the hostname. Restores and DDL can fail through the pooler.
 - `0003` and `0004` have hand-written timestamps (`when: 1750…`) that are older than `0002`. They are already applied, so this is harmless, but generate future migrations with `npm run db:generate` rather than writing them by hand.
-- **Applied to Neon through `0019`** (20 rows in `drizzle.__drizzle_migrations`):
+- **Applied to Neon through `0021`** (22 rows in `drizzle.__drizzle_migrations`):
   - `0012_location_traffic`: `locations.daily_customers` and `traffic_updated_at`
   - `0013_screen_devices`
   - `0014_direct_deposits`
@@ -179,6 +194,7 @@
   - `0016_lead_locations` (`leads.location_id`)
   - `0017_ad_templates_and_tests` (`ads.is_test`, `ads.template`, `ads.template_data`), applied 2026-10-29
   - `0018_share_50_default` (`locations.share_rate_bps` default 5000) and `0019_sales_demos` (`demos` table, `ads.demo_id`), applied 2026-10-30 (20 rows)
+  - `0020_sales_appointments` (`appointments` table) and `0021_appointment_reminders` (notification types `appointments_today`, `appointment_soon`; `appointments.reminder_sent_at`), applied 2026-10-31 (22 rows). drizzle-kit printed no success line either time; a read-only check confirmed them.
 - **Who runs them:** Claude's permission classifier refuses migrations against production ("Production Deploy"), so the user runs this in a PowerShell terminal in the project folder (it reads `.env.local`, uses the direct host, then clears the variable):
   `$env:DATABASE_URL = ((Get-Content .env.local | Select-String '^DATABASE_URL=').Line -replace '^DATABASE_URL=','' -replace '"','' -replace '-pooler',''); npx drizzle-kit migrate; Remove-Item Env:DATABASE_URL`
   Apply a migration **before** deploying code that reads its columns.
@@ -387,6 +403,7 @@
 - [ ] **Distance check (local-business rule, step 2):** ask for a business ZIP in Ad Details, load free US Census ZIP centroids, warn before payment when the business is farther than `LOCAL_AD_RADIUS_MILES` from the store, and show "~N mi from store" in Review Ads. Later: a per-store radius and a store list sorted by distance.
 - [ ] Optional: hide the clock on display screens while the tap/hover controls are showing (they overlap on desktop).
 - [ ] **Search Console:** check the sitemap shows "Success" and pages start appearing under Pages → Indexed. Optional: in Google Analytics, define internal traffic (office / home IPs) and turn on the Internal traffic filter.
+- [ ] **Sales calendar, check:** after a run of the appointment-reminders task, its Coolify log shows `{"success":true,"sent":N}`; add a test appointment 30–45 minutes ahead once to see the bell reminder, then delete it. Ideas: week view, a per-salesperson filter once there's a Sales role, reminders by email as well.
 - [ ] **Sales demos, ideas:** a "Sales" role (see below) so the sales manager needn't be an admin; show a demo count on advertiser cards in the Sales list; when a demo's advertiser pays, offer to turn the demo ad into their real ad.
 - [ ] **This computer:** `.env.local` still lacks the Google sign-in variables (`NEXT_PUBLIC_GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`), so Google sign-in fails locally.
 

@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { addDays } from "@/lib/leads";
+import { patchLead } from "../SalesClient";
 import { FOLLOW_UP_CHIP, appointmentType, fmtTime, localDay, type Appointment } from "@/lib/appointments";
 import AppointmentDialog, { type AppointmentDraft, type LeadOption } from "../AppointmentDialog";
 
@@ -73,6 +75,43 @@ export default function CalendarClient({ month, today, mine, appointments, follo
     return map;
   }, [appointments, followUps, mounted]);
 
+  // Drag an item onto another day (desktop grid): an appointment keeps its time, a follow-up moves its date
+  const dragging = useRef<Item | null>(null);
+  const [dropDay, setDropDay] = useState<string | null>(null);
+  const [moving, setMoving] = useState(false);
+  async function moveTo(item: Item, day: string) {
+    setMoving(true);
+    try {
+      if (item.kind === "follow") {
+        if (item.follow.day === day) return;
+        await patchLead(item.follow.leadId, { nextFollowUp: day });
+        toast.success(`${item.follow.businessName}: follow up ${fmtDayLong(day)}`);
+      } else {
+        const a = item.appt;
+        const start = new Date(a.startsAt), end = new Date(a.endsAt);
+        if (localDay(start) === day) return;
+        // Same local time on the new day
+        const [y, m, d] = day.split("-").map(Number);
+        const newStart = new Date(start); newStart.setFullYear(y, m - 1, d);
+        const newEnd = new Date(newStart.getTime() + (end.getTime() - start.getTime()));
+        const res = await fetch(`/api/admin/appointments/${a.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ leadId: a.leadId, type: a.type, startsAt: newStart.toISOString(), endsAt: newEnd.toISOString(), place: a.place, notes: a.notes }),
+        });
+        const json = await res.json().catch(() => null);
+        if (!json?.success) throw new Error(json?.error ?? "Couldn't move the appointment");
+        toast.success(`${appointmentType(a.type).label} with ${a.businessName} moved to ${fmtDayLong(day)}`);
+      }
+      setSelected(day);
+      router.refresh();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setMoving(false);
+    }
+  }
+
   const open = (item: Item) => {
     if (item.kind === "appt") setDraft({ kind: "edit", appointment: item.appt });
     else router.push(`/dashboard/sales/${item.follow.leadId}`);
@@ -82,10 +121,14 @@ export default function CalendarClient({ month, today, mine, appointments, follo
     <button
       key={item.key}
       type="button"
+      draggable={compact}
+      onDragStart={e => { dragging.current = item; e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", item.key); }}
+      onDragEnd={() => { dragging.current = null; setDropDay(null); }}
       onClick={e => { e.stopPropagation(); open(item); }}
       title={item.kind === "appt" ? `${appointmentType(item.appt.type).label} · ${item.appt.businessName}` : `Follow up · ${item.follow.businessName}`}
       className={cn(
         "w-full text-left border rounded px-1.5 py-0.5 truncate",
+        compact && "cursor-grab active:cursor-grabbing",
         compact ? "text-[11px]" : "text-[13px] py-1.5 px-2.5",
         item.kind === "appt" ? appointmentType(item.appt.type).chip : FOLLOW_UP_CHIP,
       )}
@@ -105,7 +148,7 @@ export default function CalendarClient({ month, today, mine, appointments, follo
       <div className="mb-4 flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h1 className="font-serif text-[26px] font-bold text-[#1A3A5C] mb-1">Sales calendar</h1>
-          <p className="text-[#4A6B82] text-sm">Appointments and follow-up dates. Click a day to see it; click an item to open it.</p>
+          <p className="text-[#4A6B82] text-sm">Appointments and follow-up dates. Click a day to see it; click an item to open it; drag an item to another day to move it.</p>
         </div>
         <button
           type="button"
@@ -154,12 +197,17 @@ export default function CalendarClient({ month, today, mine, appointments, follo
                 onClick={() => setSelected(d)}
                 onDoubleClick={() => setDraft({ kind: "new", date: d })}
                 onKeyDown={e => { if (e.key === "Enter") setSelected(d); }}
+                onDragOver={e => { if (dragging.current) { e.preventDefault(); e.dataTransfer.dropEffect = "move"; if (dropDay !== d) setDropDay(d); } }}
+                onDragLeave={() => setDropDay(prev => (prev === d ? null : prev))}
+                onDrop={e => { e.preventDefault(); const item = dragging.current; dragging.current = null; setDropDay(null); if (item) moveTo(item, d); }}
                 className={cn(
                   "min-h-[112px] p-1.5 flex flex-col gap-1 cursor-pointer border-[#D8E4EE] text-left",
                   i % 7 !== 6 && "border-r",
                   i < days.length - 7 && "border-b",
                   !inMonth && "bg-[#FAFBFD] dark:bg-white/[0.03]",
                   selected === d && "ring-2 ring-inset ring-[#4A90C4]",
+                  dropDay === d && "bg-[#EAF3FB] dark:bg-[#4A90C4]/20 ring-2 ring-inset ring-[#E8563A]",
+                  moving && "opacity-70",
                 )}
               >
                 <div className={cn(

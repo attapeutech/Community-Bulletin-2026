@@ -41,7 +41,7 @@ export function gmailComposeUrl(to: string) {
 
 export const LEADS_PAGE_SIZE = 25;
 
-const LEADS_TZ = "America/Los_Angeles";
+export const LEADS_TZ = "America/Los_Angeles";
 
 /** Today in Pacific time, "YYYY-MM-DD" */
 export function leadToday(now = new Date()) {

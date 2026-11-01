@@ -19,6 +19,7 @@ const PUBLIC_ROUTES = [
   "/demo",        // franchise partner pitch page (linked from the public navbar)
   "/go",          // QR code short links from display screens
   "/stores",      // each store's public page (linked as "Public Page" from the store owner dashboard)
+  "/p",           // sales proposals: the advertiser's private link (accepting needs sign-in, checked in the API)
   "/robots.txt",  // SEO: search engines read these logged out
   "/sitemap.xml",
   "/opengraph-image",    // link preview image when the site is shared
@@ -42,6 +43,7 @@ export async function proxy(request: NextRequest) {
     pathname === "/api/health" ||   // Coolify health check (zero-downtime deploys)
     pathname === "/api/partners/apply-signup" ||   // register form, before email confirmation
     /^\/api\/ads\/[^/]+\/track$/.test(pathname) ||   // view/click tracking from logged-out display screens
+    pathname.startsWith("/api/proposals/") ||   // proposal sign-up / accept (accept checks the session itself)
     pathname.startsWith("/api/geo") ||
     pathname.startsWith("/api/support") ||
     pathname.startsWith("/api/auth/verify-recaptcha") ||

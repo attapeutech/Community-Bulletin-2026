@@ -13,6 +13,7 @@ export interface SendEmailOptions {
   subject: string;
   html: string;
   text?: string;
+  replyTo?: string;
 }
 
 export async function sendEmail(options: SendEmailOptions) {
@@ -24,6 +25,7 @@ export async function sendEmail(options: SendEmailOptions) {
       subject: options.subject,
       html: options.html,
       text: options.text,
+      ...(options.replyTo && { replyTo: options.replyTo }),
     });
     if (error) {
       console.error("[EMAIL ERROR]", error);

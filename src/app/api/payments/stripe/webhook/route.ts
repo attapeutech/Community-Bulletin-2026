@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { sendAdSubmittedEmail, sendPaymentReceiptEmail, sendAdReviewNotificationEmail } from "@/lib/email/templates";
 import { recordEarning } from "@/lib/earnings";
 import { notifyPaymentRecorded } from "@/lib/notifications";
+import { completeProposalPayment, proposalForAd } from "@/lib/proposal-payments";
 import { formatLocationLabel } from "@/lib/location-label";
 
 export const dynamic = "force-dynamic";
@@ -76,14 +77,17 @@ export async function POST(req: NextRequest) {
       currency: (session.currency ?? "usd").toUpperCase(),
     }).returning({ id: payments.id });
 
+    // A sales proposal ad goes live at once, without review
+    const fromProposal = !!(await proposalForAd(adId));
     await recordEarning(payment.id);
-    await notifyPaymentRecorded(payment.id);
+    await notifyPaymentRecorded(payment.id, { live: fromProposal });
 
     // Mark ad as paid
     await db
       .update(ads)
       .set({ paymentStatus: "paid", updatedAt: now })
       .where(eq(ads.id, adId));
+    if (fromProposal) await completeProposalPayment(adId, session.amount_total ?? 10000);
 
     // Fetch ad details for submission email
     const [row] = await db
@@ -120,14 +124,14 @@ export async function POST(req: NextRequest) {
         provider: "stripe",
         adId,
       }).catch(console.error);
-      sendAdSubmittedEmail({
+      if (!fromProposal) sendAdSubmittedEmail({
         to: row.user.email,
         userName: row.user.name,
         adTitle: row.ad.title,
         locationName,
         adId,
       }).catch(console.error);
-      sendAdReviewNotificationEmail({
+      if (!fromProposal) sendAdReviewNotificationEmail({
         adTitle: row.ad.title,
         locationName,
         userName: row.user.name,

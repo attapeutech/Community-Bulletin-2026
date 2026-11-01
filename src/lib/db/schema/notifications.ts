@@ -22,6 +22,7 @@ export const notificationTypeEnum = pgEnum("notification_type", [
   "lead_follow_up",      // sales: leads due for follow-up today
   "appointments_today",  // sales: morning list of today's appointments
   "appointment_soon",    // sales: an appointment starts within the hour
+  "proposal_update",     // sales: a proposal was opened, or accepted and paid
 ]);
 
 export const notificationChannelEnum = pgEnum("notification_channel", [

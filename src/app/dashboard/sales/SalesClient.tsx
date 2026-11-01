@@ -8,7 +8,7 @@ import { Phone, Mail, Plus, ChevronLeft, ChevronRight, Store } from "lucide-reac
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { ADS_PER_STORE_GOAL, LEADS_PAGE_SIZE, LEAD_KINDS, LEAD_STAGES, addDays, isOpenStage, stageLabel, type LeadStage } from "@/lib/leads";
+import { ADS_PER_STORE_GOAL, LEADS_PAGE_SIZE, gmailComposeUrl, LEAD_KINDS, LEAD_STAGES, addDays, isOpenStage, stageLabel, type LeadStage } from "@/lib/leads";
 
 export type LeadRow = {
   id: string;
@@ -139,7 +139,7 @@ function LeadCard({ lead, today }: { lead: LeadRow; today: string }) {
             </a>
           )}
           {lead.email && (
-            <a href={`mailto:${lead.email}`} aria-label={`Email ${lead.businessName}`} className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-[#D8E4EE] text-[13px] text-[#1A3A5C] no-underline hover:bg-[#F0F5FA]">
+            <a href={gmailComposeUrl(lead.email)} target="_blank" rel="noopener noreferrer" aria-label={`Email ${lead.businessName} from the sales mailbox`} className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-[#D8E4EE] text-[13px] text-[#1A3A5C] no-underline hover:bg-[#F0F5FA]">
               <Mail size={14} /> Email
             </a>
           )}
@@ -275,7 +275,7 @@ export default function SalesClient({ leads, filters, total, pages, today, summa
             <div className="font-semibold text-[#1A3A5C] mb-1">Every day</div>
             <ul className="list-disc pl-5 m-0 flex flex-col gap-1">
               <li>Start with <b className="text-[#1A3A5C]">Due today</b> and <b className="text-[#1A3A5C]">Overdue</b>. The bell also reminds you each morning.</li>
-              <li>Use <b className="text-[#1A3A5C]">Tomorrow</b> / <b className="text-[#1A3A5C]">+1 week</b> on a lead to set the next follow-up in one tap; Call and Email open your phone or mail app.</li>
+              <li>Use <b className="text-[#1A3A5C]">Tomorrow</b> / <b className="text-[#1A3A5C]">+1 week</b> on a lead to set the next follow-up in one tap. Call opens your phone; Email opens a new Gmail message from <b className="text-[#1A3A5C]">sales@communitybulletin.com</b> (be signed in to that Google account in your browser).</li>
               <li>Mark a lead Lost with a short reason (price, timing, not a fit), so you can see later what holds deals back.</li>
             </ul>
           </div>

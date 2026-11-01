@@ -41,7 +41,10 @@
 - **Sales Email opens Gmail** (PR #106): the Email buttons (Sales list and lead page) open a Gmail compose tab sent as `sales@communitybulletin.com` (`gmailComposeUrl` in `src/lib/leads.ts`, `authuser` picks that signed-in Google account).
 - **Lead form autofill fix** (PR #107): `LeadForm` field changes now build on the latest values, so browser / phone autofill that fills several fields at once keeps them all (a regression from #96's per-type drafts).
 - **Sales calendar, Phases 1 and 2** (PRs #108, #109): see "Sales calendar" below. Migrations `0020` and `0021` applied by the user (22 rows).
-- **Coolify scheduled tasks:** the daily Expire Ads task's command was missing the `$` in `$CRON_SECRET` (it sent the literal text, so every run got 401 and nothing ran). Fixed today; harmless so far because no paid ads are live. A second task, **appointment-reminders**, runs every 15 minutes. Both commands: `curl -X POST https://communitybulletin.com/api/cron/<expire-ads | appointment-reminders> -H "Authorization: Bearer $CRON_SECRET"` (double quotes; Coolify runs tasks in the app container, where `CRON_SECRET` is set).
+- **Coolify scheduled tasks (fixed 2026-11-01):** both tasks' calls were refused with 401 since they were set up, so the daily job had **never** run (harmless so far: no paid ads are live). Coolify doesn't fill in `$CRON_SECRET` in a task's command, with or without the `$`, so curl sent the literal text. The commands now let Node read the secret from the app's environment:
+  - **Expire Ads** (daily): `node -e "fetch('https://communitybulletin.com/api/cron/expire-ads',{method:'POST',headers:{Authorization:'Bearer '+process.env.CRON_SECRET}}).then(r=>r.text()).then(console.log)"`
+  - **appointment-reminders** (`*/15 * * * *`): the same with `/api/cron/appointment-reminders`.
+  - Execute Now on 2026-11-01 returned `{"success":true,...}` for both (all counts 0). Changing a task's command needs no Redeploy.
 
 ## 2026-10-30 summary
 

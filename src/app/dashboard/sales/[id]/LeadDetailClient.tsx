@@ -15,6 +15,8 @@ import { STAGE_BADGE, fmtDay, followUpText, patchLead } from "../SalesClient";
 import { LeadForm } from "../LeadForm";
 import type { StoreOption } from "../store-options";
 import LeadDemos, { type LeadDemo } from "./LeadDemos";
+import LeadAppointments from "./LeadAppointments";
+import type { Appointment } from "@/lib/appointments";
 
 export type LeadDetail = {
   id: string;
@@ -63,7 +65,7 @@ function NoteBody({ body }: { body: string }) {
 
 const selectClass = "h-9 rounded-md border border-[#D8E4EE] bg-white px-2.5 text-[13px] text-[#1A3A5C]";
 
-export default function LeadDetailClient({ lead, today, stores, demos }: { lead: LeadDetail; today: string; stores: StoreOption[]; demos: LeadDemo[] }) {
+export default function LeadDetailClient({ lead, today, stores, demos, appointments }: { lead: LeadDetail; today: string; stores: StoreOption[]; demos: LeadDemo[]; appointments: Appointment[] }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -286,6 +288,12 @@ export default function LeadDetailClient({ lead, today, stores, demos }: { lead:
               )}
             </CardContent>
           </Card>
+
+          <LeadAppointments
+            lead={{ id: lead.id, label: lead.businessName, place: [lead.address, lead.city].filter(Boolean).join(", ") || null }}
+            today={today}
+            appointments={appointments}
+          />
 
           {/* Advertiser: the store they'd advertise at. Store lead: the location it became. */}
           <Card className="rounded-xl border-[#D8E4EE]">

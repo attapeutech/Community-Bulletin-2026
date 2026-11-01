@@ -2,12 +2,13 @@ import { notFound } from "next/navigation";
 import { alias } from "drizzle-orm/pg-core";
 import { requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
-import { leads, leadNotes, users, payments, ads, locations, demos } from "@/lib/db/schema";
-import { and, asc, desc, eq, inArray, notInArray, sql } from "drizzle-orm";
+import { leads, leadNotes, users, payments, ads, locations, demos, appointments } from "@/lib/db/schema";
+import { and, asc, desc, eq, gte, inArray, notInArray, sql } from "drizzle-orm";
 import { leadToday } from "@/lib/leads";
 import { storeOptions } from "../store-options";
 import LeadDetailClient, { type LeadDetail } from "./LeadDetailClient";
 import type { LeadDemo } from "./LeadDemos";
+import type { Appointment } from "@/lib/appointments";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +38,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
     .limit(1);
   if (!row) notFound();
 
-  const [notes, [spend], storeRows, demoRows] = await Promise.all([
+  const [notes, [spend], storeRows, demoRows, apptRows] = await Promise.all([
     db.select({ id: leadNotes.id, body: leadNotes.body, createdAt: leadNotes.createdAt, authorName: users.name })
       .from(leadNotes)
       .leftJoin(users, eq(leadNotes.authorId, users.id))
@@ -66,7 +67,21 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
           .where(eq(demos.leadId, id))
           .orderBy(desc(demos.createdAt))
       : Promise.resolve([]),
+    // Appointments from today on (a few hours back, so one in progress still shows)
+    db.select({ id: appointments.id, type: appointments.type, startsAt: appointments.startsAt, endsAt: appointments.endsAt, place: appointments.place, notes: appointments.notes })
+      .from(appointments)
+      .where(and(eq(appointments.leadId, id), gte(appointments.endsAt, new Date(Date.now() - 6 * 3600_000))))
+      .orderBy(asc(appointments.startsAt))
+      .limit(20),
   ]);
+  const upcoming: Appointment[] = apptRows.map(a => ({
+    ...a,
+    leadId: id,
+    businessName: row.lead.businessName,
+    leadKind: row.lead.kind,
+    startsAt: a.startsAt.toISOString(),
+    endsAt: a.endsAt.toISOString(),
+  }));
   const demoAds = demoRows.length
     ? await db.select({ id: ads.id, demoId: ads.demoId, title: ads.title, imageUrl: ads.imageUrl })
         .from(ads)
@@ -106,5 +121,5 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
     notes: notes.map(n => ({ id: n.id, body: n.body, authorName: n.authorName, createdAt: n.createdAt.toISOString() })),
   };
 
-  return <LeadDetailClient lead={data} today={leadToday()} stores={storeOptions(storeRows)} demos={leadDemos} />;
+  return <LeadDetailClient lead={data} today={leadToday()} stores={storeOptions(storeRows)} demos={leadDemos} appointments={upcoming} />;
 }

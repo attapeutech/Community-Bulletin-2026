@@ -70,8 +70,13 @@ export default function CalendarClient({ month, today, mine, appointments, follo
     const push = (day: string, item: Item) => map.set(day, [...(map.get(day) ?? []), item]);
     if (mounted) for (const a of appointments) push(localDay(new Date(a.startsAt)), { kind: "appt", key: a.id, sort: a.startsAt, appt: a });
     // Follow-ups have no time: list them after the day's appointments
-    for (const f of followUps) push(f.day, { kind: "follow", key: `f-${f.leadId}`, sort: "~" + f.businessName, follow: f });
-    for (const list of map.values()) list.sort((x, y) => x.sort.localeCompare(y.sort));
+    for (const f of followUps) push(f.day, { kind: "follow", key: `f-${f.leadId}`, sort: f.businessName, follow: f });
+    // Appointments first, by time (ISO strings sort as times); then follow-ups, A–Z
+    for (const list of map.values()) {
+      list.sort((x, y) => x.kind !== y.kind ? (x.kind === "appt" ? -1 : 1)
+        : x.kind === "appt" ? (x.sort < y.sort ? -1 : x.sort > y.sort ? 1 : 0)
+        : x.sort.localeCompare(y.sort));
+    }
     return map;
   }, [appointments, followUps, mounted]);
 

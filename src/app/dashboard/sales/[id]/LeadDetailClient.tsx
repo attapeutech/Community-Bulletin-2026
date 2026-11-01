@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { LEAD_STAGES, addDays, isOpenStage, sourceLabel, stageLabel, type LeadStage } from "@/lib/leads";
+import { LEAD_STAGES, addDays, gmailComposeUrl, isOpenStage, sourceLabel, stageLabel, type LeadStage } from "@/lib/leads";
 import { STAGE_BADGE, fmtDay, followUpText, patchLead } from "../SalesClient";
 import { LeadForm } from "../LeadForm";
 import type { StoreOption } from "../store-options";
@@ -181,7 +181,7 @@ export default function LeadDetailClient({ lead, today, stores, demos }: { lead:
                       </a>
                     )}
                     {lead.email && (
-                      <a href={`mailto:${lead.email}`} className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-[#D8E4EE] text-[13px] text-[#1A3A5C] no-underline hover:bg-[#F0F5FA] break-all">
+                      <a href={gmailComposeUrl(lead.email)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-[#D8E4EE] text-[13px] text-[#1A3A5C] no-underline hover:bg-[#F0F5FA] break-all">
                         <Mail size={14} /> {lead.email}
                       </a>
                     )}

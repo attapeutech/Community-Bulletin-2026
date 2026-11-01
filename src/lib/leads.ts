@@ -30,6 +30,15 @@ export const LEAD_KIND_VALUES = LEAD_KINDS.map(k => k.value) as [LeadKind, ...Le
 /** Goal: ads live on each store's screen at once */
 export const ADS_PER_STORE_GOAL = 40;
 
+// Sales emails go out from the shared Google Workspace mailbox
+export const SALES_EMAIL = "sales@communitybulletin.com";
+
+/** Gmail compose window, sending as the sales mailbox (authuser picks that signed-in Google account) */
+export function gmailComposeUrl(to: string) {
+  const q = new URLSearchParams({ authuser: SALES_EMAIL, view: "cm", fs: "1", to });
+  return `https://mail.google.com/mail/?${q}`;
+}
+
 export const LEADS_PAGE_SIZE = 25;
 
 const LEADS_TZ = "America/Los_Angeles";

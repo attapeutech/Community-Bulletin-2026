@@ -148,6 +148,13 @@
       "when": 1793505688678,
       "tag": "0020_sales_appointments",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793507690230,
+      "tag": "0021_appointment_reminders",
+      "breakpoints": true
     }
   ]
 }

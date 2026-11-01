@@ -17,6 +17,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (!parsed.success) return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message ?? "Validation failed" }, { status: 422 });
     const d = parsed.data;
 
+    // A new start time gets a new "starting soon" reminder
+    const [current] = await db.select({ startsAt: appointments.startsAt }).from(appointments).where(eq(appointments.id, id)).limit(1);
+    if (!current) return NextResponse.json({ success: false, error: "Appointment not found" }, { status: 404 });
+    const moved = current.startsAt.getTime() !== new Date(d.startsAt).getTime();
+
     const [row] = await db.update(appointments).set({
       leadId: d.leadId,
       type: d.type,
@@ -24,6 +29,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       endsAt: new Date(d.endsAt),
       place: d.place,
       notes: d.notes,
+      ...(moved && { reminderSentAt: null }),
       updatedAt: new Date(),
     }).where(eq(appointments.id, id)).returning({ id: appointments.id });
     if (!row) return NextResponse.json({ success: false, error: "Appointment not found" }, { status: 404 });

@@ -4,7 +4,7 @@ import { ads, locations } from "@/lib/db/schema";
 import { eq, and, lt, inArray } from "drizzle-orm";
 import { pushDisplayRefresh } from "@/lib/socket/notify";
 import { releaseEarnings } from "@/lib/earnings";
-import { notifyAdsExpired, notifyAdsExpiringSoon, notifyLeadFollowUps } from "@/lib/notifications";
+import { notifyAdsExpired, notifyAdsExpiringSoon, notifyLeadFollowUps, notifyTodaysAppointments } from "@/lib/notifications";
 import { stripeConnectEnabled } from "@/lib/stripe";
 import { runDirectDeposits, payoutDayOfMonth, PAYOUT_DAY } from "@/lib/direct-deposits";
 
@@ -52,6 +52,11 @@ export async function POST(req: NextRequest) {
     console.error("[cron/expire-ads] lead follow-up reminders failed", err);
     return 0;
   });
+  // Sales calendar: today's appointments, once a day
+  const appointmentsToday = await notifyTodaysAppointments(now).catch(err => {
+    console.error("[cron/expire-ads] today's appointments failed", err);
+    return 0;
+  });
 
   // Find all approved ads whose run window has ended
   const expired = await db
@@ -60,7 +65,7 @@ export async function POST(req: NextRequest) {
     .where(and(eq(ads.status, "approved"), lt(ads.endedAt, now)));
 
   if (expired.length === 0) {
-    return NextResponse.json({ success: true, expired: 0, expiringSoon, leadReminders, earnings, directDeposits });
+    return NextResponse.json({ success: true, expired: 0, expiringSoon, leadReminders, appointmentsToday, earnings, directDeposits });
   }
 
   const adIds = expired.map(a => a.id);
@@ -86,5 +91,5 @@ export async function POST(req: NextRequest) {
   }
 
   console.log(`[cron/expire-ads] Expired ${adIds.length} ad(s) across ${affectedLocations.length} location(s)`);
-  return NextResponse.json({ success: true, expired: adIds.length, locations: affectedLocations.map(l => l.slug), expiringSoon, leadReminders, earnings, directDeposits });
+  return NextResponse.json({ success: true, expired: adIds.length, locations: affectedLocations.map(l => l.slug), expiringSoon, leadReminders, appointmentsToday, earnings, directDeposits });
 }

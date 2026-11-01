@@ -16,6 +16,8 @@ export const appointments = pgTable("appointments", {
   place: text("place"),
   notes: text("notes"),
   createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+  // When the "starting soon" bell reminder went out (cleared when the time changes, so it's sent again)
+  reminderSentAt: timestamp("reminder_sent_at", { withTimezone: true }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (t) => [

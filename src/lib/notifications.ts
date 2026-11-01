@@ -1,8 +1,9 @@
 import { db } from "@/lib/db/client";
-import { ads, leads, locations, notifications, payments, users } from "@/lib/db/schema";
-import { and, eq, gt, inArray, lte, notExists, sql } from "drizzle-orm";
+import { ads, appointments, leads, locations, notifications, payments, users } from "@/lib/db/schema";
+import { and, eq, gt, gte, inArray, isNull, lt, lte, notExists, sql, type SQL } from "drizzle-orm";
 import { notifyUserSocket } from "@/lib/socket/server";
-import { leadToday } from "@/lib/leads";
+import { LEADS_TZ, leadToday } from "@/lib/leads";
+import { appointmentType } from "@/lib/appointments";
 
 type NotificationType = typeof notifications.$inferInsert["type"];
 
@@ -244,6 +245,76 @@ export async function notifyLeadFollowUps(now = new Date()) {
       link: `/dashboard/sales?${r.stores ? "kind=store_partner&" : ""}due=due&owner=me`,
     });
     sent++;
+  }
+  return sent;
+}
+
+// ─── Sales calendar ──────────────────────────────────────────────────────────
+
+/** "2:00 PM", Pacific (the sales team's time zone; the server runs in UTC) */
+const pacificTime = (d: Date) => d.toLocaleTimeString("en-US", { timeZone: LEADS_TZ, hour: "numeric", minute: "2-digit" });
+
+/** Appointments in a window, with who to remind: whoever made it, else the lead's owner */
+function appointmentsBetween(from: Date, to: Date, extra?: SQL) {
+  return db
+    .select({
+      id: appointments.id,
+      leadId: appointments.leadId,
+      type: appointments.type,
+      startsAt: appointments.startsAt,
+      businessName: leads.businessName,
+      recipient: sql<string | null>`coalesce(${appointments.createdBy}, ${leads.ownerId})`,
+    })
+    .from(appointments)
+    .innerJoin(leads, eq(appointments.leadId, leads.id))
+    .where(and(gte(appointments.startsAt, from), lt(appointments.startsAt, to), extra))
+    .orderBy(appointments.startsAt);
+}
+
+/** Daily job: each salesperson's appointments for today (Pacific), in one bell notification, once a day */
+export async function notifyTodaysAppointments(now = new Date()) {
+  const today = leadToday(now);
+  // A wide window, then keep the ones on today's Pacific date
+  const rows = (await appointmentsBetween(new Date(now.getTime() - 12 * 3600_000), new Date(now.getTime() + 36 * 3600_000)))
+    .filter(r => r.recipient && leadToday(r.startsAt) === today);
+
+  const byUser = new Map<string, typeof rows>();
+  for (const r of rows) byUser.set(r.recipient!, [...(byUser.get(r.recipient!) ?? []), r]);
+
+  let sent = 0;
+  for (const [userId, list] of byUser) {
+    const [already] = await db.select({ id: notifications.id }).from(notifications)
+      .where(and(eq(notifications.userId, userId), eq(notifications.type, "appointments_today"), gt(notifications.createdAt, new Date(now.getTime() - 20 * 3600_000))))
+      .limit(1);
+    if (already) continue;
+    const shown = list.slice(0, 4).map(a => `${pacificTime(a.startsAt)} ${appointmentType(a.type).label} · ${a.businessName}`);
+    if (list.length > 4) shown.push(`+${list.length - 4} more`);
+    await notifyUser(userId, {
+      type: "appointments_today",
+      subject: `${list.length} appointment${list.length !== 1 ? "s" : ""} today`,
+      body: shown.join(", "),
+      link: "/dashboard/sales/calendar",
+    });
+    sent++;
+  }
+  return sent;
+}
+
+/** Every-15-minutes job: remind about appointments starting within the next hour, once each */
+export async function notifyAppointmentsSoon(now = new Date()) {
+  const rows = await appointmentsBetween(now, new Date(now.getTime() + 60 * 60_000), isNull(appointments.reminderSentAt));
+  let sent = 0;
+  for (const a of rows) {
+    if (a.recipient) {
+      await notifyUser(a.recipient, {
+        type: "appointment_soon",
+        subject: `${appointmentType(a.type).label} with ${a.businessName} at ${pacificTime(a.startsAt)}`,
+        body: "Starting within the hour",
+        link: `/dashboard/sales/${a.leadId}`,
+      });
+      sent++;
+    }
+    await db.update(appointments).set({ reminderSentAt: now }).where(eq(appointments.id, a.id));
   }
   return sent;
 }

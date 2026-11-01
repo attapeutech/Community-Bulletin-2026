@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,11 +32,20 @@ export function LeadForm({ initial, submitLabel, onSubmit, onCancel, onChange, e
 }) {
   const [v, setV] = useState(initial);
   const [busy, setBusy] = useState(false);
+  // Build on the latest values: browser autofill changes several fields before the next render,
+  // and copying `v` would keep only the last of them
   const set = (k: keyof LeadDetails) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const next = { ...v, [k]: e.target.value };
-    setV(next);
-    onChange?.(next);
+    const value = e.target.value;
+    setV(prev => ({ ...prev, [k]: value }));
   };
+  // Report changes to the parent (New lead keeps a draft per type)
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) { first.current = false; return; }
+    onChangeRef.current?.(v);
+  }, [v]);
 
   return (
     <form

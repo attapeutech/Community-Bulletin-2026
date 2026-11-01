@@ -297,6 +297,9 @@ export default function SalesClient({ leads, filters, total, pages, today, summa
             {k.value === "store_partner" ? "1 · Stores" : "2 · Advertisers"}
           </button>
         ))}
+        <Link href="/dashboard/sales/calendar" className="px-4 py-2 -mb-px border-b-2 border-transparent text-[14px] font-semibold text-[#4A6B82] hover:text-[#1A3A5C] no-underline">
+          Calendar
+        </Link>
       </div>
 
       {/* Advertisers: each store's progress toward the goal; click one to see its leads */}

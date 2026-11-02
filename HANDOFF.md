@@ -1,4 +1,4 @@
-# Handoff: 2026-10-22 (updated 2026-10-31, evening)
+# Handoff: 2026-10-22 (updated 2026-11-01, evening)
 
 ## Where things stand
 
@@ -32,6 +32,14 @@
   - `LeaveFrame` (`src/components/layout/LeaveFrame.tsx`, in the root layout) moves any non-display page out of a frame
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
+
+## 2026-11-01 summary
+
+- **Sales proposals** (PR #112, migration `0022` applied, 23 rows): email a demo ad that the advertiser accepts and pays for; see "Sales proposals" below. **First live test passed** on 2026-11-01 (Cemitas Tepeaca, sent to `demonterock@gmail.com`): viewed → accepted (account created) → paid $100 live → ad live on Fast Eddies, lead Won and linked. The test ad was then cancelled and deleted in the Admin Panel; deleting an ad also deletes its payment rows, so confirm the $100 refund in Stripe → Payments. The lead is still Won (move it back to Interested or Lost if it shouldn't count).
+- **Admin Panel** (PR #113): each Store Owner in Users has a **Stores →** link to `/dashboard/store-owner?owner=<user id>` (admin only; heading "<name>'s locations" with "Show all locations"). The Users count updates after a delete.
+- **Dashboard menu icons** (PR #114): `src/components/layout/NavIcon.tsx` maps icon names to lucide icons; the server-built `navItems` (dashboard `layout.tsx`) carry a name, used by the sidebar and `MobileNav`.
+- **Sales how-to** (PR #115): "How to use Sales" has a section **3 · Close an advertiser with a demo ad and a proposal** (steps plus notes on chips, Viewed, expiry and finding Won leads).
+- **Admin Panel, ad actions (for reference):** **End Ad** stops an ad with **no refund**; **→ cancelled** (needs a review note) stops it, **refunds the full payment** through Stripe and emails the advertiser.
 
 ## 2026-10-31 summary
 
@@ -151,6 +159,15 @@
 - **Bell reminders:** the daily job sends each salesperson (appointment creator, else lead owner) today's appointments, once a day (`notifyTodaysAppointments`); `POST /api/cron/appointment-reminders` (every 15 minutes) reminds once about each appointment starting within the hour (`notifyAppointmentsSoon`).
 - **Dark mode:** the chips and out-of-month days carry their own `dark:` classes (the global dark-mode map doesn't cover emerald, orange, violet or slate-700).
 
+## Sales proposals (2026-11-01)
+
+- **Flow:** advertiser lead → Ad demos → **Send proposal** (`/dashboard/sales/[id]/proposal?demo=<id>`, `ProposalComposer.tsx`; message from `defaultProposalMessage`, editable) → Resend email with a **See your ad & accept** button, `replyTo` sales@communitybulletin.com → advertiser page `/p/<token>` (`src/app/(public)/p/[token]/`) plays the demo ad → **Accept & pay**: creates an account (name, phone, password; `POST /api/proposals/[token]/signup`, email marked verified) or asks an existing account to sign in → `POST /api/proposals/[token]/accept` copies the demo ad into a real unpaid ad → normal Stripe checkout.
+- **On payment** (Stripe webhook and confirm route → `completeProposalPayment` in `src/lib/proposal-payments.ts`): the ad is approved and live right away (no review emails), the proposal is marked paid, the lead turns **Won** and is linked to the account, notes are added, and the creator gets a `proposal_update` bell notification. The payment page says "goes live" for these ads (`fromProposal` from `GET /api/ads/[id]`).
+- **Status** (`proposalStatus` / `PROPOSAL_STATUS` in `src/lib/proposals.ts`): Sent → Viewed → Accepted → Paid, or Expired when the demo expires (30 days; Extend on the demo turns it back on). Shown as chips under the demo in `LeadDemos.tsx`; the lead page needs a refresh.
+- **Viewed** is recorded the first time `/p/<token>` loads for someone who isn't a signed-in admin (opening the email alone doesn't count), with a bell notification "<business> opened your proposal".
+- **Data:** `proposals` table (lead, demo, demo ad, token, email, subject, message, created_by, sent/viewed/accepted/paid timestamps, user, real ad); migration `0022_sales_proposals` (also the `proposal_update` notification type). Deleting the lead deletes its proposals; deleting an ad only clears the link.
+- **Public routes:** `proxy.ts` allows `/p` and `/api/proposals/`; `robots.ts` disallows `/p/`. Access checks in `src/lib/proposal-access.ts`.
+
 ## Sales ad demos (2026-10-30)
 
 - **What it is:** demo ads made for an **advertiser lead**, shown on the lead's store screen design through a private link, to pitch the advertiser before they pay. Admin-only (the sales manager needs an admin account).
@@ -189,7 +206,7 @@
 - Production had been built with `db:push`, so Drizzle's migration history was empty. All migrations up to `0004_ad_analytics` were recorded as applied in Neon's `drizzle.__drizzle_migrations`, so `npm run db:migrate` works normally from here.
 - **Run migrations against the direct (non-pooled) Neon host:** remove `-pooler` from the hostname. Restores and DDL can fail through the pooler.
 - `0003` and `0004` have hand-written timestamps (`when: 1750…`) that are older than `0002`. They are already applied, so this is harmless, but generate future migrations with `npm run db:generate` rather than writing them by hand.
-- **Applied to Neon through `0021`** (22 rows in `drizzle.__drizzle_migrations`):
+- **Applied to Neon through `0022`** (23 rows in `drizzle.__drizzle_migrations`; `0022_sales_proposals` applied 2026-11-01):
   - `0012_location_traffic`: `locations.daily_customers` and `traffic_updated_at`
   - `0013_screen_devices`
   - `0014_direct_deposits`
@@ -407,7 +424,8 @@
 - [ ] Optional: hide the clock on display screens while the tap/hover controls are showing (they overlap on desktop).
 - [ ] **Search Console:** check the sitemap shows "Success" and pages start appearing under Pages → Indexed. Optional: in Google Analytics, define internal traffic (office / home IPs) and turn on the Internal traffic filter.
 - [ ] **Sales calendar, check:** after a run of the appointment-reminders task, its Coolify log shows `{"success":true,"sent":N}`; add a test appointment 30–45 minutes ahead once to see the bell reminder, then delete it. Ideas: week view, a per-salesperson filter once there's a Sales role, reminders by email as well.
-- [ ] **Sales demos, ideas:** a "Sales" role (see below) so the sales manager needn't be an admin; show a demo count on advertiser cards in the Sales list; when a demo's advertiser pays, offer to turn the demo ad into their real ad.
+- [ ] **Sales demos, ideas:** a "Sales" role (see below) so the sales manager needn't be an admin; show a demo count on advertiser cards in the Sales list. (Turning the demo ad into the real ad is done: proposals.)
+- [ ] **Proposal test leftovers:** the Cemitas Tepeaca lead is Won from the 2026-11-01 test; move it back to Interested or Lost if it shouldn't count in "Won (30 days)". Check the $100 refund shows as refunded in Stripe. Ideas: a proposal reminder email after a few days without a view; live chip updates without a refresh.
 - [ ] **This computer:** `.env.local` still lacks the Google sign-in variables (`NEXT_PUBLIC_GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`), so Google sign-in fails locally.
 
 - [ ] **About 1 week after 2026-10-23:** if Neon is stable, delete the old Postgres resource in Coolify (`postgresql-database-gt2gswqg8jmybj5l2ydntnfg`). Until then, don't reuse its password; it's in git history.
@@ -416,7 +434,7 @@
 - [ ] Put the Coolify dashboard behind a domain with HTTPS. It's currently plain HTTP on `:8000`.
 - [ ] `npm audit` reports 39 vulnerabilities (3 critical). Review with `npm audit` before running `npm audit fix`.
 - [ ] Local `git stash@{0}` holds only lockfile `"peer": true` noise and can be dropped (`git stash drop`).
-- [ ] **Test data from 2026-10-27:** **Thai Grocery Tacoma #TGT-101** is an active location owned by `demonterock@gmail.com` (now a store owner), with a Won store lead in Sales. If it was only a test: deactivate or delete the location (Danger zone), set the account back to User, and delete the lead.
+- [ ] **Test data from 2026-10-27:** **Thai Grocery Tacoma #TGT-101** is an active location owned by `demonterock@gmail.com` (a User again as of 2026-11-01; also the proposal test account), with a Won store lead in Sales. If it was only a test: deactivate or delete the location (Danger zone), set the account back to User, and delete the lead.
 - [ ] Delete the leftover remote branch `feat/google-signin-and-proxy` (an early, broken version of PR #68).
 - [ ] **Sales team role, later:** the Sales page is admin-only today (the co-founder doing sales is an admin). When a sales team joins: add `sales` to the `user_role` enum (migration), allow it on `/dashboard/sales` and `/api/admin/leads` (`requireRole("sales", "admin")`), add it to `ROLE_OPTIONS` in `UserCredentials.tsx` and the role menus, and decide whether sales staff see all leads or only their own. Store setup stays admin-only.
 - [ ] **Sales, optional ideas:** create a store lead automatically when someone applies on the website (source "Website"); a clearer Delete lead button or bulk delete; a per-store goal instead of the fixed 40.

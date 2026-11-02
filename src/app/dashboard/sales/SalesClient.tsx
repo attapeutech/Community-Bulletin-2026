@@ -272,6 +272,24 @@ export default function SalesClient({ leads, filters, total, pages, today, summa
             </ol>
           </div>
           <div className="sm:col-span-2">
+            <div className="font-semibold text-[#1A3A5C] mb-1">3 · Close an advertiser with a demo ad and a proposal</div>
+            <ol className="list-decimal pl-5 m-0 flex flex-col gap-1">
+              <li>Open the advertiser lead. Make sure it has their <b className="text-[#1A3A5C]">email</b> and the store they want.</li>
+              <li>Under <b className="text-[#1A3A5C]">Ad demos</b>, click <b className="text-[#1A3A5C]">Make a demo at …</b>, then <b className="text-[#1A3A5C]">Add a demo ad</b> with their photo, offer and contact details.</li>
+              <li>Click <b className="text-[#1A3A5C]">Show demo</b> to see it playing on that store&apos;s screen design. Fix anything with the pencil. You can also <b className="text-[#1A3A5C]">Copy link</b> and text it, or show it on your phone in person.</li>
+              <li>Click <b className="text-[#1A3A5C]">Send proposal</b>, read over the message, and send it. Their replies go to sales@communitybulletin.com.</li>
+              <li>They click <b className="text-[#1A3A5C]">See your ad &amp; accept</b> in the email, create an account (name, phone, password) or sign in, and pay by card.</li>
+              <li>Done: the ad goes live on the store screen right away for 4 weeks, the lead turns <b className="text-[#1A3A5C]">Won</b> and is linked to their account, and the bell tells you.</li>
+            </ol>
+            <ul className="list-disc pl-5 mt-2 mb-0 flex flex-col gap-1">
+              <li>The proposal chip moves <b className="text-[#1A3A5C]">Sent → Viewed → Accepted → Paid</b>. Refresh the lead page to see the latest.</li>
+              <li><b className="text-[#1A3A5C]">Viewed</b> means they opened the page from the email&apos;s button. Opening the email alone doesn&apos;t count, and neither do your own views while signed in here.</li>
+              <li>Stuck at Sent or Viewed? Call them after a day or two and set a follow-up date. Want changes? Edit the demo ad and send a new proposal.</li>
+              <li>Demo links and proposals work for 30 days. If one runs out, click <b className="text-[#1A3A5C]">Extend 30 days</b> and send again.</li>
+              <li>Won leads leave the default list. Click <b className="text-[#1A3A5C]">Won (30 days)</b> or pick a stage to find them.</li>
+            </ul>
+          </div>
+          <div className="sm:col-span-2">
             <div className="font-semibold text-[#1A3A5C] mb-1">Every day</div>
             <ul className="list-disc pl-5 m-0 flex flex-col gap-1">
               <li>Start with <b className="text-[#1A3A5C]">Due today</b> and <b className="text-[#1A3A5C]">Overdue</b>. The bell also reminds you each morning.</li>

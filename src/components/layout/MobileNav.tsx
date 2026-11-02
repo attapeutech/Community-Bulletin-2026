@@ -6,8 +6,9 @@ import { BrandMark } from "./BrandMark";
 import { SignOutButton } from "./SignOutButton";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { NavIcon, type NavIconName } from "@/components/layout/NavIcon";
 
-type NavItem = { href: string; label: string };
+type NavItem = { href: string; label: string; icon: NavIconName };
 
 export function MobileNav({
   navItems,
@@ -49,8 +50,9 @@ export function MobileNav({
             <SheetClose asChild key={item.href}>
               <Link
                 href={item.href}
-                className="block px-3.5 py-2.5 rounded-lg text-[#9DC4E0] no-underline text-sm font-medium hover:bg-white/10 transition-colors"
+                className="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[#9DC4E0] no-underline text-sm font-medium hover:bg-white/10 transition-colors"
               >
+                <NavIcon name={item.icon} />
                 {item.label}
               </Link>
             </SheetClose>

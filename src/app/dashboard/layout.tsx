@@ -6,6 +6,7 @@ import { SignOutButton } from "@/components/layout/SignOutButton";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { Badge } from "@/components/ui/badge";
+import { NavIcon, type NavIconName } from "@/components/layout/NavIcon";
 
 export const metadata: Metadata = { title: "Dashboard", robots: { index: false, follow: false } };
 
@@ -19,22 +20,24 @@ export default async function DashboardLayout({
   const role = (session.user as any).role as string;
   const user = session.user as any;
 
-  const navItems = [
-    { href: "/dashboard/user",        label: "My Ads",        roles: ["user", "store_owner", "approver", "admin"] },
-    { href: "/dashboard/saved",       label: "Saved",         roles: ["user", "store_owner", "approver", "admin"] },
-    { href: "/dashboard/store-owner",          label: role === "admin" ? "All Locations" : "My Locations", roles: ["store_owner", "admin"] },
-    { href: "/dashboard/store-owner/earnings", label: "Earnings",        roles: ["store_owner", "admin"] },
-    { href: "/dashboard/approver",             label: "Review Ads",      roles: ["approver", "admin"] },
-    { href: "/dashboard/admin",       label: "Admin Panel",   roles: ["admin"] },
-    { href: "/dashboard/sales",       label: "Sales",         roles: ["admin"] },
-    { href: "/dashboard/admin/applications", label: "Applications", roles: ["admin"] },
-    { href: "/dashboard/admin/payouts", label: "Payouts",     roles: ["admin"] },
-    { href: "/dashboard/admin/screens", label: "Screens",     roles: ["admin"] },
-    { href: "/dashboard/admin/geo",   label: "Geography",     roles: ["admin"] },
-    { href: "/partners/apply",         label: "Become a Store Partner", roles: ["user"] },
-    { href: "/dashboard/profile",     label: "Account",       roles: ["user", "store_owner", "approver", "admin"] },
-    { href: "/help",                   label: "Help & Support", roles: ["user", "store_owner", "approver", "admin"] },
-  ].filter((item) => item.roles.includes(role));
+  const navItems = ([
+    { href: "/dashboard/user",        label: "My Ads",        icon: "ads",       roles: ["user", "store_owner", "approver", "admin"] },
+    { href: "/dashboard/saved",       label: "Saved",         icon: "saved",     roles: ["user", "store_owner", "approver", "admin"] },
+    { href: "/dashboard/store-owner",          label: role === "admin" ? "All Locations" : "My Locations", icon: "locations", roles: ["store_owner", "admin"] },
+    { href: "/dashboard/store-owner/earnings", label: "Earnings",   icon: "earnings",  roles: ["store_owner", "admin"] },
+    { href: "/dashboard/approver",             label: "Review Ads", icon: "review",    roles: ["approver", "admin"] },
+    { href: "/dashboard/admin",       label: "Admin Panel",   icon: "admin",     roles: ["admin"] },
+    { href: "/dashboard/sales",       label: "Sales",         icon: "sales",     roles: ["admin"] },
+    { href: "/dashboard/admin/applications", label: "Applications", icon: "applications", roles: ["admin"] },
+    { href: "/dashboard/admin/payouts", label: "Payouts",     icon: "payouts",   roles: ["admin"] },
+    { href: "/dashboard/admin/screens", label: "Screens",     icon: "screens",   roles: ["admin"] },
+    { href: "/dashboard/admin/geo",   label: "Geography",     icon: "geography", roles: ["admin"] },
+    { href: "/partners/apply",         label: "Become a Store Partner", icon: "partner", roles: ["user"] },
+    { href: "/dashboard/profile",     label: "Account",       icon: "account",   roles: ["user", "store_owner", "approver", "admin"] },
+    { href: "/help",                   label: "Help & Support", icon: "help",    roles: ["user", "store_owner", "approver", "admin"] },
+  ] satisfies { href: string; label: string; icon: NavIconName; roles: string[] }[])
+    .filter((item) => item.roles.includes(role))
+    .map(({ href, label, icon }) => ({ href, label, icon }));
 
   return (
     <div className="flex min-h-screen bg-[#F4F7FB]">
@@ -61,8 +64,9 @@ export default async function DashboardLayout({
           <Link
             key={item.href}
             href={item.href}
-            className="block px-3.5 py-2.5 rounded-lg text-[#9DC4E0] no-underline text-sm font-medium hover:bg-white/10 transition-colors"
+            className="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[#9DC4E0] no-underline text-sm font-medium hover:bg-white/10 transition-colors"
           >
+            <NavIcon name={item.icon} />
             {item.label}
           </Link>
         ))}

@@ -12,6 +12,8 @@ const schema = z.object({
   headline: z.string().trim().min(3, "Headline is too short").max(60, "Keep the headline under 60 characters"),
   subline: z.string().trim().max(120, "Keep the sub-line under 120 characters"),
   everyNAds: z.number().int().min(1).max(20),
+  showSample: z.boolean(),
+  showFamily: z.boolean(),
 });
 
 // GET /api/admin/settings/advertise-slide

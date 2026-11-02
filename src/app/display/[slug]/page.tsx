@@ -15,6 +15,7 @@ import { BrandWipe, type BrandWipeHandle } from "@/components/display/BrandWipe"
 import { FpsMeter } from "@/components/display/FpsMeter";
 import { SaleTemplate } from "@/components/display/templates/SaleTemplate";
 import { readSaleData } from "@/lib/ad-templates";
+import { SampleAdHouseSlide, FamilyHouseSlide } from "@/components/display/HouseSlides";
 import { AdvertiseHereSlide, REVEAL_START_MS, TITLE_WORD_STEP_MS, motionClass, usePortraitPhone, useShortLandscape, type SlideMotion } from "@/components/display/AdvertiseHereSlide";
 
 type Ad = {
@@ -39,10 +40,14 @@ type AdvertiseSlideSettings = {
   headline: string;
   subline: string;
   everyNAds: number;
+  showSample?: boolean; // missing (older cached settings) counts as on
+  showFamily?: boolean;
 };
 
-// A carousel slide: a paid ad, or the built-in "Advertise here" slide
-type Slide = { kind: "ad"; ad: Ad } | { kind: "promo"; key: string };
+// A carousel slide: a paid ad, or one of our house slides
+// House slides (our own) take turns in the promo slot
+type HouseSlide = "advertise" | "sample" | "family";
+type Slide = { kind: "ad"; ad: Ad } | { kind: "promo"; key: string; house: HouseSlide };
 
 
 const RECONNECTING = "__reconnecting__";
@@ -280,19 +285,27 @@ export default function DisplayPage() {
     return () => document.removeEventListener("visibilitychange", onVisible);
   }, [fetchAds]);
 
-  // Paid ads with the "Advertise here" slide after every N of them;
-  // it is the only slide when a store has no ads, and appears once per loop when it has fewer than N
+  // Paid ads with a house slide after every N of them ("Advertise here", then the sample ad and
+  // the ADSEZ family slide in turn, when turned on). A store with no ads shows all the house slides;
+  // with fewer than N ads, one appears once per loop.
   const slides = useMemo<Slide[]>(() => {
     const adSlides: Slide[] = ads.map(ad => ({ kind: "ad", ad }));
     if (!advertiseSlide?.enabled) return adSlides;
-    if (ads.length === 0) return [{ kind: "promo", key: "promo-0" }];
+    const house: HouseSlide[] = [
+      "advertise",
+      ...(advertiseSlide.showSample !== false ? ["sample" as const] : []),
+      ...(advertiseSlide.showFamily !== false ? ["family" as const] : []),
+    ];
+    if (ads.length === 0) return house.map(h => ({ kind: "promo", key: `promo-${h}`, house: h }));
     const n = Math.max(1, advertiseSlide.everyNAds);
     const out: Slide[] = [];
+    let turn = 0;
+    const nextHouse = (key: string): Slide => ({ kind: "promo", key, house: house[turn++ % house.length] });
     adSlides.forEach((slide, i) => {
       out.push(slide);
-      if ((i + 1) % n === 0) out.push({ kind: "promo", key: `promo-${i}` });
+      if ((i + 1) % n === 0) out.push(nextHouse(`promo-${i}`));
     });
-    if (ads.length < n) out.push({ kind: "promo", key: "promo-end" });
+    if (ads.length < n) out.push(nextHouse("promo-end"));
     return out;
   }, [ads, advertiseSlide]);
 
@@ -361,11 +374,16 @@ export default function DisplayPage() {
     trackShownSlide();
   }, [emblaApi, slides, trackShownSlide]);
 
-  // Brand design: hold each slide 8 s, then sweep to the next one (a sales demo just cuts to the next ad)
+  // Brand design: hold each slide 8 s, then sweep to the next one (a sales demo just cuts to the next ad).
+  // Between two of our own house slides (a store with no ads) they glide across instead, so the
+  // screen isn't a coral sweep every few seconds.
   const wipeRef = useRef<BrandWipeHandle>(null);
   const goToSlide = useCallback((i: number) => {
     if (!emblaApi) return;
-    if (wipeRef.current && !demo) wipeRef.current.play(() => emblaApi.scrollTo(i, true));
+    const from = slidesRef.current[emblaApi.selectedScrollSnap()];
+    const houseToHouse = from?.kind === "promo" && slidesRef.current[i]?.kind === "promo";
+    if (houseToHouse) emblaApi.scrollTo(i);
+    else if (wipeRef.current && !demo) wipeRef.current.play(() => emblaApi.scrollTo(i, true));
     else emblaApi.scrollTo(i, true);
   }, [emblaApi, demo]);
   useEffect(() => {
@@ -448,21 +466,29 @@ export default function DisplayPage() {
         <div style={{ display: "flex", height: "100%" }}>
           {slides.map((slide, idx) => {
             if (slide.kind === "promo") {
+              const postUrl = typeof window === "undefined" ? "" : location?.allLocations
+                ? `${window.location.origin}/ads/new`
+                : `${window.location.origin}/ads/new?location=${encodeURIComponent(slug)}&src=screen`;
+              const price = location?.pricePerRunCents ? formatPrice(location.pricePerRunCents) : null;
               return (
                 <div key={slide.key} style={{ flex: "0 0 100%", minWidth: 0, height: "100%", position: "relative", display: "flex", flexDirection: "column" }}>
+                  {slide.house === "sample" ? (
+                    <SampleAdHouseSlide price={price ? `${location?.allLocations ? "from " : ""}${price}` : null} postUrl={postUrl} portrait={portrait} short={short} motion={motionFor(idx)} />
+                  ) : slide.house === "family" ? (
+                    <FamilyHouseSlide portrait={portrait} short={short} motion={motionFor(idx)} />
+                  ) : (
                   <AdvertiseHereSlide
                     headline={advertiseSlide!.headline}
                     subline={location?.allLocations
                       ? "Reach shoppers on in-store screens at local businesses near you"
                       : advertiseSlide!.subline.replace(/\{store\}/g, location?.name ?? "this store")}
                     reach={location?.dailyCustomers ? `~${location.dailyCustomers.toLocaleString("en-US")} shoppers a day` : null}
-                    price={location?.pricePerRunCents ? formatPrice(location.pricePerRunCents) : null}
+                    price={price}
                     pricePrefix={location?.allLocations ? "From " : ""}
-                    postUrl={typeof window === "undefined" ? "" : location?.allLocations
-                      ? `${window.location.origin}/ads/new`
-                      : `${window.location.origin}/ads/new?location=${encodeURIComponent(slug)}&src=screen`}
+                    postUrl={postUrl}
                     portrait={portrait} short={short} motion={motionFor(idx)}
                   />
+                  )}
                 </div>
               );
             }

@@ -5,10 +5,13 @@ import Link from "next/link";
 import { paypalEnabled } from "@/lib/payment-options";
 import { useSession } from "@/lib/auth/client";
 import LiveAdsSection from "./LiveAdsSection";
-import HeroScreen from "./HeroScreen";
+import HeroSlides from "./HeroSlides";
+import { formatShoppers } from "@/lib/traffic";
 
 // Prices come from the server (lowest active store price); every store may differ
 export type LandingPrice = { amount: string };
+// The busiest active store with a store-reported shopper count (null when none is set)
+export type FeaturedStore = { name: string; city: string; dailyCustomers: number };
 
 const FEATURES = (price: LandingPrice) => [
   { icon: "📍", title: "Location-targeted ads", desc: "Choose exactly which store locations display your ad. Target by city, state, or specific address." },
@@ -34,7 +37,7 @@ const HIGHLIGHTS = [
   { icon: "💸", title: "Full refund", label: "If your ad isn't approved" },
 ];
 
-export default function LandingPage({ price }: { price: LandingPrice }) {
+export default function LandingPage({ price, store }: { price: LandingPrice; store: FeaturedStore | null }) {
   const { data: sessionData } = useSession();
   // The server renders signed-out links; switch to the signed-in ones after mount so the first
   // client render matches the server (the session can already be known in the browser)
@@ -50,33 +53,50 @@ export default function LandingPage({ price }: { price: LandingPrice }) {
         <div className="absolute top-[-100px] right-[-100px] w-80 h-80 rounded-full bg-[#4A90C4]/[0.08] pointer-events-none" />
         <div className="absolute bottom-[-80px] left-[-80px] w-64 h-64 rounded-full bg-[#E8563A]/[0.06] pointer-events-none" />
 
-        <div className="max-w-3xl mx-auto relative">
-          <div className="inline-flex items-center gap-1.5 bg-[#E8563A]/15 border border-[#E8563A]/30 rounded-full px-3.5 py-1.5 mb-7">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#E8563A] inline-block" />
-            <span className="text-xs font-semibold text-[#E8563A] tracking-wide uppercase">Now booking ad space</span>
+        {/* Content left, slideshow right (stacked on small screens), like the store partner page */}
+        <div className="max-w-6xl mx-auto relative grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <div className="text-center lg:text-left">
+            <div className="inline-flex items-center gap-1.5 bg-[#E8563A]/15 border border-[#E8563A]/30 rounded-full px-3.5 py-1.5 mb-7">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#E8563A] inline-block" />
+              <span className="text-xs font-semibold text-[#E8563A] tracking-wide uppercase">Now booking ad space</span>
+            </div>
+
+            <h1 className="font-serif text-[clamp(32px,5vw,56px)] font-bold text-white leading-[1.15] mb-6 tracking-tight">
+              Your ad, inside the stores<br />
+              <span className="text-[#E8563A]">your customers shop at</span>
+            </h1>
+
+            <p className="text-[clamp(15px,1.8vw,19px)] text-[#9DC4E0] leading-relaxed mb-8 max-w-xl mx-auto lg:mx-0">
+              CommunityBulletin puts your digital ad on screens inside local stores —
+              visible through the customers who walk in.
+            </p>
+
+            {/* Real local numbers: the store's own reported traffic and the price */}
+            <div className="flex flex-wrap justify-center lg:justify-start gap-3 mb-9">
+              {store && (
+                <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-left">
+                  <div className="font-serif text-2xl font-bold text-white leading-none">~{formatShoppers(store.dailyCustomers)}</div>
+                  <div className="text-xs text-[#9DC4E0] mt-1">shoppers a day at {store.name}, {store.city}</div>
+                </div>
+              )}
+              <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-left">
+                <div className="font-serif text-2xl font-bold text-white leading-none">{price.amount}</div>
+                <div className="text-xs text-[#9DC4E0] mt-1">for 4 weeks · no contract</div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+              <Link href={session ? "/ads/new" : "/register"} className="no-underline bg-[#E8563A] text-white px-8 py-3.5 rounded-xl text-base font-bold tracking-wide hover:bg-[#D14A30] transition-colors">
+                Post your first ad
+              </Link>
+              <a href="#how-it-works" className="no-underline bg-white/10 border border-white/20 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-white/20 transition-colors">
+                See how it works
+              </a>
+            </div>
+            {store && <p className="text-[11px] text-[#9DC4E0]/70 mt-4 mb-0">Shopper count is store-reported.</p>}
           </div>
 
-          <h1 className="font-serif text-[clamp(32px,6vw,64px)] font-bold text-white leading-[1.15] mb-6 tracking-tight">
-            Your ad, inside the stores<br />
-            <span className="text-[#E8563A]">your customers shop at</span>
-          </h1>
-
-          <p className="text-[clamp(15px,2vw,20px)] text-[#9DC4E0] leading-relaxed mb-10 max-w-xl mx-auto">
-            CommunityBulletin puts your digital ad on screens inside local stores —
-            visible through the customers who walk in.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href={session ? "/ads/new" : "/register"} className="no-underline bg-[#E8563A] text-white px-8 py-3.5 rounded-xl text-base font-bold tracking-wide hover:bg-[#D14A30] transition-colors">
-              Post your first ad
-            </Link>
-            <a href="#how-it-works" className="no-underline bg-white/10 border border-white/20 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-white/20 transition-colors">
-              See how it works
-            </a>
-          </div>
-
-          {/* Live mini-screen: rotates through ads running right now */}
-          <HeroScreen />
+          <HeroSlides price={price.amount} />
         </div>
       </section>
 

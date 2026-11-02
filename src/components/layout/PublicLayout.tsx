@@ -325,7 +325,10 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               <Link href="/privacy" className="text-xs text-[#4A7FA5] no-underline hover:text-white transition-colors">Privacy</Link>
               <Link href="/terms"   className="text-xs text-[#4A7FA5] no-underline hover:text-white transition-colors">Terms</Link>
             </div>
-            <p className="text-xs text-[#4A7FA5]">Made with ❤️ for local communities</p>
+            <p className="text-xs text-[#4A7FA5]">
+              Made with ❤️ for local communities · Powered by{" "}
+              <a href="https://adsez.com" target="_blank" rel="noopener noreferrer" className="text-[#9DC4E0] font-semibold no-underline hover:text-white transition-colors">ADSEZ.com</a>
+            </p>
           </div>
         </div>
       </footer>

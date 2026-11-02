@@ -57,15 +57,21 @@ function formatCents(cents: number, currency = "USD") {
   return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(cents / 100);
 }
 
-export default async function StoreOwnerPage() {
+export default async function StoreOwnerPage({ searchParams }: { searchParams: Promise<{ owner?: string }> }) {
   const session = await requireStoreOwner();
   const role = (session.user as any).role as string;
   const userId = (session.user as any).id as string;
   const isAdmin = role === "admin";
 
+  // Admins: ?owner=<user id> (from Admin Panel → Users → Stores) shows one store owner's locations
+  const { owner } = await searchParams;
+  const [ownerFilter] = isAdmin && owner && /^[0-9a-f-]{36}$/i.test(owner)
+    ? await db.select({ id: users.id, name: users.name, email: users.email }).from(users).where(eq(users.id, owner)).limit(1)
+    : [];
+
   // Admins also see deactivated locations (so they can reactivate or delete them)
   const conditions = isAdmin
-    ? []
+    ? (ownerFilter ? [eq(locations.storeOwnerId, ownerFilter.id)] : [])
     : [eq(locations.storeOwnerId, userId), eq(locations.isActive, true)];
 
   const locs = await db
@@ -119,7 +125,7 @@ export default async function StoreOwnerPage() {
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
         <h1 style={{ fontFamily: "Georgia,serif", fontSize: 26, fontWeight: 700, color: "var(--cb-ink)" }}>
-          {isAdmin ? "All Locations" : "My Locations"}
+          {ownerFilter ? `${ownerFilter.name}'s locations` : isAdmin ? "All Locations" : "My Locations"}
         </h1>
         <Link
           href="/dashboard/store-owner/locations/new"
@@ -129,7 +135,9 @@ export default async function StoreOwnerPage() {
         </Link>
       </div>
       <p style={{ color: "var(--cb-ink-2)", fontSize: 14, marginBottom: 32 }}>
-        {isAdmin ? "Manage all store locations across the platform." : "Manage your store locations and their active ad displays."}
+        {ownerFilter
+          ? <>Store owner {ownerFilter.email} · <Link href="/dashboard/store-owner" style={{ color: "#4A90C4" }}>Show all locations</Link></>
+          : isAdmin ? "Manage all store locations across the platform." : "Manage your store locations and their active ad displays."}
       </p>
 
       {isAdmin && <AdminPricingNotes />}

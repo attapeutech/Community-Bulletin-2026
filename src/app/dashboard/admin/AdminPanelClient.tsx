@@ -787,7 +787,7 @@ export default function AdminPanelClient({
             value="users"
             className="rounded-lg text-[13px] px-[18px] py-2 data-[state=active]:bg-[#1A3A5C] data-[state=active]:text-white data-[state=active]:shadow-none data-[state=inactive]:text-[#4A6B82] data-[state=inactive]:bg-transparent"
           >
-            Users ({stats.totalUsers})
+            Users ({users.length})
           </TabsTrigger>
           <TabsTrigger
             value="ads"
@@ -807,7 +807,7 @@ export default function AdminPanelClient({
             <StatCard label="Pending Review" value={stats.pendingAds} accentClass={stats.pendingAds > 0 ? "text-yellow-800" : "text-[#1A3A5C]"} onClick={() => { setStatusFilter("pending"); setAdSearch(""); setActiveTab("ads"); }} />
             <StatCard label="Approved" value={stats.approvedAds} accentClass="text-green-800" onClick={() => { setStatusFilter("approved"); setAdSearch(""); setActiveTab("ads"); }} />
             <StatCard label="Denied" value={stats.deniedAds} accentClass="text-red-800" onClick={() => { setStatusFilter("denied"); setAdSearch(""); setActiveTab("ads"); }} />
-            <StatCard label="Users" value={stats.totalUsers} onClick={() => setActiveTab("users")} />
+            <StatCard label="Users" value={users.length} onClick={() => setActiveTab("users")} />
             <StatCard label="Locations" value={stats.totalLocations} onClick={() => { window.location.href = "/dashboard/store-owner"; }} />
             <StatCard label="Screen Views" value={stats.totalViews.toLocaleString()} sub="times ads were shown in stores" />
             <StatCard label="Website Visits" value={stats.totalWebsiteClicks.toLocaleString()} sub="QR scans and link clicks" accentClass="text-[#4A90C4]" />
@@ -971,6 +971,15 @@ export default function AdminPanelClient({
                           >
                             {adCount} ad{adCount !== 1 ? "s" : ""}
                           </button>
+                        )}
+                        {/* Store owners: their stores, in the store owner dashboard */}
+                        {u.role === "store_owner" && (
+                          <Link
+                            href={`/dashboard/store-owner?owner=${u.id}`}
+                            className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-blue-100 text-blue-800 text-[11px] font-bold hover:bg-blue-200 no-underline"
+                          >
+                            Stores →
+                          </Link>
                         )}
                         <label className={cn("inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full border border-[#D8E4EE] bg-[#F7F9FC] text-[11px] font-semibold text-[#4A6B82] cursor-pointer", verifying === u.id && "opacity-60")}>
                           <Switch

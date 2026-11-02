@@ -8,6 +8,9 @@ export type AdvertiseSlideSettings = {
   headline: string;
   subline: string;     // "{store}" is replaced with the store's name
   everyNAds: number;   // shown after every N paid ads (and always when a store has none)
+  // More house slides that take turns in the same slot (see src/components/display/HouseSlides.tsx)
+  showSample: boolean; // "This could be YOUR ad": a sample Sale ad
+  showFamily: boolean; // "Part of the ADSEZ family"
 };
 
 export const ADVERTISE_SLIDE_DEFAULTS: AdvertiseSlideSettings = {
@@ -15,6 +18,8 @@ export const ADVERTISE_SLIDE_DEFAULTS: AdvertiseSlideSettings = {
   headline: "Your ad could be here",
   subline: "Reach every customer at {store}",
   everyNAds: 3,
+  showSample: true,
+  showFamily: true,
 };
 
 const KEY = "advertise_slide";

@@ -3,28 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { SaleTemplate } from "@/components/display/templates/SaleTemplate";
-import type { SaleTemplateData } from "@/lib/ad-templates";
+import { ADSEZ_FAMILY, SAMPLE_SALE_AD, SAMPLE_SALE_PHOTO } from "@/lib/house-content";
 
 type LiveAd = { id: string; title: string; imageUrl: string; locationName: string | null; storeName: string; cityName: string; stateCode: string };
 
 const ROTATE_MS = 7000;
-
-// An example ad in the Sale template (clearly labeled "Sample ad" on the slide)
-const SAMPLE: SaleTemplateData = {
-  businessName: "Your Pizza Place",
-  offerBig: "20%",
-  offerSmall: "OFF",
-  headline: "Any large pizza",
-  details: "Show this screen at the counter. Dine-in or takeout.",
-  ends: "Ends Sunday",
-};
-
-// Our sister sites, with the figures shown on ADSEZ.com. These are online, worldwide numbers:
-// the slide says so plainly, so nobody reads them as in-store or Everett-area traffic.
-const FAMILY = [
-  { name: "AdsAndClassifieds.com", href: "https://adsandclassifieds.com", what: "Local classifieds", stats: [["75k+", "users"], ["89k+", "listings"]] },
-  { name: "Blog-Directory.org", href: "https://blog-directory.org", what: "Blog directory", stats: [["83k+", "users"], ["142k+", "blogs"]] },
-];
 
 /**
  * Home page hero slideshow: ads live right now (when there are any), a sample template ad,
@@ -133,9 +116,7 @@ function LiveSlide({ ads }: { ads: LiveAd[] }) {
 function SampleSlide() {
   return (
     <>
-      <SaleTemplate data={SAMPLE} photoUrl={null} qrValue={null} address={null} phone={null} website={null} play />
-      {/* Stand-in for the advertiser's photo (right half of the template) */}
-      <div className="absolute top-0 right-0 bottom-0 w-[46%] flex items-center justify-center pointer-events-none text-[clamp(48px,9vw,96px)]" aria-hidden="true">🍕</div>
+      <SaleTemplate data={SAMPLE_SALE_AD} photoUrl={SAMPLE_SALE_PHOTO} qrValue={null} address={null} phone={null} website={null} play />
       <Pill>Sample ad</Pill>
     </>
   );
@@ -147,7 +128,7 @@ function FamilySlide() {
       <div className="text-[10px] sm:text-xs font-bold tracking-[0.14em] uppercase text-[#9DC4E0]">Part of the ADSEZ family</div>
       <div className="font-serif font-bold text-white text-base sm:text-xl leading-tight mt-1 mb-3">Community Bulletin&rsquo;s sister sites</div>
       <div className="grid grid-cols-2 gap-2 sm:gap-3">
-        {FAMILY.map(f => (
+        {ADSEZ_FAMILY.map(f => (
           <div key={f.name} className="bg-white/5 border border-white/10 rounded-lg p-2 sm:p-3">
             <div className="text-[11px] sm:text-sm font-bold text-white truncate">{f.name}</div>
             <div className="text-[10px] sm:text-xs text-[#9DC4E0] mb-1">{f.what}</div>

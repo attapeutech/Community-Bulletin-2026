@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 
-type Settings = { enabled: boolean; headline: string; subline: string; everyNAds: number };
+type Settings = { enabled: boolean; headline: string; subline: string; everyNAds: number; showSample: boolean; showFamily: boolean };
 
 // Admin controls for the built-in "Advertise here" slide on display screens
 export function AdvertiseSlideCard() {
@@ -90,6 +90,18 @@ export function AdvertiseSlideCard() {
                 className="h-9 w-16 text-sm border-[#D8E4EE]"
               />
               paid ads
+            </div>
+            <div>
+              <div className="text-[11px] font-semibold text-[#4A5568] uppercase tracking-[0.04em] mb-1.5">Take turns with</div>
+              <label className="flex items-start gap-2.5 text-sm text-[#1A3A5C] cursor-pointer mb-2">
+                <Switch checked={settings.showSample} onCheckedChange={v => set("showSample", v)} className="mt-0.5" />
+                <span><strong>&ldquo;This could be YOUR ad&rdquo;</strong> <span className="text-[#4A6B82]">a sample Sale ad under a big &ldquo;sample&rdquo; banner, with a QR code to advertise</span></span>
+              </label>
+              <label className="flex items-start gap-2.5 text-sm text-[#1A3A5C] cursor-pointer">
+                <Switch checked={settings.showFamily} onCheckedChange={v => set("showFamily", v)} className="mt-0.5" />
+                <span><strong>&ldquo;Part of the ADSEZ family&rdquo;</strong> <span className="text-[#4A6B82]">our sister sites by name (no traffic numbers on screens)</span></span>
+              </label>
+              <p className="text-[11px] text-[#5B7D96] mt-1.5">A store with no paid ads shows all of them in turn.</p>
             </div>
             <div className="flex items-center gap-3 flex-wrap">
               <Button onClick={save} disabled={saving} className="h-9 text-[13px] bg-[#1A3A5C] hover:bg-[#15304d] text-white">

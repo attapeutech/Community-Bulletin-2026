@@ -1,4 +1,4 @@
-# Handoff: 2026-10-22 (updated 2026-11-01, evening)
+# Handoff: 2026-10-22 (updated 2026-11-02)
 
 ## Where things stand
 
@@ -32,6 +32,24 @@
   - `LeaveFrame` (`src/components/layout/LeaveFrame.tsx`, in the root layout) moves any non-display page out of a frame
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
+
+## 2026-11-02 summary
+
+Context: after two weeks of door-knocking, store owners and advertisers are interested, but nobody has posted at Fast Eddies yet. Advertisers keep asking "how many advertisers are already at Fast Eddies?", and the site and screens looked empty during launch. Today's changes add credibility without overstating anything.
+
+- **Footer** (PR #117): "Powered by ADSEZ.com", linking to https://adsez.com (`PublicLayout.tsx`).
+- **Home page hero** (PR #118): content left, slideshow right, like the `/demo` store partner page; stacks on phones.
+  - **Left:** headline, buttons, and two stat cards: the busiest active store's store-reported shoppers a day ("~500 shoppers a day at Fast Eddies, Everett", from `locations.daily_customers`, queried in `src/app/(public)/page.tsx`) and the 4-week price. A small note says the count is store-reported.
+  - **Right:** `src/components/marketing/HeroSlides.tsx`, rotating every 7 s (pauses on hover, no auto-rotate with reduced motion): **Live now** (only when paid ads are running), a **Sample ad** (Sale template, labeled), **Part of the ADSEZ family**, and **Your ad could be here**. It replaced `HeroScreen.tsx`.
+- **Store screens, house slides** (PR #119): the house slot after every N paid ads now takes turns between **Your ad could be here**, **This could be YOUR ad** and **Part of the ADSEZ family**. A store with no paid ads (Fast Eddies today) cycles through all three, gliding between them instead of the coral brand sweep. See "Advertise here" slide below.
+- **The honesty rules** (agreed with the partner's concern about traffic numbers):
+  - The ADSEZ "brands" are our own sister sites (AdsAndClassifieds.com: 75k+ users, 89k+ listings; Blog-Directory.org: 83k+ users, 142k+ blogs), not client logos. Those figures are **online and worldwide**, not Everett or in-store traffic.
+  - On the **website** they always appear with the disclaimer "Online users and listings across our sites, worldwide. Not Community Bulletin screen viewers or local store traffic."
+  - On **store screens** there are **no numbers**: the disclaimer can't be read at TV distance, so shoppers would read them as local traffic.
+  - The sample ad is always labeled; on screens it sits under a big coral "This could be YOUR ad · Sample ad" banner so no shopper takes it for a real deal.
+  - No "X of 40 spots left": 40 is only a sales goal (`ADS_PER_STORE_GOAL`), not an enforced limit.
+  - The figures live in `src/lib/house-content.ts` (shared by the home page and screens); update them by hand when ADSEZ.com's numbers change.
+- **Fast Eddies photos:** two setup-day photos are in `public/Fast Eddies Photos/` (untracked, not deployed). Not usable: they show the old classic design with "From $100 / week" and the "Testing advertising" test ad, and are blurry. A retake is wanted (see To do).
 
 ## 2026-11-01 summary
 
@@ -319,7 +337,8 @@
   - The proxy (`src/proxy.ts`, formerly `middleware.ts`) keeps the query string in `callbackUrl`.
   - Login and register read it with `useNextParam()` and pass it to sign-in, Google sign-in, the verification email (`callbackURL`) and the links between the two pages.
   - `safeNext()` allows same-site paths only.
-- **Later (option 2):** custom house ads (admin-made, no payment, chosen stores).
+- **House slides (2026-11-02):** the slot takes turns between `AdvertiseHereSlide`, `SampleAdHouseSlide` and `FamilyHouseSlide` (`src/components/display/HouseSlides.tsx`). Settings `showSample` and `showFamily` (both default on; missing counts as on) are switches under "Take turns with" in the Admin card. With no paid ads, all enabled house slides show; on the brand design they glide between each other, and the coral sweep plays only when a paid ad is involved. The sample slide's QR opens the same Post a New Ad link ("Scan to advertise"). The family slide shows the sister sites by name only.
+- **Later (option 2):** custom house ads (admin-made, no payment, chosen stores), for example a store's own "Welcome to Fast Eddies" slide or free community spots.
 
 ## Display screens (2026-10-24)
 
@@ -438,4 +457,7 @@
 - [ ] Delete the leftover remote branch `feat/google-signin-and-proxy` (an early, broken version of PR #68).
 - [ ] **Sales team role, later:** the Sales page is admin-only today (the co-founder doing sales is an admin). When a sales team joins: add `sales` to the `user_role` enum (migration), allow it on `/dashboard/sales` and `/api/admin/leads` (`requireRole("sales", "admin")`), add it to `ROLE_OPTIONS` in `UserCredentials.tsx` and the role menus, and decide whether sales staff see all leads or only their own. Store setup stays admin-only.
 - [ ] **Sales, optional ideas:** create a store lead automatically when someone applies on the website (source "Website"); a clearer Delete lead button or bulk delete; a per-store goal instead of the fixed 40.
+- [ ] **Partner decisions (from 2026-11-02):** a founding-advertiser offer (locked price, free second run, or other); free screen spots for local nonprofits and schools; a free AdsAndClassifieds.com listing bundled with each screen ad. Each can become another house slide or home page slide.
+- [ ] **Fast Eddies screen photo:** retake with the new design showing (ideally "This could be YOUR ad" or "Your ad could be here"), 1× lens and closer rather than zoom, tap to focus and lower brightness, steady, landscape with store context, no faces. Then shrink it, add a "Live at Fast Eddies, Everett" slide to `HeroSlides`, and delete `public/Fast Eddies Photos/` (don't commit the old photos).
+- [ ] **Sister-site links:** confirm `https://adsandclassifieds.com` and `https://blog-directory.org` (in `src/lib/house-content.ts`) are the right addresses.
 - [ ] **Home page stats, later:** the bar under the hero shows launch highlights (`HIGHLIGHTS` in `LandingPage.tsx`) instead of the old made-up figures. When the numbers are worth showing, add live stats (stores, cities, ads run) that switch on automatically above a chosen threshold, for example 25+ stores.

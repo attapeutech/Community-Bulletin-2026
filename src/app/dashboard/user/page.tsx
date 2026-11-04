@@ -1,10 +1,12 @@
 import { getSession } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
-import { ads, locations, cities, states, postalCodes, savedAds } from "@/lib/db/schema";
-import { eq, and, desc, gte, sql, isNull } from "drizzle-orm";
+import { ads, adSwaps, locations, cities, states, postalCodes, savedAds } from "@/lib/db/schema";
+import { eq, and, desc, gte, sql, isNull, inArray } from "drizzle-orm";
 import Link from "next/link";
 import { RenewAdButton } from "./RenewAdButton";
+import { WithdrawSwapButton } from "./WithdrawSwapButton";
+import { canSwap } from "@/lib/ad-swaps";
 import { UserDashboardRefresher } from "./UserDashboardRefresher";
 import { latestApplicationFor } from "@/lib/partner-applications";
 
@@ -63,6 +65,7 @@ export default async function UserDashboard() {
       showWebsite: ads.showWebsite,
       contactWebsite: ads.contactWebsite,
       isTest: ads.isTest,
+      demoId: ads.demoId,
       location: {
         storeName: locations.storeName,
         slug: locations.slug,
@@ -81,6 +84,16 @@ export default async function UserDashboard() {
     .where(and(eq(ads.userId, userId), isNull(ads.demoId)))
     .orderBy(desc(ads.createdAt))
     .limit(50);
+
+  // Each ad's latest swap (a new version sent while it runs): waiting for review, approved or denied
+  const swapRows = userAds.length
+    ? await db.select({ adId: adSwaps.adId, status: adSwaps.status, title: adSwaps.title, reviewNote: adSwaps.reviewNote, reviewedAt: adSwaps.reviewedAt })
+        .from(adSwaps)
+        .where(and(inArray(adSwaps.adId, userAds.map(a => a.id)), sql`${adSwaps.status} <> 'withdrawn'`))
+        .orderBy(desc(adSwaps.createdAt))
+    : [];
+  const latestSwap = new Map<string, (typeof swapRows)[number]>();
+  for (const r of swapRows) if (!latestSwap.has(r.adId)) latestSwap.set(r.adId, r);
 
   const now = new Date();
   const totalAds = userAds.length;
@@ -184,6 +197,8 @@ export default async function UserDashboard() {
               const adStatus = STATUS_STYLES[ad.status] ?? STATUS_STYLES.pending;
               const payStatus = PAY_STYLES[ad.paymentStatus] ?? PAY_STYLES.unpaid;
               const needsPayment = ad.paymentStatus === "unpaid";
+              const swap = latestSwap.get(ad.id);
+              const swappable = canSwap(ad, now);
 
               return (
                 <div
@@ -227,7 +242,19 @@ export default async function UserDashboard() {
                     )}
                     <div style={{ fontSize: 11, color: "var(--cb-ink-3)", marginTop: 2 }}>
                       Submitted {new Date(ad.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      {swap?.status === "approved" && swap.reviewedAt && <> · swapped {new Date(swap.reviewedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })} (counts include the earlier version)</>}
                     </div>
+                    {swap?.status === "pending" && (
+                      <div style={{ fontSize: 12, color: "#5B21B6", background: "#F5F3FF", border: "1px solid #DDD6FE", borderRadius: 6, padding: "5px 10px", marginTop: 6, display: "inline-flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                        <span>🔄 New version &ldquo;{swap.title}&rdquo; is waiting for review. This ad keeps running until then.</span>
+                        <WithdrawSwapButton adId={ad.id} />
+                      </div>
+                    )}
+                    {swap?.status === "denied" && swappable && (
+                      <div style={{ fontSize: 12, color: "#991b1b", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, padding: "5px 10px", marginTop: 6 }}>
+                        Your swap &ldquo;{swap.title}&rdquo; wasn&apos;t approved{swap.reviewNote ? `: ${swap.reviewNote}` : "."} This ad keeps running; you can send another version.
+                      </div>
+                    )}
                     {(ad.status === "approved" || ad.status === "expired" || ad.status === "cancelled") && (
                       <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
                         <span style={{ fontSize: 11, color: "var(--cb-ink-2)" }}>
@@ -277,6 +304,15 @@ export default async function UserDashboard() {
                         }}
                       >
                         View Live ↗
+                      </Link>
+                    )}
+                    {swappable && swap?.status !== "pending" && (
+                      <Link
+                        href={`/ads/new?swap=${ad.id}`}
+                        title="Replace this ad with a new one for the same business. Reviewed, no extra payment."
+                        style={{ fontSize: 12, fontWeight: 600, background: "#1A3A5C", color: "#fff", padding: "6px 14px", borderRadius: 6, textDecoration: "none" }}
+                      >
+                        Swap ad
                       </Link>
                     )}
                     {(ad.status === "expired" || ad.status === "cancelled") && (

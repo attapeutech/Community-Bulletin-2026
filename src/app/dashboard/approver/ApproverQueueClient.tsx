@@ -31,7 +31,11 @@ type Ad = {
   showWebsite: boolean;
   user: { id: string; name: string; email: string };
   location: { id: string; storeName: string; slug: string; addressLine1: string; addressLine2: string | null; cityName: string; stateCode: string; postalCode: string };
+  // An ad swap: a new version of this running paid ad (id is then the swap's id)
+  swap?: { adId: string; title: string; imageUrl: string; endedAt: string };
 };
+
+const fmtLong = (iso: string) => new Date(iso).toLocaleDateString("en-US", { dateStyle: "long" });
 
 export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }) {
   const [queue, setQueue] = useState<Ad[]>(initialAds);
@@ -83,10 +87,12 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
     if (!selected) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/ads/${selected.id}/approve`, { method: "PATCH" });
+      const res = selected.swap
+        ? await fetch(`/api/ad-swaps/${selected.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "approve" }) })
+        : await fetch(`/api/ads/${selected.id}/approve`, { method: "PATCH" });
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
-      showToast(`"${selected.title}" approved and live!`, true);
+      showToast(selected.swap ? `"${selected.title}" swapped in and live!` : `"${selected.title}" approved and live!`, true);
       setQueue((prev) => prev.filter((a) => a.id !== selected.id));
       setSelected(null);
       setMode(null);
@@ -105,14 +111,14 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
     }
     setLoading(true);
     try {
-      const res = await fetch(`/api/ads/${selected.id}/deny`, {
+      const res = await fetch(selected.swap ? `/api/ad-swaps/${selected.id}` : `/api/ads/${selected.id}/deny`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reviewNote: reviewNote.trim() }),
+        body: JSON.stringify(selected.swap ? { action: "deny", reviewNote: reviewNote.trim() } : { reviewNote: reviewNote.trim() }),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
-      showToast(`"${selected.title}" denied. Refund initiated.`, true);
+      showToast(selected.swap ? `Swap denied. "${selected.swap.title}" keeps running.` : `"${selected.title}" denied. Refund initiated.`, true);
       setQueue((prev) => prev.filter((a) => a.id !== selected.id));
       setSelected(null);
       setMode(null);
@@ -179,7 +185,10 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
                   className="w-20 h-14 object-cover rounded-md shrink-0"
                 />
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-sm text-[#1A3A5C] mb-0.5">{ad.title}</div>
+                  <div className="font-semibold text-sm text-[#1A3A5C] mb-0.5">
+                    {ad.swap && <span className="mr-1.5 align-middle text-[10px] font-bold uppercase tracking-wide border rounded-full px-2 py-0.5 bg-violet-50 text-violet-800 border-violet-200 dark:bg-violet-500/15 dark:text-violet-200 dark:border-violet-400/30">Swap</span>}
+                    {ad.title}
+                  </div>
                   <div className="text-xs text-[#4A6B82]">{ad.location.storeName}</div>
                   <div className="text-[11px] text-[#5B7D96] mt-1">
                     By {ad.user.name} · {new Date(ad.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
@@ -222,6 +231,18 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
                   </span>
                 </div>
               </div>
+              )}
+
+              {/* Ad swap: what it replaces (already paid; the current ad keeps running until approved) */}
+              {selected.swap && (
+                <div className="flex gap-3 items-center mb-4 p-3 rounded-lg border border-violet-200 bg-violet-50 dark:bg-violet-500/10 dark:border-violet-400/30">
+                  <img src={selected.swap.imageUrl} alt="" className="w-16 h-11 object-cover rounded shrink-0" />
+                  <div className="text-xs text-violet-900 dark:text-violet-100 leading-relaxed">
+                    <div className="font-bold uppercase tracking-wide text-[10px]">Swap · replaces the running ad</div>
+                    <div>&ldquo;{selected.swap.title}&rdquo; · already paid · runs until {fmtLong(selected.swap.endedAt)}</div>
+                    <div>Must be for the same business.</div>
+                  </div>
+                </div>
               )}
 
               <h3 className="font-serif text-[18px] text-[#1A3A5C] mb-1">{selected.title}</h3>
@@ -274,7 +295,9 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
               {mode === "approve" && (
                 <div className="bg-green-50 border border-green-300 rounded-lg p-4">
                   <p className="text-[13px] text-green-800 mb-3">
-                    This ad will go live immediately for 4 weeks (28 days). The advertiser will be notified.
+                    {selected.swap
+                      ? `This version replaces "${selected.swap.title}" on the screen right away. It still ends ${fmtLong(selected.swap.endedAt)}; no payment. The advertiser will be notified.`
+                      : "This ad will go live immediately for 4 weeks (28 days). The advertiser will be notified."}
                   </p>
                   <div className="flex gap-2">
                     <Button
@@ -304,6 +327,7 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
                   {/* One-tap reasons; the text can still be edited before denying */}
                   <div className="flex flex-wrap gap-1.5 mb-2">
                     {[
+                      ...(selected.swap ? ["A swap must advertise the same business as the original ad. For a different business, please post a new ad."] : []),
                       `This business is too far from this store. Screens are for local businesses within about ${LOCAL_AD_RADIUS_MILES} miles; please choose a store closer to your business.`,
                       "The image is too low in resolution to display clearly. Please upload a sharper image (1920×1080 recommended).",
                       "The ad doesn't meet our content guidelines.",
@@ -314,7 +338,7 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
                         onClick={() => setReviewNote(r)}
                         className="text-[11px] font-semibold text-red-800 bg-white border border-red-300 rounded-full px-2.5 py-0.5 hover:bg-red-100"
                       >
-                        {["Too far from store", "Low-resolution image", "Content guidelines"][i]}
+                        {[...(selected.swap ? ["Different business"] : []), "Too far from store", "Low-resolution image", "Content guidelines"][i]}
                       </button>
                     ))}
                   </div>
@@ -331,7 +355,7 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
                       onClick={handleDeny}
                       disabled={loading || reviewNote.trim().length < 10}
                     >
-                      {loading ? "Denying…" : "Confirm Deny & Refund"}
+                      {loading ? "Denying…" : selected.swap ? "Confirm Deny (current ad keeps running)" : "Confirm Deny & Refund"}
                     </Button>
                     <Button
                       variant="outline"

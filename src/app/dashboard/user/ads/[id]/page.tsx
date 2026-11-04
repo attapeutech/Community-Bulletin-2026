@@ -1,7 +1,8 @@
 import { requireAuth } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
-import { ads, locations, users, payments, cities, states, postalCodes, savedAds } from "@/lib/db/schema";
-import { count, eq } from "drizzle-orm";
+import { ads, adSwaps, locations, users, payments, cities, states, postalCodes, savedAds } from "@/lib/db/schema";
+import { and, count, eq } from "drizzle-orm";
+import { canSwap } from "@/lib/ad-swaps";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import AdImagePreview from "./AdImagePreview";
@@ -116,6 +117,10 @@ export default async function AdDetailPage({
     ? { ...basePayStatus, label: `Paid — $${(latestPaid.amountCents / 100).toFixed(2)}` }
     : basePayStatus;
 
+  // A new version of this ad waiting for review, if any
+  const [pendingSwap] = await db.select({ title: adSwaps.title }).from(adSwaps)
+    .where(and(eq(adSwaps.adId, id), eq(adSwaps.status, "pending"))).limit(1);
+
   const isOwner = row.user.id === userId;
   const needsPayment = ad.paymentStatus === "unpaid" && !ad.isTest;
 
@@ -139,6 +144,11 @@ export default async function AdDetailPage({
           {ad.isTest && (
             <div style={{ fontSize: 13, color: "var(--cb-ink-2)", marginTop: 8 }}>
               Shows only on preview screens, never on the store TV, and doesn&apos;t count anywhere.
+            </div>
+          )}
+          {pendingSwap && (
+            <div style={{ fontSize: 13, color: "#5B21B6", marginTop: 8 }}>
+              🔄 New version &ldquo;{pendingSwap.title}&rdquo; is waiting for review. This ad keeps running until then.
             </div>
           )}
         </div>
@@ -176,6 +186,16 @@ export default async function AdDetailPage({
             }}
           >
             {ad.isTest ? "View on preview screen ↗" : "View Live Display ↗"}
+          </Link>
+        )}
+        {/* Replace it with a new version for the same business: reviewed, no payment (hidden while one waits) */}
+        {isOwner && canSwap(ad) && !pendingSwap && (
+          <Link
+            href={`/ads/new?swap=${ad.id}`}
+            title="Replace this ad with a new one for the same business. Reviewed, no extra payment."
+            style={{ display: "inline-block", background: "#1A3A5C", color: "#fff", padding: "10px 18px", borderRadius: 8, textDecoration: "none", fontSize: 14, fontWeight: 600 }}
+          >
+            Swap ad
           </Link>
         )}
         {/* Share the ad's public page while it's live */}

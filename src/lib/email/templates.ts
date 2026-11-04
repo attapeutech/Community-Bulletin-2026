@@ -132,6 +132,55 @@ export async function sendAdReviewNotificationEmail({
   });
 }
 
+/** Reviewers: an advertiser sent a new version of a running ad (no payment; the current one keeps running) */
+export async function sendAdSwapReviewEmail({
+  currentTitle, newTitle, locationName, userName,
+}: {
+  currentTitle: string; newTitle: string; locationName: string; userName: string;
+}) {
+  return sendEmail({
+    to: APPROVER_EMAIL,
+    cc: ADMIN_EMAIL !== APPROVER_EMAIL ? ADMIN_EMAIL : undefined,
+    subject: `Ad swap to review — "${newTitle}"`,
+    html: emailWrapper(`
+      <h2 style="margin:0 0 8px;color:${BRAND_COLOR};font-size:20px">Ad swap waiting for review</h2>
+      <p style="color:#4A6B82;font-size:14px;margin:0 0 20px">An advertiser wants to replace their running ad with a new version. It's already paid for; the current ad keeps running until you approve.</p>
+      ${detailTable([
+        { label: "Current ad", value: currentTitle },
+        { label: "New version", value: `<strong>${newTitle}</strong>` },
+        { label: "Submitted by", value: userName },
+        { label: "Location", value: locationName },
+      ])}
+      ${primaryButton(`${APP_URL}/dashboard/approver`, "Review the swap", "#16a34a")}
+    `),
+  });
+}
+
+/** Advertiser: their ad swap was approved (now showing) or not (the current ad keeps running) */
+export async function sendAdSwapResultEmail({
+  to, userName, adTitle, adId, approved, reviewNote, endedAt,
+}: {
+  to: string; userName: string; adTitle: string; adId: string; approved: boolean; reviewNote?: string; endedAt: string;
+}) {
+  return sendEmail({
+    to,
+    subject: approved ? `Your new ad is live — "${adTitle}"` : `Ad swap update — "${adTitle}"`,
+    html: emailWrapper(approved ? `
+      <h2 style="margin:0 0 8px;color:#16a34a;font-size:20px">Your new ad is live</h2>
+      <p style="color:#4A6B82;font-size:14px;margin:0 0 20px">Hi ${userName}, your swap was approved. <strong>"${adTitle}"</strong> now shows on the screen in place of your previous ad, until <strong>${endedAt}</strong>.</p>
+      ${primaryButton(`${APP_URL}/dashboard/user/ads/${adId}`, "View Ad Details")}
+    ` : `
+      <h2 style="margin:0 0 8px;color:${BRAND_COLOR};font-size:20px">Ad swap update</h2>
+      <p style="color:#4A6B82;font-size:14px;margin:0 0 20px">Hi ${userName}, the new version you sent (<strong>"${adTitle}"</strong>) wasn't approved. Your current ad keeps running until <strong>${endedAt}</strong>.</p>
+      <div style="background:#fef2f2;border-left:4px solid #ef4444;padding:14px 18px;margin:0 0 20px;border-radius:0 8px 8px 0">
+        <p style="margin:0;font-size:13px;color:#b91c1c"><strong>Reviewer note:</strong> ${reviewNote ?? ""}</p>
+      </div>
+      <p style="color:#4A6B82;font-size:13px">You can send another version from My Ads at any time.</p>
+      ${primaryButton(`${APP_URL}/dashboard/user`, "Go to My Ads")}
+    `),
+  });
+}
+
 export async function sendPaymentReceiptEmail({
   to, userName, adTitle, locationName, amountFormatted, provider, adId,
 }: {

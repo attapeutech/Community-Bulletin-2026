@@ -11,7 +11,6 @@ import { BrandMark } from "@/components/layout/BrandMark";
 import { HeartButton } from "@/components/ui/HeartButton";
 import { ShareButton } from "@/components/ui/ShareButton";
 import { BrandFrame } from "@/components/display/BrandFrame";
-import { BrandWipe, type BrandWipeHandle } from "@/components/display/BrandWipe";
 import { FpsMeter } from "@/components/display/FpsMeter";
 import { SaleTemplate } from "@/components/display/templates/SaleTemplate";
 import { readSaleData } from "@/lib/ad-templates";
@@ -374,18 +373,14 @@ export default function DisplayPage() {
     trackShownSlide();
   }, [emblaApi, slides, trackShownSlide]);
 
-  // Brand design: hold each slide 8 s, then sweep to the next one (a sales demo just cuts to the next ad).
-  // Between two of our own house slides (a store with no ads) they glide across instead, so the
-  // screen isn't a coral sweep every few seconds.
-  const wipeRef = useRef<BrandWipeHandle>(null);
+  // Brand design: hold each slide 8 s, then cut to the next one (no logo sweep: the footer already
+  // carries the brand). Between two of our own house slides (a store with no ads) they glide across.
   const goToSlide = useCallback((i: number) => {
     if (!emblaApi) return;
     const from = slidesRef.current[emblaApi.selectedScrollSnap()];
     const houseToHouse = from?.kind === "promo" && slidesRef.current[i]?.kind === "promo";
-    if (houseToHouse) emblaApi.scrollTo(i);
-    else if (wipeRef.current && !demo) wipeRef.current.play(() => emblaApi.scrollTo(i, true));
-    else emblaApi.scrollTo(i, true);
-  }, [emblaApi, demo]);
+    emblaApi.scrollTo(i, !houseToHouse);
+  }, [emblaApi]);
   useEffect(() => {
     if (!brand || !emblaApi || slides.length < 2) return;
     const t = setTimeout(() => goToSlide((emblaApi.selectedScrollSnap() + 1) % slides.length), 8000);
@@ -552,7 +547,6 @@ export default function DisplayPage() {
             );
           })}
         </div>
-        {brand && <BrandWipe ref={wipeRef} />}
       </div>
 
       {/* Dot indicators (classic design) */}

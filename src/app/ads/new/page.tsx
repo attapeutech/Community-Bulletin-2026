@@ -278,6 +278,8 @@ export default function NewAdPage() {
   const [asTest, setAsTest] = useState(false); // admin: post as a test ad (no payment, preview screens only)
   const [demo, setDemo] = useState<{ id: string; name: string; leadId: string } | null>(null); // ?demo=<id>: a sales demo ad
   const [editingAdId, setEditingAdId] = useState<string | null>(null); // ?demo=<id>&edit=<ad id>: change an existing demo ad
+  // ?swap=<ad id>: a new version of a running paid ad (same business), reviewed, no payment
+  const [swapping, setSwapping] = useState<{ adId: string; endedAt: string } | null>(null);
   const [locLoading, setLocLoading] = useState(false);
   const [locSearched, setLocSearched] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
@@ -303,9 +305,11 @@ export default function NewAdPage() {
   const [showAddress, setShowAddress] = useState(false);
   const [showWebsite, setShowWebsite] = useState(false);
 
-  // Pre-fill contact info from user profile (not on a demo ad: that's the prospect's business, not the admin's)
+  // Pre-fill contact info from user profile (not on a demo ad: that's the prospect's business, not the admin's;
+  // not on a swap: it starts from the running ad's details)
   useEffect(() => {
-    const forDemo = new URLSearchParams(window.location.search).has("demo");
+    const q = new URLSearchParams(window.location.search);
+    const forDemo = q.has("demo") || q.has("swap");
     fetch("/api/users/me")
       .then(r => r.json())
       .then(j => {
@@ -368,6 +372,34 @@ export default function NewAdPage() {
       if (d.phone) { setContactPhone(d.phone); setShowPhone(true); }
       const address = [d.address, d.city].filter(Boolean).join(", ");
       if (address) { setContactAddress(address); setShowAddress(true); }
+    })();
+  }, []);
+
+  // Swapping a running ad: the store stays, so start at the details step, filled in from the current ad
+  useEffect(() => {
+    const swapId = new URLSearchParams(window.location.search).get("swap");
+    if (!swapId) return;
+    (async () => {
+      const aj = await fetch(`/api/ads/${encodeURIComponent(swapId)}/swap`).then(r => r.json()).catch(() => null);
+      if (!aj?.success) { setError(aj?.error ?? "Couldn't load your ad."); return; }
+      const a = aj.data;
+      if (!a.canSwap) { setError("Only a paid ad that's running can be swapped."); return; }
+      if (a.pending) { setError(`A new version ("${a.pending.title}") is already waiting for review. Withdraw it in My Ads to send a different one.`); return; }
+      const lj = await fetch(`/api/locations?slug=${encodeURIComponent(a.locationSlug)}`).then(r => r.json()).catch(() => null);
+      const loc = lj?.success ? lj.data?.[0] : null;
+      if (!loc) { setError("This ad's store isn't available."); return; }
+      setSwapping({ adId: a.id, endedAt: a.endedAt });
+      setSelectedLocation(loc);
+      setStep(2);
+      if (a.template === "sale") {
+        const t = readSaleData(a.templateData);
+        setDesign("template"); setSale(t); setPreviewSale(t);
+      } else {
+        setDesign("own"); setTitle(a.title); setDescription(a.description ?? "");
+      }
+      setUploadedImageUrl(a.imageUrl); setUploadedImageKey(a.imageKey);
+      setContactPhone(a.contactPhone ?? ""); setContactAddress(a.contactAddress ?? ""); setContactWebsite(a.contactWebsite ?? "");
+      setShowPhone(a.showPhone); setShowAddress(a.showAddress); setShowWebsite(a.showWebsite);
     })();
   }, []);
 
@@ -470,8 +502,8 @@ export default function NewAdPage() {
     setLoading(true);
     setError("");
     try {
-      // Editing a demo ad saves over it; everything else posts a new ad
-      const res = await fetch(editingAdId && demo ? `/api/admin/demos/${demo.id}/ads/${editingAdId}` : "/api/ads", {
+      // Editing a demo ad saves over it; a swap goes to review; everything else posts a new ad
+      const res = await fetch(swapping ? `/api/ads/${swapping.adId}/swap` : editingAdId && demo ? `/api/admin/demos/${demo.id}/ads/${editingAdId}` : "/api/ads", {
         method: editingAdId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -494,8 +526,9 @@ export default function NewAdPage() {
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
-      // A demo ad goes back to the demo; a test ad skips payment: open the store's preview screen on it
-      router.push(demo ? `/dashboard/sales/${demo.leadId}#demos` : asTest
+      // A swap goes back to My Ads (waiting for review); a demo ad goes back to the demo;
+      // a test ad skips payment: open the store's preview screen on it
+      router.push(swapping ? "/dashboard/user" : demo ? `/dashboard/sales/${demo.leadId}#demos` : asTest
         ? `/display/${selectedLocation.slug}?preview=brand&ad=${json.data.id}`
         : `/ads/${json.data.id}/payment`);
     } catch (e: any) {
@@ -618,11 +651,13 @@ export default function NewAdPage() {
           {demo ? `← Back to ${demo.name}` : "← Back to dashboard"}
         </a>
         <h1 style={{ fontFamily: "Georgia,serif", fontSize: 28, fontWeight: 700, color: ACCENT, marginBottom: 4 }}>
-          {demo ? `${editingAdId ? "Edit demo ad" : "Demo ad"} · ${demo.name}` : "Post a New Ad"}
+          {demo ? `${editingAdId ? "Edit demo ad" : "Demo ad"} · ${demo.name}` : swapping ? "Swap your ad" : "Post a New Ad"}
         </h1>
         <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 32 }}>
           {demo
             ? `${selectedLocation?.storeName ?? ""} · Shown only on this demo's private link, never on the store TV. No payment.`
+            : swapping
+            ? `${selectedLocation?.storeName ?? ""} · Replace your running ad with a new one for the same business, e.g. the next car for sale. No payment; your current ad keeps running until the new one is approved.`
             : <>{selectedLocation ? `${formatPrice(selectedLocation.pricePerRunCents)} / 4 weeks` : "Priced per store · 4 weeks"} · Displayed on in-store screens at your chosen location.</>}
         </p>
 
@@ -864,7 +899,7 @@ export default function NewAdPage() {
               </div>
 
               <div style={{ display: "flex", gap: 12, justifyContent: "space-between" }}>
-                <Btn secondary onClick={() => (demo ? router.push(`/dashboard/sales/${demo.leadId}`) : setStep(1))}>← Back</Btn>
+                <Btn secondary onClick={() => (demo ? router.push(`/dashboard/sales/${demo.leadId}`) : swapping ? router.push("/dashboard/user") : setStep(1))}>← Back</Btn>
                 <Btn onClick={() => {
                   if (isTemplate) {
                     const check = saleTemplateSchema.safeParse(sale);
@@ -874,7 +909,7 @@ export default function NewAdPage() {
                   if (!uploadedImageUrl) { setError(`Please add your ${isTemplate ? "photo" : "image"}: click the screen preview or drop it there.`); return; }
                   setError(""); setStep(4);
                 }}>
-                  {demo ? "Next: Review →" : <>Next: Review &amp; Pay →</>}
+                  {demo || swapping ? "Next: Review →" : <>Next: Review &amp; Pay →</>}
                 </Btn>
               </div>
             </div>
@@ -887,6 +922,8 @@ export default function NewAdPage() {
               <p style={{ fontSize: 13, color: "#4A6B82", marginBottom: 24 }}>
                 {demo
                   ? <>Confirm the demo ad. No payment: it shows only on this demo&apos;s private link.</>
+                  : swapping
+                  ? <>Confirm the new version. We&apos;ll review it; once approved it replaces your current ad. No payment.</>
                   : <>Confirm your ad details. Payment of <strong>{selectedLocation ? `$${(selectedLocation.pricePerRunCents / 100).toFixed(2)}` : ""}</strong> is collected on the next step.</>}
               </p>
 
@@ -901,6 +938,8 @@ export default function NewAdPage() {
                   {!isTemplate && description && <div><span style={{ color: "#4A6B82" }}>Description:</span> {description}</div>}
                   {demo ? (
                     <div><span style={{ color: "#4A6B82" }}>Shown:</span> on the demo link only, until it expires · no payment</div>
+                  ) : swapping ? (
+                    <div><span style={{ color: "#4A6B82" }}>Runs:</span> from approval until <strong>{new Date(swapping.endedAt).toLocaleDateString("en-US", { dateStyle: "medium" })}</strong> (same end date) · no payment</div>
                   ) : (
                     <>
                       <div><span style={{ color: "#4A6B82" }}>Duration:</span> 4 weeks (28 days)</div>
@@ -918,7 +957,7 @@ export default function NewAdPage() {
                 </div>
               </div>
 
-              {isAdmin && !demo && (
+              {isAdmin && !demo && !swapping && (
                 <label style={{ display: "flex", gap: 10, alignItems: "flex-start", background: "#F0F7FF", border: "1px solid #C9DFF2", borderRadius: 8, padding: "12px 14px", marginBottom: 12, fontSize: 13, color: "#1A3A5C", cursor: "pointer", lineHeight: 1.5 }}>
                   <input
                     type="checkbox"
@@ -940,16 +979,22 @@ export default function NewAdPage() {
                   onChange={e => setLocalConfirmed(e.target.checked)}
                   style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0, accentColor: "#1A3A5C" }}
                 />
+                {swapping ? (
+                  <span>
+                    This new ad is for the <strong>same business</strong> as my current ad. I understand a swap for a different business will be declined (my current ad keeps running).
+                  </span>
+                ) : (
                 <span>
                   My business is within about {LOCAL_AD_RADIUS_MILES} miles of <strong>{selectedLocation?.storeName ?? "this store"}</strong>, or serves customers in its area. I understand ads for businesses farther away may be declined and refunded.
                 </span>
+                )}
               </label>
               )}
 
               <div style={{ display: "flex", gap: 12, justifyContent: "space-between" }}>
                 <Btn secondary onClick={() => setStep(2)}>← Back</Btn>
                 <Btn onClick={submitAd} disabled={loading || (!asTest && !localConfirmed)}>
-                  {loading ? "Submitting…" : editingAdId ? "Save changes →" : demo ? "Add to demo →" : asTest ? "Post test ad →" : "Submit & Pay →"}
+                  {loading ? "Submitting…" : editingAdId ? "Save changes →" : swapping ? "Send for review →" : demo ? "Add to demo →" : asTest ? "Post test ad →" : "Submit & Pay →"}
                 </Btn>
               </div>
             </div>

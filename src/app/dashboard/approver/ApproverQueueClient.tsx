@@ -152,9 +152,22 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
           {queue.length} ad{queue.length !== 1 ? "s" : ""} awaiting review
         </div>
       </div>
-      <p className="text-[#4A6B82] text-sm mb-8">
+      <p className="text-[#4A6B82] text-sm mb-4">
         Ads are shown only after payment is confirmed. Review image, title, and content before approving.
       </p>
+
+      {/* How ad swaps work, closed by default */}
+      <details className="mb-8 rounded-xl border border-[#D8E4EE] bg-[#F7F9FC] px-4 py-3 text-[13px] text-[#4A6B82] leading-relaxed">
+        <summary className="cursor-pointer font-semibold text-[14px] text-[#1A3A5C]">How ad swaps work</summary>
+        <ul className="list-disc pl-5 mt-2 mb-0 flex flex-col gap-1">
+          <li>A <b className="text-[#1A3A5C]">Swap</b> is a new version of an ad that&apos;s already paid and running (e.g. the advertiser sold the car and wants to show the next one). There&apos;s no new payment.</li>
+          <li>The box above the preview shows the ad it replaces and its end date. The current ad keeps playing on the screen while you review.</li>
+          <li>Check it like any ad, and also that it&apos;s for the <b className="text-[#1A3A5C]">same business</b>. A different business must post (and pay for) its own ad: deny with the &ldquo;Different business&rdquo; reason.</li>
+          <li><b className="text-[#1A3A5C]">Approve:</b> the new version replaces the ad on the screen right away, until the same end date. Payment, store owner earnings, QR link and view counts stay with the ad.</li>
+          <li><b className="text-[#1A3A5C]">Deny:</b> no refund (nothing new was paid). The current ad keeps running, and the advertiser gets your note by email and in My Ads and can send another version.</li>
+          <li>Advertisers can swap as often as they like, one at a time, and can withdraw a swap before it&apos;s reviewed. If an ad is ended or cancelled, its waiting swap drops off this list.</li>
+        </ul>
+      </details>
 
       {queue.length === 0 ? (
         <Card className="rounded-xl border-[#D8E4EE]">

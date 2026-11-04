@@ -1,4 +1,4 @@
-# Handoff: 2026-10-22 (updated 2026-11-03)
+# Handoff: 2026-10-22 (updated 2026-11-04)
 
 ## Where things stand
 
@@ -32,6 +32,14 @@
   - `LeaveFrame` (`src/components/layout/LeaveFrame.tsx`, in the root layout) moves any non-display page out of a frame
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
+
+## 2026-11-04 summary
+
+- **User menu** (PR #125): `src/components/layout/UserMenu.tsx`, a Radix dropdown on the user's avatar with name, email and role, then **My Ads**, **Saved**, **Dashboard**, **Admin Panel** (admins only) and **Sign out**. It opens on tap / click, and on hover with a mouse (a 250 ms close delay lets the pointer reach the menu). Where:
+  - dashboard phone header, next to the bell (`dashboard/layout.tsx`)
+  - website header on phones and tablets, next to the bell and theme toggle
+  - website header on desktop: avatar + the user's **first name** ▾ (cut off at about 110 px; "Account" with no name), replacing the old "Dashboard" button
+- **Phone side menu scrolls** (`MobileNav.tsx`, `overflow-y-auto`): with all 14 admin items, Sign out at its bottom ran off short screens; that was the original report.
 
 ## 2026-11-03 summary
 

@@ -192,6 +192,22 @@ export default async function UserDashboard() {
             <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: "var(--cb-ink)" }}>Your Ads</h2>
           </div>
 
+          {/* How swapping works: shown once there's a running paid ad to swap (or a swap) */}
+          {userAds.some(a => canSwap(a, now) || latestSwap.has(a.id)) && (
+            <details style={{ margin: "12px 24px 0", background: "var(--cb-surface-2)", border: "1px solid var(--cb-line)", borderRadius: 10, padding: "10px 14px", fontSize: 13, color: "var(--cb-ink-2)", lineHeight: 1.6 }}>
+              <summary style={{ cursor: "pointer", fontWeight: 600, color: "var(--cb-ink)" }}>🔄 How Swap ad works</summary>
+              <ul style={{ margin: "8px 0 2px", paddingLeft: 20 }}>
+                <li>Sold the item, or have a new offer? Click <strong>Swap ad</strong> on a paid ad that&apos;s running. No extra payment.</li>
+                <li>The form starts from your current ad. Change the photo, offer or text, then send it for review.</li>
+                <li>Your current ad keeps showing until the new one is approved, then the new one takes its place. The end date stays the same.</li>
+                <li>It must be for the <strong>same business</strong> at the same store. For a different business, post a new ad.</li>
+                <li>Swap as often as you like, one at a time. <strong>Withdraw</strong> cancels a swap that&apos;s still waiting.</li>
+                <li>Not approved? Your current ad keeps running, and you&apos;ll see the reviewer&apos;s note here.</li>
+                <li>Screen views and website visits keep adding up across versions.</li>
+              </ul>
+            </details>
+          )}
+
           <div>
             {userAds.map((ad, idx) => {
               const adStatus = STATUS_STYLES[ad.status] ?? STATUS_STYLES.pending;

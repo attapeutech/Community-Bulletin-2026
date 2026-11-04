@@ -7,6 +7,7 @@ import { MobileNav } from "@/components/layout/MobileNav";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { Badge } from "@/components/ui/badge";
 import { NavIcon, type NavIconName } from "@/components/layout/NavIcon";
+import { UserMenu } from "@/components/layout/UserMenu";
 
 export const metadata: Metadata = { title: "Dashboard", robots: { index: false, follow: false } };
 
@@ -98,7 +99,10 @@ export default async function DashboardLayout({
             Community<span className="text-[#E8563A]">Bulletin</span>
           </div>
         </Link>
-        <NotificationBell align="right" />
+        <div className="flex items-center gap-1">
+          <NotificationBell align="right" />
+          <UserMenu name={user.name} email={user.email} image={user.image} role={role} />
+        </div>
       </div>
 
       {/* Main content */}

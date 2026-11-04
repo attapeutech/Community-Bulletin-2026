@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
-import { ads, locations } from "@/lib/db/schema";
+import { ads, locations, screenDevices } from "@/lib/db/schema";
 import { and, eq, gte, lte, sql } from "drizzle-orm";
 import { recordWebsiteVisit, clientIp } from "@/lib/click-tracking";
 
 // Public — display screens are never logged in.
-// Body: { event: "view", location: "<store slug>" }  → one time the ad was shown on that store's screen
+// Body: { event: "view", location: "<store slug>", device: "<screen device id>" }
+//         → one time the ad was shown on a screen registered to that store (Admin → Screens)
 //       { event: "website_click" }                   → a click on the ad's website link (see lib/click-tracking)
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -39,10 +40,14 @@ export async function POST(
 
     if (event === "view") {
       const slug = typeof body.location === "string" ? body.location : "";
+      const device = typeof body.device === "string" ? body.device.slice(0, 64) : "";
       if (!slug) return NextResponse.json({ success: false, error: "Missing location" }, { status: 400 });
-      if (isRepeat(`view:${ip}:${slug}:${id}`)) return NextResponse.json({ success: true, counted: false });
+      // Only a store's registered screens count (Admin → Screens), not View Live tabs or other browsers
+      if (!device) return NextResponse.json({ success: true, counted: false });
+      if (isRepeat(`view:${device}:${slug}:${id}`)) return NextResponse.json({ success: true, counted: false });
 
-      // Count only ads that are approved, currently running, and booked at this screen's store
+      // Count only ads that are approved, currently running, and booked at this screen's store,
+      // shown on a screen registered to that store
       const now = new Date();
       const result = await db
         .update(ads)
@@ -53,6 +58,7 @@ export async function POST(
           lte(ads.startedAt, now),
           gte(ads.endedAt, now),
           sql`${ads.locationId} = (select ${locations.id} from ${locations} where ${locations.slug} = ${slug})`,
+          sql`exists (select 1 from ${screenDevices} where ${screenDevices.id} = ${device} and ${screenDevices.locationId} = ${ads.locationId})`,
         ))
         .returning({ id: ads.id });
       return NextResponse.json({ success: true, counted: result.length > 0 });

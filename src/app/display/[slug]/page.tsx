@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { useDisplaySocket } from "@/lib/socket/client";
-import { screenCheckin, goToScreen } from "@/lib/screen-device";
+import { screenCheckin, goToScreen, screenDeviceId } from "@/lib/screen-device";
 import { QRCodeSVG } from "qrcode.react";
 import { BrandMark } from "@/components/layout/BrandMark";
 import { HeartButton } from "@/components/ui/HeartButton";
@@ -349,7 +349,8 @@ export default function DisplayPage() {
     fetch(`/api/ads/${slide.ad.id}/track`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ event: "view", location: slug }),
+      // The screen's device id: only screens registered to this store (Admin → Screens) count
+      body: JSON.stringify({ event: "view", location: slug, device: screenDeviceId() }),
     }).catch(() => {});
   }, [emblaApi, slug]);
 

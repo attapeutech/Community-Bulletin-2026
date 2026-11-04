@@ -1,4 +1,4 @@
-# Handoff: 2026-10-22 (updated 2026-11-02)
+# Handoff: 2026-10-22 (updated 2026-11-03)
 
 ## Where things stand
 
@@ -32,6 +32,15 @@
   - `LeaveFrame` (`src/components/layout/LeaveFrame.tsx`, in the root layout) moves any non-display page out of a frame
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
+
+## 2026-11-03 summary
+
+- **Ad swap** (PR #121, migration `0023` applied, 24 rows): an advertiser replaces a running paid ad with a new version for the same business (e.g. the next car for sale), reviewed, no new payment. See "Ad swaps" below. Tested locally end to end with Approve (ad made "paid" by an Admin Panel edit, no real payment); **Deny wasn't tested yet**.
+- **No CB logo sweep on store screens** (same PR): slides now cut straight to the next one (house slide to house slide still glides). The footer brand bar already carries the brand. `BrandWipe.tsx` was deleted (it's in git history if wanted back).
+- **Swap notes** (PR #122): Help FAQ "Can I swap my ad for a new one while it's running?" (and "Can I edit my ad after submitting?" now points to it); a collapsed "How Swap ad works" box in My Ads (shown only with a running paid ad or a swap); a collapsed "How ad swaps work" box in Review Ads.
+- **Screen views from registered screens only** (PR #123): views counted only when the screen's device is assigned to the ad's store in Admin → Screens. Found because a test ad got ~290 views in 46 minutes from three browsers (the Fast Eddies TV, a View Live tab, a localhost tab). See "Ad analytics definitions". The Fast Eddies TV was reloaded after the deploy.
+- **Test data:** the swap test ad ("TEST AD: Car for sale…", Fast Eddies) was deleted. A stale local dev server from 2026-11-01 had kept port 3000; stopping a dev server through the Claude task left its child node processes running.
+- **Proposal test leftovers** from 2026-11-01 are done (refund confirmed in Stripe, Cemitas Tepeaca lead moved out of Won).
 
 ## 2026-11-02 summary
 
@@ -177,6 +186,14 @@ Context: after two weeks of door-knocking, store owners and advertisers are inte
 - **Bell reminders:** the daily job sends each salesperson (appointment creator, else lead owner) today's appointments, once a day (`notifyTodaysAppointments`); `POST /api/cron/appointment-reminders` (every 15 minutes) reminds once about each appointment starting within the hour (`notifyAppointmentsSoon`).
 - **Dark mode:** the chips and out-of-month days carry their own `dark:` classes (the global dark-mode map doesn't cover emerald, orange, violet or slate-700).
 
+## Ad swaps (2026-11-03)
+
+- **Advertiser:** **Swap ad** on a paid, approved, running real ad (`canSwap` in `src/lib/ad-swaps.ts`: not a test or demo ad, `ended_at` in the future), in My Ads and on the ad's details page. It opens `/ads/new?swap=<ad id>` at the Details step, filled in from the ad (`GET /api/ads/[id]/swap`); store fixed, no payment, a required "same business" checkbox; **Send for review** → `POST /api/ads/[id]/swap`. While it waits, My Ads shows a purple note with **Withdraw** (`DELETE`, status `withdrawn`); after a denial, a red note with the reviewer's note.
+- **Reviewer:** pending swaps appear in Review Ads (`dashboard/approver/page.tsx`) with a **Swap** tag and the ad they replace; only while that ad is still approved and running. `PATCH /api/ad-swaps/[id]` `{action:"approve"}` copies the new content onto the **same ad row** (title, description, image, contacts, template) in a transaction, so payment, earnings, start/end dates, QR link (`/go/<id>`), saves and counts stay; the screen refreshes. `{action:"deny", reviewNote}` (10+ characters; quick reason "Different business") keeps the current ad; no refund.
+- **Notifications:** reviewers get the `ad_pending_review` bell and `sendAdSwapReviewEmail`; the advertiser gets an `ad_approved` / `ad_denied` bell and `sendAdSwapResultEmail`. No store owner notice.
+- **Data:** `ad_swaps` (ad, user, status `pending | approved | denied | withdrawn`, the new content columns, review note / reviewer / time); a partial unique index allows one pending swap per ad. Approved swaps are the history; old images stay in R2.
+- **Choices made:** unlimited swaps (one at a time), same business only (checked by the reviewer), counts keep adding up across versions (My Ads notes "swapped <date>").
+
 ## Sales proposals (2026-11-01)
 
 - **Flow:** advertiser lead → Ad demos → **Send proposal** (`/dashboard/sales/[id]/proposal?demo=<id>`, `ProposalComposer.tsx`; message from `defaultProposalMessage`, editable) → Resend email with a **See your ad & accept** button, `replyTo` sales@communitybulletin.com → advertiser page `/p/<token>` (`src/app/(public)/p/[token]/`) plays the demo ad → **Accept & pay**: creates an account (name, phone, password; `POST /api/proposals/[token]/signup`, email marked verified) or asks an existing account to sign in → `POST /api/proposals/[token]/accept` copies the demo ad into a real unpaid ad → normal Stripe checkout.
@@ -224,7 +241,7 @@ Context: after two weeks of door-knocking, store owners and advertisers are inte
 - Production had been built with `db:push`, so Drizzle's migration history was empty. All migrations up to `0004_ad_analytics` were recorded as applied in Neon's `drizzle.__drizzle_migrations`, so `npm run db:migrate` works normally from here.
 - **Run migrations against the direct (non-pooled) Neon host:** remove `-pooler` from the hostname. Restores and DDL can fail through the pooler.
 - `0003` and `0004` have hand-written timestamps (`when: 1750…`) that are older than `0002`. They are already applied, so this is harmless, but generate future migrations with `npm run db:generate` rather than writing them by hand.
-- **Applied to Neon through `0022`** (23 rows in `drizzle.__drizzle_migrations`; `0022_sales_proposals` applied 2026-11-01):
+- **Applied to Neon through `0023`** (24 rows in `drizzle.__drizzle_migrations`; `0022_sales_proposals` applied 2026-11-01, `0023_ad_swaps` 2026-11-03):
   - `0012_location_traffic`: `locations.daily_customers` and `traffic_updated_at`
   - `0013_screen_devices`
   - `0014_direct_deposits`
@@ -411,8 +428,8 @@ Context: after two weeks of door-knocking, store owners and advertisers are inte
 
 - **Screen views** (`ads.view_count`): one each time a display screen actually shows the ad.
   - Sent by `display/[slug]` on each carousel `select`, plus once at load. Data refreshes never re-count.
-  - Recorded by public `POST /api/ads/[id]/track` with `{event:"view", location:<slug>}`. It only counts approved, currently running ads booked at that store.
-  - Repeats from the same IP within 5 seconds are ignored (in-memory, per server process).
+  - Recorded by public `POST /api/ads/[id]/track` with `{event:"view", location:<slug>, device:<screen device id>}`. It only counts approved, currently running ads booked at that store, **shown on a screen registered to that store** (a `screen_devices` row with that `location_id`, set in Admin → Screens; since 2026-11-03). View Live tabs, store owners' browsers and localhost play ads but don't count. **A new store's TV must be assigned in Admin → Screens, or its views don't count.**
+  - Repeats from the same device within 5 seconds are ignored (in-memory, per server process).
   - Dashboard page opens no longer count.
 - **Website visits** (`ads.website_click_count`): QR scans via `/go/[id]` plus website-link clicks on the public ad page (track route, `website_click`), both through `recordWebsiteVisit()` in `src/lib/click-tracking.ts`.
   - Counted once per IP per ad per minute (shared between both paths).
@@ -444,7 +461,10 @@ Context: after two weeks of door-knocking, store owners and advertisers are inte
 - [ ] **Search Console:** check the sitemap shows "Success" and pages start appearing under Pages → Indexed. Optional: in Google Analytics, define internal traffic (office / home IPs) and turn on the Internal traffic filter.
 - [ ] **Sales calendar, check:** after a run of the appointment-reminders task, its Coolify log shows `{"success":true,"sent":N}`; add a test appointment 30–45 minutes ahead once to see the bell reminder, then delete it. Ideas: week view, a per-salesperson filter once there's a Sales role, reminders by email as well.
 - [ ] **Sales demos, ideas:** a "Sales" role (see below) so the sales manager needn't be an admin; show a demo count on advertiser cards in the Sales list. (Turning the demo ad into the real ad is done: proposals.)
-- [ ] **Proposal test leftovers:** the Cemitas Tepeaca lead is Won from the 2026-11-01 test; move it back to Interested or Lost if it shouldn't count in "Won (30 days)". Check the $100 refund shows as refunded in Stripe. Ideas: a proposal reminder email after a few days without a view; live chip updates without a refresh.
+- [ ] **Proposals, ideas:** a reminder email after a few days without a view; live chip updates without a refresh. (The 2026-11-01 test leftovers are done.)
+- [ ] **Ad swap:** test **Deny** once (on the first real swap, or a test ad made "paid" by an Admin Panel edit, then deleted). Ideas: show the swap history on the ad's details page; let admins see swaps in the Admin Panel.
+- [ ] **Ad form checkboxes:** on Post a New Ad's Review step, unticked checkboxes ("Post as a test ad", "My business is within…") look filled dark grey in dark mode. Give them a light background or explicit colours.
+- [ ] **Store screens:** after the next deploy that touches the display, reload each store TV once so it runs the new code (since 2026-11-03 its views count only when it sends its device id).
 - [ ] **This computer:** `.env.local` still lacks the Google sign-in variables (`NEXT_PUBLIC_GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`), so Google sign-in fails locally.
 
 - [ ] **About 1 week after 2026-10-23:** if Neon is stable, delete the old Postgres resource in Coolify (`postgresql-database-gt2gswqg8jmybj5l2ydntnfg`). Until then, don't reuse its password; it's in git history.

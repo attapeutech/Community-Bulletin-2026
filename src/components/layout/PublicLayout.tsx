@@ -12,6 +12,7 @@ import LocationPickerDialog from "@/components/marketing/LocationPickerDialog";
 import { readSavedLocation, writeSavedLocation } from "@/lib/location-preference";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { NotificationBell } from "@/components/layout/NotificationBell";
+import { UserMenu } from "@/components/layout/UserMenu";
 
 type SelectedLocation = { stateCode: string; stateName: string; cityName: string };
 
@@ -166,13 +167,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             {user && <NotificationBell />}
             <ThemeToggle />
             {user ? (
-              <Link href="/dashboard" className="no-underline flex items-center gap-2.5 text-sm font-semibold text-white pl-1 pr-4 py-1 rounded-full bg-[#1A3A5C] hover:bg-[#0F2540] transition-colors">
-                <Avatar className="w-7 h-7 shrink-0">
-                  <AvatarImage src={user.image ?? ""} alt={user.name ?? ""} className="object-cover" />
-                  <AvatarFallback className="bg-[#4A90C4] text-white text-[11px] font-bold">{initials}</AvatarFallback>
-                </Avatar>
-                Dashboard
-              </Link>
+              <UserMenu name={user.name} email={user.email} image={user.image} role={(user as any).role} label={user.name?.split(" ")[0] || "Account"} />
             ) : (
               <>
                 <Link href="/login" className="no-underline text-sm font-semibold text-[#1A3A5C] dark:text-white px-4 py-2 rounded-lg border border-[#D1DDE8] dark:border-[#1E3550] hover:bg-[#F4F7FB] dark:hover:bg-[#1E3550] transition-colors">Sign in</Link>
@@ -185,6 +180,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
           <div className="lg:hidden flex items-center gap-1 ml-auto shrink-0">
             {user && <NotificationBell />}
             <ThemeToggle />
+            {user && <UserMenu name={user.name} email={user.email} image={user.image} role={(user as any).role} />}
             <button
               className="p-2 rounded-lg text-[#1A3A5C] dark:text-[#9DC4E0] hover:bg-[#F4F7FB] dark:hover:bg-[#1E3550] transition-colors"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

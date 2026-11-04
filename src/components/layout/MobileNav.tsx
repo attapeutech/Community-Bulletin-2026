@@ -29,7 +29,8 @@ export function MobileNav({
         </button>
       </SheetTrigger>
       <SheetContent side="left" className="p-0 bg-[#1A3A5C] w-64 max-w-[80vw]">
-        <div className="flex flex-col h-full px-4 py-6 gap-2">
+        {/* Scrolls when the menu is taller than the phone screen, so Sign out at the bottom stays reachable */}
+        <div className="flex flex-col h-full overflow-y-auto px-4 py-6 gap-2">
           {/* Logo */}
           <SheetClose asChild>
             <Link href="/dashboard/user" className="no-underline">

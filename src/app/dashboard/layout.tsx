@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { requireAuth } from "@/lib/auth/session";
 import Link from "next/link";
-import { BrandMark } from "@/components/layout/BrandMark";
 import { SignOutButton } from "@/components/layout/SignOutButton";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { Badge } from "@/components/ui/badge";
 import { NavIcon, type NavIconName } from "@/components/layout/NavIcon";
 import { UserMenu } from "@/components/layout/UserMenu";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 
 export const metadata: Metadata = { title: "Dashboard", robots: { index: false, follow: false } };
 
@@ -47,14 +47,8 @@ export default async function DashboardLayout({
         {/* Logo + notifications */}
         <div className="flex items-center justify-between gap-1 mb-8">
           <Link href="/" className="no-underline">
-            <div className="flex items-center gap-2.5 pl-2">
-              <BrandMark size={40} className="shrink-0 ring-1 ring-white/15 rounded-[9px]" />
-              <div>
-                <div className="font-serif font-bold text-white text-[13px] leading-tight">Community</div>
-                <div className="font-serif font-bold text-[#E8563A] text-[13px] leading-tight">
-                  Bulletin<span className="text-[#4A90C4] text-[10px] font-normal">.com</span>
-                </div>
-              </div>
+            <div className="pl-1">
+              <BrandLogo tone="dark" height={50} />
             </div>
           </Link>
           <NotificationBell variant="dark" align="left" />
@@ -93,11 +87,8 @@ export default async function DashboardLayout({
           userEmail={user.email}
           role={role}
         />
-        <Link href="/" className="no-underline flex items-center gap-2">
-          <BrandMark size={30} className="shrink-0" />
-          <div className="font-serif font-bold text-[13px] text-[#1A3A5C] leading-tight">
-            Community<span className="text-[#E8563A]">Bulletin</span>
-          </div>
+        <Link href="/" className="no-underline flex items-center">
+          <BrandLogo tone="light" height={40} />
         </Link>
         <div className="flex items-center gap-1">
           <NotificationBell align="right" />

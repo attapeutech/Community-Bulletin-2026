@@ -24,7 +24,9 @@ const PUBLIC_ROUTES = [
   "/sitemap.xml",
   "/opengraph-image",    // link preview image when the site is shared
   "/icon.png",           // site icons (logged-out visitors and store screens need these)
+  "/icon.svg",
   "/apple-icon.png",
+  "/brand",              // logo files (headers for logged-out visitors, email headers)
   "/display.webmanifest", // home-screen settings for display screens
 ];
 

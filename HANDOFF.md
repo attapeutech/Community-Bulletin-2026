@@ -53,6 +53,7 @@
   - To redo with a new icon: replace the PNG and rebuild the same files; the SVG mark sits where the old `<rect ... rx="26" fill="#1A3A5C"/>` + `translate(0 -1.8)` group was.
 - **Header location pin** (same PR): the `MapPin` on "All locations" (desktop) and next to search (phones) in `PublicLayout.tsx` is orange (#E8563A), 15 px, bolder, with a light orange fill.
 - **Admin → Equipment** (PR #134, migrations `0024` + `0025` applied, 26 rows): for setting up the ~10 stores' hardware. See "Equipment and store setup" below. `ENCRYPTION_KEY` was added to `.env.local` and Coolify (same value) on 2026-11-07.
+- **Equipment photos** (PR #135, migration `0026` applied, 27 rows): snap and attach up to 12 photos per equipment item (team request). Tested and working. See "Equipment and store setup".
 - **Testing tip:** headless Chrome via the DevTools protocol (node + the built-in WebSocket, no extra packages) can screenshot pages at phone width and list elements wider than the screen; scripts lived in the session scratchpad, not the repo.
 
 ## 2026-11-06 summary
@@ -276,7 +277,7 @@ Context: after two weeks of door-knocking, store owners and advertisers are inte
 - Production had been built with `db:push`, so Drizzle's migration history was empty. All migrations up to `0004_ad_analytics` were recorded as applied in Neon's `drizzle.__drizzle_migrations`, so `npm run db:migrate` works normally from here.
 - **Run migrations against the direct (non-pooled) Neon host:** remove `-pooler` from the hostname. Restores and DDL can fail through the pooler.
 - `0003` and `0004` have hand-written timestamps (`when: 1750…`) that are older than `0002`. They are already applied, so this is harmless, but generate future migrations with `npm run db:generate` rather than writing them by hand.
-- **Applied to Neon through `0025`** (26 rows in `drizzle.__drizzle_migrations`; `0022_sales_proposals` applied 2026-11-01, `0023_ad_swaps` 2026-11-03, `0024_equipment` and `0025_location_setup` 2026-11-07):
+- **Applied to Neon through `0026`** (27 rows in `drizzle.__drizzle_migrations`; `0022_sales_proposals` applied 2026-11-01, `0023_ad_swaps` 2026-11-03, `0024_equipment`, `0025_location_setup` and `0026_equipment_photos` 2026-11-07):
   - `0012_location_traffic`: `locations.daily_customers` and `traffic_updated_at`
   - `0013_screen_devices`
   - `0014_direct_deposits`
@@ -443,6 +444,11 @@ Admin only: `/dashboard/admin/equipment` (sidebar "Equipment", under Screens). T
 Tables: `equipment` (`0024`; `location_id` and `screen_device_id` set null on delete) and `location_setup` (`0025`; one row per location, created on first save, cascade delete; `checklist` jsonb of step → date).
 
 **WiFi passwords** are encrypted with AES-256-GCM (`src/lib/secret-box.ts`, stored as `v1:iv:tag:data`) using **`ENCRYPTION_KEY`** (32 random bytes, base64). The page only gets `hasPassword`; the password is fetched from `GET /api/admin/location-setup/<id>/password` (admin only, `no-store`) when "Show" is clicked. **The key must be identical in `.env.local` and Coolify** (shared database); with a different or missing key, saving refuses with a message and "Show" says the password can't be read. Lost key = re-type the passwords. Never put the key or passwords in chat, HANDOFF or git. To make a key (PowerShell, doesn't print it): `$b = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); Add-Content .env.local "ENCRYPTION_KEY=$([Convert]::ToBase64String($b))"; Remove-Variable b`
+
+**Photos** (`equipment_photos`, `0026`; cascade with the item): Photos section in the add/edit form ("Add photos" offers camera or library on phones; new items queue photos and upload on save), up to 4 thumbnails per item in the list with a full-size viewer (arrows, Esc). Code: `EquipmentPhotos.tsx`.
+- The browser shrinks each photo (1600 px JPEG + 400 px thumbnail) before upload, which also strips GPS/EXIF and turns iPhone HEIC into JPEG; the server accepts only JPEG bytes (5 MB / 1 MB caps).
+- Stored in R2 at `files/equipment/<item id>/<random>.jpg` (and `-thumb.jpg`) via `putFile` in `src/lib/storage/r2.ts`. Shown through `GET /api/admin/equipment/photos/<id>[?size=thumb]` (admin only), which redirects to a 10-minute signed link (`createSignedReadUrl`). Deleting a photo or an item removes the R2 files too.
+- **Privacy caveat:** the bucket is public, so a photo's permanent public URL works for anyone who has its exact key (random, never on the page, but visible inside the signed link). For full privacy, move these photos to a separate private bucket (small change: a second bucket name in `r2.ts`). Router photos can show WiFi passwords.
 
 Ideas not built yet: printable QR labels per device (scan → its record), offline-screen alerts, a history log (moves/repairs).
 

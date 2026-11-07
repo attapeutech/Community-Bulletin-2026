@@ -47,7 +47,7 @@ export default function HeroSlides({ price }: { price: string }) {
 
   return (
     <div
-      className="w-full max-w-xl mx-auto"
+      className="w-full max-w-xl mx-auto min-w-0"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}

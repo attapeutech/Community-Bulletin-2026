@@ -54,8 +54,10 @@ export default function LandingPage({ price, store }: { price: LandingPrice; sto
         <div className="absolute bottom-[-80px] left-[-80px] w-64 h-64 rounded-full bg-[#E8563A]/[0.06] pointer-events-none" />
 
         {/* Content left, slideshow right (stacked on small screens), like the store partner page */}
-        <div className="max-w-6xl mx-auto relative grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          <div className="text-center lg:text-left">
+        {/* grid-cols-1 / min-w-0: on phones the column must stay screen-wide. With an "auto" column,
+            iPhone Safari widened it to the slideshow's content, cutting off the text and the header */}
+        <div className="max-w-6xl mx-auto relative grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <div className="text-center lg:text-left min-w-0">
             <div className="inline-flex items-center gap-1.5 bg-[#E8563A]/15 border border-[#E8563A]/30 rounded-full px-3.5 py-1.5 mb-7">
               <span className="w-1.5 h-1.5 rounded-full bg-[#E8563A] inline-block" />
               <span className="text-xs font-semibold text-[#E8563A] tracking-wide uppercase">Now booking ad space</span>

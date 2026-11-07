@@ -1,6 +1,6 @@
 import {
   Banknote, CircleUser, ClipboardCheck, Globe, Handshake, Heart, Inbox, LayoutDashboard,
-  LifeBuoy, Megaphone, Monitor, Sparkles, Store, Wallet, type LucideIcon,
+  LifeBuoy, Megaphone, Monitor, Package, Sparkles, Store, Wallet, type LucideIcon,
 } from "lucide-react";
 
 // Dashboard menu icons, by name (the menu list is built on the server and passed to the phone menu,
@@ -16,6 +16,7 @@ const ICONS = {
   applications: Inbox,
   payouts: Banknote,
   screens: Monitor,
+  equipment: Package,
   geography: Globe,
   partner: Sparkles,
   account: CircleUser,

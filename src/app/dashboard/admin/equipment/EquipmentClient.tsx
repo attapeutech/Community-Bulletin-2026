@@ -1,0 +1,359 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { EQUIPMENT_STATUSES, EQUIPMENT_TYPES, statusLabel, typeLabel } from "@/lib/equipment";
+
+export type EquipmentRow = {
+  id: string;
+  locationId: string | null;
+  locationName: string | null;
+  type: string;
+  status: string;
+  label: string | null;
+  brand: string | null;
+  model: string | null;
+  serialNumber: string | null;
+  screenDeviceId: string | null;
+  screenLabel: string | null;
+  screenLastSeenAt: string | null;
+  purchasedOn: string | null;
+  costCents: number | null;
+  notes: string | null;
+  updatedAt: string;
+};
+
+type LocationOption = { id: string; storeName: string; storeNumber: string | null };
+type ScreenOption = { id: string; label: string | null; locationId: string | null; locationName: string };
+
+const STATUS_STYLE: Record<string, string> = {
+  in_stock: "bg-slate-50 text-slate-700 border-slate-200",
+  installed: "bg-green-50 text-green-800 border-green-200",
+  repair: "bg-amber-50 text-amber-800 border-amber-200",
+  retired: "bg-slate-100 text-slate-500 border-slate-200",
+};
+
+const selectCls = "h-9 rounded-md border border-[#D1DDE8] bg-[#F7F9FC] px-2.5 text-base sm:text-sm text-[#1A3A5C] w-full";
+const fieldLabel = "block text-[11px] font-semibold uppercase tracking-wide text-[#4A6B82] mb-1";
+
+const storeName = (l: LocationOption) => `${l.storeName}${l.storeNumber ? ` #${l.storeNumber.replace(/^#/, "")}` : ""}`;
+
+type FormState = {
+  type: string; status: string; locationId: string; label: string; brand: string; model: string;
+  serialNumber: string; screenDeviceId: string; purchasedOn: string; cost: string; notes: string;
+};
+
+const emptyForm: FormState = {
+  type: "mini_pc", status: "in_stock", locationId: "", label: "", brand: "", model: "",
+  serialNumber: "", screenDeviceId: "", purchasedOn: "", cost: "", notes: "",
+};
+
+function toForm(r: EquipmentRow): FormState {
+  return {
+    type: r.type, status: r.status, locationId: r.locationId ?? "", label: r.label ?? "", brand: r.brand ?? "",
+    model: r.model ?? "", serialNumber: r.serialNumber ?? "", screenDeviceId: r.screenDeviceId ?? "",
+    purchasedOn: r.purchasedOn ?? "", cost: r.costCents != null ? (r.costCents / 100).toFixed(2) : "", notes: r.notes ?? "",
+  };
+}
+
+function EquipmentForm({
+  initial, editingId, locations, screens, onDone,
+}: {
+  initial: FormState; editingId: string | null; locations: LocationOption[]; screens: ScreenOption[]; onDone: () => void;
+}) {
+  const router = useRouter();
+  const [f, setF] = useState<FormState>(initial);
+  const [saving, setSaving] = useState(false);
+  const set = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setF((prev) => {
+      const next = { ...prev, [k]: value };
+      // Picking a store marks the item installed; clearing it puts it back in stock
+      if (k === "locationId") {
+        if (value && prev.status === "in_stock") next.status = "installed";
+        if (!value && prev.status === "installed") next.status = "in_stock";
+      }
+      return next;
+    });
+  };
+
+  // Screens at the chosen store first (any assigned screen can still be picked)
+  const screenChoices = useMemo(
+    () => [...screens].sort((a, b) => Number(b.locationId === f.locationId) - Number(a.locationId === f.locationId)),
+    [screens, f.locationId],
+  );
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    const cost = f.cost.trim() ? Math.round(Number(f.cost.replace(/[$,]/g, "")) * 100) : null;
+    if (cost != null && (!Number.isFinite(cost) || cost < 0)) { toast.error("Cost should be a number, like 189.99"); return; }
+    setSaving(true);
+    try {
+      const res = await fetch(editingId ? `/api/admin/equipment/${editingId}` : "/api/admin/equipment", {
+        method: editingId ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: f.type, status: f.status, locationId: f.locationId || null, label: f.label, brand: f.brand,
+          model: f.model, serialNumber: f.serialNumber, screenDeviceId: f.type === "mini_pc" ? f.screenDeviceId || null : null,
+          purchasedOn: f.purchasedOn || null, costCents: cost, notes: f.notes,
+        }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      toast.success(editingId ? "Saved" : "Added");
+      onDone();
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err.message || "Save failed");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form onSubmit={save} className="bg-white rounded-xl border-2 border-[#4A90C4]/50 p-4 sm:p-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div>
+          <label className={fieldLabel}>Type</label>
+          <select value={f.type} onChange={set("type")} className={selectCls} autoFocus>
+            {EQUIPMENT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className={fieldLabel}>Store</label>
+          <select value={f.locationId} onChange={set("locationId")} className={selectCls}>
+            <option value="">— In stock (no store) —</option>
+            {locations.map((l) => <option key={l.id} value={l.id}>{storeName(l)}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className={fieldLabel}>Status</label>
+          <select value={f.status} onChange={set("status")} className={selectCls}>
+            {EQUIPMENT_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
+        </div>
+        <div className="sm:col-span-3">
+          <label className={fieldLabel}>Label</label>
+          <Input value={f.label} onChange={set("label")} maxLength={120} placeholder="e.g. TV behind the register, 55-inch" />
+        </div>
+        <div>
+          <label className={fieldLabel}>Brand</label>
+          <Input value={f.brand} onChange={set("brand")} maxLength={80} placeholder="e.g. Beelink" />
+        </div>
+        <div>
+          <label className={fieldLabel}>Model</label>
+          <Input value={f.model} onChange={set("model")} maxLength={80} placeholder="e.g. Mini S12" />
+        </div>
+        <div>
+          <label className={fieldLabel}>Serial number</label>
+          <Input value={f.serialNumber} onChange={set("serialNumber")} maxLength={120} />
+        </div>
+        {f.type === "mini_pc" && (
+          <div className="sm:col-span-3">
+            <label className={fieldLabel}>Screen it runs</label>
+            <select value={f.screenDeviceId} onChange={set("screenDeviceId")} className={selectCls}>
+              <option value="">— Not linked —</option>
+              {screenChoices.map((s) => (
+                <option key={s.id} value={s.id}>{s.locationName}{s.label ? ` · ${s.label}` : ""} ({s.id.slice(0, 8)})</option>
+              ))}
+            </select>
+            <p className="text-[11px] text-[#4A6B82] mt-1">Only screens assigned to a store on the Screens page are listed.</p>
+          </div>
+        )}
+        <div>
+          <label className={fieldLabel}>Purchased on</label>
+          <Input type="date" value={f.purchasedOn} onChange={set("purchasedOn")} />
+        </div>
+        <div>
+          <label className={fieldLabel}>Cost ($)</label>
+          <Input inputMode="decimal" value={f.cost} onChange={set("cost")} placeholder="e.g. 189.99" />
+        </div>
+        <div className="sm:col-span-3">
+          <label className={fieldLabel}>Notes</label>
+          <Textarea value={f.notes} onChange={set("notes")} maxLength={2000} rows={2} placeholder="Anything useful: where it is, warranty, quirks" />
+        </div>
+      </div>
+      <p className="text-[11px] text-[#9A6B12] mt-3">Don&apos;t put WiFi or router passwords here; they&apos;ll get their own protected place.</p>
+      <div className="flex gap-2 mt-3">
+        <Button type="submit" disabled={saving} className="h-9 text-[13px] bg-[#1A3A5C] hover:bg-[#15304d] text-white">
+          {saving ? "Saving…" : editingId ? "Save" : "Add item"}
+        </Button>
+        <Button type="button" variant="outline" onClick={onDone} className="h-9 text-[13px]">Cancel</Button>
+      </div>
+    </form>
+  );
+}
+
+function ItemRow({ item, nowIso, onEdit }: { item: EquipmentRow; nowIso: string; onEdit: () => void }) {
+  const router = useRouter();
+  const [deleting, setDeleting] = useState(false);
+  const online = item.screenLastSeenAt ? Date.parse(nowIso) - Date.parse(item.screenLastSeenAt) < 3 * 60_000 : null;
+  const details = [item.brand, item.model].filter(Boolean).join(" ");
+
+  async function remove() {
+    if (!confirm("Delete this item? Use the \"Retired\" status instead if it just stopped being used.")) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/equipment/${item.id}`, { method: "DELETE" });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      toast.success("Deleted");
+      router.refresh();
+    } catch (e: any) {
+      toast.error(e.message || "Delete failed");
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <div className={`flex items-start justify-between gap-3 px-4 py-3 ${item.status === "retired" ? "opacity-60" : ""}`}>
+      <div className="min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-semibold text-sm text-[#1A3A5C]">{typeLabel(item.type)}</span>
+          <span className={`text-[11px] font-semibold border rounded-full px-2 py-0.5 ${STATUS_STYLE[item.status] ?? STATUS_STYLE.in_stock}`}>
+            {statusLabel(item.status)}
+          </span>
+          {online !== null && (
+            <span className="flex items-center gap-1 text-[11px] text-[#4A6B82]">
+              <span className={`inline-block w-2 h-2 rounded-full ${online ? "bg-green-500" : "bg-slate-300"}`} />
+              Screen {online ? "online" : "offline"}
+            </span>
+          )}
+        </div>
+        <div className="text-xs text-[#4A6B82] mt-0.5 break-words">
+          {[item.label, details, item.serialNumber && `S/N ${item.serialNumber}`].filter(Boolean).join(" · ") || "No details yet"}
+        </div>
+        {item.notes && <div className="text-xs text-[#6B7A8C] mt-0.5 whitespace-pre-line break-words">{item.notes}</div>}
+      </div>
+      <div className="flex gap-1.5 shrink-0">
+        <Button variant="outline" onClick={onEdit} className="h-8 px-3 text-xs">Edit</Button>
+        <Button variant="outline" onClick={remove} disabled={deleting} className="h-8 px-3 text-xs text-red-700 hover:text-red-800">
+          {deleting ? "…" : "Delete"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export default function EquipmentClient({
+  items, locations, screens, nowIso,
+}: {
+  items: EquipmentRow[]; locations: LocationOption[]; screens: ScreenOption[]; nowIso: string;
+}) {
+  const [adding, setAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [store, setStore] = useState("all");
+  const [type, setType] = useState("all");
+  const [showRetired, setShowRetired] = useState(false);
+  const [q, setQ] = useState("");
+
+  const filtered = items.filter((i) => {
+    if (store === "stock" ? i.locationId : store !== "all" && i.locationId !== store) return false;
+    if (type !== "all" && i.type !== type) return false;
+    if (!showRetired && i.status === "retired") return false;
+    if (q.trim()) {
+      const hay = [i.label, i.brand, i.model, i.serialNumber, i.notes, i.locationName, typeLabel(i.type)].join(" ").toLowerCase();
+      if (!hay.includes(q.trim().toLowerCase())) return false;
+    }
+    return true;
+  });
+
+  // Group by store; in-stock items last
+  const groups = new Map<string, { name: string; rows: EquipmentRow[] }>();
+  for (const i of filtered) {
+    const key = i.locationId ?? "stock";
+    if (!groups.has(key)) groups.set(key, { name: i.locationName ?? "In stock (no store)", rows: [] });
+    groups.get(key)!.rows.push(i);
+  }
+  const ordered = [...groups.entries()].sort(([a], [b]) => Number(a === "stock") - Number(b === "stock"));
+
+  const active = items.filter((i) => i.status !== "retired");
+  const count = (s: string) => active.filter((i) => i.status === s).length;
+  const storesWithGear = new Set(active.filter((i) => i.locationId).map((i) => i.locationId)).size;
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Totals */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { n: active.length, l: "Items" },
+          { n: `${storesWithGear} / ${locations.length}`, l: "Stores with gear" },
+          { n: count("in_stock"), l: "In stock" },
+          { n: count("repair"), l: "Need repair" },
+        ].map((s) => (
+          <div key={s.l} className="bg-white rounded-xl border border-[#D8E4EE] px-4 py-3">
+            <div className="font-serif font-bold text-xl text-[#1A3A5C]">{s.n}</div>
+            <div className="text-xs text-[#4A6B82]">{s.l}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filters + add */}
+      <div className="flex flex-wrap items-center gap-2">
+        <select value={store} onChange={(e) => setStore(e.target.value)} className={`${selectCls} sm:w-56`}>
+          <option value="all">All stores</option>
+          <option value="stock">In stock (no store)</option>
+          {locations.map((l) => <option key={l.id} value={l.id}>{storeName(l)}</option>)}
+        </select>
+        <select value={type} onChange={(e) => setType(e.target.value)} className={`${selectCls} sm:w-48`}>
+          <option value="all">All types</option>
+          {EQUIPMENT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+        </select>
+        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search label, model, serial…" className="h-9 sm:w-56" />
+        <label className="flex items-center gap-1.5 text-xs text-[#4A6B82] cursor-pointer">
+          <input type="checkbox" checked={showRetired} onChange={(e) => setShowRetired(e.target.checked)} />
+          Show retired
+        </label>
+        <Button
+          onClick={() => { setEditingId(null); setAdding(true); }}
+          className="h-9 text-[13px] bg-[#E8563A] hover:bg-[#D04530] text-white sm:ml-auto"
+        >
+          + Add equipment
+        </Button>
+      </div>
+
+      {adding && (
+        <EquipmentForm
+          initial={{ ...emptyForm, locationId: store !== "all" && store !== "stock" ? store : "", status: store !== "all" && store !== "stock" ? "installed" : "in_stock" }}
+          editingId={null}
+          locations={locations}
+          screens={screens}
+          onDone={() => setAdding(false)}
+        />
+      )}
+
+      {!items.length && !adding && (
+        <div className="bg-white rounded-xl border border-[#D8E4EE] p-10 text-center text-sm text-[#4A6B82]">
+          No equipment yet. Click <strong>+ Add equipment</strong> to add the first item.
+        </div>
+      )}
+      {!!items.length && !filtered.length && (
+        <div className="bg-white rounded-xl border border-[#D8E4EE] p-6 text-center text-sm text-[#4A6B82]">Nothing matches these filters.</div>
+      )}
+
+      {ordered.map(([key, g]) => (
+        <section key={key} className="bg-white rounded-xl border border-[#D8E4EE] overflow-hidden">
+          <div className="px-4 py-2.5 bg-[#F7FAFC] border-b border-[#E5EDF4] flex items-center justify-between">
+            <h2 className="text-sm font-bold text-[#1A3A5C]">{g.name}</h2>
+            <span className="text-xs text-[#4A6B82]">{g.rows.length} item{g.rows.length === 1 ? "" : "s"}</span>
+          </div>
+          <div className="divide-y divide-[#EEF3F8]">
+            {g.rows.map((i) =>
+              editingId === i.id ? (
+                <div key={i.id} className="p-3">
+                  <EquipmentForm initial={toForm(i)} editingId={i.id} locations={locations} screens={screens} onDone={() => setEditingId(null)} />
+                </div>
+              ) : (
+                <ItemRow key={i.id} item={i} nowIso={nowIso} onEdit={() => { setAdding(false); setEditingId(i.id); }} />
+              ),
+            )}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}

@@ -52,6 +52,7 @@
   - Left as before: the browser-tab favicon (simplified "CB" box with white outline; the 3D pin is a blur at 16 px). On navy panels the icon box still blends in (see To do).
   - To redo with a new icon: replace the PNG and rebuild the same files; the SVG mark sits where the old `<rect ... rx="26" fill="#1A3A5C"/>` + `translate(0 -1.8)` group was.
 - **Header location pin** (same PR): the `MapPin` on "All locations" (desktop) and next to search (phones) in `PublicLayout.tsx` is orange (#E8563A), 15 px, bolder, with a light orange fill.
+- **Admin → Equipment** (PR #134, migrations `0024` + `0025` applied, 26 rows): for setting up the ~10 stores' hardware. See "Equipment and store setup" below. `ENCRYPTION_KEY` was added to `.env.local` and Coolify (same value) on 2026-11-07.
 - **Testing tip:** headless Chrome via the DevTools protocol (node + the built-in WebSocket, no extra packages) can screenshot pages at phone width and list elements wider than the screen; scripts lived in the session scratchpad, not the repo.
 
 ## 2026-11-06 summary
@@ -267,6 +268,7 @@ Context: after two weeks of door-knocking, store owners and advertisers are inte
 - **`DATABASE_URL`** ends with `?sslmode=verify-full&channel_binding=require` (locally and in Coolify).
 - **Google sign-in:** `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (a Coolify **build variable**) and `GOOGLE_CLIENT_SECRET`, in both `.env.local` and Coolify.
 - **Stripe** runs on **live** keys in production (since 2026-10-28): `STRIPE_SECRET_KEY` (`sk_live_…`) and the live-mode `STRIPE_WEBHOOK_SECRET`. Checkout uses Stripe-hosted pages, so no publishable key is needed (`NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` and `APP_URL` in `.env.local` are unused). **Keep test keys in `.env.local`:** it points at the production database. With test keys, local scripts can't look up live payments.
+- **`ENCRYPTION_KEY`** (2026-11-07): encrypts store WiFi passwords; same value in `.env.local` and Coolify. See "Equipment and store setup".
 - **PayPal is off** (2026-10-26) unless `NEXT_PUBLIC_PAYPAL_ENABLED=true` (`src/lib/payment-options.ts`). While it's off, checkout shows card only, `create-order` refuses, and the Help and home page text drops PayPal. Refunds of older PayPal payments still work. Turning it on needs a redeploy (build-time variable), plus `PAYPAL_MODE=live` and live credentials.
 
 ## Migrations
@@ -274,7 +276,7 @@ Context: after two weeks of door-knocking, store owners and advertisers are inte
 - Production had been built with `db:push`, so Drizzle's migration history was empty. All migrations up to `0004_ad_analytics` were recorded as applied in Neon's `drizzle.__drizzle_migrations`, so `npm run db:migrate` works normally from here.
 - **Run migrations against the direct (non-pooled) Neon host:** remove `-pooler` from the hostname. Restores and DDL can fail through the pooler.
 - `0003` and `0004` have hand-written timestamps (`when: 1750…`) that are older than `0002`. They are already applied, so this is harmless, but generate future migrations with `npm run db:generate` rather than writing them by hand.
-- **Applied to Neon through `0023`** (24 rows in `drizzle.__drizzle_migrations`; `0022_sales_proposals` applied 2026-11-01, `0023_ad_swaps` 2026-11-03):
+- **Applied to Neon through `0025`** (26 rows in `drizzle.__drizzle_migrations`; `0022_sales_proposals` applied 2026-11-01, `0023_ad_swaps` 2026-11-03, `0024_equipment` and `0025_location_setup` 2026-11-07):
   - `0012_location_traffic`: `locations.daily_customers` and `traffic_updated_at`
   - `0013_screen_devices`
   - `0014_direct_deposits`
@@ -429,6 +431,21 @@ Context: after two weeks of door-knocking, store owners and advertisers are inte
   - **Deactivate / Reactivate.** Admins still see inactive stores on All Locations, labeled Inactive.
   - **Delete** (`DELETE /api/locations/[id]`, admin only, type the store name to confirm). It's refused when the location has payments or owner earnings; otherwise it removes the location and its unpaid draft ads.
 
+## Equipment and store setup (2026-11-07)
+
+Admin only: `/dashboard/admin/equipment` (sidebar "Equipment", under Screens). Two tabs:
+
+- **Store setup** (default): one row per active location with checklist progress (x/6), item count, screen online status (screens assigned on the Screens page, seen in the last 3 min), WiFi status, and a **live screen link + QR code** (`${NEXT_PUBLIC_APP_URL}/display/<slug>`; click the QR for a big one with Copy / Open). A row expands to:
+  - **Checklist** (`SETUP_STEPS` in `src/lib/location-setup.ts`): delivered, TV mounted, mini computer set up, connected to WiFi, screen paired, first ad showing. Ticking saves at once with the date. Manual; "paired" and "delivered" only show hints (screens assigned/online, items listed).
+  - **WiFi & contact:** WiFi name, password, store contact + phone, network notes.
+- **Equipment list** (`?tab=items`): items per store, or "In stock" with no store. Types and statuses are in `src/lib/equipment.ts` (plain text columns, so adding a type needs no migration). Picking a store sets status Installed; clearing it sets In stock. A mini computer can be linked to a screen device to show online/offline. Filters, search, "Show retired"; Delete asks first (Retired is preferred for old gear).
+
+Tables: `equipment` (`0024`; `location_id` and `screen_device_id` set null on delete) and `location_setup` (`0025`; one row per location, created on first save, cascade delete; `checklist` jsonb of step → date).
+
+**WiFi passwords** are encrypted with AES-256-GCM (`src/lib/secret-box.ts`, stored as `v1:iv:tag:data`) using **`ENCRYPTION_KEY`** (32 random bytes, base64). The page only gets `hasPassword`; the password is fetched from `GET /api/admin/location-setup/<id>/password` (admin only, `no-store`) when "Show" is clicked. **The key must be identical in `.env.local` and Coolify** (shared database); with a different or missing key, saving refuses with a message and "Show" says the password can't be read. Lost key = re-type the passwords. Never put the key or passwords in chat, HANDOFF or git. To make a key (PowerShell, doesn't print it): `$b = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); Add-Content .env.local "ENCRYPTION_KEY=$([Convert]::ToBase64String($b))"; Remove-Variable b`
+
+Ideas not built yet: printable QR labels per device (scan → its record), offline-screen alerts, a history log (moves/repairs).
+
 ## Sharing and deploys
 
 - **`ShareButton`** (`src/components/ui`): native share sheet, or a menu (copy link, Facebook, X, WhatsApp, email). It's on the public ad page, the advertiser's live ad page and the display controls. The public ad page has Open Graph and Twitter preview tags using the ad image. If WhatsApp previews lack the image (WebP), add a JPEG preview image.
@@ -497,6 +514,7 @@ Context: after two weeks of door-knocking, store owners and advertisers are inte
 - [ ] **Proposals, ideas:** a reminder email after a few days without a view; live chip updates without a refresh. (The 2026-11-01 test leftovers are done.)
 - [ ] **Ad swap:** test **Deny** once (on the first real swap, or a test ad made "paid" by an Admin Panel edit, then deleted). Ideas: show the swap history on the ad's details page; let admins see swaps in the Admin Panel.
 - [ ] **Ad form checkboxes:** (still open) on Post a New Ad's Review step, unticked checkboxes ("Post as a test ad", "My business is within…") look filled dark grey in dark mode. Give them a light background or explicit colours.
+- [ ] **Store setup (from 2026-11-08):** set up the 10 stores using Admin → Equipment: add each store's mini computer / TV / cables, tick the checklist, save WiFi details, and on the Screens page assign each new screen to its store (then link the mini computer to it in the Equipment list). Remove test entries made on 2026-11-07 if any are left.
 - [ ] **New logo, remaining:** the link preview image (`src/app/opengraph-image.tsx`, shown when the site is shared) still writes "CommunityBulletin" in text; switch it to the new logo. The old `src/components/layout/Logo.tsx` is unused and can go. Optional: a light outline around the logo icon on navy backgrounds (dashboard sidebar, sign-in left panel), where the navy box blends in.
 - [ ] **Store screens:** after the next deploy that touches the display, reload each store TV once so it runs the new code (since 2026-11-03 its views count only when it sends its device id).
 - [ ] **This computer:** `.env.local` still lacks the Google sign-in variables (`NEXT_PUBLIC_GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`), so Google sign-in fails locally.

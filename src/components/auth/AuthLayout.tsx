@@ -42,9 +42,10 @@ export function AuthLayout({ children, wide = false }: { children: React.ReactNo
       </div>
 
       {/* ── RIGHT PANEL ── */}
-      <div className="flex-1 bg-secondary flex items-center justify-center px-4 sm:px-8 py-10">
+      {/* Phones: start near the top (centring a short form left a big gap above it); desktop: centred */}
+      <div className="flex-1 bg-secondary flex items-start lg:items-center justify-center px-4 sm:px-8 pt-6 pb-10 lg:py-10">
         {/* wide: roomier card for longer forms (e.g. register with store details) */}
-        <div className={`w-full ${wide ? "max-w-[560px]" : "max-w-[400px]"} flex flex-col items-center gap-6 transition-[max-width] duration-200`}>
+        <div className={`w-full ${wide ? "max-w-[560px]" : "max-w-[400px]"} flex flex-col items-center gap-5 lg:gap-6 transition-[max-width] duration-200`}>
           {/* Mobile-only logo */}
           <Link href="/" className="lg:hidden flex items-center gap-3 no-underline">
             <BrandLogo height={54} />

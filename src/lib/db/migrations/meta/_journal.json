@@ -169,6 +169,20 @@
       "when": 1793762853746,
       "tag": "0023_ad_swaps",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794082371103,
+      "tag": "0024_equipment",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1794083573507,
+      "tag": "0025_location_setup",
+      "breakpoints": true
     }
   ]
 }

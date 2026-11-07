@@ -23,3 +23,5 @@ export * from "./demos";
 export * from "./appointments";
 export * from "./proposals";
 export * from "./adSwaps";
+export * from "./equipment";
+export * from "./locationSetup";

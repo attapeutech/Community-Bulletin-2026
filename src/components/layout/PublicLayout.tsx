@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { BrandMark } from "@/components/layout/BrandMark";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Menu, X, Lightbulb, Sparkles, Tag, LifeBuoy, Store, Search, MapPin, LogIn, UserPlus, LayoutDashboard, Monitor, Mail, Shield, FileText } from "lucide-react";
@@ -13,6 +12,7 @@ import { readSavedLocation, writeSavedLocation } from "@/lib/location-preference
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { UserMenu } from "@/components/layout/UserMenu";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 
 type SelectedLocation = { stateCode: string; stateName: string; cityName: string };
 
@@ -95,14 +95,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
 
           {/* Logo */}
           <Link href="/" className="no-underline flex items-center gap-2.5 shrink-0">
-            <BrandMark size={40} className="shrink-0 dark:ring-1 dark:ring-white/15 rounded-[9px]" />
-            <div>
-              <div className="font-serif font-bold text-[14px] text-[#1A3A5C] dark:text-white leading-tight">Community</div>
-              <div className="font-serif font-bold text-[14px] leading-tight">
-                <span className="text-[#E8563A]">Bulletin</span>
-                <span className="text-[#4A90C4] text-[11px] font-normal">.com</span>
-              </div>
-            </div>
+            <BrandLogo height={48} />
           </Link>
 
           {/* Location picker + search — icon-only at md, full at lg */}
@@ -268,13 +261,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-8 mb-10">
             <div className="col-span-2 sm:col-span-1">
               <div className="flex items-center gap-2.5 mb-3.5">
-                <BrandMark size={36} className="shrink-0 ring-1 ring-white/15 rounded-[8px]" />
-                <div>
-                  <div className="font-serif font-bold text-white text-[13px] leading-tight">Community</div>
-                  <div className="font-serif font-bold text-[#E8563A] text-[13px] leading-tight">
-                    Bulletin<span className="text-[#4A90C4] text-[10px] font-normal">.com</span>
-                  </div>
-                </div>
+                <BrandLogo tone="dark" height={48} />
               </div>
               <p className="text-sm text-[#4A6B82] leading-relaxed max-w-[220px] mb-4">
                 Digital in-store advertising for local communities.

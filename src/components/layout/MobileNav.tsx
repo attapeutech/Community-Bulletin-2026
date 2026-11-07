@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { Menu } from "lucide-react";
-import { BrandMark } from "./BrandMark";
 import { SignOutButton } from "./SignOutButton";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { NavIcon, type NavIconName } from "@/components/layout/NavIcon";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 
 type NavItem = { href: string; label: string; icon: NavIconName };
 
@@ -34,14 +34,8 @@ export function MobileNav({
           {/* Logo */}
           <SheetClose asChild>
             <Link href="/dashboard/user" className="no-underline">
-              <div className="flex items-center gap-2.5 mb-8 pl-2">
-                <BrandMark size={40} className="shrink-0 ring-1 ring-white/15 rounded-[9px]" />
-                <div>
-                  <div className="font-serif font-bold text-white text-[13px] leading-tight">Community</div>
-                  <div className="font-serif font-bold text-[#E8563A] text-[13px] leading-tight">
-                    Bulletin<span className="text-[#4A90C4] text-[10px] font-normal">.com</span>
-                  </div>
-                </div>
+              <div className="mb-8 pl-1">
+                <BrandLogo tone="dark" height={52} />
               </div>
             </Link>
           </SheetClose>

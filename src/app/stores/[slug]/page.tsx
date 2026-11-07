@@ -3,7 +3,7 @@ import { locations, users, cities, states, postalCodes, ads, payments } from "@/
 import { eq, and, count, sum } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { BrandMark } from "@/components/layout/BrandMark";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 import type { Metadata } from "next";
 
 // Search result and link preview: "Advertise at <store>, <city>"
@@ -89,11 +89,8 @@ export default async function PublicStorePage({
       {/* Nav bar */}
       <header className="bg-white border-b border-[#D8E4EE] sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 no-underline">
-            <BrandMark size={30} className="shrink-0" />
-            <span className="font-serif font-bold text-[13px] text-[#1A3A5C] leading-tight">
-              Community<span className="text-[#E8563A]">Bulletin</span>
-            </span>
+          <Link href="/" className="flex items-center no-underline">
+            <BrandLogo tone="light" height={42} />
           </Link>
           <Link
             href={`/ads/new?locationId=${loc.id}`}

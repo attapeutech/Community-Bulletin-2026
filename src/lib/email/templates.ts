@@ -10,9 +10,7 @@ function emailWrapper(content: string) {
     <div style="font-family:Georgia,serif;max-width:580px;margin:0 auto;background:#ffffff">
       <!-- Header -->
       <div style="background:${BRAND_COLOR};padding:28px 40px;border-radius:10px 10px 0 0">
-        <div style="font-family:Georgia,serif;font-size:22px;font-weight:700;color:#ffffff;line-height:1.1">
-          Community<span style="color:${CORAL_COLOR}">Bulletin</span><span style="color:${ACCENT_COLOR};font-size:13px;font-family:sans-serif;font-weight:400">.com</span>
-        </div>
+        <img src="${APP_URL}/brand/logo-dark@2x.png" alt="Community Bulletin.com" width="151" height="48" style="display:block;height:48px;width:auto;border:0">
         <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:4px;font-family:sans-serif;letter-spacing:0.08em;text-transform:uppercase">
           Digital in-store advertising
         </div>

@@ -1,4 +1,4 @@
-# Handoff: 2026-10-22 (updated 2026-11-04)
+# Handoff: 2026-10-22 (updated 2026-11-07)
 
 ## Where things stand
 
@@ -32,6 +32,24 @@
   - `LeaveFrame` (`src/components/layout/LeaveFrame.tsx`, in the root layout) moves any non-display page out of a frame
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
+
+## 2026-11-07 summary
+
+- **New logo** (PR #128): monitor-and-pin "CB" mark plus "COMMUNITY BULLETIN.com" lettering (Space Grotesk, converted to shapes). The designer's source files are in `communitybulletin-logo/` (untracked, kept as the master copy; README has the brand colours).
+  - `BrandMark` (`src/components/layout/BrandMark.tsx`) draws the new mark inline; used on display screens, the TV brand bar, house slides and the display loading screen.
+  - `BrandLogo` (`src/components/layout/BrandLogo.tsx`) shows the full logo from `public/brand/`: `logo.svg` on light backgrounds, `logo-dark.svg` (white "COMMUNITY") on navy, `tone="auto"` swaps in dark mode. It replaced the serif text logo in the website header (48 px) and footer, dashboard sidebar (50) and phone header (40), phone side menu (52), sign-in pages and store pages. Below about 40 px tall the lettering looks soft on 100% Windows screens.
+  - Emails: the header is `${APP_URL}/brand/logo-dark@2x.png` (email apps don't show SVG).
+  - `/brand` is in the proxy's public routes (logged-out visitors and email apps).
+- **Favicon** (same PR): the designer's favicon is a navy box that vanished on dark browser tabs, so `src/app/icon.svg` and `src/app/favicon.ico` (16/32/48, built with sharp) add a white outline. The 512 px icon moved to `public/icon.png` (still `/icon.png` for `display.webmanifest`) so browsers don't use it as a tab icon. `/icon.svg` is public. Browsers cache tab icons hard: Ctrl+Shift+Delete → cached images, or a private window.
+- **Phones: page slid sideways** (PR #129): on iPhone Safari the home hero's grid column grew to the slideshow's content width, cutting off the headline and pushing the header's ☰ off screen. Fixed with `grid-cols-1` / `min-w-0` in `LandingPage.tsx` and `HeroSlides.tsx`, plus `overflow-x: clip` on html/body in `globals.css` (Safari ignores `overflow-x: hidden` for panning). Chrome never showed it, so test layout changes on a real iPhone.
+- **Sign-in pages on phones** (PR #130): `AuthLayout` starts the form near the top on phones (centring left a ~180 px gap above the short sign-in form); desktop stays centred. Register and the other account pages share it.
+- **Account forms focus the first field** (PR #131): sign in and forgot password (email), create account (name), reset / set password. iPhone Safari won't open the keyboard by itself (Apple blocks it).
+- **Phones: no zoom on form fields** (PR #132): iPhone Safari zooms in when a field under 16 px gets focus (e.g. the form focusing the first error after an empty submit), and the page then slid around. `Input`, `Textarea` and `Select` use `text-base sm:text-sm`, and a phone-only rule in `globals.css` (`max-width: 639px`) sets every text field to 16 px. Pinch-zoom is left on (no `maximum-scale`).
+- **Testing tip:** headless Chrome via the DevTools protocol (node + the built-in WebSocket, no extra packages) can screenshot pages at phone width and list elements wider than the screen; scripts lived in the session scratchpad, not the repo.
+
+## 2026-11-06 summary
+
+- **Sister-site figures updated** in `src/lib/house-content.ts` (shared by the home page slideshow; store screens show no numbers): AdsAndClassifieds.com **76k+** users (was 75k+), 89k+ listings unchanged; Blog-Directory.org **84k+** users (was 83k+), **143k+** blogs (was 142k+). Update them by hand there when ADSEZ.com's numbers change.
 
 ## 2026-11-04 summary
 
@@ -471,7 +489,8 @@ Context: after two weeks of door-knocking, store owners and advertisers are inte
 - [ ] **Sales demos, ideas:** a "Sales" role (see below) so the sales manager needn't be an admin; show a demo count on advertiser cards in the Sales list. (Turning the demo ad into the real ad is done: proposals.)
 - [ ] **Proposals, ideas:** a reminder email after a few days without a view; live chip updates without a refresh. (The 2026-11-01 test leftovers are done.)
 - [ ] **Ad swap:** test **Deny** once (on the first real swap, or a test ad made "paid" by an Admin Panel edit, then deleted). Ideas: show the swap history on the ad's details page; let admins see swaps in the Admin Panel.
-- [ ] **Ad form checkboxes:** on Post a New Ad's Review step, unticked checkboxes ("Post as a test ad", "My business is within…") look filled dark grey in dark mode. Give them a light background or explicit colours.
+- [ ] **Ad form checkboxes:** (still open) on Post a New Ad's Review step, unticked checkboxes ("Post as a test ad", "My business is within…") look filled dark grey in dark mode. Give them a light background or explicit colours.
+- [ ] **New logo, remaining:** the link preview image (`src/app/opengraph-image.tsx`, shown when the site is shared) still writes "CommunityBulletin" in text; switch it to the new logo. The old `src/components/layout/Logo.tsx` is unused and can go. Optional: a light outline around the dark logo on the navy dashboard sidebar.
 - [ ] **Store screens:** after the next deploy that touches the display, reload each store TV once so it runs the new code (since 2026-11-03 its views count only when it sends its device id).
 - [ ] **This computer:** `.env.local` still lacks the Google sign-in variables (`NEXT_PUBLIC_GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`), so Google sign-in fails locally.
 

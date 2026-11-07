@@ -102,7 +102,7 @@ function ResetPasswordForm() {
           <Label className="block mb-1.5 text-[11px] font-semibold text-foreground/70 uppercase tracking-[0.04em]">
             New password
           </Label>
-          <PasswordInput placeholder="Min. 8 characters" {...register("password")} className={errors.password ? "border-destructive bg-destructive/5" : ""} />
+          <PasswordInput placeholder="Min. 8 characters" autoFocus {...register("password")} className={errors.password ? "border-destructive bg-destructive/5" : ""} />
           <FieldError msg={errors.password?.message} />
         </div>
         <div>

@@ -100,6 +100,7 @@ export default function ForgotPasswordPage() {
               <Input
                 type="email"
                 placeholder="you@example.com"
+                autoFocus
                 {...register("email")}
                 className={errors.email ? "border-destructive bg-destructive/5" : ""}
               />

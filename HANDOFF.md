@@ -1,4 +1,4 @@
-# Handoff: 2026-10-22 (updated 2026-11-04)
+# Handoff: 2026-10-22 (updated 2026-11-06)
 
 ## Where things stand
 
@@ -32,6 +32,10 @@
   - `LeaveFrame` (`src/components/layout/LeaveFrame.tsx`, in the root layout) moves any non-display page out of a frame
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
+
+## 2026-11-06 summary
+
+- **Sister-site figures updated** in `src/lib/house-content.ts` (shared by the home page slideshow; store screens show no numbers): AdsAndClassifieds.com **76k+** users (was 75k+), 89k+ listings unchanged; Blog-Directory.org **84k+** users (was 83k+), **143k+** blogs (was 142k+). Update them by hand there when ADSEZ.com's numbers change.
 
 ## 2026-11-04 summary
 

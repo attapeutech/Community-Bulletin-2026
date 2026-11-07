@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { EQUIPMENT_STATUSES, EQUIPMENT_TYPES, statusLabel, typeLabel } from "@/lib/equipment";
+import { FormPhotos, MAX_PHOTOS, PhotoViewer, photoSrc, uploadPhoto } from "./EquipmentPhotos";
 
 export type EquipmentRow = {
   id: string;
@@ -24,6 +25,7 @@ export type EquipmentRow = {
   purchasedOn: string | null;
   costCents: number | null;
   notes: string | null;
+  photoIds: string[];
   updatedAt: string;
 };
 
@@ -61,13 +63,60 @@ function toForm(r: EquipmentRow): FormState {
 }
 
 function EquipmentForm({
-  initial, editingId, locations, screens, onDone,
+  initial, editingId, initialPhotos = [], locations, screens, onDone,
 }: {
-  initial: FormState; editingId: string | null; locations: LocationOption[]; screens: ScreenOption[]; onDone: () => void;
+  initial: FormState; editingId: string | null; initialPhotos?: string[]; locations: LocationOption[]; screens: ScreenOption[]; onDone: () => void;
 }) {
   const router = useRouter();
   const [f, setF] = useState<FormState>(initial);
   const [saving, setSaving] = useState(false);
+  // Photos: when editing they upload right away; for a new item they wait until it's saved
+  const [photos, setPhotos] = useState<string[]>(initialPhotos);
+  const [pending, setPending] = useState<{ file: File; url: string }[]>([]);
+  const [uploading, setUploading] = useState(false);
+
+  async function addFiles(files: File[]) {
+    const room = MAX_PHOTOS - photos.length - pending.length;
+    if (files.length > room) toast.error(`Up to ${MAX_PHOTOS} photos per item; added the first ${Math.max(room, 0)}.`);
+    const take = files.slice(0, Math.max(room, 0));
+    if (!editingId) {
+      setPending((p) => [...p, ...take.map((file) => ({ file, url: URL.createObjectURL(file) }))]);
+      return;
+    }
+    setUploading(true);
+    let added = 0;
+    for (const file of take) {
+      try {
+        const id = await uploadPhoto(editingId, file);
+        setPhotos((p) => [...p, id]);
+        added++;
+      } catch (e: any) {
+        toast.error(e.message);
+      }
+    }
+    setUploading(false);
+    if (added) { toast.success(added === 1 ? "Photo added" : `${added} photos added`); router.refresh(); }
+  }
+
+  async function deletePhoto(id: string) {
+    if (!confirm("Delete this photo?")) return;
+    try {
+      const res = await fetch(`/api/admin/equipment/photos/${id}`, { method: "DELETE" });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      setPhotos((p) => p.filter((x) => x !== id));
+      router.refresh();
+    } catch (e: any) {
+      toast.error(e.message || "Delete failed");
+    }
+  }
+
+  function removePending(index: number) {
+    setPending((p) => {
+      URL.revokeObjectURL(p[index].url);
+      return p.filter((_, i) => i !== index);
+    });
+  }
   const set = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const value = e.target.value;
     setF((prev) => {
@@ -104,6 +153,14 @@ function EquipmentForm({
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
+      if (!editingId && pending.length) {
+        let failed = 0;
+        for (const p of pending) {
+          try { await uploadPhoto(json.data.id, p.file); } catch { failed++; }
+          URL.revokeObjectURL(p.url);
+        }
+        if (failed) toast.error(`${failed} photo${failed === 1 ? "" : "s"} didn't upload; open Edit to try again.`);
+      }
       toast.success(editingId ? "Saved" : "Added");
       onDone();
       router.refresh();
@@ -173,14 +230,25 @@ function EquipmentForm({
           <Input inputMode="decimal" value={f.cost} onChange={set("cost")} placeholder="e.g. 189.99" />
         </div>
         <div className="sm:col-span-3">
+          <label className={fieldLabel}>Photos</label>
+          <FormPhotos
+            saved={photos}
+            pending={pending}
+            onDeleteSaved={deletePhoto}
+            onRemovePending={removePending}
+            onFiles={addFiles}
+            busy={uploading}
+          />
+        </div>
+        <div className="sm:col-span-3">
           <label className={fieldLabel}>Notes</label>
           <Textarea value={f.notes} onChange={set("notes")} maxLength={2000} rows={2} placeholder="Anything useful: where it is, warranty, quirks" />
         </div>
       </div>
       <p className="text-[11px] text-[#9A6B12] mt-3">Don&apos;t put WiFi or router passwords here; they&apos;ll get their own protected place.</p>
       <div className="flex gap-2 mt-3">
-        <Button type="submit" disabled={saving} className="h-9 text-[13px] bg-[#1A3A5C] hover:bg-[#15304d] text-white">
-          {saving ? "Saving…" : editingId ? "Save" : "Add item"}
+        <Button type="submit" disabled={saving || uploading} className="h-9 text-[13px] bg-[#1A3A5C] hover:bg-[#15304d] text-white">
+          {saving ? (pending.length ? "Saving + uploading…" : "Saving…") : editingId ? "Save" : "Add item"}
         </Button>
         <Button type="button" variant="outline" onClick={onDone} className="h-9 text-[13px]">Cancel</Button>
       </div>
@@ -191,6 +259,7 @@ function EquipmentForm({
 function ItemRow({ item, nowIso, onEdit }: { item: EquipmentRow; nowIso: string; onEdit: () => void }) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
+  const [viewing, setViewing] = useState<number | null>(null);
   const online = item.screenLastSeenAt ? Date.parse(nowIso) - Date.parse(item.screenLastSeenAt) < 3 * 60_000 : null;
   const details = [item.brand, item.model].filter(Boolean).join(" ");
 
@@ -228,6 +297,27 @@ function ItemRow({ item, nowIso, onEdit }: { item: EquipmentRow; nowIso: string;
           {[item.label, details, item.serialNumber && `S/N ${item.serialNumber}`].filter(Boolean).join(" · ") || "No details yet"}
         </div>
         {item.notes && <div className="text-xs text-[#6B7A8C] mt-0.5 whitespace-pre-line break-words">{item.notes}</div>}
+        {item.photoIds.length > 0 && (
+          <div className="flex gap-1.5 mt-2">
+            {item.photoIds.slice(0, 4).map((id, n) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setViewing(n)}
+                className="relative w-12 h-12 rounded-md overflow-hidden border border-[#D8E4EE] bg-[#F7F9FC]"
+                aria-label={`View photo ${n + 1}`}
+              >
+                <img src={photoSrc(id, true)} alt="" loading="lazy" className="w-full h-full object-cover" />
+                {n === 3 && item.photoIds.length > 4 && (
+                  <span className="absolute inset-0 bg-black/50 text-white text-xs font-bold flex items-center justify-center">
+                    +{item.photoIds.length - 4}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+        {viewing !== null && <PhotoViewer ids={item.photoIds} start={viewing} onClose={() => setViewing(null)} />}
       </div>
       <div className="flex gap-1.5 shrink-0">
         <Button variant="outline" onClick={onEdit} className="h-8 px-3 text-xs">Edit</Button>
@@ -345,7 +435,7 @@ export default function EquipmentClient({
             {g.rows.map((i) =>
               editingId === i.id ? (
                 <div key={i.id} className="p-3">
-                  <EquipmentForm initial={toForm(i)} editingId={i.id} locations={locations} screens={screens} onDone={() => setEditingId(null)} />
+                  <EquipmentForm initial={toForm(i)} editingId={i.id} initialPhotos={i.photoIds} locations={locations} screens={screens} onDone={() => setEditingId(null)} />
                 </div>
               ) : (
                 <ItemRow key={i.id} item={i} nowIso={nowIso} onEdit={() => { setAdding(false); setEditingId(i.id); }} />

@@ -68,6 +68,20 @@ export async function deleteFile(key: string) {
 }
 
 /**
+ * Upload bytes from the server (no public URL returned: for private files)
+ */
+export async function putFile(key: string, body: Buffer, contentType: string) {
+  await r2.send(new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: body, ContentType: contentType }));
+}
+
+/**
+ * Short-lived signed link to read a private file (default 10 minutes)
+ */
+export async function createSignedReadUrl(key: string, expiresIn = 600) {
+  return getSignedUrl(r2, new GetObjectCommand({ Bucket: BUCKET, Key: key }), { expiresIn });
+}
+
+/**
  * Build a public CDN URL from an object key
  */
 export function getPublicUrl(key: string) {

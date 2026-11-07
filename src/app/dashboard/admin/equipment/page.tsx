@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
-import { equipment, locations, locationSetup, screenDevices } from "@/lib/db/schema";
+import { equipment, equipmentPhotos, locations, locationSetup, screenDevices } from "@/lib/db/schema";
 import { asc, desc, eq, isNotNull, ne } from "drizzle-orm";
 import EquipmentClient, { type EquipmentRow } from "./EquipmentClient";
 import StoreSetupClient, { type StoreSetupRow } from "./StoreSetupClient";
@@ -89,8 +89,12 @@ export default async function AdminEquipmentPage({ searchParams }: { searchParam
       .leftJoin(screenDevices, eq(equipment.screenDeviceId, screenDevices.id))
       .orderBy(asc(locations.storeName), asc(equipment.type), desc(equipment.updatedAt));
 
+    // Photo ids per item, oldest first (the images load through an admin-only link)
+    const photos = await db.select({ id: equipmentPhotos.id, equipmentId: equipmentPhotos.equipmentId })
+      .from(equipmentPhotos).orderBy(asc(equipmentPhotos.createdAt));
     const items: EquipmentRow[] = rows.map((r) => ({
       ...r,
+      photoIds: photos.filter((p) => p.equipmentId === r.id).map((p) => p.id),
       screenLastSeenAt: r.screenLastSeenAt?.toISOString() ?? null,
       updatedAt: r.updatedAt.toISOString(),
     }));

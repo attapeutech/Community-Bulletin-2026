@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { equipment } from "@/lib/db/schema";
+import { equipment, equipmentPhotos } from "@/lib/db/schema";
+import { deleteFile } from "@/lib/storage/r2";
 import { getSession } from "@/lib/auth/session";
 import { equipmentSchema } from "@/lib/equipment";
 
@@ -50,8 +51,12 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     if (!z.string().uuid().safeParse(id).success) {
       return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
     }
+    const photos = await db.select({ key: equipmentPhotos.key, thumbKey: equipmentPhotos.thumbKey })
+      .from(equipmentPhotos).where(eq(equipmentPhotos.equipmentId, id));
+    // Photo rows go with the item (cascade); then remove their files
     const [row] = await db.delete(equipment).where(eq(equipment.id, id)).returning({ id: equipment.id });
     if (!row) return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+    await Promise.allSettled(photos.flatMap((p) => [deleteFile(p.key), deleteFile(p.thumbKey)]));
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[DELETE /api/admin/equipment/[id]]", error);

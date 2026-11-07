@@ -25,3 +25,4 @@ export * from "./proposals";
 export * from "./adSwaps";
 export * from "./equipment";
 export * from "./locationSetup";
+export * from "./equipmentPhotos";

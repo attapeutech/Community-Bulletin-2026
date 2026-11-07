@@ -104,7 +104,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               onClick={() => setLocationPickerOpen(true)}
               className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors shrink-0 ${locBtnCls}`}
             >
-              <MapPin size={12} />
+              <MapPin size={15} strokeWidth={2.5} className="text-[#E8563A] fill-[#E8563A]/15 shrink-0" />
               <span className="hidden lg:inline">{locationLabel ?? "All locations"}</span>
               {locationLabel && (
                 <span
@@ -190,7 +190,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             onClick={() => setLocationPickerOpen(true)}
             className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-colors shrink-0 ${locBtnCls}`}
           >
-            <MapPin size={12} />
+            <MapPin size={15} strokeWidth={2.5} className="text-[#E8563A] fill-[#E8563A]/15 shrink-0" />
             {locationLabel && <span className="max-w-[64px] truncate">{locationLabel}</span>}
           </button>
           <Search size={13} className="text-[#9DB8CC] shrink-0" />

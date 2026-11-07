@@ -186,7 +186,7 @@ function RegisterForm() {
           <Label className="block mb-1.5 text-[11px] font-semibold text-foreground/70 uppercase tracking-[0.04em]">
             Full name
           </Label>
-          <Input type="text" placeholder="Jane Smith" {...register("name")} className={errors.name ? "border-destructive bg-destructive/5" : ""} />
+          <Input type="text" placeholder="Jane Smith" autoFocus {...register("name")} className={errors.name ? "border-destructive bg-destructive/5" : ""} />
           <FieldError msg={errors.name?.message} />
         </div>
 

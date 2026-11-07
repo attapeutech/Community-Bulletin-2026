@@ -183,6 +183,13 @@
       "when": 1794083573507,
       "tag": "0025_location_setup",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1794091340271,
+      "tag": "0026_equipment_photos",
+      "breakpoints": true
     }
   ]
 }

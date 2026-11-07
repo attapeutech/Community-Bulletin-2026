@@ -83,6 +83,12 @@
   html, body { overflow-x: hidden; max-width: 100%; }
   /* iPhone Safari still lets you pan sideways with "hidden"; "clip" stops it (and keeps sticky headers working) */
   @supports (overflow: clip) { html, body { overflow-x: clip; } }
+  /* iPhone Safari zooms the page in when a field under 16px gets focus (e.g. a form putting the cursor
+     on the first error), and the page then slides around. 16px text in fields on phones stops it. */
+  @media (max-width: 639px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+    textarea, select { font-size: 16px !important; }
+  }
 }
 
 /* Skeleton shimmer */

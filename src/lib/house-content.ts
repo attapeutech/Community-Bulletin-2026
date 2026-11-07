@@ -15,8 +15,8 @@ export const SAMPLE_SALE_AD: SaleTemplateData = {
 // Our sister sites, with the figures shown on ADSEZ.com. These are online, worldwide numbers:
 // show them only where the disclaimer can be read (the website), never on store screens.
 export const ADSEZ_FAMILY = [
-  { name: "AdsAndClassifieds.com", href: "https://adsandclassifieds.com", what: "Local classifieds", stats: [["75k+", "users"], ["89k+", "listings"]] },
-  { name: "Blog-Directory.org", href: "https://blog-directory.org", what: "Blog directory", stats: [["83k+", "users"], ["142k+", "blogs"]] },
+  { name: "AdsAndClassifieds.com", href: "https://adsandclassifieds.com", what: "Local classifieds", stats: [["76k+", "users"], ["89k+", "listings"]] },
+  { name: "Blog-Directory.org", href: "https://blog-directory.org", what: "Blog directory", stats: [["84k+", "users"], ["143k+", "blogs"]] },
 ] as const;
 
 // Stand-in "photo" for the sample ad: a pizza on the template's navy, drawn as an SVG

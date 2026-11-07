@@ -45,6 +45,13 @@
 - **Sign-in pages on phones** (PR #130): `AuthLayout` starts the form near the top on phones (centring left a ~180 px gap above the short sign-in form); desktop stays centred. Register and the other account pages share it.
 - **Account forms focus the first field** (PR #131): sign in and forgot password (email), create account (name), reset / set password. iPhone Safari won't open the keyboard by itself (Apple blocks it).
 - **Phones: no zoom on form fields** (PR #132): iPhone Safari zooms in when a field under 16 px gets focus (e.g. the form focusing the first error after an empty submit), and the page then slid around. `Input`, `Textarea` and `Select` use `text-base sm:text-sm`, and a phone-only rule in `globals.css` (`max-width: 639px`) sets every text field to 16 px. Pinch-zoom is left on (no `maximum-scale`).
+- **3D-pin logo** (PR #133): the designer's `communitybulletin-logo/logo/icon-3d-pin.png` (512 px, 3D push pin) replaced the flat mark. Built by a sharp script (session scratchpad, not the repo):
+  - `logo.svg`, `logo-dark.svg`, `logo-mark.svg` embed the icon as a 256 px PNG (base64 `<image>`) in place of the flat mark; the lettering is unchanged. `logo@2x.png` / `logo-dark@2x.png` (emails) re-rendered from them.
+  - `BrandMark.tsx` (store-screen badge) is now an `<img>` of `public/brand/logo-mark-256.png`; `logo-mark-512.png` is the designer's file.
+  - `public/icon.png` (512) and `src/app/apple-icon.png` (180, corners filled navy) rebuilt from it.
+  - Left as before: the browser-tab favicon (simplified "CB" box with white outline; the 3D pin is a blur at 16 px). On navy panels the icon box still blends in (see To do).
+  - To redo with a new icon: replace the PNG and rebuild the same files; the SVG mark sits where the old `<rect ... rx="26" fill="#1A3A5C"/>` + `translate(0 -1.8)` group was.
+- **Header location pin** (same PR): the `MapPin` on "All locations" (desktop) and next to search (phones) in `PublicLayout.tsx` is orange (#E8563A), 15 px, bolder, with a light orange fill.
 - **Testing tip:** headless Chrome via the DevTools protocol (node + the built-in WebSocket, no extra packages) can screenshot pages at phone width and list elements wider than the screen; scripts lived in the session scratchpad, not the repo.
 
 ## 2026-11-06 summary
@@ -490,7 +497,7 @@ Context: after two weeks of door-knocking, store owners and advertisers are inte
 - [ ] **Proposals, ideas:** a reminder email after a few days without a view; live chip updates without a refresh. (The 2026-11-01 test leftovers are done.)
 - [ ] **Ad swap:** test **Deny** once (on the first real swap, or a test ad made "paid" by an Admin Panel edit, then deleted). Ideas: show the swap history on the ad's details page; let admins see swaps in the Admin Panel.
 - [ ] **Ad form checkboxes:** (still open) on Post a New Ad's Review step, unticked checkboxes ("Post as a test ad", "My business is within…") look filled dark grey in dark mode. Give them a light background or explicit colours.
-- [ ] **New logo, remaining:** the link preview image (`src/app/opengraph-image.tsx`, shown when the site is shared) still writes "CommunityBulletin" in text; switch it to the new logo. The old `src/components/layout/Logo.tsx` is unused and can go. Optional: a light outline around the dark logo on the navy dashboard sidebar.
+- [ ] **New logo, remaining:** the link preview image (`src/app/opengraph-image.tsx`, shown when the site is shared) still writes "CommunityBulletin" in text; switch it to the new logo. The old `src/components/layout/Logo.tsx` is unused and can go. Optional: a light outline around the logo icon on navy backgrounds (dashboard sidebar, sign-in left panel), where the navy box blends in.
 - [ ] **Store screens:** after the next deploy that touches the display, reload each store TV once so it runs the new code (since 2026-11-03 its views count only when it sends its device id).
 - [ ] **This computer:** `.env.local` still lacks the Google sign-in variables (`NEXT_PUBLIC_GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`), so Google sign-in fails locally.
 

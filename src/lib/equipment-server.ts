@@ -16,12 +16,14 @@ function secret(v: string | null | undefined): string | null | undefined {
 }
 
 export function equipmentColumns(data: EquipmentInput) {
-  const { remotePassword, remotePin, ...plain } = data;
+  const { remotePassword, remotePin, windowsPassword, ...plain } = data;
   const remoteAccountPasswordEnc = secret(remotePassword);
   const remotePinEnc = secret(remotePin);
+  const windowsPasswordEnc = secret(windowsPassword);
   return {
     ...plain,
     ...(remoteAccountPasswordEnc !== undefined ? { remoteAccountPasswordEnc } : {}),
     ...(remotePinEnc !== undefined ? { remotePinEnc } : {}),
+    ...(windowsPasswordEnc !== undefined ? { windowsPasswordEnc } : {}),
   };
 }

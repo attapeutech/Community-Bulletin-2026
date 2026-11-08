@@ -85,9 +85,11 @@ export default async function AdminEquipmentPage({ searchParams }: { searchParam
         remoteAccount: equipment.remoteAccount,
         remoteUrl: equipment.remoteUrl,
         remoteComputerName: equipment.remoteComputerName,
+        windowsUser: equipment.windowsUser,
         // Only whether a secret is saved; the values come from the "Show" button
         hasRemotePassword: sql<boolean>`${equipment.remoteAccountPasswordEnc} is not null`,
         hasRemotePin: sql<boolean>`${equipment.remotePinEnc} is not null`,
+        hasWindowsPassword: sql<boolean>`${equipment.windowsPasswordEnc} is not null`,
         updatedAt: equipment.updatedAt,
       })
       .from(equipment)

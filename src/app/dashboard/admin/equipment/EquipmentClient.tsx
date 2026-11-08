@@ -31,7 +31,9 @@ export type EquipmentRow = {
   remoteUrl: string | null;
   remoteComputerName: string | null;
   hasRemotePassword: boolean;
+  windowsUser: string | null;
   hasRemotePin: boolean;
+  hasWindowsPassword: boolean;
   photoIds: string[];
   updatedAt: string;
 };
@@ -54,13 +56,13 @@ const storeName = (l: LocationOption) => `${l.storeName}${l.storeNumber ? ` #${l
 type FormState = {
   type: string; status: string; locationId: string; label: string; brand: string; model: string;
   serialNumber: string; screenDeviceId: string; purchasedOn: string; cost: string; notes: string;
-  remoteAccount: string; remoteUrl: string; remoteComputerName: string;
+  remoteAccount: string; remoteUrl: string; remoteComputerName: string; windowsUser: string;
 };
 
 const emptyForm: FormState = {
   type: "mini_pc", status: "in_stock", locationId: "", label: "", brand: "", model: "",
   serialNumber: "", screenDeviceId: "", purchasedOn: "", cost: "", notes: "",
-  remoteAccount: "", remoteUrl: "", remoteComputerName: "",
+  remoteAccount: "", remoteUrl: "", remoteComputerName: "", windowsUser: "",
 };
 
 function toForm(r: EquipmentRow): FormState {
@@ -69,18 +71,20 @@ function toForm(r: EquipmentRow): FormState {
     model: r.model ?? "", serialNumber: r.serialNumber ?? "", screenDeviceId: r.screenDeviceId ?? "",
     purchasedOn: r.purchasedOn ?? "", cost: r.costCents != null ? (r.costCents / 100).toFixed(2) : "", notes: r.notes ?? "",
     remoteAccount: r.remoteAccount ?? "", remoteUrl: r.remoteUrl ?? "", remoteComputerName: r.remoteComputerName ?? "",
+    windowsUser: r.windowsUser ?? "",
   };
 }
 
 function EquipmentForm({
-  initial, editingId, initialPhotos = [], savedSecrets = { password: false, pin: false }, locations, screens, onDone,
+  initial, editingId, initialPhotos = [], savedSecrets = { password: false, pin: false, windows: false }, locations, screens, onDone,
 }: {
-  initial: FormState; editingId: string | null; initialPhotos?: string[]; savedSecrets?: { password: boolean; pin: boolean };
+  initial: FormState; editingId: string | null; initialPhotos?: string[]; savedSecrets?: { password: boolean; pin: boolean; windows: boolean };
   locations: LocationOption[]; screens: ScreenOption[]; onDone: () => void;
 }) {
   // Secrets to send on save: null = keep the saved one, "" = clear / none, text = new
   const [remotePassword, setRemotePassword] = useState<string | null>(savedSecrets.password ? null : "");
   const [remotePin, setRemotePin] = useState<string | null>(savedSecrets.pin ? null : "");
+  const [windowsPassword, setWindowsPassword] = useState<string | null>(savedSecrets.windows ? null : "");
   const router = useRouter();
   const [f, setF] = useState<FormState>(initial);
   const [saving, setSaving] = useState(false);
@@ -165,12 +169,13 @@ function EquipmentForm({
           purchasedOn: f.purchasedOn || null, costCents: cost, notes: f.notes,
           ...(f.type === "mini_pc"
             ? {
-                remoteAccount: f.remoteAccount, remoteUrl: f.remoteUrl, remoteComputerName: f.remoteComputerName,
+                remoteAccount: f.remoteAccount, remoteUrl: f.remoteUrl, remoteComputerName: f.remoteComputerName, windowsUser: f.windowsUser,
                 // only send a secret when it was typed or cleared
                 ...(remotePassword !== null && (remotePassword !== "" || savedSecrets.password) ? { remotePassword: remotePassword || null } : {}),
                 ...(remotePin !== null && (remotePin !== "" || savedSecrets.pin) ? { remotePin: remotePin || null } : {}),
+                ...(windowsPassword !== null && (windowsPassword !== "" || savedSecrets.windows) ? { windowsPassword: windowsPassword || null } : {}),
               }
-            : { remoteAccount: null, remoteUrl: null, remoteComputerName: null, remotePassword: null, remotePin: null }),
+            : { remoteAccount: null, remoteUrl: null, remoteComputerName: null, windowsUser: null, remotePassword: null, remotePin: null, windowsPassword: null }),
         }),
       });
       const json = await res.json();
@@ -246,7 +251,7 @@ function EquipmentForm({
         {f.type === "mini_pc" && (
           <fieldset className="sm:col-span-3 rounded-lg border border-[#D8E4EE] bg-[#F7FAFC] p-3">
             <legend className="px-1 text-xs font-bold text-[#1A3A5C] flex items-center gap-1.5">
-              <MonitorSmartphone size={13} /> Remote access (Chrome Remote Desktop)
+              <MonitorSmartphone size={13} /> Remote access &amp; Windows login
             </legend>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
@@ -287,7 +292,22 @@ function EquipmentForm({
                 )}
               </div>
             </div>
-            <p className="text-[11px] text-[#6B7A8C] mt-2">Password and PIN are stored encrypted; only admins can see them.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 pt-3 border-t border-[#D8E4EE]">
+              <div>
+                <label className={fieldLabel}>Windows admin name</label>
+                <Input value={f.windowsUser} onChange={set("windowsUser")} maxLength={100} autoComplete="off" placeholder="e.g. cbadmin" />
+              </div>
+              <div>
+                <label className={fieldLabel}>Windows admin password</label>
+                <SecretField
+                  saved={savedSecrets.windows}
+                  revealUrl={editingId ? `/api/admin/equipment/${editingId}/secret?field=windows` : null}
+                  value={windowsPassword}
+                  onChange={setWindowsPassword}
+                />
+              </div>
+            </div>
+            <p className="text-[11px] text-[#6B7A8C] mt-2">Passwords and PIN are stored encrypted; only admins can see them.</p>
           </fieldset>
         )}
         <div>
@@ -516,7 +536,7 @@ export default function EquipmentClient({
             {g.rows.map((i) =>
               editingId === i.id ? (
                 <div key={i.id} className="p-3">
-                  <EquipmentForm initial={toForm(i)} editingId={i.id} initialPhotos={i.photoIds} savedSecrets={{ password: i.hasRemotePassword, pin: i.hasRemotePin }} locations={locations} screens={screens} onDone={() => setEditingId(null)} />
+                  <EquipmentForm initial={toForm(i)} editingId={i.id} initialPhotos={i.photoIds} savedSecrets={{ password: i.hasRemotePassword, pin: i.hasRemotePin, windows: i.hasWindowsPassword }} locations={locations} screens={screens} onDone={() => setEditingId(null)} />
                 </div>
               ) : (
                 <ItemRow key={i.id} item={i} nowIso={nowIso} onEdit={() => { setAdding(false); setEditingId(i.id); }} />

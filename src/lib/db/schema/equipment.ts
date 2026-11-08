@@ -27,6 +27,9 @@ export const equipment = pgTable("equipment", {
   remoteUrl: text("remote_url"),                    // e.g. https://remotedesktop.google.com/access
   remoteComputerName: text("remote_computer_name"), // name shown in Chrome Remote Desktop
   remotePinEnc: text("remote_pin_enc"),
+  // Windows admin login on the mini computer (password encrypted the same way)
+  windowsUser: text("windows_user"),
+  windowsPasswordEnc: text("windows_password_enc"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (t) => [index("equipment_location_idx").on(t.locationId)]);

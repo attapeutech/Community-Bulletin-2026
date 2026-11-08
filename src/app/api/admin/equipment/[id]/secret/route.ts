@@ -10,7 +10,7 @@ import { REMOTE_SECRET_FIELDS } from "@/lib/equipment";
 const NO_STORE = { "Cache-Control": "no-store" };
 const fail = (error: string, status: number) => NextResponse.json({ success: false, error }, { status, headers: NO_STORE });
 
-// GET /api/admin/equipment/[id]/secret?field=password|pin — admin: a remote access secret, decrypted
+// GET /api/admin/equipment/[id]/secret?field=password|pin|windows — admin: a remote access secret, decrypted
 // (only when an admin clicks "Show"; never part of the page itself)
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     if (!z.string().uuid().safeParse(id).success || !field.success) return fail("Not found", 404);
 
     const [row] = await db
-      .select({ password: equipment.remoteAccountPasswordEnc, pin: equipment.remotePinEnc })
+      .select({ password: equipment.remoteAccountPasswordEnc, pin: equipment.remotePinEnc, windows: equipment.windowsPasswordEnc })
       .from(equipment).where(eq(equipment.id, id)).limit(1);
     const enc = row?.[field.data];
     if (!enc) return fail("Nothing saved", 404);

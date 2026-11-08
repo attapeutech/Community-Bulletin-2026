@@ -43,12 +43,14 @@ export const equipmentSchema = z.object({
   remoteAccount: optText(200),
   remoteUrl: optText(500).refine((v) => !v || /^https?:\/\//i.test(v), "URL should start with https://"),
   remoteComputerName: optText(100),
+  windowsUser: optText(100),
   // Secrets: a string sets it, null clears it, left out keeps the saved one
   remotePassword: z.string().max(200).nullable().optional(),
   remotePin: z.string().max(50).nullable().optional(),
+  windowsPassword: z.string().max(200).nullable().optional(),
 });
 
-export const REMOTE_SECRET_FIELDS = ["password", "pin"] as const;
+export const REMOTE_SECRET_FIELDS = ["password", "pin", "windows"] as const;
 export type RemoteSecretField = (typeof REMOTE_SECRET_FIELDS)[number];
 export const DEFAULT_REMOTE_URL = "https://remotedesktop.google.com/access";
 

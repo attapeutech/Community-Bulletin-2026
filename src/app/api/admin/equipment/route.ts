@@ -3,6 +3,7 @@ import { db } from "@/lib/db/client";
 import { equipment } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
 import { equipmentSchema } from "@/lib/equipment";
+import { equipmentColumns, MissingKeyError } from "@/lib/equipment-server";
 
 // POST /api/admin/equipment — admin: add an item
 export async function POST(req: NextRequest) {
@@ -13,9 +14,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
     const data = equipmentSchema.parse(await req.json());
-    const [row] = await db.insert(equipment).values(data).returning({ id: equipment.id });
+    const [row] = await db.insert(equipment).values(equipmentColumns(data)).returning({ id: equipment.id });
     return NextResponse.json({ success: true, data: row });
   } catch (error: any) {
+    if (error instanceof MissingKeyError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 503 });
+    }
     if (error.name === "ZodError") {
       return NextResponse.json({ success: false, error: "Please check the form" }, { status: 422 });
     }

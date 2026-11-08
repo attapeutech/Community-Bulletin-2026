@@ -1,4 +1,4 @@
-# Handoff: 2026-10-22 (updated 2026-11-04)
+# Handoff: 2026-10-22 (updated 2026-11-08)
 
 ## Where things stand
 
@@ -32,6 +32,40 @@
   - `LeaveFrame` (`src/components/layout/LeaveFrame.tsx`, in the root layout) moves any non-display page out of a frame
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
+
+## 2026-11-08 summary
+
+- **Remote access fields on mini computers** (PR #136, migration `0027`): a "Remote access & Windows login" box in the equipment form (type Mini computer only) for Chrome Remote Desktop: Google account, URL (one-click default `https://remotedesktop.google.com/access`), remote computer name, plus the Google password and PIN (encrypted). The list shows "Remote: <computer name> · <account>" and a **Connect ↗** link; search covers computer name and account.
+- **Windows admin login** (PR #137, migration `0028`): Windows admin name and password (encrypted) in the same box.
+- Both tested and working. Migrations applied through `0028` (29 rows). The store setup moved to 2026-11-09.
+- Suggested to the user: use a Google account made only for the store computers, with 2-Step Verification.
+
+## 2026-11-07 summary
+
+- **New logo** (PR #128): monitor-and-pin "CB" mark plus "COMMUNITY BULLETIN.com" lettering (Space Grotesk, converted to shapes). The designer's source files are in `communitybulletin-logo/` (untracked, kept as the master copy; README has the brand colours).
+  - `BrandMark` (`src/components/layout/BrandMark.tsx`) draws the new mark inline; used on display screens, the TV brand bar, house slides and the display loading screen.
+  - `BrandLogo` (`src/components/layout/BrandLogo.tsx`) shows the full logo from `public/brand/`: `logo.svg` on light backgrounds, `logo-dark.svg` (white "COMMUNITY") on navy, `tone="auto"` swaps in dark mode. It replaced the serif text logo in the website header (48 px) and footer, dashboard sidebar (50) and phone header (40), phone side menu (52), sign-in pages and store pages. Below about 40 px tall the lettering looks soft on 100% Windows screens.
+  - Emails: the header is `${APP_URL}/brand/logo-dark@2x.png` (email apps don't show SVG).
+  - `/brand` is in the proxy's public routes (logged-out visitors and email apps).
+- **Favicon** (same PR): the designer's favicon is a navy box that vanished on dark browser tabs, so `src/app/icon.svg` and `src/app/favicon.ico` (16/32/48, built with sharp) add a white outline. The 512 px icon moved to `public/icon.png` (still `/icon.png` for `display.webmanifest`) so browsers don't use it as a tab icon. `/icon.svg` is public. Browsers cache tab icons hard: Ctrl+Shift+Delete → cached images, or a private window.
+- **Phones: page slid sideways** (PR #129): on iPhone Safari the home hero's grid column grew to the slideshow's content width, cutting off the headline and pushing the header's ☰ off screen. Fixed with `grid-cols-1` / `min-w-0` in `LandingPage.tsx` and `HeroSlides.tsx`, plus `overflow-x: clip` on html/body in `globals.css` (Safari ignores `overflow-x: hidden` for panning). Chrome never showed it, so test layout changes on a real iPhone.
+- **Sign-in pages on phones** (PR #130): `AuthLayout` starts the form near the top on phones (centring left a ~180 px gap above the short sign-in form); desktop stays centred. Register and the other account pages share it.
+- **Account forms focus the first field** (PR #131): sign in and forgot password (email), create account (name), reset / set password. iPhone Safari won't open the keyboard by itself (Apple blocks it).
+- **Phones: no zoom on form fields** (PR #132): iPhone Safari zooms in when a field under 16 px gets focus (e.g. the form focusing the first error after an empty submit), and the page then slid around. `Input`, `Textarea` and `Select` use `text-base sm:text-sm`, and a phone-only rule in `globals.css` (`max-width: 639px`) sets every text field to 16 px. Pinch-zoom is left on (no `maximum-scale`).
+- **3D-pin logo** (PR #133): the designer's `communitybulletin-logo/logo/icon-3d-pin.png` (512 px, 3D push pin) replaced the flat mark. Built by a sharp script (session scratchpad, not the repo):
+  - `logo.svg`, `logo-dark.svg`, `logo-mark.svg` embed the icon as a 256 px PNG (base64 `<image>`) in place of the flat mark; the lettering is unchanged. `logo@2x.png` / `logo-dark@2x.png` (emails) re-rendered from them.
+  - `BrandMark.tsx` (store-screen badge) is now an `<img>` of `public/brand/logo-mark-256.png`; `logo-mark-512.png` is the designer's file.
+  - `public/icon.png` (512) and `src/app/apple-icon.png` (180, corners filled navy) rebuilt from it.
+  - Left as before: the browser-tab favicon (simplified "CB" box with white outline; the 3D pin is a blur at 16 px). On navy panels the icon box still blends in (see To do).
+  - To redo with a new icon: replace the PNG and rebuild the same files; the SVG mark sits where the old `<rect ... rx="26" fill="#1A3A5C"/>` + `translate(0 -1.8)` group was.
+- **Header location pin** (same PR): the `MapPin` on "All locations" (desktop) and next to search (phones) in `PublicLayout.tsx` is orange (#E8563A), 15 px, bolder, with a light orange fill.
+- **Admin → Equipment** (PR #134, migrations `0024` + `0025` applied, 26 rows): for setting up the ~10 stores' hardware. See "Equipment and store setup" below. `ENCRYPTION_KEY` was added to `.env.local` and Coolify (same value) on 2026-11-07.
+- **Equipment photos** (PR #135, migration `0026` applied, 27 rows): snap and attach up to 12 photos per equipment item (team request). Tested and working. See "Equipment and store setup".
+- **Testing tip:** headless Chrome via the DevTools protocol (node + the built-in WebSocket, no extra packages) can screenshot pages at phone width and list elements wider than the screen; scripts lived in the session scratchpad, not the repo.
+
+## 2026-11-06 summary
+
+- **Sister-site figures updated** in `src/lib/house-content.ts` (shared by the home page slideshow; store screens show no numbers): AdsAndClassifieds.com **76k+** users (was 75k+), 89k+ listings unchanged; Blog-Directory.org **84k+** users (was 83k+), **143k+** blogs (was 142k+). Update them by hand there when ADSEZ.com's numbers change.
 
 ## 2026-11-04 summary
 
@@ -242,6 +276,7 @@ Context: after two weeks of door-knocking, store owners and advertisers are inte
 - **`DATABASE_URL`** ends with `?sslmode=verify-full&channel_binding=require` (locally and in Coolify).
 - **Google sign-in:** `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (a Coolify **build variable**) and `GOOGLE_CLIENT_SECRET`, in both `.env.local` and Coolify.
 - **Stripe** runs on **live** keys in production (since 2026-10-28): `STRIPE_SECRET_KEY` (`sk_live_…`) and the live-mode `STRIPE_WEBHOOK_SECRET`. Checkout uses Stripe-hosted pages, so no publishable key is needed (`NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` and `APP_URL` in `.env.local` are unused). **Keep test keys in `.env.local`:** it points at the production database. With test keys, local scripts can't look up live payments.
+- **`ENCRYPTION_KEY`** (2026-11-07): encrypts store WiFi passwords and the mini computers' Google password, PIN and Windows password; same value in `.env.local` and Coolify. See "Equipment and store setup".
 - **PayPal is off** (2026-10-26) unless `NEXT_PUBLIC_PAYPAL_ENABLED=true` (`src/lib/payment-options.ts`). While it's off, checkout shows card only, `create-order` refuses, and the Help and home page text drops PayPal. Refunds of older PayPal payments still work. Turning it on needs a redeploy (build-time variable), plus `PAYPAL_MODE=live` and live credentials.
 
 ## Migrations
@@ -249,7 +284,7 @@ Context: after two weeks of door-knocking, store owners and advertisers are inte
 - Production had been built with `db:push`, so Drizzle's migration history was empty. All migrations up to `0004_ad_analytics` were recorded as applied in Neon's `drizzle.__drizzle_migrations`, so `npm run db:migrate` works normally from here.
 - **Run migrations against the direct (non-pooled) Neon host:** remove `-pooler` from the hostname. Restores and DDL can fail through the pooler.
 - `0003` and `0004` have hand-written timestamps (`when: 1750…`) that are older than `0002`. They are already applied, so this is harmless, but generate future migrations with `npm run db:generate` rather than writing them by hand.
-- **Applied to Neon through `0023`** (24 rows in `drizzle.__drizzle_migrations`; `0022_sales_proposals` applied 2026-11-01, `0023_ad_swaps` 2026-11-03):
+- **Applied to Neon through `0028`** (29 rows in `drizzle.__drizzle_migrations`; `0022_sales_proposals` applied 2026-11-01, `0023_ad_swaps` 2026-11-03, `0024_equipment`, `0025_location_setup` and `0026_equipment_photos` 2026-11-07, `0027_equipment_remote` and `0028_equipment_windows_login` 2026-11-08):
   - `0012_location_traffic`: `locations.daily_customers` and `traffic_updated_at`
   - `0013_screen_devices`
   - `0014_direct_deposits`
@@ -404,6 +439,28 @@ Context: after two weeks of door-knocking, store owners and advertisers are inte
   - **Deactivate / Reactivate.** Admins still see inactive stores on All Locations, labeled Inactive.
   - **Delete** (`DELETE /api/locations/[id]`, admin only, type the store name to confirm). It's refused when the location has payments or owner earnings; otherwise it removes the location and its unpaid draft ads.
 
+## Equipment and store setup (2026-11-07)
+
+Admin only: `/dashboard/admin/equipment` (sidebar "Equipment", under Screens). Two tabs:
+
+- **Store setup** (default): one row per active location with checklist progress (x/6), item count, screen online status (screens assigned on the Screens page, seen in the last 3 min), WiFi status, and a **live screen link + QR code** (`${NEXT_PUBLIC_APP_URL}/display/<slug>`; click the QR for a big one with Copy / Open). A row expands to:
+  - **Checklist** (`SETUP_STEPS` in `src/lib/location-setup.ts`): delivered, TV mounted, mini computer set up, connected to WiFi, screen paired, first ad showing. Ticking saves at once with the date. Manual; "paired" and "delivered" only show hints (screens assigned/online, items listed).
+  - **WiFi & contact:** WiFi name, password, store contact + phone, network notes.
+- **Equipment list** (`?tab=items`): items per store, or "In stock" with no store. Types and statuses are in `src/lib/equipment.ts` (plain text columns, so adding a type needs no migration). Picking a store sets status Installed; clearing it sets In stock. A mini computer can be linked to a screen device to show online/offline. Filters, search, "Show retired"; Delete asks first (Retired is preferred for old gear).
+
+Tables: `equipment` (`0024`; `location_id` and `screen_device_id` set null on delete) and `location_setup` (`0025`; one row per location, created on first save, cascade delete; `checklist` jsonb of step → date).
+
+**WiFi passwords** are encrypted with AES-256-GCM (`src/lib/secret-box.ts`, stored as `v1:iv:tag:data`) using **`ENCRYPTION_KEY`** (32 random bytes, base64). The page only gets `hasPassword`; the password is fetched from `GET /api/admin/location-setup/<id>/password` (admin only, `no-store`) when "Show" is clicked. **The key must be identical in `.env.local` and Coolify** (shared database); with a different or missing key, saving refuses with a message and "Show" says the password can't be read. Lost key = re-type the passwords. Never put the key or passwords in chat, HANDOFF or git. To make a key (PowerShell, doesn't print it): `$b = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); Add-Content .env.local "ENCRYPTION_KEY=$([Convert]::ToBase64String($b))"; Remove-Variable b`
+
+**Photos** (`equipment_photos`, `0026`; cascade with the item): Photos section in the add/edit form ("Add photos" offers camera or library on phones; new items queue photos and upload on save), up to 4 thumbnails per item in the list with a full-size viewer (arrows, Esc). Code: `EquipmentPhotos.tsx`.
+- The browser shrinks each photo (1600 px JPEG + 400 px thumbnail) before upload, which also strips GPS/EXIF and turns iPhone HEIC into JPEG; the server accepts only JPEG bytes (5 MB / 1 MB caps).
+- Stored in R2 at `files/equipment/<item id>/<random>.jpg` (and `-thumb.jpg`) via `putFile` in `src/lib/storage/r2.ts`. Shown through `GET /api/admin/equipment/photos/<id>[?size=thumb]` (admin only), which redirects to a 10-minute signed link (`createSignedReadUrl`). Deleting a photo or an item removes the R2 files too.
+- **Privacy caveat:** the bucket is public, so a photo's permanent public URL works for anyone who has its exact key (random, never on the page, but visible inside the signed link). For full privacy, move these photos to a separate private bucket (small change: a second bucket name in `r2.ts`). Router photos can show WiFi passwords.
+
+**Remote access & Windows login** (mini computers; `0027`, `0028`): plain columns `remote_account`, `remote_url`, `remote_computer_name`, `windows_user`; encrypted `remote_account_password_enc`, `remote_pin_enc`, `windows_password_enc` (same `ENCRYPTION_KEY`). Save routes go through `equipmentColumns()` in `src/lib/equipment-server.ts` (a secret left out keeps the saved one, null clears it; no key → 503 with a message). The page only gets `hasRemotePassword` / `hasRemotePin` / `hasWindowsPassword`; values come from `GET /api/admin/equipment/<id>/secret?field=password|pin|windows` (admin only, `no-store`) on "Show". `SecretField.tsx` is the reusable Show / Copy / Change / Keep old input (the WiFi field in `StoreSetupClient.tsx` predates it and has its own copy). Changing an item's type away from Mini computer clears these fields on save. `remote_url` must start with http(s):// (it's rendered as a link).
+
+Ideas not built yet: printable QR labels per device (scan → its record), offline-screen alerts, a history log (moves/repairs).
+
 ## Sharing and deploys
 
 - **`ShareButton`** (`src/components/ui`): native share sheet, or a menu (copy link, Facebook, X, WhatsApp, email). It's on the public ad page, the advertiser's live ad page and the display controls. The public ad page has Open Graph and Twitter preview tags using the ad image. If WhatsApp previews lack the image (WebP), add a JPEG preview image.
@@ -471,7 +528,9 @@ Context: after two weeks of door-knocking, store owners and advertisers are inte
 - [ ] **Sales demos, ideas:** a "Sales" role (see below) so the sales manager needn't be an admin; show a demo count on advertiser cards in the Sales list. (Turning the demo ad into the real ad is done: proposals.)
 - [ ] **Proposals, ideas:** a reminder email after a few days without a view; live chip updates without a refresh. (The 2026-11-01 test leftovers are done.)
 - [ ] **Ad swap:** test **Deny** once (on the first real swap, or a test ad made "paid" by an Admin Panel edit, then deleted). Ideas: show the swap history on the ad's details page; let admins see swaps in the Admin Panel.
-- [ ] **Ad form checkboxes:** on Post a New Ad's Review step, unticked checkboxes ("Post as a test ad", "My business is within…") look filled dark grey in dark mode. Give them a light background or explicit colours.
+- [ ] **Ad form checkboxes:** (still open) on Post a New Ad's Review step, unticked checkboxes ("Post as a test ad", "My business is within…") look filled dark grey in dark mode. Give them a light background or explicit colours.
+- [ ] **Store setup (moved to 2026-11-09):** set up the 10 stores using Admin → Equipment: add each store's mini computer (with its remote access and Windows login) / TV / cables, tick the checklist, save WiFi details, and on the Screens page assign each new screen to its store (then link the mini computer to it in the Equipment list). Remove test entries made on 2026-11-07 if any are left.
+- [ ] **New logo, remaining:** the link preview image (`src/app/opengraph-image.tsx`, shown when the site is shared) still writes "CommunityBulletin" in text; switch it to the new logo. The old `src/components/layout/Logo.tsx` is unused and can go. Optional: a light outline around the logo icon on navy backgrounds (dashboard sidebar, sign-in left panel), where the navy box blends in.
 - [ ] **Store screens:** after the next deploy that touches the display, reload each store TV once so it runs the new code (since 2026-11-03 its views count only when it sends its device id).
 - [ ] **This computer:** `.env.local` still lacks the Google sign-in variables (`NEXT_PUBLIC_GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`), so Google sign-in fails locally.
 

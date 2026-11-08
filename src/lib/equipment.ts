@@ -39,6 +39,17 @@ export const equipmentSchema = z.object({
   purchasedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional().or(z.literal("")).transform((v) => v || null),
   costCents: z.number().int().min(0).max(100_000_00).nullable().optional().transform((v) => v ?? null),
   notes: optText(2000),
+  // Remote access (mini computers)
+  remoteAccount: optText(200),
+  remoteUrl: optText(500).refine((v) => !v || /^https?:\/\//i.test(v), "URL should start with https://"),
+  remoteComputerName: optText(100),
+  // Secrets: a string sets it, null clears it, left out keeps the saved one
+  remotePassword: z.string().max(200).nullable().optional(),
+  remotePin: z.string().max(50).nullable().optional(),
 });
+
+export const REMOTE_SECRET_FIELDS = ["password", "pin"] as const;
+export type RemoteSecretField = (typeof REMOTE_SECRET_FIELDS)[number];
+export const DEFAULT_REMOTE_URL = "https://remotedesktop.google.com/access";
 
 export type EquipmentInput = z.infer<typeof equipmentSchema>;

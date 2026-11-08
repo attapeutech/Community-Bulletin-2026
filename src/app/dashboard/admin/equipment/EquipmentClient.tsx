@@ -6,7 +6,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { EQUIPMENT_STATUSES, EQUIPMENT_TYPES, statusLabel, typeLabel } from "@/lib/equipment";
+import { DEFAULT_REMOTE_URL, EQUIPMENT_STATUSES, EQUIPMENT_TYPES, statusLabel, typeLabel } from "@/lib/equipment";
+import { SecretField } from "./SecretField";
+import { ExternalLink, MonitorSmartphone } from "lucide-react";
 import { FormPhotos, MAX_PHOTOS, PhotoViewer, photoSrc, uploadPhoto } from "./EquipmentPhotos";
 
 export type EquipmentRow = {
@@ -25,6 +27,11 @@ export type EquipmentRow = {
   purchasedOn: string | null;
   costCents: number | null;
   notes: string | null;
+  remoteAccount: string | null;
+  remoteUrl: string | null;
+  remoteComputerName: string | null;
+  hasRemotePassword: boolean;
+  hasRemotePin: boolean;
   photoIds: string[];
   updatedAt: string;
 };
@@ -47,11 +54,13 @@ const storeName = (l: LocationOption) => `${l.storeName}${l.storeNumber ? ` #${l
 type FormState = {
   type: string; status: string; locationId: string; label: string; brand: string; model: string;
   serialNumber: string; screenDeviceId: string; purchasedOn: string; cost: string; notes: string;
+  remoteAccount: string; remoteUrl: string; remoteComputerName: string;
 };
 
 const emptyForm: FormState = {
   type: "mini_pc", status: "in_stock", locationId: "", label: "", brand: "", model: "",
   serialNumber: "", screenDeviceId: "", purchasedOn: "", cost: "", notes: "",
+  remoteAccount: "", remoteUrl: "", remoteComputerName: "",
 };
 
 function toForm(r: EquipmentRow): FormState {
@@ -59,14 +68,19 @@ function toForm(r: EquipmentRow): FormState {
     type: r.type, status: r.status, locationId: r.locationId ?? "", label: r.label ?? "", brand: r.brand ?? "",
     model: r.model ?? "", serialNumber: r.serialNumber ?? "", screenDeviceId: r.screenDeviceId ?? "",
     purchasedOn: r.purchasedOn ?? "", cost: r.costCents != null ? (r.costCents / 100).toFixed(2) : "", notes: r.notes ?? "",
+    remoteAccount: r.remoteAccount ?? "", remoteUrl: r.remoteUrl ?? "", remoteComputerName: r.remoteComputerName ?? "",
   };
 }
 
 function EquipmentForm({
-  initial, editingId, initialPhotos = [], locations, screens, onDone,
+  initial, editingId, initialPhotos = [], savedSecrets = { password: false, pin: false }, locations, screens, onDone,
 }: {
-  initial: FormState; editingId: string | null; initialPhotos?: string[]; locations: LocationOption[]; screens: ScreenOption[]; onDone: () => void;
+  initial: FormState; editingId: string | null; initialPhotos?: string[]; savedSecrets?: { password: boolean; pin: boolean };
+  locations: LocationOption[]; screens: ScreenOption[]; onDone: () => void;
 }) {
+  // Secrets to send on save: null = keep the saved one, "" = clear / none, text = new
+  const [remotePassword, setRemotePassword] = useState<string | null>(savedSecrets.password ? null : "");
+  const [remotePin, setRemotePin] = useState<string | null>(savedSecrets.pin ? null : "");
   const router = useRouter();
   const [f, setF] = useState<FormState>(initial);
   const [saving, setSaving] = useState(false);
@@ -149,6 +163,14 @@ function EquipmentForm({
           type: f.type, status: f.status, locationId: f.locationId || null, label: f.label, brand: f.brand,
           model: f.model, serialNumber: f.serialNumber, screenDeviceId: f.type === "mini_pc" ? f.screenDeviceId || null : null,
           purchasedOn: f.purchasedOn || null, costCents: cost, notes: f.notes,
+          ...(f.type === "mini_pc"
+            ? {
+                remoteAccount: f.remoteAccount, remoteUrl: f.remoteUrl, remoteComputerName: f.remoteComputerName,
+                // only send a secret when it was typed or cleared
+                ...(remotePassword !== null && (remotePassword !== "" || savedSecrets.password) ? { remotePassword: remotePassword || null } : {}),
+                ...(remotePin !== null && (remotePin !== "" || savedSecrets.pin) ? { remotePin: remotePin || null } : {}),
+              }
+            : { remoteAccount: null, remoteUrl: null, remoteComputerName: null, remotePassword: null, remotePin: null }),
         }),
       });
       const json = await res.json();
@@ -220,6 +242,53 @@ function EquipmentForm({
             </select>
             <p className="text-[11px] text-[#4A6B82] mt-1">Only screens assigned to a store on the Screens page are listed.</p>
           </div>
+        )}
+        {f.type === "mini_pc" && (
+          <fieldset className="sm:col-span-3 rounded-lg border border-[#D8E4EE] bg-[#F7FAFC] p-3">
+            <legend className="px-1 text-xs font-bold text-[#1A3A5C] flex items-center gap-1.5">
+              <MonitorSmartphone size={13} /> Remote access (Chrome Remote Desktop)
+            </legend>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className={fieldLabel}>Google account</label>
+                <Input type="email" value={f.remoteAccount} onChange={set("remoteAccount")} maxLength={200} autoComplete="off" placeholder="e.g. cb.screens@gmail.com" />
+              </div>
+              <div>
+                <label className={fieldLabel}>Google password</label>
+                <SecretField
+                  saved={savedSecrets.password}
+                  revealUrl={editingId ? `/api/admin/equipment/${editingId}/secret?field=password` : null}
+                  value={remotePassword}
+                  onChange={setRemotePassword}
+                />
+              </div>
+              <div>
+                <label className={fieldLabel}>Remote computer name</label>
+                <Input value={f.remoteComputerName} onChange={set("remoteComputerName")} maxLength={100} autoComplete="off" placeholder="e.g. CB-FASTEDDIES-01" />
+              </div>
+              <div>
+                <label className={fieldLabel}>PIN</label>
+                <SecretField
+                  saved={savedSecrets.pin}
+                  revealUrl={editingId ? `/api/admin/equipment/${editingId}/secret?field=pin` : null}
+                  value={remotePin}
+                  onChange={setRemotePin}
+                  inputMode="numeric"
+                  placeholder="6+ digits"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className={fieldLabel}>URL</label>
+                <Input type="url" value={f.remoteUrl} onChange={set("remoteUrl")} maxLength={500} autoComplete="off" placeholder={DEFAULT_REMOTE_URL} />
+                {!f.remoteUrl && (
+                  <button type="button" onClick={() => setF((p) => ({ ...p, remoteUrl: DEFAULT_REMOTE_URL }))} className="text-[11px] text-[#4A90C4] hover:underline mt-1">
+                    Use {DEFAULT_REMOTE_URL}
+                  </button>
+                )}
+              </div>
+            </div>
+            <p className="text-[11px] text-[#6B7A8C] mt-2">Password and PIN are stored encrypted; only admins can see them.</p>
+          </fieldset>
         )}
         <div>
           <label className={fieldLabel}>Purchased on</label>
@@ -297,6 +366,18 @@ function ItemRow({ item, nowIso, onEdit }: { item: EquipmentRow; nowIso: string;
           {[item.label, details, item.serialNumber && `S/N ${item.serialNumber}`].filter(Boolean).join(" · ") || "No details yet"}
         </div>
         {item.notes && <div className="text-xs text-[#6B7A8C] mt-0.5 whitespace-pre-line break-words">{item.notes}</div>}
+        {(item.remoteComputerName || item.remoteUrl) && (
+          <div className="text-xs text-[#4A6B82] mt-1 flex items-center gap-1.5 flex-wrap">
+            <MonitorSmartphone size={13} className="text-[#4A90C4]" />
+            <span>Remote: <strong className="text-[#1A3A5C]">{item.remoteComputerName || "unnamed"}</strong></span>
+            {item.remoteAccount && <span className="text-[#6B7A8C]">· {item.remoteAccount}</span>}
+            {item.remoteUrl && /^https?:\/\//i.test(item.remoteUrl) && (
+              <a href={item.remoteUrl} target="_blank" rel="noopener noreferrer" className="no-underline inline-flex items-center gap-0.5 font-semibold text-[#4A90C4] hover:text-[#1A3A5C]">
+                Connect <ExternalLink size={12} />
+              </a>
+            )}
+          </div>
+        )}
         {item.photoIds.length > 0 && (
           <div className="flex gap-1.5 mt-2">
             {item.photoIds.slice(0, 4).map((id, n) => (
@@ -346,7 +427,7 @@ export default function EquipmentClient({
     if (type !== "all" && i.type !== type) return false;
     if (!showRetired && i.status === "retired") return false;
     if (q.trim()) {
-      const hay = [i.label, i.brand, i.model, i.serialNumber, i.notes, i.locationName, typeLabel(i.type)].join(" ").toLowerCase();
+      const hay = [i.label, i.brand, i.model, i.serialNumber, i.notes, i.locationName, i.remoteComputerName, i.remoteAccount, typeLabel(i.type)].join(" ").toLowerCase();
       if (!hay.includes(q.trim().toLowerCase())) return false;
     }
     return true;
@@ -435,7 +516,7 @@ export default function EquipmentClient({
             {g.rows.map((i) =>
               editingId === i.id ? (
                 <div key={i.id} className="p-3">
-                  <EquipmentForm initial={toForm(i)} editingId={i.id} initialPhotos={i.photoIds} locations={locations} screens={screens} onDone={() => setEditingId(null)} />
+                  <EquipmentForm initial={toForm(i)} editingId={i.id} initialPhotos={i.photoIds} savedSecrets={{ password: i.hasRemotePassword, pin: i.hasRemotePin }} locations={locations} screens={screens} onDone={() => setEditingId(null)} />
                 </div>
               ) : (
                 <ItemRow key={i.id} item={i} nowIso={nowIso} onEdit={() => { setAdding(false); setEditingId(i.id); }} />

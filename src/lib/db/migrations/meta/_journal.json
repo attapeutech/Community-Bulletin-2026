@@ -190,6 +190,13 @@
       "when": 1794091340271,
       "tag": "0026_equipment_photos",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1794120979017,
+      "tag": "0027_equipment_remote",
+      "breakpoints": true
     }
   ]
 }

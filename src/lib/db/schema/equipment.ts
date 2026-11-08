@@ -20,6 +20,13 @@ export const equipment = pgTable("equipment", {
   purchasedOn: date("purchased_on"),
   costCents: integer("cost_cents"),
   notes: text("notes"),
+  // Remote access (mini computers, Chrome Remote Desktop). The *_enc columns are encrypted with
+  // src/lib/secret-box.ts and only decrypted when an admin clicks "Show"; never sent with the page.
+  remoteAccount: text("remote_account"),            // Google account the computer is signed in with
+  remoteAccountPasswordEnc: text("remote_account_password_enc"),
+  remoteUrl: text("remote_url"),                    // e.g. https://remotedesktop.google.com/access
+  remoteComputerName: text("remote_computer_name"), // name shown in Chrome Remote Desktop
+  remotePinEnc: text("remote_pin_enc"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (t) => [index("equipment_location_idx").on(t.locationId)]);

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import { equipment, equipmentPhotos, locations, locationSetup, screenDevices } from "@/lib/db/schema";
-import { asc, desc, eq, isNotNull, ne } from "drizzle-orm";
+import { asc, desc, eq, isNotNull, ne, sql } from "drizzle-orm";
 import EquipmentClient, { type EquipmentRow } from "./EquipmentClient";
 import StoreSetupClient, { type StoreSetupRow } from "./StoreSetupClient";
 
@@ -82,6 +82,12 @@ export default async function AdminEquipmentPage({ searchParams }: { searchParam
         purchasedOn: equipment.purchasedOn,
         costCents: equipment.costCents,
         notes: equipment.notes,
+        remoteAccount: equipment.remoteAccount,
+        remoteUrl: equipment.remoteUrl,
+        remoteComputerName: equipment.remoteComputerName,
+        // Only whether a secret is saved; the values come from the "Show" button
+        hasRemotePassword: sql<boolean>`${equipment.remoteAccountPasswordEnc} is not null`,
+        hasRemotePin: sql<boolean>`${equipment.remotePinEnc} is not null`,
         updatedAt: equipment.updatedAt,
       })
       .from(equipment)

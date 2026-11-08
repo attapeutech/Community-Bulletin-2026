@@ -6,6 +6,7 @@ import { equipment, equipmentPhotos } from "@/lib/db/schema";
 import { deleteFile } from "@/lib/storage/r2";
 import { getSession } from "@/lib/auth/session";
 import { equipmentSchema } from "@/lib/equipment";
+import { equipmentColumns, MissingKeyError } from "@/lib/equipment-server";
 
 async function adminOnly() {
   const session = await getSession();
@@ -26,11 +27,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
     }
     const data = equipmentSchema.parse(await req.json());
-    const [row] = await db.update(equipment).set({ ...data, updatedAt: new Date() })
+    const [row] = await db.update(equipment).set({ ...equipmentColumns(data), updatedAt: new Date() })
       .where(eq(equipment.id, id)).returning({ id: equipment.id });
     if (!row) return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
     return NextResponse.json({ success: true });
   } catch (error: any) {
+    if (error instanceof MissingKeyError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 503 });
+    }
     if (error.name === "ZodError") {
       return NextResponse.json({ success: false, error: "Please check the form" }, { status: 422 });
     }

@@ -197,6 +197,13 @@
       "when": 1794120979017,
       "tag": "0027_equipment_remote",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1794123746499,
+      "tag": "0028_equipment_windows_login",
+      "breakpoints": true
     }
   ]
 }

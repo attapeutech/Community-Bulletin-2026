@@ -1,4 +1,4 @@
-# Handoff: 2026-10-22 (updated 2026-11-07)
+# Handoff: 2026-10-22 (updated 2026-11-08)
 
 ## Where things stand
 
@@ -32,6 +32,13 @@
   - `LeaveFrame` (`src/components/layout/LeaveFrame.tsx`, in the root layout) moves any non-display page out of a frame
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
+
+## 2026-11-08 summary
+
+- **Remote access fields on mini computers** (PR #136, migration `0027`): a "Remote access & Windows login" box in the equipment form (type Mini computer only) for Chrome Remote Desktop: Google account, URL (one-click default `https://remotedesktop.google.com/access`), remote computer name, plus the Google password and PIN (encrypted). The list shows "Remote: <computer name> · <account>" and a **Connect ↗** link; search covers computer name and account.
+- **Windows admin login** (PR #137, migration `0028`): Windows admin name and password (encrypted) in the same box.
+- Both tested and working. Migrations applied through `0028` (29 rows). The store setup moved to 2026-11-09.
+- Suggested to the user: use a Google account made only for the store computers, with 2-Step Verification.
 
 ## 2026-11-07 summary
 
@@ -269,7 +276,7 @@ Context: after two weeks of door-knocking, store owners and advertisers are inte
 - **`DATABASE_URL`** ends with `?sslmode=verify-full&channel_binding=require` (locally and in Coolify).
 - **Google sign-in:** `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (a Coolify **build variable**) and `GOOGLE_CLIENT_SECRET`, in both `.env.local` and Coolify.
 - **Stripe** runs on **live** keys in production (since 2026-10-28): `STRIPE_SECRET_KEY` (`sk_live_…`) and the live-mode `STRIPE_WEBHOOK_SECRET`. Checkout uses Stripe-hosted pages, so no publishable key is needed (`NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` and `APP_URL` in `.env.local` are unused). **Keep test keys in `.env.local`:** it points at the production database. With test keys, local scripts can't look up live payments.
-- **`ENCRYPTION_KEY`** (2026-11-07): encrypts store WiFi passwords; same value in `.env.local` and Coolify. See "Equipment and store setup".
+- **`ENCRYPTION_KEY`** (2026-11-07): encrypts store WiFi passwords and the mini computers' Google password, PIN and Windows password; same value in `.env.local` and Coolify. See "Equipment and store setup".
 - **PayPal is off** (2026-10-26) unless `NEXT_PUBLIC_PAYPAL_ENABLED=true` (`src/lib/payment-options.ts`). While it's off, checkout shows card only, `create-order` refuses, and the Help and home page text drops PayPal. Refunds of older PayPal payments still work. Turning it on needs a redeploy (build-time variable), plus `PAYPAL_MODE=live` and live credentials.
 
 ## Migrations
@@ -277,7 +284,7 @@ Context: after two weeks of door-knocking, store owners and advertisers are inte
 - Production had been built with `db:push`, so Drizzle's migration history was empty. All migrations up to `0004_ad_analytics` were recorded as applied in Neon's `drizzle.__drizzle_migrations`, so `npm run db:migrate` works normally from here.
 - **Run migrations against the direct (non-pooled) Neon host:** remove `-pooler` from the hostname. Restores and DDL can fail through the pooler.
 - `0003` and `0004` have hand-written timestamps (`when: 1750…`) that are older than `0002`. They are already applied, so this is harmless, but generate future migrations with `npm run db:generate` rather than writing them by hand.
-- **Applied to Neon through `0026`** (27 rows in `drizzle.__drizzle_migrations`; `0022_sales_proposals` applied 2026-11-01, `0023_ad_swaps` 2026-11-03, `0024_equipment`, `0025_location_setup` and `0026_equipment_photos` 2026-11-07):
+- **Applied to Neon through `0028`** (29 rows in `drizzle.__drizzle_migrations`; `0022_sales_proposals` applied 2026-11-01, `0023_ad_swaps` 2026-11-03, `0024_equipment`, `0025_location_setup` and `0026_equipment_photos` 2026-11-07, `0027_equipment_remote` and `0028_equipment_windows_login` 2026-11-08):
   - `0012_location_traffic`: `locations.daily_customers` and `traffic_updated_at`
   - `0013_screen_devices`
   - `0014_direct_deposits`
@@ -450,6 +457,8 @@ Tables: `equipment` (`0024`; `location_id` and `screen_device_id` set null on de
 - Stored in R2 at `files/equipment/<item id>/<random>.jpg` (and `-thumb.jpg`) via `putFile` in `src/lib/storage/r2.ts`. Shown through `GET /api/admin/equipment/photos/<id>[?size=thumb]` (admin only), which redirects to a 10-minute signed link (`createSignedReadUrl`). Deleting a photo or an item removes the R2 files too.
 - **Privacy caveat:** the bucket is public, so a photo's permanent public URL works for anyone who has its exact key (random, never on the page, but visible inside the signed link). For full privacy, move these photos to a separate private bucket (small change: a second bucket name in `r2.ts`). Router photos can show WiFi passwords.
 
+**Remote access & Windows login** (mini computers; `0027`, `0028`): plain columns `remote_account`, `remote_url`, `remote_computer_name`, `windows_user`; encrypted `remote_account_password_enc`, `remote_pin_enc`, `windows_password_enc` (same `ENCRYPTION_KEY`). Save routes go through `equipmentColumns()` in `src/lib/equipment-server.ts` (a secret left out keeps the saved one, null clears it; no key → 503 with a message). The page only gets `hasRemotePassword` / `hasRemotePin` / `hasWindowsPassword`; values come from `GET /api/admin/equipment/<id>/secret?field=password|pin|windows` (admin only, `no-store`) on "Show". `SecretField.tsx` is the reusable Show / Copy / Change / Keep old input (the WiFi field in `StoreSetupClient.tsx` predates it and has its own copy). Changing an item's type away from Mini computer clears these fields on save. `remote_url` must start with http(s):// (it's rendered as a link).
+
 Ideas not built yet: printable QR labels per device (scan → its record), offline-screen alerts, a history log (moves/repairs).
 
 ## Sharing and deploys
@@ -520,7 +529,7 @@ Ideas not built yet: printable QR labels per device (scan → its record), offli
 - [ ] **Proposals, ideas:** a reminder email after a few days without a view; live chip updates without a refresh. (The 2026-11-01 test leftovers are done.)
 - [ ] **Ad swap:** test **Deny** once (on the first real swap, or a test ad made "paid" by an Admin Panel edit, then deleted). Ideas: show the swap history on the ad's details page; let admins see swaps in the Admin Panel.
 - [ ] **Ad form checkboxes:** (still open) on Post a New Ad's Review step, unticked checkboxes ("Post as a test ad", "My business is within…") look filled dark grey in dark mode. Give them a light background or explicit colours.
-- [ ] **Store setup (from 2026-11-08):** set up the 10 stores using Admin → Equipment: add each store's mini computer / TV / cables, tick the checklist, save WiFi details, and on the Screens page assign each new screen to its store (then link the mini computer to it in the Equipment list). Remove test entries made on 2026-11-07 if any are left.
+- [ ] **Store setup (moved to 2026-11-09):** set up the 10 stores using Admin → Equipment: add each store's mini computer (with its remote access and Windows login) / TV / cables, tick the checklist, save WiFi details, and on the Screens page assign each new screen to its store (then link the mini computer to it in the Equipment list). Remove test entries made on 2026-11-07 if any are left.
 - [ ] **New logo, remaining:** the link preview image (`src/app/opengraph-image.tsx`, shown when the site is shared) still writes "CommunityBulletin" in text; switch it to the new logo. The old `src/components/layout/Logo.tsx` is unused and can go. Optional: a light outline around the logo icon on navy backgrounds (dashboard sidebar, sign-in left panel), where the navy box blends in.
 - [ ] **Store screens:** after the next deploy that touches the display, reload each store TV once so it runs the new code (since 2026-11-03 its views count only when it sends its device id).
 - [ ] **This computer:** `.env.local` still lacks the Google sign-in variables (`NEXT_PUBLIC_GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`), so Google sign-in fails locally.

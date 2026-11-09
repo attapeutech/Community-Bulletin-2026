@@ -16,7 +16,7 @@ export default async function PartnerApplyPage() {
   const isPartner = me?.role === "store_owner" || me?.role === "admin";
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-8 py-12">
+    <div className="max-w-2xl mx-auto px-4 sm:px-8 pt-8 sm:pt-10 pb-12">
       <div className="text-xs font-bold text-[#E8563A] tracking-widest uppercase mb-3">For store owners</div>
       <h1 className="font-serif text-[clamp(26px,4vw,36px)] font-bold text-[#1A3A5C] dark:text-white mb-3">Become a store partner</h1>
       <p className="text-[15px] text-[#4A6B82] dark:text-[#9DC4E0] mb-8 leading-relaxed">

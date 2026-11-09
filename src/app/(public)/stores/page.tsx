@@ -20,7 +20,7 @@ export default async function StoresPage() {
 
   return (
     <div className="font-sans text-[#1A3A5C] dark:text-[#DEEAF4]">
-      <section className="bg-gradient-to-br from-[#1A3A5C] via-[#0F2540] to-[#1A3A5C] px-4 sm:px-8 pt-14 sm:pt-16 pb-12 text-center">
+      <section className="bg-gradient-to-br from-[#1A3A5C] via-[#0F2540] to-[#1A3A5C] px-4 sm:px-8 pt-8 sm:pt-10 pb-12 text-center">
         <div className="max-w-3xl mx-auto">
           <div className="text-xs font-bold text-[#E8563A] tracking-widest uppercase mb-3">Our stores</div>
           <h1 className="font-serif text-[clamp(28px,4.5vw,46px)] font-bold text-white leading-tight mb-4">

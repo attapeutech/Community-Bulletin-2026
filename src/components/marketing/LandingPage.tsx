@@ -49,7 +49,7 @@ export default function LandingPage({ price, network, citiesLabel }: { price: La
     <div className="font-sans text-[#1A3A5C] dark:text-[#DEEAF4] overflow-x-hidden">
 
       {/* ── HERO ── */}
-      <section className="relative bg-gradient-to-br from-[#1A3A5C] via-[#0F2540] to-[#1A3A5C] px-4 sm:px-8 pt-20 sm:pt-24 pb-16 sm:pb-20 text-center overflow-hidden">
+      <section className="relative bg-gradient-to-br from-[#1A3A5C] via-[#0F2540] to-[#1A3A5C] px-4 sm:px-8 pt-8 sm:pt-10 pb-16 sm:pb-20 text-center overflow-hidden">
         <div className="absolute top-[-100px] right-[-100px] w-80 h-80 rounded-full bg-[#4A90C4]/[0.08] pointer-events-none" />
         <div className="absolute bottom-[-80px] left-[-80px] w-64 h-64 rounded-full bg-[#E8563A]/[0.06] pointer-events-none" />
 

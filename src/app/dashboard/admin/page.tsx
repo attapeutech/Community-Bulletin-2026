@@ -1,16 +1,17 @@
 import { requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import { ads, users, locations, payments } from "@/lib/db/schema";
-import { eq, and, desc, count, sum, isNull } from "drizzle-orm";
+import { eq, and, desc, count, sum } from "drizzle-orm";
+import { listedAd } from "@/lib/ad-filters";
 import AdminPanelClient from "./AdminPanelClient";
 
 export default async function AdminDashboard() {
   const session = await requireAdmin();
   const currentUserId = (session.user as any).id as string;
 
-  // Sales demo ads are managed on their lead's page in Sales, so they're left out of the panel
+  // Sales work in progress (demo ads, unpaid proposal copies) is left out of the panel
   // (the same as /api/admin/ads, which the panel's refresh uses)
-  const notDemo = isNull(ads.demoId);
+  const notDemo = listedAd;
 
   // Fetch stats
   const [
@@ -25,7 +26,7 @@ export default async function AdminDashboard() {
     clicksRow,
   ] = await Promise.all([
     db.select({ count: count() }).from(ads).where(notDemo),
-    db.select({ count: count() }).from(ads).where(eq(ads.status, "pending")),
+    db.select({ count: count() }).from(ads).where(and(eq(ads.status, "pending"), notDemo)),
     db.select({ count: count() }).from(ads).where(and(eq(ads.status, "approved"), eq(ads.isTest, false))),
     db.select({ count: count() }).from(ads).where(and(eq(ads.status, "denied"), notDemo)),
     db.select({ count: count() }).from(users),

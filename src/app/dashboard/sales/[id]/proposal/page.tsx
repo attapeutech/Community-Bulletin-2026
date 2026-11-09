@@ -9,7 +9,7 @@ import ProposalComposer from "./ProposalComposer";
 
 export const dynamic = "force-dynamic";
 
-// Sales → lead → Ad demos → Send proposal: email the advertiser a demo ad to accept and pay for
+// Sales → lead → Ad demos → Send proposal: email or text the advertiser a demo ad they can pay for
 export default async function ProposalPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ demo?: string }> }) {
   await requireAdmin();
   const { id } = await params;
@@ -23,6 +23,7 @@ export default async function ProposalPage({ params, searchParams }: { params: P
       businessName: leads.businessName,
       contactName: leads.contactName,
       email: leads.email,
+      phone: leads.phone,
       demoToken: demos.token,
       expiresAt: demos.expiresAt,
       storeName: locations.storeName,
@@ -43,7 +44,7 @@ export default async function ProposalPage({ params, searchParams }: { params: P
   return (
     <ProposalComposer
       demoId={demoId}
-      lead={{ id: row.leadId, businessName: row.businessName, email: row.email ?? "" }}
+      lead={{ id: row.leadId, businessName: row.businessName, contactName: row.contactName, email: row.email ?? "", phone: row.phone }}
       store={{ name: row.storeName, slug: row.storeSlug }}
       demoToken={row.demoToken}
       expired={row.expiresAt < new Date()}

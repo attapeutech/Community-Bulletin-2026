@@ -212,6 +212,7 @@ export default function LeadDetailClient({ lead, today, stores, demos, appointme
               locationId={lead.locationId}
               storeLabel={stores.find(s => s.id === lead.locationId)?.label ?? lead.storeLabel}
               demos={demos}
+              contact={{ businessName: lead.businessName, contactName: lead.contactName, phone: lead.phone }}
             />
           )}
 

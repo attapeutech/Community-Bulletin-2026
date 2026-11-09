@@ -4,11 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Copy, ExternalLink, Pencil, Plus, Send, Trash2 } from "lucide-react";
+import { Copy, ExternalLink, MessageSquare, Pencil, Plus, Send, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { demoPath } from "@/lib/demos";
-import { PROPOSAL_STATUS, proposalPath, proposalStatus } from "@/lib/proposals";
+import { PROPOSAL_STATUS, proposalPath, proposalStatus, proposalTextMessage, smsHref } from "@/lib/proposals";
 
 export type LeadDemo = {
   id: string;
@@ -24,8 +24,9 @@ export type LeadDemo = {
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
 /** Advertiser lead: demo ads shown to them on their store's real screen, through a private link */
-export default function LeadDemos({ leadId, locationId, storeLabel, demos }: {
+export default function LeadDemos({ leadId, locationId, storeLabel, demos, contact }: {
   leadId: string;
+  contact: { businessName: string; contactName: string | null; phone: string | null };   // for texting a proposal
   locationId: string | null;   // the lead's store now
   storeLabel: string | null;
   demos: LeadDemo[];
@@ -62,6 +63,20 @@ export default function LeadDemos({ leadId, locationId, storeLabel, demos }: {
       toast.success("Demo link copied");
     } catch {
       toast.error("Couldn't copy. Open the demo and copy the address instead.");
+    }
+  }
+
+  // Proposals: the same private pay link, by text or pasted anywhere
+  const proposalUrl = (token: string) => `${window.location.origin}${proposalPath(token)}`;
+  const textProposal = (token: string, d: LeadDemo) => {
+    window.location.href = smsHref(contact.phone, proposalTextMessage({ contactName: contact.contactName, businessName: contact.businessName, storeName: d.storeLabel, url: proposalUrl(token) }));
+  };
+  async function copyProposal(token: string) {
+    try {
+      await navigator.clipboard.writeText(proposalUrl(token));
+      toast.success("Pay link copied");
+    } catch {
+      toast.error("Couldn't copy. Open it with View and copy the address instead.");
     }
   }
 
@@ -160,7 +175,19 @@ export default function LeadDemos({ leadId, locationId, storeLabel, demos }: {
                       <div key={p.id} className="flex items-center gap-2 flex-wrap text-[12px] text-[#1A3A5C]">
                         <span className={cn("text-[10px] font-bold uppercase tracking-wide border rounded-full px-2 py-0.5", st.chip)}>{st.label}</span>
                         <span className="truncate">{p.email} · sent {fmtDate(p.sentAt)}{p.viewedAt ? ` · opened ${fmtDate(p.viewedAt)}` : ""}{p.paidAt ? ` · paid ${fmtDate(p.paidAt)}` : ""}</span>
-                        <a href={proposalPath(p.token)} target="_blank" rel="noopener noreferrer" className="ml-auto text-[#4A90C4] no-underline hover:underline">View</a>
+                        <span className="ml-auto flex items-center gap-3">
+                          {!p.paidAt && !expired && (
+                            <>
+                              <button type="button" onClick={() => textProposal(p.token, d)} className="inline-flex items-center gap-1 text-[#4A90C4] hover:underline p-0 bg-transparent border-0 cursor-pointer text-[12px]">
+                                <MessageSquare size={12} /> Text
+                              </button>
+                              <button type="button" onClick={() => copyProposal(p.token)} className="inline-flex items-center gap-1 text-[#4A90C4] hover:underline p-0 bg-transparent border-0 cursor-pointer text-[12px]">
+                                <Copy size={12} /> Copy link
+                              </button>
+                            </>
+                          )}
+                          <a href={proposalPath(p.token)} target="_blank" rel="noopener noreferrer" className="text-[#4A90C4] no-underline hover:underline">View</a>
+                        </span>
                       </div>
                     );
                   })}

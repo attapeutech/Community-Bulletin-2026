@@ -45,7 +45,7 @@ export async function proxy(request: NextRequest) {
     pathname === "/api/health" ||   // Coolify health check (zero-downtime deploys)
     pathname === "/api/partners/apply-signup" ||   // register form, before email confirmation
     /^\/api\/ads\/[^/]+\/track$/.test(pathname) ||   // view/click tracking from logged-out display screens
-    pathname.startsWith("/api/proposals/") ||   // proposal sign-up / accept (accept checks the session itself)
+    pathname.startsWith("/api/proposals/") ||   // proposal quick pay (no sign-in needed)
     pathname.startsWith("/api/geo") ||
     pathname.startsWith("/api/support") ||
     pathname.startsWith("/api/auth/verify-recaptcha") ||

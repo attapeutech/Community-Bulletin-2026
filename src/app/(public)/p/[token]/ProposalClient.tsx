@@ -3,14 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, MapPin, Users } from "lucide-react";
-import { signIn } from "@/lib/auth/client";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { LOCAL_AD_RADIUS_MILES } from "@/types";
 
-const fieldLabel = "block mb-1.5 text-[11px] font-semibold text-[#4A6B82] uppercase tracking-[0.04em]";
-
-export default function ProposalClient({ token, businessName, store, price, previewSrc, blocked, paid, email, defaults, signedIn, accountExists }: {
+export default function ProposalClient({ token, businessName, store, price, previewSrc, blocked, paid, email, signedIn, canSignIn }: {
   token: string;
   businessName: string;
   store: { name: string; place: string; shoppers: number | null };
@@ -19,47 +14,51 @@ export default function ProposalClient({ token, businessName, store, price, prev
   blocked: string | null;
   paid: boolean;
   email: string;
-  defaults: { name: string; phone: string };
   signedIn: { name: string; email: string } | null;
-  accountExists: boolean;
+  canSignIn: boolean;   // paid and not signed in: their account already has a password or Google sign-in
 }) {
-  const [name, setName] = useState(defaults.name);
-  const [phone, setPhone] = useState(defaults.phone);
-  const [password, setPassword] = useState("");
   const [local, setLocal] = useState(false);
   const [terms, setTerms] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const callback = `/p/${token}`;
+  const [linkSent, setLinkSent] = useState(false);
 
-  // Copy the ad into their account, then the usual payment page
-  async function accept() {
-    const res = await fetch(`/api/proposals/${token}/accept`, { method: "POST" });
-    const json = await res.json().catch(() => null);
-    if (!json?.success) throw new Error(json?.error ?? "Couldn't accept the proposal");
-    window.location.href = `/ads/${json.data.adId}/payment`;
-  }
-
-  async function submit(e: React.FormEvent) {
+  // No account or password needed: straight to Stripe
+  async function pay(e: React.FormEvent) {
     e.preventDefault();
     if (!local || !terms) { setError("Please tick both boxes to continue."); return; }
     setBusy(true);
     setError("");
     try {
-      if (!signedIn) {
-        const res = await fetch(`/api/proposals/${token}/signup`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, phone, password }),
-        });
-        const json = await res.json().catch(() => null);
-        if (!json?.success) throw new Error(json?.error ?? "Couldn't create your account");
-        const signed = await signIn.email({ email, password });
-        if (signed?.error) throw new Error(signed.error.message ?? "Your account was created, but signing in failed. Use Sign in with your new password.");
-      }
-      await accept();
+      const res = await fetch(`/api/proposals/${token}/pay`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ local, terms }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!json?.success) throw new Error(json?.error ?? "Couldn't start the payment");
+      window.location.href = json.data.url;
     } catch (err: any) {
       setError(err.message);
+      setBusy(false);
+    }
+  }
+
+  // After paying: the usual "reset password" email, which lets them choose their first password
+  async function sendPasswordLink() {
+    setBusy(true);
+    setError("");
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, redirectTo: "/reset-password" }),
+      });
+      if (!res.ok) throw new Error("Couldn't send the email. Try again in a moment.");
+      setLinkSent(true);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
       setBusy(false);
     }
   }
@@ -97,44 +96,32 @@ export default function ProposalClient({ token, businessName, store, price, prev
           </ul>
 
           {paid ? (
-            <div className="rounded-lg bg-green-50 border border-green-200 text-green-800 p-4 text-[14px] flex gap-2">
-              <CheckCircle2 size={18} className="shrink-0 mt-0.5" />
-              <div>Thank you! Your ad is live. <Link href="/dashboard/user" className="font-semibold text-green-800">See it in My Ads →</Link></div>
+            <div className="flex flex-col gap-3">
+              <div className="rounded-lg bg-green-50 border border-green-200 text-green-800 p-4 text-[14px] flex gap-2">
+                <CheckCircle2 size={18} className="shrink-0 mt-0.5" />
+                <div>Thank you! Your ad is live on the {store.name} screen.{!signedIn && <> Your receipt is on its way to <b>{email}</b>.</>}</div>
+              </div>
+              {signedIn ? (
+                <Link href="/dashboard/user" className="text-[14px] font-semibold text-[#4A90C4] no-underline hover:underline">See it in My Ads →</Link>
+              ) : canSignIn ? (
+                <Link href="/login?callbackUrl=%2Fdashboard%2Fuser" className="text-[14px] font-semibold text-[#4A90C4] no-underline hover:underline">Sign in to see it in My Ads →</Link>
+              ) : linkSent ? (
+                <div className="text-[13px] text-[#4A6B82]">Check your email for a link to choose your password.</div>
+              ) : (
+                <div className="text-[13px] text-[#4A6B82]">
+                  Want to see your ad or renew it later? You can choose a password any time.{" "}
+                  <button type="button" disabled={busy} onClick={sendPasswordLink} className="font-semibold text-[#4A90C4] hover:underline disabled:opacity-60 p-0 bg-transparent border-0 cursor-pointer">
+                    Email me a link to set one
+                  </button>
+                  {error && <div className="mt-2 text-red-700">{error}</div>}
+                </div>
+              )}
             </div>
           ) : blocked ? (
             <div className="rounded-lg bg-amber-50 border border-amber-200 text-amber-800 p-4 text-[14px]">{blocked}</div>
-          ) : !signedIn && accountExists ? (
-            <div className="flex flex-col gap-3">
-              <div className="text-[14px]">You already have a Community Bulletin account with <b>{email}</b>. Sign in to accept.</div>
-              <Link href={`/login?callbackUrl=${encodeURIComponent(callback)}`} className="inline-flex justify-center items-center h-11 rounded-md bg-[#E8563A] text-white text-[15px] font-semibold no-underline">
-                Sign in to accept
-              </Link>
-            </div>
           ) : (
-            <form onSubmit={submit} className="flex flex-col gap-3.5">
-              {signedIn ? (
-                <div className="text-[13px] text-[#4A6B82]">Signed in as <b className="text-[#1A3A5C]">{signedIn.email}</b></div>
-              ) : (
-                <>
-                  <div className="text-[13px] text-[#4A6B82]">Create your free account to accept. You&apos;ll use it to see your ad and renew it.</div>
-                  <div>
-                    <Label className={fieldLabel}>Email</Label>
-                    <Input value={email} readOnly className="h-10 bg-[#F4F7FB]" />
-                  </div>
-                  <div>
-                    <Label className={fieldLabel}>Your name</Label>
-                    <Input value={name} onChange={e => setName(e.target.value)} required autoComplete="name" className="h-10 bg-white" />
-                  </div>
-                  <div>
-                    <Label className={fieldLabel}>Phone</Label>
-                    <Input type="tel" value={phone} onChange={e => setPhone(e.target.value)} autoComplete="tel" className="h-10 bg-white" />
-                  </div>
-                  <div>
-                    <Label className={fieldLabel}>Choose a password</Label>
-                    <Input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} autoComplete="new-password" placeholder="At least 8 characters" className="h-10 bg-white" />
-                  </div>
-                </>
-              )}
+            <form onSubmit={pay} className="flex flex-col gap-3.5">
+              <div className="text-[13px] text-[#4A6B82]">No account or password needed. Your receipt goes to <b className="text-[#1A3A5C]">{signedIn?.email ?? email}</b>.</div>
               <label className="flex gap-2.5 items-start text-[13px] leading-snug cursor-pointer">
                 <input type="checkbox" checked={local} onChange={e => setLocal(e.target.checked)} className="mt-0.5 w-4 h-4 shrink-0 accent-[#1A3A5C]" />
                 <span>My business is within about {LOCAL_AD_RADIUS_MILES} miles of {store.name}, or serves customers in its area.</span>
@@ -145,9 +132,9 @@ export default function ProposalClient({ token, businessName, store, price, prev
               </label>
               {error && <div className="rounded-md bg-red-50 border border-red-200 text-red-700 px-3 py-2 text-[13px]">{error}</div>}
               <button type="submit" disabled={busy} className="h-11 rounded-md bg-[#E8563A] text-white text-[15px] font-semibold disabled:opacity-60">
-                {busy ? "One moment…" : `Accept & pay ${price}`}
+                {busy ? "One moment…" : `Pay ${price}`}
               </button>
-              <div className="text-[12px] text-[#4A6B82] text-center">Secure card payment by Stripe on the next page.</div>
+              <div className="text-[12px] text-[#4A6B82] text-center">Secure payment by Stripe on the next page. Card, Apple Pay or Google Pay.</div>
             </form>
           )}
         </div>

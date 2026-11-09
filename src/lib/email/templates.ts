@@ -439,7 +439,7 @@ export async function sendProposalEmail({ to, replyTo, subject, message, busines
         { label: "Screen", value: escapeHtml(storeName) },
         { label: "Price", value: `<strong>${escapeHtml(price)}</strong> for 4 weeks` },
       ])}
-      ${primaryButton(url, "See your ad &amp; accept", CORAL_COLOR)}
+      ${primaryButton(url, "See your ad &amp; pay", CORAL_COLOR)}
       <p style="color:#9DC4E0;font-size:12px;margin-top:24px">Questions? Reply to this email and our sales team will get back to you.</p>
     `),
   });

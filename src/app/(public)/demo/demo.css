@@ -33,7 +33,7 @@
 .d-wrap { max-width: var(--d-w); margin: 0 auto; padding: 0 40px; }
 
 /* HERO */
-.d-hero { padding: 84px 0 72px; background: var(--d-bg); }
+.d-hero { padding: 40px 0 72px; background: var(--d-bg); }
 .d-hero-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
 .d-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: var(--d-coral); margin-bottom: 20px; }
 .d-h1 { font-family: var(--d-serif); font-size: clamp(38px, 5vw, 62px); line-height: 1.08; color: var(--d-heading); letter-spacing: -.025em; text-wrap: balance; margin-bottom: 24px; }
@@ -180,7 +180,7 @@
   .d-cta-inner { padding: 0 20px; }
 }
 @media (max-width: 640px) {
-  .d-hero { padding: 60px 0 56px; }
+  .d-hero { padding: 32px 0 56px; }
   .d-opp,.d-how,.d-rev,.d-plat,.d-fit,.d-cta { padding: 72px 0; }
   .d-contact-row { grid-template-columns: 1fr; }
 }

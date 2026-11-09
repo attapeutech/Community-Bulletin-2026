@@ -121,7 +121,7 @@ function ContactPageContent() {
   return (
     <>
       {/* ── Hero ── */}
-      <section className="pt-14 pb-14 px-4 sm:px-8 bg-gradient-to-br from-[#1A3A5C] via-[#0F2540] to-[#1A3A5C] text-center">
+      <section className="pt-8 sm:pt-10 pb-14 px-4 sm:px-8 bg-gradient-to-br from-[#1A3A5C] via-[#0F2540] to-[#1A3A5C] text-center">
         <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 mb-5">
           <MessageSquare size={14} className="text-[#9DC4E0]" />
           <span className="text-xs font-semibold text-[#9DC4E0] uppercase tracking-wide">Contact Us</span>

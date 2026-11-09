@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
         showWebsite: ads.showWebsite,
         viewCount: ads.viewCount,
         websiteClickCount: ads.websiteClickCount,
-        user: { id: users.id, name: users.name, email: users.email },
+        user: { id: users.id, name: users.name, email: users.email, phone: users.defaultPhone },
         location: { id: locations.id, storeName: locations.storeName, storeNumber: locations.storeNumber, slug: locations.slug },
       })
       .from(ads)

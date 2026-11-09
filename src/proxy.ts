@@ -19,7 +19,8 @@ const PUBLIC_ROUTES = [
   "/demo",        // franchise partner pitch page (linked from the public navbar)
   "/go",          // QR code short links from display screens
   "/stores",      // each store's public page (linked as "Public Page" from the store owner dashboard)
-  "/p",           // sales proposals: the advertiser's private link (accepting needs sign-in, checked in the API)
+  "/p",           // sales proposals: the advertiser's private link (pay with no sign-in)
+  "/pay",         // pay links from Admin → All Ads: pay for an unpaid ad with no sign-in
   "/robots.txt",  // SEO: search engines read these logged out
   "/sitemap.xml",
   "/opengraph-image",    // link preview image when the site is shared
@@ -46,6 +47,7 @@ export async function proxy(request: NextRequest) {
     pathname === "/api/partners/apply-signup" ||   // register form, before email confirmation
     /^\/api\/ads\/[^/]+\/track$/.test(pathname) ||   // view/click tracking from logged-out display screens
     pathname.startsWith("/api/proposals/") ||   // proposal quick pay (no sign-in needed)
+    pathname.startsWith("/api/pay/") ||         // pay links (no sign-in needed; the link is signed)
     pathname.startsWith("/api/geo") ||
     pathname.startsWith("/api/support") ||
     pathname.startsWith("/api/auth/verify-recaptcha") ||

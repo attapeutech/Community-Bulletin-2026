@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useDashboardSocket } from "@/lib/socket/client";
-import { Check, X, RefreshCw, Trash2, MonitorPlay, Pencil } from "lucide-react";
+import { Check, X, RefreshCw, Trash2, MonitorPlay, Pencil, Link2, Copy, MessageSquare } from "lucide-react";
+import { smsHref } from "@/lib/proposals";
 
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -87,7 +88,7 @@ type Ad = {
   showWebsite: boolean;
   viewCount: number;
   websiteClickCount: number;
-  user: { id: string; name: string; email: string };
+  user: { id: string; name: string; email: string; phone?: string | null };
   location: { id: string; storeName: string; storeNumber: string | null; slug: string };
 };
 
@@ -506,6 +507,35 @@ export default function AdminPanelClient({
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [editingAd, setEditingAd] = useState<Ad | null>(null);
+  // Pay link for an unpaid ad: the sales team texts or copies it; the advertiser pays with no sign-in
+  const [payLink, setPayLink] = useState<{ adId: string; url: string; days: number } | null>(null);
+  const [makingPayLink, setMakingPayLink] = useState<string | null>(null);
+
+  async function makePayLink(adId: string) {
+    setMakingPayLink(adId);
+    try {
+      const res = await fetch(`/api/admin/ads/${adId}/pay-link`, { method: "POST" });
+      const json = await res.json().catch(() => null);
+      if (!json?.success) throw new Error(json?.error ?? "Couldn't make the pay link");
+      setPayLink({ adId, url: json.data.url, days: json.data.days });
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setMakingPayLink(null);
+    }
+  }
+
+  async function copyText(text: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(`${label} copied`);
+    } catch {
+      toast.error("Couldn't copy. Select the text and copy it instead.");
+    }
+  }
+
+  const payLinkMessage = (ad: Ad, url: string) =>
+    `Hi ${ad.user.name.split(" ")[0]}, your ad "${ad.title}" for the Community Bulletin screen at ${ad.location.storeName} is ready. Pay here in a minute, no sign-in needed: ${url}`;
 
   // Force-refresh display screens
   const [refreshingSlug, setRefreshingSlug] = useState<string | null>(null);
@@ -1235,6 +1265,19 @@ export default function AdminPanelClient({
                                 </Button>
                               );
                             })}
+                          {ad.paymentStatus === "unpaid" && ad.status === "pending" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={makingPayLink === ad.id}
+                              onClick={() => (payLink?.adId === ad.id ? setPayLink(null) : makePayLink(ad.id))}
+                              className="px-2.5 py-1 h-auto rounded-md text-[11px] font-semibold border-[#E8563A]/40 text-[#E8563A] bg-[#FDF0EC] hover:bg-[#FBE1D9]"
+                              title="A link the advertiser can pay with, no sign-in"
+                            >
+                              <Link2 size={12} className="mr-1" />
+                              {makingPayLink === ad.id ? "…" : "Pay link"}
+                            </Button>
+                          )}
                           <Link href={`/dashboard/user/ads/${ad.id}`} className="text-xs text-[#4A90C4] no-underline px-2 py-1">
                             Details ↗
                           </Link>
@@ -1283,6 +1326,32 @@ export default function AdminPanelClient({
                             </Button>
                           )}
                         </div>
+                        {payLink?.adId === ad.id && (
+                          <div className="mt-3 rounded-lg border border-[#D8E4EE] bg-[#F7F9FC] p-3 flex flex-col gap-2 max-w-[640px]">
+                            <div className="text-[12px] text-[#1A3A5C]">
+                              <b>Pay link for {ad.user.name}</b> · works for {payLink.days} days, until the ad is paid. After paying, the ad goes to review as usual.
+                            </div>
+                            <div className="text-[12px] text-[#1A3A5C] bg-white border border-[#D8E4EE] rounded px-2 py-1.5 break-words">{payLinkMessage(ad, payLink.url)}</div>
+                            <div className="flex gap-2 flex-wrap">
+                              <a
+                                href={smsHref(ad.user.phone ?? null, payLinkMessage(ad, payLink.url))}
+                                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-[#E8563A] text-white text-[12px] font-semibold no-underline"
+                              >
+                                <MessageSquare size={13} /> Text it{ad.user.phone ? ` to ${ad.user.phone}` : ""}
+                              </a>
+                              <button type="button" onClick={() => copyText(payLinkMessage(ad, payLink.url), "Message")} className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md border border-[#D8E4EE] bg-white text-[12px] text-[#1A3A5C] hover:bg-[#F0F5FA]">
+                                <Copy size={13} /> Copy message
+                              </button>
+                              <button type="button" onClick={() => copyText(payLink.url, "Link")} className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md border border-[#D8E4EE] bg-white text-[12px] text-[#1A3A5C] hover:bg-[#F0F5FA]">
+                                <Copy size={13} /> Copy link
+                              </button>
+                              <a href={payLink.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center h-8 px-3 rounded-md border border-[#D8E4EE] bg-white text-[12px] text-[#1A3A5C] no-underline hover:bg-[#F0F5FA]">
+                                Open it
+                              </a>
+                            </div>
+                            <div className="text-[11px] text-[#4A6B82]">&ldquo;Text it&rdquo; opens your phone&apos;s messages app. On a computer, copy the message instead.</div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

@@ -103,6 +103,17 @@
   border-radius: 6px;
 }
 
+/* Endless horizontal scroll (home page store strip): the content is two identical copies, so
+   moving left by half its width loops seamlessly. Set animation-duration inline. */
+@keyframes cb-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.cb-marquee { animation: cb-marquee 24s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .cb-marquee { animation: none; }
+}
+
 /* Display screen — fullscreen kiosk mode */
 .display-screen {
   width: 100vw;

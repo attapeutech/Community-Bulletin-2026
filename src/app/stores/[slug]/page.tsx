@@ -93,7 +93,7 @@ export default async function PublicStorePage({
             <BrandLogo tone="light" height={42} />
           </Link>
           <Link
-            href={`/ads/new?locationId=${loc.id}`}
+            href={`/ads/new?location=${encodeURIComponent(loc.slug)}&from=store`}
             className="bg-[#E8563A] text-white text-sm font-semibold px-4 py-2 rounded-lg no-underline hover:bg-[#d14a30] transition-colors"
           >
             Advertise Here
@@ -173,13 +173,13 @@ export default async function PublicStorePage({
           </p>
           <div className="flex gap-3 justify-center flex-wrap">
             <Link
-              href={`/ads/new?locationId=${loc.id}`}
+              href={`/ads/new?location=${encodeURIComponent(loc.slug)}&from=store`}
               className="bg-[#E8563A] text-white text-sm font-semibold px-6 py-3 rounded-xl no-underline hover:bg-[#d14a30] transition-colors"
             >
               Post an Ad Here — {formatCents(loc.pricePerRunCents, loc.currency)} / 4 weeks
             </Link>
             <Link
-              href="/ads/new"
+              href="/stores"
               className="bg-white/10 text-white text-sm font-semibold px-6 py-3 rounded-xl no-underline hover:bg-white/20 transition-colors border border-white/20"
             >
               Browse All Locations

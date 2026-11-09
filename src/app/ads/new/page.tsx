@@ -283,6 +283,14 @@ export default function NewAdPage() {
   const [locLoading, setLocLoading] = useState(false);
   const [locSearched, setLocSearched] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  // Where the advertiser came from (?from=home | stores | store, or a screen QR code), for the breadcrumb
+  const [cameFrom, setCameFrom] = useState<"home" | "stores" | "store" | "screen" | null>(null);
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const from = q.get("from");
+    if (from === "home" || from === "stores" || from === "store") setCameFrom(from);
+    else if (q.get("src") === "screen") setCameFrom("screen");
+  }, []);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -647,9 +655,20 @@ export default function NewAdPage() {
     <div style={{ minHeight: "100vh", background: "#F4F7FB", display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 16px" }}>
       {/* Header + form: wide on desktop (form left, screen preview right); one column on phones */}
       <div style={{ width: "100%", maxWidth: 1400 }}>
-        <a href={demo ? `/dashboard/sales/${demo.leadId}` : "/dashboard/user"} style={{ fontSize: 13, color: "#4A6B82", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 24 }}>
-          {demo ? `← Back to ${demo.name}` : "← Back to dashboard"}
-        </a>
+        <Breadcrumb
+          trail={
+            demo ? [{ label: "Sales", href: "/dashboard/sales" }, { label: demo.name, href: `/dashboard/sales/${demo.leadId}` }]
+            : swapping ? [{ label: "My Ads", href: "/dashboard/user" }]
+            : cameFrom === "store" || cameFrom === "stores" ? [
+                { label: "Home", href: "/" },
+                { label: "Stores", href: "/stores" },
+                ...(cameFrom === "store" && selectedLocation ? [{ label: selectedLocation.storeName.trim(), href: `/stores/${selectedLocation.slug}` }] : []),
+              ]
+            : cameFrom === "home" || cameFrom === "screen" ? [{ label: "Home", href: "/" }]
+            : [{ label: "Dashboard", href: "/dashboard/user" }]
+          }
+          current={demo ? (editingAdId ? "Edit demo ad" : "Demo ad") : swapping ? "Swap your ad" : "Post a New Ad"}
+        />
         <h1 style={{ fontFamily: "Georgia,serif", fontSize: 28, fontWeight: 700, color: ACCENT, marginBottom: 4 }}>
           {demo ? `${editingAdId ? "Edit demo ad" : "Demo ad"} · ${demo.name}` : swapping ? "Swap your ad" : "Post a New Ad"}
         </h1>
@@ -1082,5 +1101,20 @@ export default function NewAdPage() {
         );
       })()}
     </div>
+  );
+}
+
+/** "Home › Stores › Marathon › Post a New Ad": where the advertiser came from, each step a link */
+function Breadcrumb({ trail, current }: { trail: { label: string; href: string }[]; current: string }) {
+  return (
+    <nav aria-label="Breadcrumb" style={{ fontSize: 13, color: "#4A6B82", display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6, marginBottom: 24 }}>
+      {trail.map(step => (
+        <span key={step.href} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <a href={step.href} style={{ color: "#4A6B82", textDecoration: "none", fontWeight: 600 }} className="hover:underline">{step.label}</a>
+          <span aria-hidden="true" style={{ color: "#A0B4C5" }}>›</span>
+        </span>
+      ))}
+      <span aria-current="page" style={{ color: "#1A3A5C", fontWeight: 600 }}>{current}</span>
+    </nav>
   );
 }

@@ -197,7 +197,7 @@ export default function LiveAdsGrid({ state = "", city = "", search = "", limit,
             ? "No ads match your search yet. Be the first to reach local shoppers here."
             : "Reach shoppers on in-store screens at local businesses near you."}
         </div>
-        <Link href="/ads/new" className="no-underline inline-flex items-center bg-[#E8563A] hover:bg-[#d44a2f] text-white text-sm font-bold rounded-lg transition-colors" style={{ height: 40, padding: "0 20px" }}>
+        <Link href="/ads/new?from=home" className="no-underline inline-flex items-center bg-[#E8563A] hover:bg-[#d44a2f] text-white text-sm font-bold rounded-lg transition-colors" style={{ height: 40, padding: "0 20px" }}>
           + Post an Ad
         </Link>
         {filtered && (

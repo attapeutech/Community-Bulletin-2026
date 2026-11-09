@@ -7,11 +7,10 @@ import { useSession } from "@/lib/auth/client";
 import LiveAdsSection from "./LiveAdsSection";
 import HeroSlides from "./HeroSlides";
 import { formatShoppers } from "@/lib/traffic";
+import type { StoreNetwork } from "@/lib/network";
 
 // Prices come from the server (lowest active store price); every store may differ
 export type LandingPrice = { amount: string };
-// The busiest active store with a store-reported shopper count (null when none is set)
-export type FeaturedStore = { name: string; city: string; dailyCustomers: number };
 
 const FEATURES = (price: LandingPrice) => [
   { icon: "📍", title: "Location-targeted ads", desc: "Choose exactly which store locations display your ad. Target by city, state, or specific address." },
@@ -37,7 +36,8 @@ const HIGHLIGHTS = [
   { icon: "💸", title: "Full refund", label: "If your ad isn't approved" },
 ];
 
-export default function LandingPage({ price, store }: { price: LandingPrice; store: FeaturedStore | null }) {
+export default function LandingPage({ price, network, citiesLabel }: { price: LandingPrice; network: StoreNetwork; citiesLabel: string }) {
+  const storeCount = network.stores.length;
   const { data: sessionData } = useSession();
   // The server renders signed-out links; switch to the signed-in ones after mount so the first
   // client render matches the server (the session can already be known in the browser)
@@ -73,29 +73,72 @@ export default function LandingPage({ price, store }: { price: LandingPrice; sto
               visible through the customers who walk in.
             </p>
 
-            {/* Real local numbers: the store's own reported traffic and the price */}
-            <div className="flex flex-wrap justify-center lg:justify-start gap-3 mb-9">
-              {store && (
+            {/* Store-reported traffic and the main button side by side (stacked on narrow phones) */}
+            <div className="flex flex-col sm:flex-row justify-center lg:justify-start items-stretch gap-3 mb-5">
+              {/* Shoppers a day across the stores (just the store count until any store has a figure) */}
+              {storeCount > 0 && (
                 <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-left">
-                  <div className="font-serif text-2xl font-bold text-white leading-none">~{formatShoppers(store.dailyCustomers)}</div>
-                  <div className="text-xs text-[#9DC4E0] mt-1">shoppers a day at {store.name}, {store.city}</div>
+                  <div className="font-serif text-2xl font-bold text-white leading-none">
+                    {network.storesWithCounts > 0
+                      ? <>~{formatShoppers(network.dailyShoppers)} <span className="text-base">shoppers a day</span></>
+                      : `${storeCount} store${storeCount !== 1 ? "s" : ""}`}
+                  </div>
+                  <div className="text-xs text-[#9DC4E0] mt-1">
+                    {network.storesWithCounts === 0
+                      ? "with screens"
+                      : network.storesWithCounts === storeCount
+                        ? `across ${storeCount} store${storeCount !== 1 ? "s" : ""}`
+                        : `at ${network.storesWithCounts} of our ${storeCount} stores`}
+                    {" "}in {citiesLabel}
+                  </div>
                 </div>
               )}
-              <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-left">
-                <div className="font-serif text-2xl font-bold text-white leading-none">{price.amount}</div>
-                <div className="text-xs text-[#9DC4E0] mt-1">for 4 weeks · no contract</div>
-              </div>
+              {/* The price rides on the main button */}
+              <Link href={session ? "/ads/new?from=home" : "/register"} className="no-underline bg-[#E8563A] text-white px-8 py-2.5 rounded-xl hover:bg-[#D14A30] transition-colors flex flex-col items-center justify-center leading-tight">
+                <span className="text-base font-bold tracking-wide">Post your first ad</span>
+                <span className="text-xs font-semibold text-white/85 mt-0.5">{price.amount} for 4 weeks · no contract</span>
+              </Link>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
-              <Link href={session ? "/ads/new" : "/register"} className="no-underline bg-[#E8563A] text-white px-8 py-3.5 rounded-xl text-base font-bold tracking-wide hover:bg-[#D14A30] transition-colors">
-                Post your first ad
-              </Link>
-              <a href="#how-it-works" className="no-underline bg-white/10 border border-white/20 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-white/20 transition-colors">
-                See how it works
-              </a>
-            </div>
-            {store && <p className="text-[11px] text-[#9DC4E0]/70 mt-4 mb-0">Shopper count is store-reported.</p>}
+            <a href="#how-it-works" className="no-underline inline-block text-sm font-semibold text-[#9DC4E0] hover:text-white transition-colors">
+              See how it works ↓
+            </a>
+
+            {/* Every store with a screen, newest first, scrolling across in one line (the list is doubled
+                so it loops seamlessly); pauses on hover; with reduced motion it's a row you can swipe */}
+            {storeCount > 0 && (
+              <div className="mt-7 pt-5 border-t border-white/10">
+                <div className="flex items-center justify-center lg:justify-start gap-3 mb-2.5">
+                  <span className="text-[11px] font-bold tracking-widest uppercase text-[#9DC4E0]">Now on screens at</span>
+                  <Link href="/stores" className="no-underline text-xs font-semibold text-[#E8563A] hover:text-white transition-colors">View all →</Link>
+                </div>
+                <div className="group relative overflow-hidden motion-reduce:overflow-x-auto [mask-image:linear-gradient(90deg,transparent,#000_6%,#000_94%,transparent)]">
+                  <div
+                    className="flex w-max cb-marquee group-hover:[animation-play-state:paused]"
+                    style={{ animationDuration: `${Math.max(16, storeCount * 6)}s` }}
+                  >
+                    {[0, 1].map(copy => (
+                      <div key={copy} className={`flex gap-2 pr-2 shrink-0 ${copy === 1 ? "motion-reduce:hidden" : ""}`} aria-hidden={copy === 1 || undefined}>
+                        {network.stores.map(s => (
+                          <Link
+                            key={s.slug}
+                            href={`/stores/${s.slug}`}
+                            tabIndex={copy === 1 ? -1 : undefined}
+                            className="no-underline shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/25 transition-colors rounded-full pl-2.5 pr-3 py-1.5 text-[13px] text-white"
+                          >
+                            <span aria-hidden="true" className="text-[#E8563A]">📍</span>
+                            <span className="font-semibold">{s.name}</span>
+                            <span className="text-[#9DC4E0]">· {s.city}</span>
+                            {s.isNew && <span className="ml-0.5 bg-[#E8563A] text-white text-[10px] font-bold tracking-wider uppercase rounded-full px-1.5 py-0.5">New</span>}
+                          </Link>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            {network.storesWithCounts > 0 && <p className="text-[11px] text-[#9DC4E0]/70 mt-4 mb-0">Shopper counts are store-reported.</p>}
           </div>
 
           <HeroSlides price={price.amount} />
@@ -187,7 +230,7 @@ export default function LandingPage({ price, store }: { price: LandingPrice; sto
                   </li>
                 ))}
               </ul>
-              <Link href={session ? "/ads/new" : "/register"} className="block text-center no-underline bg-[#1A3A5C] dark:bg-[#4A90C4] text-white px-6 py-3 rounded-lg text-base font-bold hover:bg-[#0F2540] dark:hover:bg-[#3A7AB4] transition-colors">
+              <Link href={session ? "/ads/new?from=home" : "/register"} className="block text-center no-underline bg-[#1A3A5C] dark:bg-[#4A90C4] text-white px-6 py-3 rounded-lg text-base font-bold hover:bg-[#0F2540] dark:hover:bg-[#3A7AB4] transition-colors">
                 {session ? "Post an ad" : "Get started"}
               </Link>
             </div>

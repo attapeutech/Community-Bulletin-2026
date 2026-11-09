@@ -1,8 +1,9 @@
 import { requireStoreOwner, getSession } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import { locations, ads, users, cities, states, postalCodes } from "@/lib/db/schema";
-import { eq, and, asc, desc, isNull } from "drizzle-orm";
+import { eq, and, asc, desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
+import { listedAd } from "@/lib/ad-filters";
 import Link from "next/link";
 import LocationDetailClient from "./LocationDetailClient";
 
@@ -73,7 +74,7 @@ export default async function LocationDetailPage({
     .from(ads)
     .innerJoin(users, eq(ads.userId, users.id))
     // Sales demo ads never run on the store's screen, so they're not the store's ads
-    .where(and(eq(ads.locationId, id), isNull(ads.demoId)))
+    .where(and(eq(ads.locationId, id), listedAd))
     .orderBy(asc(ads.displayOrder), desc(ads.createdAt));
 
   // Serialize dates and coerce nullable fields

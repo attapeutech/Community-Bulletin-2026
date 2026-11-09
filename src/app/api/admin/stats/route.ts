@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { ads, users, locations, payments } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/auth/session";
-import { eq, and, count, sum, gte, isNull } from "drizzle-orm";
+import { eq, and, count, sum, gte } from "drizzle-orm";
+import { listedAd } from "@/lib/ad-filters";
 
 // GET /api/admin/stats
 
-// Sales demo ads are managed on their lead's page in Sales, not counted here
-const notDemo = isNull(ads.demoId);
+// Sales work in progress (demo ads, unpaid proposal copies) isn't counted here
+const notDemo = listedAd;
 
 export async function GET() {
   try {
@@ -23,7 +24,7 @@ export async function GET() {
       revenue,
     ] = await Promise.all([
       db.select({ count: count() }).from(ads).where(notDemo),
-      db.select({ count: count() }).from(ads).where(eq(ads.status, "pending")),
+      db.select({ count: count() }).from(ads).where(and(eq(ads.status, "pending"), notDemo)),
       db.select({ count: count() }).from(ads).where(and(eq(ads.status, "approved"), eq(ads.isTest, false))),
       db.select({ count: count() }).from(ads).where(and(eq(ads.status, "denied"), notDemo)),
       db.select({ count: count() }).from(users),

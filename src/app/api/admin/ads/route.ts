@@ -3,8 +3,9 @@ import { z } from "zod";
 import { db } from "@/lib/db/client";
 import { ads, users, locations, cities, states, postalCodes } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/auth/session";
-import { eq, desc, and, isNull } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { addDays } from "date-fns";
+import { listedAd } from "@/lib/ad-filters";
 import { AD_DURATION_DAYS } from "@/types";
 import { pushDisplayRefresh, pushDashboardUpdate } from "@/lib/socket/notify";
 import { sendAdApprovedEmail, sendAdDeniedEmail, sendAdCancelledEmail } from "@/lib/email/templates";
@@ -21,8 +22,8 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get("status") as typeof ads.$inferSelect["status"] | null;
     const paymentStatus = searchParams.get("paymentStatus") as typeof ads.$inferSelect["paymentStatus"] | null;
 
-    // Sales demo ads are managed on their lead's page in Sales
-    const conditions = [isNull(ads.demoId)];
+    // Sales work in progress (demo ads, unpaid proposal copies) is left out
+    const conditions = [listedAd];
     if (status) conditions.push(eq(ads.status, status));
     if (paymentStatus) conditions.push(eq(ads.paymentStatus, paymentStatus));
 

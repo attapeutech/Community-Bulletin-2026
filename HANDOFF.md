@@ -1,4 +1,4 @@
-# Handoff: 2026-10-22 (updated 2026-11-08)
+# Handoff: 2026-10-22 (updated 2026-11-09)
 
 ## Where things stand
 
@@ -32,6 +32,48 @@
   - `LeaveFrame` (`src/components/layout/LeaveFrame.tsx`, in the root layout) moves any non-display page out of a frame
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
+
+## 2026-11-09 summary
+
+- **Home page: the store network** (PR #139): 4 stores now (Fast Eddies, SAS Food Mart and Marathon in Everett; M&M Mart in Marysville).
+  - `src/lib/network.ts`: `getStoreNetwork()` returns active stores newest first, with cities, total store-reported shoppers, and a **New** flag for 14 days (`NEW_STORE_DAYS`). `formatCities()` gives "Everett & Marysville", "A, B & C" or "N cities".
+  - The hero has the shoppers card ("~2,000 shoppers a day across 4 stores in …") beside a **Post your first ad** button with the price, then **See how it works ↓**.
+  - Below that, a "NOW ON SCREENS AT" strip: a single scrolling line of store chips (CSS `cb-marquee` in `globals.css`; it pauses on hover and stops for reduced motion) and **View all →**.
+  - **`/stores`** (new): a card for every store (address, shoppers a day, 4-week price), **Post here** and **Details**. It's in the proxy's public routes.
+- **Store page fix:** the `/stores/<slug>` buttons used `?locationId=`, which Post a New Ad ignored. They now use `?location=<slug>`, so the store is pre-selected.
+- **Breadcrumb on Post a New Ad:** replaces "← Back to dashboard". Links add `?from=home|stores|store` (`src=screen` from the TV QR code) to choose the trail:
+  - Home › Stores › store
+  - Home
+  - Sales › lead (demo ads)
+  - My Ads (swaps)
+  - Dashboard (default)
+- **Tighter page tops** (PR #140): public pages start `pt-8 sm:pt-10` below the navbar. That covers home, stores, contact, help, privacy, terms and partners/apply; `/demo`'s `.d-hero` is 40px (32px on phones).
+- **Proposals: pay without signing up** (PR #141):
+  - The advertiser's `/p/<token>` page has no account form anymore: tick the two boxes, then **Pay $X**, which goes straight to Stripe.
+  - `POST /api/proposals/[token]/pay` puts the ad in the account with the proposal's email. If there's none, it creates one with no password and the email marked verified.
+  - If an advertiser is signed in, the ad goes to their own account. A signed-in admin pays *as the advertiser*, so a rep can take payment on their own phone.
+  - Nobody is signed in by the link.
+  - Back from Stripe, the page records the payment through the shared `recordPaidCheckout` (`src/lib/stripe-checkout.ts`, also used by `/api/payments/stripe/confirm`).
+  - The thank-you page offers **Email me a link to set one**: the normal reset-password email, which creates the password login.
+  - The old `/api/proposals/[token]/signup` and `/accept` routes are gone. The email button now says **See your ad & pay**.
+- **Proposals: text it** (same PR):
+  - **Send proposal** has tabs: **Email it** and **Text it / show it**. The second makes the link without emailing; the email field is only for the receipt and the account.
+  - Once the link is made: **Text it** (an `sms:` link with the lead's phone and the message, from `proposalTextMessage` / `smsHref` in `src/lib/proposals.ts`), **Copy message**, **Copy link**, **Open it**.
+  - The lead page has **Text** and **Copy link** on each open proposal.
+- **Hide unpaid proposal copies** (PR #142):
+  - The Pay button copies the demo ad into a real unpaid ad before Stripe opens, so an unfinished checkout left a "pending / unpaid" duplicate. A test on 2026-11-09 left one: the Jeep ad under lao tech.
+  - `listedAd` (`src/lib/ad-filters.ts`) leaves out demo ads and these unpaid copies in:
+    - the Admin Panel list and totals (including Pending)
+    - `/api/admin/ads` and `/api/admin/stats`
+    - the store owner's location ads
+  - The copy still shows in the advertiser's own My Ads, so they can pay from there.
+- **Pay links for unpaid ads** (PR #143):
+  - Admin → All Ads: pending, unpaid ads have a coral **Pay link** button. It opens a message panel with **Text it** (the owner's saved phone), **Copy message**, **Copy link** and **Open it**.
+  - The advertiser opens `/pay/<token>`, sees their ad, store and price, and taps **Pay $X**. That goes to Stripe with no sign-in (`POST /api/pay/[token]`). After payment the ad goes to **normal review**: proposals skip review, pay-link ads don't.
+  - Links are signed with `BETTER_AUTH_SECRET`, not stored (`src/lib/pay-links.ts`): `<ad id>.<expiry>.<signature>`. Each works for 30 days, for one ad, only while it's pending and unpaid. No migration.
+  - `/pay` and `/api/pay/` are in the proxy's public routes. The page has a `noindex` tag.
+- **How to use Sales** (in the app) is updated for Text it / show it, sign-up-free payment and pay links.
+- No migrations today; Neon is still through `0028`.
 
 ## 2026-11-08 summary
 
@@ -238,12 +280,15 @@ Context: after two weeks of door-knocking, store owners and advertisers are inte
 
 ## Sales proposals (2026-11-01)
 
-- **Flow:** advertiser lead → Ad demos → **Send proposal** (`/dashboard/sales/[id]/proposal?demo=<id>`, `ProposalComposer.tsx`; message from `defaultProposalMessage`, editable) → Resend email with a **See your ad & accept** button, `replyTo` sales@communitybulletin.com → advertiser page `/p/<token>` (`src/app/(public)/p/[token]/`) plays the demo ad → **Accept & pay**: creates an account (name, phone, password; `POST /api/proposals/[token]/signup`, email marked verified) or asks an existing account to sign in → `POST /api/proposals/[token]/accept` copies the demo ad into a real unpaid ad → normal Stripe checkout.
+- **Flow (updated 2026-11-09):** advertiser lead → Ad demos → **Send proposal** (`/dashboard/sales/[id]/proposal?demo=<id>`, `ProposalComposer.tsx`):
+  - **Email it**: the message comes from `defaultProposalMessage` (editable). It's sent with Resend, with a **See your ad & pay** button and `replyTo` sales@communitybulletin.com.
+  - **Text it / show it**: makes the link only (`send: false` to `POST /api/admin/proposals`), then Text it / Copy / Open.
+  - The advertiser's page `/p/<token>` (`src/app/(public)/p/[token]/`) plays the demo ad. Two boxes, then **Pay**: `POST /api/proposals/[token]/pay` finds or creates the account by the proposal's email (no password, never signed in), copies the demo ad into a real unpaid ad, and returns a Stripe Checkout URL. That checkout comes back to `/p/<token>?session_id=…`, which records the payment.
 - **On payment** (Stripe webhook and confirm route → `completeProposalPayment` in `src/lib/proposal-payments.ts`): the ad is approved and live right away (no review emails), the proposal is marked paid, the lead turns **Won** and is linked to the account, notes are added, and the creator gets a `proposal_update` bell notification. The payment page says "goes live" for these ads (`fromProposal` from `GET /api/ads/[id]`).
 - **Status** (`proposalStatus` / `PROPOSAL_STATUS` in `src/lib/proposals.ts`): Sent → Viewed → Accepted → Paid, or Expired when the demo expires (30 days; Extend on the demo turns it back on). Shown as chips under the demo in `LeadDemos.tsx`; the lead page needs a refresh.
 - **Viewed** is recorded the first time `/p/<token>` loads for someone who isn't a signed-in admin (opening the email alone doesn't count), with a bell notification "<business> opened your proposal".
 - **Data:** `proposals` table (lead, demo, demo ad, token, email, subject, message, created_by, sent/viewed/accepted/paid timestamps, user, real ad); migration `0022_sales_proposals` (also the `proposal_update` notification type). Deleting the lead deletes its proposals; deleting an ad only clears the link.
-- **Public routes:** `proxy.ts` allows `/p` and `/api/proposals/`; `robots.ts` disallows `/p/`. Access checks in `src/lib/proposal-access.ts`.
+- **Public routes:** `proxy.ts` allows `/p` and `/api/proposals/` (and `/pay`, `/api/pay/` for pay links); `robots.ts` disallows `/p/`. Access checks in `src/lib/proposal-access.ts`.
 
 ## Sales ad demos (2026-10-30)
 
@@ -527,6 +572,11 @@ Ideas not built yet: printable QR labels per device (scan → its record), offli
 - [ ] **Sales calendar, check:** after a run of the appointment-reminders task, its Coolify log shows `{"success":true,"sent":N}`; add a test appointment 30–45 minutes ahead once to see the bell reminder, then delete it. Ideas: week view, a per-salesperson filter once there's a Sales role, reminders by email as well.
 - [ ] **Sales demos, ideas:** a "Sales" role (see below) so the sales manager needn't be an admin; show a demo count on advertiser cards in the Sales list. (Turning the demo ad into the real ad is done: proposals.)
 - [ ] **Proposals, ideas:** a reminder email after a few days without a view; live chip updates without a refresh. (The 2026-11-01 test leftovers are done.)
+- [ ] **Leftover from the 2026-11-09 Pay test:** the unpaid "$4,990 2014 Jeep Cherokee sport" ad under lao tech (a proposal copy). It's hidden from the Admin Panel now, but still in lao tech's My Ads; delete it there if it isn't needed.
+- [ ] **First real pay link:** send Rosalba a pay link for "Free Pepsi Cemitas" (Admin → All Ads → Pay link) and check that it lands in Review Ads after she pays.
+- [ ] **Pay links / proposals, ideas:** a "Pay right here" button on the lead page (opens checkout on the rep's device, without making the link first); show a Pay link on the Sales lead page when the lead is linked to an account; sending texts from CommunityBulletin.com (Twilio) instead of the rep's phone. Proposals and pay links offer Stripe only (no PayPal).
+- [ ] **Store map on `/stores`** (agreed 2026-11-09, idea #2 from the home page brainstorm): "Find screens near your business", a map with a pin per store beside the list. Needs latitude/longitude per store (a small migration the user runs) and a free map library with no API key.
+- [ ] **Multi-store bundle** (idea #3, later): one ad on several stores at a discount. Needs partner decisions on pricing.
 - [ ] **Ad swap:** test **Deny** once (on the first real swap, or a test ad made "paid" by an Admin Panel edit, then deleted). Ideas: show the swap history on the ad's details page; let admins see swaps in the Admin Panel.
 - [ ] **Ad form checkboxes:** (still open) on Post a New Ad's Review step, unticked checkboxes ("Post as a test ad", "My business is within…") look filled dark grey in dark mode. Give them a light background or explicit colours.
 - [ ] **Store setup (moved to 2026-11-09):** set up the 10 stores using Admin → Equipment: add each store's mini computer (with its remote access and Windows login) / TV / cables, tick the checklist, save WiFi details, and on the Screens page assign each new screen to its store (then link the mini computer to it in the Equipment list). Remove test entries made on 2026-11-07 if any are left.

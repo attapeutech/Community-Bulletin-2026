@@ -268,6 +268,7 @@ export default function SalesClient({ leads, filters, total, pages, today, summa
               <li>Each store card shows live ads out of {ADS_PER_STORE_GOAL}. Click a card to see that store&apos;s leads.</li>
               <li>Visit businesses nearby and add a <b className="text-[#1A3A5C]">New advertiser lead</b> for that store.</li>
               <li>When they post an ad, link their account under <b className="text-[#1A3A5C]">Customer account</b> to see what they&apos;ve spent, and mark the lead Won.</li>
+              <li>Posted but not paid yet? In <b className="text-[#1A3A5C]">Admin Panel → All Ads</b>, click <b className="text-[#1A3A5C]">Pay link</b> on their ad and text it: they pay with no sign-in, then the ad goes to review.</li>
               <li>Keep going until the store reaches {ADS_PER_STORE_GOAL} live ads.</li>
             </ol>
           </div>
@@ -277,13 +278,14 @@ export default function SalesClient({ leads, filters, total, pages, today, summa
               <li>Open the advertiser lead. Make sure it has their <b className="text-[#1A3A5C]">email</b> and the store they want.</li>
               <li>Under <b className="text-[#1A3A5C]">Ad demos</b>, click <b className="text-[#1A3A5C]">Make a demo at …</b>, then <b className="text-[#1A3A5C]">Add a demo ad</b> with their photo, offer and contact details.</li>
               <li>Click <b className="text-[#1A3A5C]">Show demo</b> to see it playing on that store&apos;s screen design. Fix anything with the pencil. You can also <b className="text-[#1A3A5C]">Copy link</b> and text it, or show it on your phone in person.</li>
-              <li>Click <b className="text-[#1A3A5C]">Send proposal</b>, read over the message, and send it. Their replies go to sales@communitybulletin.com.</li>
-              <li>They click <b className="text-[#1A3A5C]">See your ad &amp; accept</b> in the email, create an account (name, phone, password) or sign in, and pay by card.</li>
+              <li>Click <b className="text-[#1A3A5C]">Send proposal</b>. Busy? Pick <b className="text-[#1A3A5C]">Text it / show it</b>: it only needs their email (for the receipt) and gives you a link to <b className="text-[#1A3A5C]">Text it</b>, copy, or open on your phone so they pay right there. Or pick <b className="text-[#1A3A5C]">Email it</b>, read over the message, and send it (replies go to sales@communitybulletin.com).</li>
+              <li>They open the link, tick two boxes and tap <b className="text-[#1A3A5C]">Pay</b>: card, Apple Pay or Google Pay. No account or password needed; they can set a password later from the thank-you page.</li>
               <li>Done: the ad goes live on the store screen right away for 4 weeks, the lead turns <b className="text-[#1A3A5C]">Won</b> and is linked to their account, and the bell tells you.</li>
             </ol>
             <ul className="list-disc pl-5 mt-2 mb-0 flex flex-col gap-1">
               <li>The proposal chip moves <b className="text-[#1A3A5C]">Sent → Viewed → Accepted → Paid</b>. Refresh the lead page to see the latest.</li>
-              <li><b className="text-[#1A3A5C]">Viewed</b> means they opened the page from the email&apos;s button. Opening the email alone doesn&apos;t count, and neither do your own views while signed in here.</li>
+              <li>Each open proposal has <b className="text-[#1A3A5C]">Text</b> and <b className="text-[#1A3A5C]">Copy link</b> to send it again.</li>
+              <li><b className="text-[#1A3A5C]">Viewed</b> means they opened the proposal link. Opening the email alone doesn&apos;t count, and neither do your own views while signed in here.</li>
               <li>Stuck at Sent or Viewed? Call them after a day or two and set a follow-up date. Want changes? Edit the demo ad and send a new proposal.</li>
               <li>Demo links and proposals work for 30 days. If one runs out, click <b className="text-[#1A3A5C]">Extend 30 days</b> and send again.</li>
               <li>Won leads leave the default list. Click <b className="text-[#1A3A5C]">Won (30 days)</b> or pick a stage to find them.</li>

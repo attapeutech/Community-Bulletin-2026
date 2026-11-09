@@ -32,7 +32,19 @@ export function defaultProposalMessage(o: { contactName: string | null; business
 
 Thanks for talking with us. We made an ad for ${o.businessName} to show on the Community Bulletin screen at ${o.storeName}.${reach}
 
-Click the button below to see it playing just as it would on the screen. If you like it, you can accept and pay online in a couple of minutes: ${o.price} for 4 weeks, and it starts right away.
+Click the button below to see it playing just as it would on the screen. If you like it, you can pay online in a minute, no sign-up needed: ${o.price} for 4 weeks, and it starts right away.
 
 Want any changes? Just reply to this email.`;
+}
+
+/** The text message a salesperson sends with a proposal link (from their own phone) */
+export function proposalTextMessage(o: { contactName: string | null; businessName: string; storeName: string; url: string }) {
+  const hi = o.contactName ? `Hi ${o.contactName.split(" ")[0]}, ` : "Hi, ";
+  return `${hi}here's the ad we made for ${o.businessName} on the Community Bulletin screen at ${o.storeName}. See it and pay in a minute, no sign-up needed: ${o.url}`;
+}
+
+/** Opens the phone's messaging app with the number and message filled in ("?&body=" works on iPhone and Android) */
+export function smsHref(phone: string | null, body: string) {
+  const to = (phone ?? "").replace(/[^\d+]/g, "");
+  return `sms:${to}?&body=${encodeURIComponent(body)}`;
 }

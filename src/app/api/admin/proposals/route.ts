@@ -14,11 +14,14 @@ const schema = z.object({
   demoId: z.string().uuid(),
   demoAdId: z.string().uuid("Choose the demo ad to offer"),
   email: z.string().trim().toLowerCase().email("Enter the advertiser's email"),
-  subject: z.string().trim().min(1, "Add a subject").max(200),
-  message: z.string().trim().min(1, "Add a message").max(5000),
-});
+  // false: only make the link (the salesperson texts or shows it); the email is still who the ad and receipt go to
+  send: z.boolean().default(true),
+  subject: z.string().trim().max(200).default(""),
+  message: z.string().trim().max(5000).default(""),
+}).refine(d => !d.send || d.subject, { message: "Add a subject", path: ["subject"] })
+  .refine(d => !d.send || d.message, { message: "Add a message", path: ["message"] });
 
-// POST /api/admin/proposals — email an advertiser lead a demo ad they can accept and pay for
+// POST /api/admin/proposals — email an advertiser lead a demo ad they can pay for, or just make the link to text them
 export async function POST(req: NextRequest) {
   try {
     const session = await requireAdmin();
@@ -51,7 +54,8 @@ export async function POST(req: NextRequest) {
       createdBy: adminId,
     }).returning({ id: proposals.id });
 
-    const sent = await sendProposalEmail({
+    const url = `${SITE_URL}${proposalPath(token)}`;
+    const sent = !d.send ? { success: true } : await sendProposalEmail({
       to: d.email,
       replyTo: SALES_EMAIL,
       subject: d.subject,
@@ -59,7 +63,7 @@ export async function POST(req: NextRequest) {
       businessName: demo.businessName,
       storeName: demo.storeName,
       price: formatPrice(demo.price),
-      url: `${SITE_URL}${proposalPath(token)}`,
+      url,
     });
     if (!sent.success) {
       await db.delete(proposals).where(eq(proposals.id, proposal.id));
@@ -68,10 +72,10 @@ export async function POST(req: NextRequest) {
 
     const now = new Date();
     await db.update(proposals).set({ sentAt: now }).where(eq(proposals.id, proposal.id));
-    await db.insert(leadNotes).values({ leadId: demo.leadId, authorId: adminId, body: `Proposal sent to ${d.email}: "${d.subject}"` });
+    await db.insert(leadNotes).values({ leadId: demo.leadId, authorId: adminId, body: d.send ? `Proposal sent to ${d.email}: "${d.subject}"` : `Proposal link made for ${d.email} (to text or show them)` });
     await db.update(leads).set({ updatedAt: now }).where(eq(leads.id, demo.leadId));
 
-    return NextResponse.json({ success: true, data: { id: proposal.id } });
+    return NextResponse.json({ success: true, data: { id: proposal.id, url } });
   } catch (error) {
     console.error("[POST /api/admin/proposals]", error);
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });

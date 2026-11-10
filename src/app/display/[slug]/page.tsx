@@ -321,6 +321,14 @@ export default function DisplayPage() {
   }, [emblaApi]);
 
   const motionFor = (idx: number): SlideMotion => (idx === selectedIndex ? "play" : "none");
+  // Only the slide on screen and its neighbours draw their ad (and load its image). With 40 ads,
+  // keeping every image in memory made small store computers slow; the next one is ready before it
+  // slides in. Distance wraps around because the carousel loops.
+  const isNear = (idx: number) => {
+    const n = slides.length;
+    const d = Math.abs(idx - selectedIndex);
+    return Math.min(d, n - d) <= 1;
+  };
 
   // Ad on screen right now (null on the "Advertise here" slide) — for the Save button in the controls
   const currentSlide = slides[selectedIndex];
@@ -490,6 +498,16 @@ export default function DisplayPage() {
             }
             const ad = slide.ad;
             const hasSplit = !!(ad.contactPhone || ad.contactAddress || ad.contactWebsite);
+            if (!isNear(idx)) {
+              // Empty frame until its turn comes near (keeps the carousel's slide positions)
+              return (
+                <div
+                  key={ad.id}
+                  aria-hidden="true"
+                  style={{ flex: "0 0 100%", minWidth: 0, height: "100%", position: "relative", background: "#0A1A2E" }}
+                />
+              );
+            }
             return (
               <div
                 key={ad.id}

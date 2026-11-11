@@ -22,12 +22,31 @@ import { AdvertiseSlideCard } from "./AdvertiseSlideCard";
 import { DisplayDesignCard } from "./DisplayDesignCard";
 
 const STATUS_BADGE_CLASS: Record<string, string> = {
-  pending:   "bg-yellow-100 text-yellow-800 border-yellow-200",
-  approved:  "bg-green-100 text-green-800 border-green-200",
-  denied:    "bg-red-100 text-red-800 border-red-200",
-  expired:   "bg-slate-100 text-slate-600 border-slate-200",
-  cancelled: "bg-slate-100 text-slate-600 border-slate-200",
+  pending:   "bg-amber-100 text-amber-900 border-amber-300",
+  approved:  "bg-green-100 text-green-800 border-green-300",
+  denied:    "bg-red-100 text-red-800 border-red-300",
+  expired:   "bg-slate-100 text-slate-600 border-slate-300",
+  cancelled: "bg-slate-100 text-slate-600 border-slate-300",
 };
+
+// Payment status: its own colour and dot, so "unpaid" stands out in the All Ads list
+const PAYMENT_BADGE: Record<string, { label: string; cls: string; dot: string }> = {
+  unpaid:         { label: "Unpaid",         cls: "bg-orange-50 text-orange-800 border-orange-300", dot: "bg-orange-500 animate-pulse" },
+  paid:           { label: "Paid",           cls: "bg-emerald-50 text-emerald-800 border-emerald-300", dot: "bg-emerald-500" },
+  refund_pending: { label: "Refund pending", cls: "bg-violet-50 text-violet-800 border-violet-300", dot: "bg-violet-500 animate-pulse" },
+  refunded:       { label: "Refunded",       cls: "bg-violet-50 text-violet-700 border-violet-200", dot: "bg-violet-400" },
+  failed:         { label: "Payment failed", cls: "bg-red-50 text-red-800 border-red-300", dot: "bg-red-500" },
+};
+
+function PaymentBadge({ status }: { status: string }) {
+  const b = PAYMENT_BADGE[status] ?? { label: status, cls: "bg-slate-50 text-slate-600 border-slate-200", dot: "bg-slate-400" };
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 text-[11px] font-semibold border rounded-full px-2.5 py-0.5", b.cls)}>
+      <span className={cn("inline-block w-1.5 h-1.5 rounded-full", b.dot)} aria-hidden="true" />
+      {b.label}
+    </span>
+  );
+}
 
 const ROLE_BADGE_CLASS: Record<string, string> = {
   user:        "bg-slate-100 text-slate-600 border-slate-200",
@@ -1180,7 +1199,7 @@ export default function AdminPanelClient({
                           <Badge variant="outline" className={cn("text-[11px] font-semibold px-2.5 py-0.5 rounded-full", statusClass)}>
                             {ad.status.charAt(0).toUpperCase() + ad.status.slice(1)}
                           </Badge>
-                          <span className="text-[11px] text-[#5B7D96] bg-blue-50 rounded px-1.5 py-0.5">{ad.paymentStatus}</span>
+                          <PaymentBadge status={ad.paymentStatus} />
                         </div>
                         <div className="text-xs text-[#4A6B82] mb-0.5 flex items-center gap-1 flex-wrap">
                           <button

@@ -1,4 +1,4 @@
-# Handoff: 2026-10-22 (updated 2026-11-09)
+# Handoff: 2026-10-22 (updated 2026-11-10)
 
 ## Where things stand
 
@@ -32,6 +32,12 @@
   - `LeaveFrame` (`src/components/layout/LeaveFrame.tsx`, in the root layout) moves any non-display page out of a frame
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
+
+## 2026-11-10 summary
+
+- **All Ads: coloured payment badges** (PR #146, `AdminPanelClient.tsx`): payment status is a `PaymentBadge` pill with a dot and a readable label (`PAYMENT_BADGE`): **Unpaid** orange with a pulsing dot, **Paid** green, **Refund pending** purple (pulsing), **Refunded** light purple, **Payment failed** red. Ad status badges (`STATUS_BADGE_CLASS`) got stronger borders; Pending is amber so it doesn't blend with Unpaid.
+- **"← Sales" is a button** (same PR): on the lead page (`sales/[id]/LeadDetailClient.tsx`) and New lead (`sales/new/NewLeadClient.tsx`), a white pill with an orange `ArrowLeft` that fills navy on hover.
+- Not checked in a browser by Claude (admin pages need a sign-in); the user reviewed both on localhost before committing.
 
 ## 2026-11-09 summary
 
@@ -74,6 +80,14 @@
   - `/pay` and `/api/pay/` are in the proxy's public routes. The page has a `noindex` tag.
 - **How to use Sales** (in the app) is updated for Text it / show it, sign-up-free payment and pay links.
 - No migrations today; Neon is still through `0028`.
+
+- **Lighter store screens for 40 ads** (PR #145), prompted by choosing 10 more mini computers (budget $120 each):
+  - **Uploads are shrunk:** `/api/upload` runs `shrinkImage()` (`src/lib/storage/shrink-image.ts`, sharp): max 1920 px, photos to JPEG (quality 85), transparent images stay PNG, EXIF/GPS dropped, EXIF rotation applied. GIFs, and images already ≤1920 px and ≤1.5 MB, are stored unchanged. Unreadable images are refused. Covers ads, avatars and store logos. `/api/upload` now only accepts the folders `ads`, `avatars`, `locations` (before, any folder name was accepted).
+  - **Screens load only nearby slides:** in `src/app/display/[slug]/page.tsx`, `isNear()` keeps the previous, current and next ad slides drawn (wrapping around the loop); the others are empty frames until their turn. Tested in headless Chrome with 40 fake ads (the `/api/display` response replaced inside the test browser only): 3 ad images loaded at a time instead of 40. House slides are unaffected.
+  - **Older large images:** `scripts/shrink-existing-ad-images.ts` (report only by default; `--apply` writes). Ran with `--apply` on 2026-11-09: 4 of 23 ad images, 7.7 MB → 2.1 MB; ads now point at the new copies, **originals kept** in R2 (`ads/jkdjtSnXMQWOC_nkMYRol.jpg`, `ads/1-OgfBXKQdj634zys82so.png`, `ads/qZnaCJUtlRO3slo7oxEbb.webp`, `ads/KC8e3NEv-tt6grp2tpkx0.jpeg`; safe to delete later if nothing else uses them).
+  - `sharp` 0.34.5 is now a direct dependency in `package.json` (it was only installed through Next.js).
+  - Before this, every slide kept its original upload in memory (one ad was a 5422×3899 photo, about 85 MB once decoded), so 40 phone-photo ads could need about 2 GB.
+- **Mini computer advice (2026-11-09):** memory prices jumped in 2026; new Intel N150 mini PCs mostly cost $160–360 now (e.g. Beelink Mini S13 about $349). At $120 or less, the suggestion was refurbished business minis (HP EliteDesk 800 G3 Mini, Lenovo ThinkCentre M710q / M715q, Dell OptiPlex 3050 / 5050 Micro) with 8 GB RAM, an SSD, Windows 10/11 Pro, then test one with a full loop before buying ten. Not Android TV boxes or Chromeboxes: Chrome Remote Desktop can't be set up for unattended access on them.
 
 ## 2026-11-08 summary
 
@@ -504,6 +518,8 @@ Tables: `equipment` (`0024`; `location_id` and `screen_device_id` set null on de
 
 **Remote access & Windows login** (mini computers; `0027`, `0028`): plain columns `remote_account`, `remote_url`, `remote_computer_name`, `windows_user`; encrypted `remote_account_password_enc`, `remote_pin_enc`, `windows_password_enc` (same `ENCRYPTION_KEY`). Save routes go through `equipmentColumns()` in `src/lib/equipment-server.ts` (a secret left out keeps the saved one, null clears it; no key → 503 with a message). The page only gets `hasRemotePassword` / `hasRemotePin` / `hasWindowsPassword`; values come from `GET /api/admin/equipment/<id>/secret?field=password|pin|windows` (admin only, `no-store`) on "Show". `SecretField.tsx` is the reusable Show / Copy / Change / Keep old input (the WiFi field in `StoreSetupClient.tsx` predates it and has its own copy). Changing an item's type away from Mini computer clears these fields on save. `remote_url` must start with http(s):// (it's rendered as a link).
 
+**Store screens and memory:** screens draw only the nearby ad slides and uploads are max 1920 px (see the 2026-11-09 summary), so a 40-ad loop is light enough for an 8 GB mini computer.
+
 Ideas not built yet: printable QR labels per device (scan → its record), offline-screen alerts, a history log (moves/repairs).
 
 ## Sharing and deploys
@@ -579,6 +595,7 @@ Ideas not built yet: printable QR labels per device (scan → its record), offli
 - [ ] **Multi-store bundle** (idea #3, later): one ad on several stores at a discount. Needs partner decisions on pricing.
 - [ ] **Ad swap:** test **Deny** once (on the first real swap, or a test ad made "paid" by an Admin Panel edit, then deleted). Ideas: show the swap history on the ad's details page; let admins see swaps in the Admin Panel.
 - [ ] **Ad form checkboxes:** (still open) on Post a New Ad's Review step, unticked checkboxes ("Post as a test ad", "My business is within…") look filled dark grey in dark mode. Give them a light background or explicit colours.
+- [ ] **10 more mini computers:** buy one (≤$120, 8 GB RAM, SSD, Windows Pro), run a 40-ad loop on it for a day, then buy the rest.
 - [ ] **Store setup (moved to 2026-11-09):** set up the 10 stores using Admin → Equipment: add each store's mini computer (with its remote access and Windows login) / TV / cables, tick the checklist, save WiFi details, and on the Screens page assign each new screen to its store (then link the mini computer to it in the Equipment list). Remove test entries made on 2026-11-07 if any are left.
 - [ ] **New logo, remaining:** the link preview image (`src/app/opengraph-image.tsx`, shown when the site is shared) still writes "CommunityBulletin" in text; switch it to the new logo. The old `src/components/layout/Logo.tsx` is unused and can go. Optional: a light outline around the logo icon on navy backgrounds (dashboard sidebar, sign-in left panel), where the navy box blends in.
 - [ ] **Store screens:** after the next deploy that touches the display, reload each store TV once so it runs the new code (since 2026-11-03 its views count only when it sends its device id).

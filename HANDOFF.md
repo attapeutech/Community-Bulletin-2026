@@ -1,4 +1,4 @@
-# Handoff: 2026-10-22 (updated 2026-11-09)
+# Handoff: 2026-10-22 (updated 2026-11-10)
 
 ## Where things stand
 
@@ -32,6 +32,12 @@
   - `LeaveFrame` (`src/components/layout/LeaveFrame.tsx`, in the root layout) moves any non-display page out of a frame
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
+
+## 2026-11-10 summary
+
+- **All Ads: coloured payment badges** (PR #146, `AdminPanelClient.tsx`): payment status is a `PaymentBadge` pill with a dot and a readable label (`PAYMENT_BADGE`): **Unpaid** orange with a pulsing dot, **Paid** green, **Refund pending** purple (pulsing), **Refunded** light purple, **Payment failed** red. Ad status badges (`STATUS_BADGE_CLASS`) got stronger borders; Pending is amber so it doesn't blend with Unpaid.
+- **"← Sales" is a button** (same PR): on the lead page (`sales/[id]/LeadDetailClient.tsx`) and New lead (`sales/new/NewLeadClient.tsx`), a white pill with an orange `ArrowLeft` that fills navy on hover.
+- Not checked in a browser by Claude (admin pages need a sign-in); the user reviewed both on localhost before committing.
 
 ## 2026-11-09 summary
 

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Phone, Mail, MapPin, Store } from "lucide-react";
+import { ArrowLeft, Phone, Mail, MapPin, Store } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -135,7 +135,9 @@ export default function LeadDetailClient({ lead, today, stores, demos, appointme
 
   return (
     <div className="w-full max-w-[860px]">
-      <Link href={back} className="text-[13px] text-[#4A6B82] no-underline hover:underline">← Sales</Link>
+      <Link href={back} className="group no-underline inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#1A3A5C] bg-white border border-[#C9D9E7] rounded-full pl-2.5 pr-3.5 py-1.5 shadow-sm hover:bg-[#1A3A5C] hover:text-white hover:border-[#1A3A5C] transition-colors">
+        <ArrowLeft size={15} strokeWidth={2.4} className="text-[#E8563A] group-hover:text-white" aria-hidden="true" /> Sales
+      </Link>
 
       <div className="mt-2 mb-5 flex items-center gap-2.5 flex-wrap">
         <h1 className="font-serif text-[26px] font-bold text-[#1A3A5C]">{lead.businessName}</h1>

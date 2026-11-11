@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -37,7 +38,9 @@ export default function NewLeadClient({ today, stores, initialKind, initialLocat
 
   return (
     <div className="w-full max-w-[720px]">
-      <Link href={back} className="text-[13px] text-[#4A6B82] no-underline hover:underline">← Sales</Link>
+      <Link href={back} className="group no-underline inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#1A3A5C] bg-white border border-[#C9D9E7] rounded-full pl-2.5 pr-3.5 py-1.5 shadow-sm hover:bg-[#1A3A5C] hover:text-white hover:border-[#1A3A5C] transition-colors">
+        <ArrowLeft size={15} strokeWidth={2.4} className="text-[#E8563A] group-hover:text-white" aria-hidden="true" /> Sales
+      </Link>
       <h1 className="font-serif text-[26px] font-bold text-[#1A3A5C] mt-2 mb-5">New lead</h1>
       <Card className="rounded-xl border-[#D8E4EE]">
         <CardContent className="p-5 sm:p-6 flex flex-col gap-5">

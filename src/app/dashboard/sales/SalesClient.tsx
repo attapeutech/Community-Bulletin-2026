@@ -8,7 +8,7 @@ import { Phone, Mail, Plus, ChevronLeft, ChevronRight, Store, Search } from "luc
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { ADS_PER_STORE_GOAL, LEADS_PAGE_SIZE, gmailComposeUrl, LEAD_KINDS, LEAD_STAGES, addDays, isOpenStage, stageLabel, type LeadStage } from "@/lib/leads";
+import { ADS_PER_STORE_GOAL, LEADS_PAGE_SIZE, defaultLeadSort, gmailComposeUrl, LEAD_KINDS, LEAD_STAGES, addDays, isOpenStage, stageLabel, type LeadStage } from "@/lib/leads";
 
 export type LeadRow = {
   id: string;
@@ -218,13 +218,14 @@ export default function SalesClient({ leads, filters, total, pages, today, summa
     if (next.store && next.kind === "advertiser") p.set("store", next.store);
     if (next.city) p.set("city", next.city);
     if (next.owner) p.set("owner", next.owner);
-    if (next.sort !== "follow_up") p.set("sort", next.sort);
+    // Only put the sort in the address when it isn't this tab's default (A→Z for advertisers)
+    if (next.sort !== defaultLeadSort(next.kind)) p.set("sort", next.sort);
     if (next.page > 1) p.set("page", String(next.page));
     router.push(`/dashboard/sales${p.size ? `?${p}` : ""}`);
   }
 
   const isAdvertisers = filters.kind === "advertiser";
-  const hasFilters = !!(filters.q || filters.stage !== "open" || filters.due || filters.store || filters.city || filters.owner || filters.sort !== "follow_up");
+  const hasFilters = !!(filters.q || filters.stage !== "open" || filters.due || filters.store || filters.city || filters.owner || filters.sort !== defaultLeadSort(filters.kind));
   const newLeadHref = `/dashboard/sales/new?kind=${filters.kind}${isAdvertisers && filters.store ? `&location=${filters.store}` : ""}`;
   const tiles = [
     { label: "Due today", value: summary.dueToday, active: filters.due === "today", onClick: () => go({ due: "today", stage: "open" }), tone: "text-amber-800" },
@@ -308,7 +309,7 @@ export default function SalesClient({ leads, filters, total, pages, today, summa
           <button
             key={k.value}
             type="button"
-            onClick={() => { setQ(""); go({ kind: k.value, q: "", store: "", city: "", due: "", stage: "open" }); }}
+            onClick={() => { setQ(""); go({ kind: k.value, q: "", store: "", city: "", due: "", stage: "open", sort: defaultLeadSort(k.value) }); }}
             className={cn(
               "px-4 py-2 -mb-px border-b-2 text-[14px] font-semibold",
               filters.kind === k.value ? "border-[#E8563A] text-[#1A3A5C]" : "border-transparent text-[#4A6B82] hover:text-[#1A3A5C]"
@@ -434,7 +435,7 @@ export default function SalesClient({ leads, filters, total, pages, today, summa
           <option value="follow_up">Sort: follow-up date</option>
           <option value="updated">Sort: recently updated</option>
           <option value="created">Sort: newest</option>
-          <option value="name">Sort: name</option>
+          <option value="name">Sort: name (A→Z)</option>
         </select>
         {hasFilters && (
           <button type="button" onClick={() => { setQ(""); router.push(`/dashboard/sales${isAdvertisers ? "" : "?kind=store_partner"}`); }} className="text-[12px] text-[#4A90C4] hover:underline px-1">

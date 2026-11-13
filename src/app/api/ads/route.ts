@@ -7,11 +7,12 @@ import { eq, and, gt } from "drizzle-orm";
 import { AD_DURATION_DAYS } from "@/types";
 import { addDays } from "date-fns";
 import { pushDashboardUpdate } from "@/lib/socket/notify";
-import { saleTemplateSchema, saleTitle } from "@/lib/ad-templates";
+import { AD_TEMPLATES, posterFields, saleTemplateSchema, saleTitle } from "@/lib/ad-templates";
 
 const createAdSchema = z.object({
   locationId: z.string().uuid(),
-  title: z.string().min(3).max(120),
+  // Poster ads may leave it blank ("Poster ad" is used); other ads need at least 3 characters
+  title: z.string().max(120),
   description: z.string().max(500).optional(),
   imageUrl: z.string().url(),
   imageKey: z.string().min(1),
@@ -26,7 +27,7 @@ const createAdSchema = z.object({
   // Admin only: a sales demo ad (a test ad shown only on that demo's private link)
   demoId: z.string().uuid().optional(),
   // Built-in template drawn by the screen (the image is then the template's photo)
-  template: z.literal("sale").optional(),
+  template: z.enum(AD_TEMPLATES).optional(),
   templateData: z.unknown().optional(),
 });
 
@@ -52,6 +53,10 @@ export async function POST(req: NextRequest) {
     }
     // Template ads: check the fields; the title shown elsewhere is built from them ("20% OFF any large pizza")
     let templateData = null;
+    if (data.template === "poster") Object.assign(data, posterFields(data));
+    else if (data.template !== "sale" && data.title.trim().length < 3) {
+      return NextResponse.json({ success: false, error: "Title must be at least 3 characters." }, { status: 422 });
+    }
     if (data.template === "sale") {
       const parsedTemplate = saleTemplateSchema.safeParse(data.templateData);
       if (!parsedTemplate.success) {

@@ -2,7 +2,7 @@ import { requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import { ads, leads, locations, users } from "@/lib/db/schema";
 import { and, asc, count, desc, eq, ilike, inArray, isNotNull, isNull, lt, lte, or, sql, type SQL } from "drizzle-orm";
-import { LEADS_PAGE_SIZE, LEAD_STAGE_VALUES, addDays, leadToday, type LeadStage } from "@/lib/leads";
+import { LEADS_PAGE_SIZE, LEAD_STAGE_VALUES, addDays, defaultLeadSort, leadToday, type LeadStage } from "@/lib/leads";
 import SalesClient, { type LeadRow, type SalesFilters, type StoreGoal } from "./SalesClient";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +24,7 @@ function readFilters(sp: Record<string, string | string[] | undefined>): SalesFi
     store: UUID.test(store) ? store : "",
     city: one("city").trim().slice(0, 100),
     owner: one("owner") === "me" ? "me" : "",
-    sort: ["updated", "name", "created"].includes(sort) ? sort : "follow_up",
+    sort: ["follow_up", "updated", "name", "created"].includes(sort) ? sort : defaultLeadSort(one("kind") === "store_partner" ? "store_partner" : "advertiser"),
     page: Math.max(1, Number.parseInt(one("page"), 10) || 1),
   };
 }
@@ -58,7 +58,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
 
   const orderBy =
     f.sort === "updated" ? [desc(leads.updatedAt)]
-    : f.sort === "name" ? [asc(leads.businessName)]
+    : f.sort === "name" ? [sql`lower(${leads.businessName}) asc`, desc(leads.createdAt)]
     : f.sort === "created" ? [desc(leads.createdAt)]
     // Most urgent first; leads with no follow-up date go last
     : [sql`${leads.nextFollowUp} asc nulls last`, desc(leads.updatedAt)];

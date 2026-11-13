@@ -66,3 +66,8 @@ export function sourceLabel(value: string | null) {
 
 /** Won and Lost are finished; follow-ups only matter while a lead is open */
 export const isOpenStage = (stage: string) => stage !== "won" && stage !== "lost";
+
+/** Default list order: Advertisers A→Z by business name; Store partners by follow-up date */
+export function defaultLeadSort(kind: string) {
+  return kind === "advertiser" ? "name" : "follow_up";
+}

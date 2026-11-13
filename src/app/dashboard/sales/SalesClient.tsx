@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Phone, Mail, Plus, ChevronLeft, ChevronRight, Store } from "lucide-react";
+import { Phone, Mail, Plus, ChevronLeft, ChevronRight, Store, Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -378,16 +378,27 @@ export default function SalesClient({ leads, filters, total, pages, today, summa
 
       {/* Filters */}
       <div className="flex gap-2 mb-4 flex-wrap items-center">
+        {/* The main way to find a lead, so it stands out: search icon, coloured border, soft tint */}
         <form
           onSubmit={e => { e.preventDefault(); go({ q: q.trim() }); }}
-          className="flex-[1_1_220px] min-w-0"
+          className="relative flex-[1_1_260px] min-w-0"
+          role="search"
         >
+          <Search size={17} strokeWidth={2.4} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#E8563A] pointer-events-none" aria-hidden="true" />
           <Input
             type="search"
             value={q}
             onChange={e => setQ(e.target.value)}
             placeholder="Search name, contact, phone, email"
-            className="h-9 text-[13px] bg-white border-[#D8E4EE]"
+            aria-label="Search leads by name, contact, phone or email"
+            // Peach tint only while empty; typed text sits on white in large, dark navy for easy reading
+            className={cn(
+              "h-10 pl-10 pr-3 text-[15px] sm:text-[15px] font-semibold text-[#0F2540] caret-[#E8563A] border-2 rounded-lg shadow-sm",
+              "placeholder:text-[#8A6F66] placeholder:font-normal",
+              "focus-visible:bg-white focus-visible:border-[#E8563A] focus-visible:ring-[3px] focus-visible:ring-[#E8563A]/20",
+              q ? "bg-white border-[#E8563A]" : "bg-[#FFF7F3] border-[#F2A58E]"
+            )}
+            style={{ color: "#0F2540", WebkitTextFillColor: "#0F2540" }}
           />
         </form>
         <select aria-label="Stage" value={filters.stage} onChange={e => go({ stage: e.target.value })} className={selectClass}>

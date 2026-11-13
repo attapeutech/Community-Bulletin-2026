@@ -4,7 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { ads } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/auth/session";
-import { saleTemplateSchema, saleTitle } from "@/lib/ad-templates";
+import { AD_TEMPLATES, posterFields, saleTemplateSchema, saleTitle } from "@/lib/ad-templates";
 
 const isUuid = (id: string) => /^[0-9a-f-]{36}$/i.test(id);
 
@@ -49,7 +49,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
 // The same fields as posting an ad (store, payment and status don't change)
 const editSchema = z.object({
-  title: z.string().min(3).max(120),
+  title: z.string().max(120), // poster ads may leave it blank
   description: z.string().max(500).optional(),
   imageUrl: z.string().url(),
   imageKey: z.string().min(1),
@@ -59,7 +59,7 @@ const editSchema = z.object({
   showPhone:   z.boolean().optional(),
   showAddress: z.boolean().optional(),
   showWebsite: z.boolean().optional(),
-  template: z.literal("sale").optional(),
+  template: z.enum(AD_TEMPLATES).optional(),
   templateData: z.unknown().optional(),
 });
 
@@ -72,7 +72,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const parsed = editSchema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message ?? "Validation failed" }, { status: 422 });
-    const data = parsed.data;
+    const data = parsed.data.template === "poster" ? posterFields(parsed.data) : parsed.data;
+    if (data.template !== "sale" && data.template !== "poster" && data.title.trim().length < 3) {
+      return NextResponse.json({ success: false, error: "Title must be at least 3 characters." }, { status: 422 });
+    }
 
     // Template ads: check the fields; the title is built from them, as when posting
     let templateData = null;

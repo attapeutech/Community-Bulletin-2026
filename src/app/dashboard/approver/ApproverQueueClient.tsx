@@ -6,6 +6,7 @@ import { Check, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { SaleTemplate } from "@/components/display/templates/SaleTemplate";
+import { PosterSlide } from "@/components/display/PosterSlide";
 import { readSaleData } from "@/lib/ad-templates";
 import { LOCAL_AD_RADIUS_MILES } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -226,6 +227,16 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
                     phone={selected.showPhone ? selected.contactPhone : null}
                     website={selected.showWebsite ? selected.contactWebsite : null}
                     play
+                  />
+                </div>
+              ) : selected.template === "poster" ? (
+                /* Own design: full-screen poster, website as a corner QR code (as on the store screen) */
+                <div className="relative w-full mb-4 rounded-lg overflow-hidden" style={{ aspectRatio: "16 / 9" }}>
+                  <PosterSlide
+                    imageUrl={selected.imageUrl}
+                    title={selected.title}
+                    qrValue={selected.showWebsite && selected.contactWebsite ? selected.contactWebsite : null}
+                    compact
                   />
                 </div>
               ) : (

@@ -12,6 +12,7 @@ import { HeartButton } from "@/components/ui/HeartButton";
 import { ShareButton } from "@/components/ui/ShareButton";
 import { BrandFrame } from "@/components/display/BrandFrame";
 import { FpsMeter } from "@/components/display/FpsMeter";
+import { PosterSlide } from "@/components/display/PosterSlide";
 import { SaleTemplate } from "@/components/display/templates/SaleTemplate";
 import { readSaleData } from "@/lib/ad-templates";
 import { SampleAdHouseSlide, FamilyHouseSlide } from "@/components/display/HouseSlides";
@@ -525,6 +526,16 @@ export default function DisplayPage() {
                       phone={ad.showPhone ? ad.contactPhone : null}
                       website={ad.showWebsite ? ad.contactWebsite : null}
                       play={idx === selectedIndex}
+                    />
+                  </div>
+                ) : ad.template === "poster" ? (
+                  /* The advertiser's own flyer, full screen; website (if any) as a corner QR code */
+                  <div style={{ flex: 1, position: "relative" }}>
+                    <PosterSlide
+                      imageUrl={ad.imageUrl}
+                      title={ad.title}
+                      qrValue={ad.showWebsite && ad.contactWebsite && typeof window !== "undefined" ? `${window.location.origin}/go/${ad.id}` : null}
+                      zooming={idx === selectedIndex}
                     />
                   </div>
                 ) : hasSplit ? (

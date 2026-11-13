@@ -2,8 +2,9 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { LOCAL_AD_RADIUS_MILES } from "@/types";
+import { PosterSlide } from "@/components/display/PosterSlide";
 import { SaleTemplate } from "@/components/display/templates/SaleTemplate";
-import { EMPTY_SALE, SALE_LIMITS, readSaleData, saleTemplateSchema, saleTitle, type SaleTemplateData } from "@/lib/ad-templates";
+import { EMPTY_SALE, POSTER_TITLE, SALE_LIMITS, readSaleData, saleTemplateSchema, saleTitle, type SaleTemplateData } from "@/lib/ad-templates";
 import { useRouter } from "next/navigation";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { costPerThousandCents, formatCostPerThousand, formatShoppers } from "@/lib/traffic";
@@ -99,28 +100,6 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
         {label}
       </span>
     </div>
-  );
-}
-
-function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return (
-    <textarea
-      {...props}
-      rows={4}
-      style={{
-        width: "100%",
-        padding: "10px 14px",
-        border: "1px solid #D8E4EE",
-        borderRadius: 8,
-        fontSize: 14,
-        color: "#1A3A5C",
-        background: "#fff",
-        outline: "none",
-        resize: "vertical",
-        boxSizing: "border-box",
-        ...props.style,
-      }}
-    />
   );
 }
 
@@ -303,7 +282,8 @@ export default function NewAdPage() {
   useEffect(() => { const t = setTimeout(() => setPreviewSale(sale), 600); return () => clearTimeout(t); }, [sale]);
   const [replay, setReplay] = useState(0);
   const isTemplate = design === "template";
-  const adTitle = isTemplate ? saleTitle(sale) : title;
+  // Own design = a poster ad: its name is optional (only for lists and emails, not shown on the screen)
+  const adTitle = isTemplate ? saleTitle(sale) : (title.trim() || POSTER_TITLE);
 
   // Contact info
   const [contactPhone,   setContactPhone]   = useState("");
@@ -367,7 +347,7 @@ export default function NewAdPage() {
           const t = readSaleData(a.templateData);
           setDesign("template"); setSale(t); setPreviewSale(t);
         } else {
-          setDesign("own"); setTitle(a.title); setDescription(a.description ?? "");
+          setDesign("own"); setTitle(a.title === POSTER_TITLE ? "" : a.title); setDescription(a.description ?? "");
         }
         setUploadedImageUrl(a.imageUrl); setUploadedImageKey(a.imageKey);
         setContactPhone(a.contactPhone ?? ""); setContactAddress(a.contactAddress ?? ""); setContactWebsite(a.contactWebsite ?? "");
@@ -403,7 +383,7 @@ export default function NewAdPage() {
         const t = readSaleData(a.templateData);
         setDesign("template"); setSale(t); setPreviewSale(t);
       } else {
-        setDesign("own"); setTitle(a.title); setDescription(a.description ?? "");
+        setDesign("own"); setTitle(a.title === POSTER_TITLE ? "" : a.title); setDescription(a.description ?? "");
       }
       setUploadedImageUrl(a.imageUrl); setUploadedImageKey(a.imageKey);
       setContactPhone(a.contactPhone ?? ""); setContactAddress(a.contactAddress ?? ""); setContactWebsite(a.contactWebsite ?? "");
@@ -517,17 +497,18 @@ export default function NewAdPage() {
         body: JSON.stringify({
           locationId: selectedLocation.id,
           title: adTitle,
-          description: (isTemplate ? sale.details : description) || undefined,
-          template: isTemplate ? "sale" : undefined,
+          description: isTemplate ? sale.details || undefined : undefined,
+          template: isTemplate ? "sale" : "poster",
           templateData: isTemplate ? sale : undefined,
           imageUrl: uploadedImageUrl,
           imageKey: uploadedImageKey,
-          contactPhone:   contactPhone   || undefined,
-          contactAddress: contactAddress || undefined,
-          contactWebsite: contactWebsite || undefined,
-          showPhone,
-          showAddress,
-          showWebsite,
+          // A poster keeps only the website, shown as a QR code
+          contactPhone:   isTemplate ? contactPhone   || undefined : undefined,
+          contactAddress: isTemplate ? contactAddress || undefined : undefined,
+          contactWebsite: contactWebsite.trim() || undefined,
+          showPhone:   isTemplate ? showPhone : false,
+          showAddress: isTemplate ? showAddress : false,
+          showWebsite: isTemplate ? showWebsite : !!contactWebsite.trim(),
           isTest: asTest || undefined,
           demoId: demo?.id,
         }),
@@ -588,66 +569,28 @@ export default function NewAdPage() {
       );
     }
     const img = uploadedImageUrl ?? imagePreview;
-    // Same rule as the screen: title and description show only beside contact details (split layout)
-    if (!img && !(contactPhone || contactAddress || contactWebsite)) {
-      return placeholder("");
-    }
+    if (!img) return placeholder("");
+    // Own design: the poster fills the screen, with the website as a corner QR code
+    return (
+      <div style={{ position: "relative", width: "100%", aspectRatio: "16 / 9", borderRadius: 8, overflow: "hidden", background: "#0A1A2E" }}>
+        <PosterSlide imageUrl={img} title={adTitle} qrValue={contactWebsite.trim() || null} compact />
+        {showFullscreen && (
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowPreview(true); }}
+            style={{
+              position: "absolute", top: 10, right: 10,
+              background: "rgba(10,26,46,0.75)", color: "#fff",
+              border: "none", borderRadius: 6, padding: "6px 12px",
+              fontSize: 12, fontWeight: 600, cursor: "pointer",
+              backdropFilter: "blur(4px)", display: "flex", alignItems: "center", gap: 6,
+            }}
+          >
+            <span>⛶</span> Preview on display screen
+          </button>
+        )}
+      </div>
+    );
 
-                  const hasSplit = !!(contactPhone || contactAddress || contactWebsite);
-                  const titleLen = title.length;
-                  const titleSize = titleLen <= 20 ? "clamp(18px, 3vw, 40px)" : titleLen <= 40 ? "clamp(14px, 2.2vw, 30px)" : "clamp(12px, 1.6vw, 22px)";
-                  return (
-                    <div style={{ position: "relative", background: "#0A1A2E", borderRadius: 8, overflow: "hidden" }}>
-                      {hasSplit ? (
-                        /* Split layout preview, in a screen's 16:9 shape; "safe center" keeps a long title visible
-                           (any overflow is cut at the bottom, not the top) */
-                        <div style={{ display: "flex", aspectRatio: "16 / 9" }}>
-                          <div style={{ width: "42%", background: "#0A1A2E", display: "flex", flexDirection: "column", justifyContent: "safe center", overflow: "hidden", padding: "16px 20px", position: "relative", flexShrink: 0, borderRight: "1px solid rgba(74,144,196,0.2)" }}>
-                            <div style={{ fontFamily: "Georgia,serif", fontSize: titleSize, fontWeight: 700, color: "#fff", lineHeight: 1.2, marginBottom: 8 }}>{title}</div>
-                            {description && <div style={{ fontSize: "clamp(10px, 1vw, 13px)", color: "rgba(255,255,255,0.6)", lineHeight: 1.5, marginBottom: 10 }}>{description}</div>}
-                            {(showPhone || showAddress || showWebsite) && (
-                              <>
-                                <div style={{ width: 28, height: 2, background: "#E8563A", borderRadius: 1, marginBottom: 8 }} />
-                                <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 8 }}>Contact Info</div>
-                              </>
-                            )}
-                            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                              {showPhone && contactPhone && <div style={{ fontSize: "clamp(10px, 1vw, 13px)", color: "#fff", fontWeight: 600 }}>📞 {contactPhone}</div>}
-                              {showAddress && contactAddress && <div style={{ fontSize: "clamp(10px, 1vw, 13px)", color: "#fff", fontWeight: 600 }}>📍 {contactAddress}</div>}
-                              {showWebsite && contactWebsite && <div style={{ fontSize: "clamp(10px, 1vw, 13px)", color: "#4A90C4", fontWeight: 600 }}>🌐 {contactWebsite}</div>}
-                            </div>
-                          </div>
-                          <div style={{ flex: 1, overflow: "hidden" }}>
-                            {img
-                              ? <img src={img} alt={title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                              : <div style={{ width: "100%", height: "100%", background: "#13304F" }} /* the upload pill sits over this */ />}
-                          </div>
-                        </div>
-                      ) : (
-                        /* Full-screen preview */
-                        <>
-                          <img src={img ?? undefined} alt={title} style={{ width: "100%", aspectRatio: "16 / 9", objectFit: "contain", display: "block" }} />
-                          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,26,46,0.75) 0%, transparent 30%)", pointerEvents: "none" }} />
-                          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "10px 14px", display: "flex", justifyContent: "flex-end" }}>
-                            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.6)" }}>Ad #Preview</span>
-                          </div>
-                        </>
-                      )}
-                      {/* Preview button */}
-                      {showFullscreen && <button
-                        onClick={(e) => { e.stopPropagation(); setShowPreview(true); }}
-                        style={{
-                          position: "absolute", top: 10, right: 10,
-                          background: "rgba(10,26,46,0.75)", color: "#fff",
-                          border: "none", borderRadius: 6, padding: "6px 12px",
-                          fontSize: 12, fontWeight: 600, cursor: "pointer",
-                          backdropFilter: "blur(4px)", display: "flex", alignItems: "center", gap: 6,
-                        }}
-                      >
-                        <span>⛶</span> Preview on display screen
-                      </button>}
-                    </div>
-                  );
   };
 
   // ─── Render ─────────────────────────────────────────────────────────────────
@@ -855,29 +798,21 @@ export default function NewAdPage() {
 
               {!isTemplate && (<>
               <div style={{ marginBottom: 20 }}>
-                <Label>Ad title *</Label>
+                <Label>Ad name (optional)</Label>
                 <Input
-                  placeholder="e.g. Grand Opening Sale — 30% Off!"
+                  placeholder="e.g. Grand Opening flyer"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   maxLength={120}
                 />
-                <div style={{ fontSize: 11, color: "#4A6B82", marginTop: 4, textAlign: "right" }}>{title.length}/120</div>
-              </div>
-
-              <div style={{ marginBottom: 20 }}>
-                <Label>Description (optional)</Label>
-                <Textarea
-                  placeholder="Additional details shown below the image…"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  maxLength={500}
-                />
-                <div style={{ fontSize: 11, color: "#4A6B82", marginTop: 4, textAlign: "right" }}>{description.length}/500</div>
+                <div style={{ fontSize: 11, color: "#4A6B82", marginTop: 4, display: "flex", justifyContent: "space-between", gap: 8 }}>
+                  <span>Just for your records; it isn&apos;t shown on the screen.</span>
+                  <span>{title.length}/120</span>
+                </div>
               </div>
 
               <p style={{ fontSize: 11, color: "#5B7D96", marginBottom: 16 }}>
-                Add your image by clicking the screen preview or dropping it there. The screen shows your title and description beside the image only when a contact detail below is filled in; otherwise the image fills the screen.
+                Add your flyer or poster by clicking the screen preview or dropping it there. It fills the whole screen, so put everything shoppers need (phone, address, offer) on the design itself.
               </p>
               <div className="lg:hidden" style={{ marginBottom: 20 }}>
                 <Label>Live preview · image *</Label>
@@ -885,7 +820,27 @@ export default function NewAdPage() {
               </div>
               </>)}
 
-              {/* Contact info */}
+              {/* Own design: only the website, which becomes a QR code on the poster */}
+              {!isTemplate && (
+                <div style={{ borderTop: "1px solid #D8E4EE", paddingTop: 20, marginBottom: 20 }}>
+                  <div style={{ marginBottom: 14, background: "#FFF7F3", borderRadius: 10, padding: "12px 14px", border: "1px solid #F6C9B8" }}>
+                    <Label>🔳 Website for the QR code <span style={{ color: RED, fontWeight: 700 }}>· important</span></Label>
+                    <p style={{ fontSize: 12, color: "#4A6B82", margin: "4px 0 8px" }}>
+                      Shown as a <strong>QR code in the corner of your poster</strong>. Shoppers scan it with their phone to visit your website, menu or booking page. Leave it empty for no QR code.
+                    </p>
+                    <Input
+                      type="url"
+                      placeholder="https://yourwebsite.com"
+                      value={contactWebsite}
+                      onChange={(e) => setContactWebsite(e.target.value)}
+                      maxLength={200}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Contact info (Sale template) */}
+              {isTemplate && (
               <div style={{ borderTop: "1px solid #D8E4EE", paddingTop: 20, marginBottom: 20 }}>
                 <div style={{ fontFamily: "Georgia,serif", fontSize: 15, fontWeight: 700, color: ACCENT, marginBottom: 4 }}>
                   Contact Information
@@ -916,6 +871,7 @@ export default function NewAdPage() {
                 </p>
                 )}
               </div>
+              )}
 
               <div style={{ display: "flex", gap: 12, justifyContent: "space-between" }}>
                 <Btn secondary onClick={() => (demo ? router.push(`/dashboard/sales/${demo.leadId}`) : swapping ? router.push("/dashboard/user") : setStep(1))}>← Back</Btn>
@@ -923,7 +879,7 @@ export default function NewAdPage() {
                   if (isTemplate) {
                     const check = saleTemplateSchema.safeParse(sale);
                     if (!check.success) { setError(check.error.issues[0]?.message ?? "Please fill in the template."); return; }
-                  } else if (title.trim().length < 3) { setError("Title must be at least 3 characters."); return; }
+                  } else if (title.trim() && title.trim().length < 3) { setError("The ad name should be at least 3 characters, or leave it empty."); return; }
                   if (uploading) { setError("Your image is still uploading. One moment."); return; }
                   if (!uploadedImageUrl) { setError(`Please add your ${isTemplate ? "photo" : "image"}: click the screen preview or drop it there.`); return; }
                   setError(""); setStep(4);
@@ -953,8 +909,7 @@ export default function NewAdPage() {
                 {/* Own text colour: the page's inherited text colour is light in dark mode, on this light box */}
                 <div style={{ display: "grid", gap: 10, fontSize: 14, color: ACCENT }}>
                   <div><span style={{ color: "#4A6B82" }}>Location:</span> <strong>{selectedLocation?.storeName}</strong>{selectedLocation?.storeNumber && <StoreNumber value={selectedLocation.storeNumber} />}</div>
-                  <div><span style={{ color: "#4A6B82" }}>Title:</span> <strong>{adTitle}</strong>{isTemplate && <span style={{ color: "#4A6B82" }}> · Sale template</span>}</div>
-                  {!isTemplate && description && <div><span style={{ color: "#4A6B82" }}>Description:</span> {description}</div>}
+                  <div><span style={{ color: "#4A6B82" }}>{isTemplate ? "Title" : "Name"}:</span> <strong>{adTitle}</strong><span style={{ color: "#4A6B82" }}> · {isTemplate ? "Sale template" : "Your own design (full screen)"}</span></div>
                   {demo ? (
                     <div><span style={{ color: "#4A6B82" }}>Shown:</span> on the demo link only, until it expires · no payment</div>
                   ) : swapping ? (
@@ -965,7 +920,10 @@ export default function NewAdPage() {
                       <div><span style={{ color: "#4A6B82" }}>Price:</span> <strong style={{ color: RED }}>{selectedLocation ? `$${(selectedLocation.pricePerRunCents / 100).toFixed(2)}` : ""}</strong> <span style={{ color: "#4A6B82" }}>/ 4 weeks</span></div>
                     </>
                   )}
-                  {(showPhone || showAddress || showWebsite) && (
+                  {!isTemplate && contactWebsite.trim() && (
+                    <div><span style={{ color: "#4A6B82" }}>QR code links to:</span> {contactWebsite.trim()}</div>
+                  )}
+                  {isTemplate && (showPhone || showAddress || showWebsite) && (
                     <div style={{ marginTop: 8, borderTop: "1px solid #D8E4EE", paddingTop: 8 }}>
                       <div style={{ fontSize: 12, color: "#4A6B82", marginBottom: 4, fontWeight: 600 }}>Shown on display:</div>
                       {showPhone   && contactPhone   && <div style={{ fontSize: 13 }}>📞 {contactPhone}</div>}
@@ -1043,63 +1001,26 @@ export default function NewAdPage() {
       </div>
 
       {/* ── Display screen preview modal ── */}
-      {showPreview && !isTemplate && uploadedImageUrl && (() => {
-        const hasSplit = !!(contactPhone || contactAddress || contactWebsite);
-        const titleLen = title.length;
-        const titleSize = titleLen <= 20 ? "clamp(28px, 4vw, 58px)" : titleLen <= 40 ? "clamp(20px, 2.8vw, 42px)" : "clamp(15px, 2vw, 30px)";
-        return (
+      {showPreview && !isTemplate && uploadedImageUrl && (
+        <div
+          onClick={() => setShowPreview(false)}
+          style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.85)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}
+        >
           <div
-            onClick={() => setShowPreview(false)}
-            style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.85)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "min(90vw, 1100px)", height: "min(56vw, 620px)",
+              background: "#0A1A2E", borderRadius: 12, overflow: "hidden", position: "relative",
+              boxShadow: "0 0 0 8px #1a1a1a, 0 0 0 12px #333, 0 24px 48px rgba(0,0,0,0.8)",
+            }}
           >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                width: "min(90vw, 1100px)", height: "min(56vw, 620px)",
-                background: "#0A1A2E", borderRadius: 12, overflow: "hidden",
-                position: "relative", display: "flex",
-                boxShadow: "0 0 0 8px #1a1a1a, 0 0 0 12px #333, 0 24px 48px rgba(0,0,0,0.8)",
-              }}
-            >
-              {hasSplit ? (
-                <>
-                  {/* Left panel */}
-                  <div style={{ width: "42%", background: "#0A1A2E", display: "flex", flexDirection: "column", justifyContent: "center", padding: "clamp(20px, 4vw, 52px)", position: "relative", flexShrink: 0, borderRight: "1px solid rgba(74,144,196,0.15)" }}>
-                    <div style={{ fontFamily: "Georgia,serif", fontSize: titleSize, fontWeight: 700, color: "#fff", lineHeight: 1.15, marginBottom: "clamp(10px, 1.5vw, 20px)" }}>{title}</div>
-                    {description && <div style={{ fontSize: "clamp(11px, 1.2vw, 17px)", color: "rgba(255,255,255,0.65)", lineHeight: 1.6, marginBottom: "clamp(12px, 1.8vw, 24px)" }}>{description}</div>}
-                    {(showPhone || showAddress || showWebsite) && (
-                      <>
-                        <div style={{ width: 40, height: 3, background: "#E8563A", borderRadius: 2, marginBottom: "clamp(8px, 1.2vw, 16px)" }} />
-                        <div style={{ fontSize: "clamp(9px, 0.8vw, 11px)", fontWeight: 700, letterSpacing: "0.12em", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: "clamp(8px, 1vw, 14px)" }}>Contact Info</div>
-                      </>
-                    )}
-                    <div style={{ display: "flex", flexDirection: "column", gap: "clamp(8px, 1vw, 14px)" }}>
-                      {showPhone && contactPhone && <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "clamp(12px, 1.3vw, 18px)", color: "#fff", fontWeight: 600 }}>📞 {contactPhone}</div>}
-                      {showAddress && contactAddress && <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "clamp(12px, 1.3vw, 18px)", color: "#fff", fontWeight: 600 }}>📍 {contactAddress}</div>}
-                      {showWebsite && contactWebsite && <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "clamp(12px, 1.3vw, 18px)", color: "#4A90C4", fontWeight: 600 }}>🌐 {contactWebsite}</div>}
-                    </div>
-                  </div>
-                  {/* Right panel */}
-                  <div style={{ flex: 1, overflow: "hidden" }}>
-                    <img src={uploadedImageUrl} alt={title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <img src={uploadedImageUrl} alt={title} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,26,46,0.75) 0%, transparent 18%)" }} />
-                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "16px 32px", display: "flex", justifyContent: "flex-end" }}>
-                    <span style={{ fontSize: "clamp(10px, 1.2vw, 15px)", color: "rgba(255,255,255,0.6)" }}>Ad #Preview</span>
-                  </div>
-                </>
-              )}
-            </div>
-            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, marginTop: 20 }}>
-              This is how your ad will appear on the in-store display screen · Click anywhere or press Esc to close
-            </p>
+            <PosterSlide imageUrl={uploadedImageUrl} title={adTitle} qrValue={contactWebsite.trim() || null} />
           </div>
-        );
-      })()}
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, marginTop: 20 }}>
+            This is how your ad will appear on the in-store display screen · Click anywhere or press Esc to close
+          </p>
+        </div>
+      )}
     </div>
   );
 }

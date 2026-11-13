@@ -1,10 +1,10 @@
 // Ad swaps: replace a running paid ad with a new version (same business), reviewed, no new payment
 import { z } from "zod";
-import { saleTemplateSchema, saleTitle } from "@/lib/ad-templates";
+import { AD_TEMPLATES, posterFields, saleTemplateSchema, saleTitle } from "@/lib/ad-templates";
 
 /** The ad content an advertiser sends as the new version (the store, dates and payment stay) */
 export const swapContentSchema = z.object({
-  title: z.string().min(3).max(120),
+  title: z.string().max(120), // poster ads may leave it blank
   description: z.string().max(500).optional(),
   imageUrl: z.string().url(),
   imageKey: z.string().min(1),
@@ -14,12 +14,16 @@ export const swapContentSchema = z.object({
   showPhone:   z.boolean().optional(),
   showAddress: z.boolean().optional(),
   showWebsite: z.boolean().optional(),
-  template: z.literal("sale").optional(),
+  template: z.enum(AD_TEMPLATES).optional(),
   templateData: z.unknown().optional(),
 });
 
 /** Checks the template fields and returns the columns to store, or an error message */
-export function swapColumns(data: z.infer<typeof swapContentSchema>) {
+export function swapColumns(input: z.infer<typeof swapContentSchema>) {
+  const data = input.template === "poster" ? posterFields(input) : input;
+  if (data.template !== "sale" && data.template !== "poster" && data.title.trim().length < 3) {
+    return { error: "Title must be at least 3 characters." } as const;
+  }
   let { title, description } = data;
   let templateData = null;
   if (data.template === "sale") {

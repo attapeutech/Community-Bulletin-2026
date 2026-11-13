@@ -23,8 +23,35 @@ export const saleTemplateSchema = z.object({
 
 export type SaleTemplateData = z.infer<typeof saleTemplateSchema>;
 
-export const AD_TEMPLATES = ["sale"] as const;
+// "sale": drawn by the screen from templateData. "poster": the advertiser's own flyer, shown full screen
+// with only an optional website QR code (no title or contact panel). null: older own-image ads.
+export const AD_TEMPLATES = ["sale", "poster"] as const;
 export type AdTemplate = (typeof AD_TEMPLATES)[number];
+
+/** Name used for a poster ad when the advertiser leaves the (optional) name blank */
+export const POSTER_TITLE = "Poster ad";
+
+/**
+ * Poster ads keep only the website (for the QR code): no description, phone or address, and the
+ * website shows whenever one is given. Shared by posting, swaps and demo ad edits.
+ */
+export function posterFields<T extends {
+  title: string; description?: string; contactPhone?: string; contactAddress?: string; contactWebsite?: string;
+  showPhone?: boolean; showAddress?: boolean; showWebsite?: boolean;
+}>(data: T): T {
+  const website = data.contactWebsite?.trim() || undefined;
+  return {
+    ...data,
+    title: data.title.trim() || POSTER_TITLE,
+    description: undefined,
+    contactPhone: undefined,
+    contactAddress: undefined,
+    contactWebsite: website,
+    showPhone: false,
+    showAddress: false,
+    showWebsite: !!website,
+  };
+}
 
 export const EMPTY_SALE: SaleTemplateData = { businessName: "", offerBig: "", offerSmall: "", headline: "", details: "", ends: "" };
 

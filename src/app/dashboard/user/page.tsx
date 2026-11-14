@@ -69,6 +69,8 @@ export default async function UserDashboard() {
       contactWebsite: ads.contactWebsite,
       showAddress: ads.showAddress,
       contactAddress: ads.contactAddress,
+      showPhone: ads.showPhone,
+      contactPhone: ads.contactPhone,
       isTest: ads.isTest,
       demoId: ads.demoId,
       location: {
@@ -287,7 +289,7 @@ export default async function UserDashboard() {
                           </span>
                         )}
                         {/* QR code page: scans, then taps on Get directions / Call */}
-                        {(ad.qrScanCount > 0 || (ad.showAddress && ad.contactAddress)) && (
+                        {(ad.qrScanCount > 0 || (ad.showAddress && ad.contactAddress) || (ad.showWebsite && ad.contactWebsite)) && (
                           <span style={{ fontSize: 11, color: "var(--cb-ink-2)" }}>
                             📷 <strong style={{ color: "var(--cb-ink)" }}>{ad.qrScanCount.toLocaleString()}</strong> QR scans
                           </span>
@@ -297,7 +299,7 @@ export default async function UserDashboard() {
                             📍 <strong style={{ color: "var(--cb-ink)" }}>{ad.directionsClickCount.toLocaleString()}</strong> directions
                           </span>
                         )}
-                        {ad.callClickCount > 0 && (
+                        {(ad.callClickCount > 0 || (ad.showPhone && ad.contactPhone)) && (
                           <span style={{ fontSize: 11, color: "var(--cb-ink-2)" }}>
                             📞 <strong style={{ color: "var(--cb-ink)" }}>{ad.callClickCount.toLocaleString()}</strong> calls
                           </span>

@@ -1,4 +1,4 @@
-# Handoff: 2026-10-22 (updated 2026-11-12)
+# Handoff: 2026-10-22 (updated 2026-11-13)
 
 ## Where things stand
 
@@ -32,6 +32,18 @@
   - `LeaveFrame` (`src/components/layout/LeaveFrame.tsx`, in the root layout) moves any non-display page out of a frame
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
+
+## 2026-11-13 summary
+
+- **Sales: Pay now / Copy link on advertiser leads** (PR #152). One click on the Advertisers list replaces four (open the lead, Send proposal, Text it / show it, Make the link).
+  - Shown on advertiser rows in open stages, not Won or Lost (`QuickPayButtons` in `SalesClient.tsx`). **Pay now** opens the proposal page in a new tab to hand the phone over; **Copy link** copies it.
+  - `src/lib/proposal-quick.ts`:
+    - `quickPayFor(rows)` gives each row a state: `ready` (an open proposal: unpaid, with its demo not expired), `can_make`, `need_email` (has a demo ad but no email) or `missing` ("Make a demo ad first", shown as a small note under the lead).
+    - `getOrMakeProposalLink()` reuses the open proposal. Otherwise it inserts one like "Text it / show it": the newest open demo and its newest ad, the lead's email, no subject or message, `sentAt` now. It adds a lead note and bumps `updatedAt`.
+  - `POST /api/admin/proposals/quick { leadId, email? }` (admin only). For `need_email`, the button asks for the email with `window.prompt`, and the server saves it to `leads.email`.
+  - Pay now opens a blank tab during the click, then points it at the link; if the browser blocks it, a toast offers **Open**. Copy link uses a `ClipboardItem` with a promise, so Safari allows the copy after the link is made.
+  - On 2026-11-13: 14 of 33 advertiser leads were `ready`, 18 `need_email` and 1 `missing`.
+- **Dark mode: Call, Email, Copy link** (same PR). Under the general dark remapping in `globals.css`, these buttons showed white text on a pale hover. They now share `ROW_BTN` with explicit `dark:` colours (`dark:hover:bg-[#2A5179]`, white text). Explicit `dark:` classes compile to `:is(.dark *)` and beat the `:where(.dark)` remapping. Use the same fix for any other button that's hard to read on hover in dark mode.
 
 ## 2026-11-12 summary
 

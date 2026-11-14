@@ -1,4 +1,4 @@
-# Handoff: 2026-10-22 (updated 2026-11-13)
+# Handoff: 2026-10-22 (updated 2026-11-14)
 
 ## Where things stand
 
@@ -32,6 +32,18 @@
   - `LeaveFrame` (`src/components/layout/LeaveFrame.tsx`, in the root layout) moves any non-display page out of a frame
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
+
+## 2026-11-14 summary
+
+- **QR code: scan for deal & directions (and call)** (PR #153, migration `0029_qr_counters` applied, 30 rows). Requested by the paying advertiser Cemitas Tepeaca (Free Pepsi Cemitas, Fast Eddies). See "Ad analytics definitions" and "QR code page" below.
+  - `/go/<id>` counts a QR scan. When the ad shows an address or phone, it opens **`/go/<id>/options`**, a phone page with photo, business, offer, **See the deal** (`/go/<id>/deal`, a website visit), **Get directions** (`/go/<id>/map`) and **Call** (a `tel:` link that reports `{event:"call"}` to `/api/ads/<id>/track`). It shows only the buttons that apply, plus the address with map-pin links (PR #154) to Google Maps and Apple Maps (`?app=google|apple`). An ad with only a website still goes straight there.
+  - Directions use Apple Maps on iPhone / iPad / Mac (user agent) and Google Maps elsewhere (`mapsUrl()` in `src/lib/ad-templates.ts`).
+  - The screen label comes from `qrOffer()` / `qrLabel()`: **SCAN FOR DEAL & DIRECTIONS**, SCAN FOR DEAL or SCAN FOR DIRECTIONS (posters use sentence case via `qrCaption()`). The QR now also shows for ads that have only an address.
+  - **Poster ads** get an optional **"Store address for directions"** (kept by `posterFields`, not printed on the screen).
+  - New counters `qr_scan_count`, `directions_click_count`, `call_click_count`, through `recordAdEvent()` in `src/lib/click-tracking.ts` (bots and repeats within a minute excluded). Shown in My Ads, on the ad page and in Admin → All Ads, always for ads with a QR code, even at 0 (PR #156).
+  - Tested with curl (counts as a bot, so nothing counted) and headless Chrome; the user tested live with a phone.
+- **Screen views: at most one per ad per screen per minute** (PR #155). With Cemitas the only live ad at Fast Eddies' single TV, it was shown slide after slide, 24/7, and counted ~4,600 views in 13 hours. The window went from 5 s to 60 s, and only a counted view restarts it (before, every attempt reset it, which with 60 s would have stopped a lone ad counting). Normal multi-ad loops are unchanged.
+- **All ad counters reset to 0 on 2026-11-14** (user approved, after PR #155 was live): 6 ads, 4,700 screen views, 6 website visits, 2 scans, 1 directions tap (mostly testing).
 
 ## 2026-11-13 summary
 
@@ -370,7 +382,7 @@ Context: after two weeks of door-knocking, store owners and advertisers are inte
 - Production had been built with `db:push`, so Drizzle's migration history was empty. All migrations up to `0004_ad_analytics` were recorded as applied in Neon's `drizzle.__drizzle_migrations`, so `npm run db:migrate` works normally from here.
 - **Run migrations against the direct (non-pooled) Neon host:** remove `-pooler` from the hostname. Restores and DDL can fail through the pooler.
 - `0003` and `0004` have hand-written timestamps (`when: 1750…`) that are older than `0002`. They are already applied, so this is harmless, but generate future migrations with `npm run db:generate` rather than writing them by hand.
-- **Applied to Neon through `0028`** (29 rows in `drizzle.__drizzle_migrations`; `0022_sales_proposals` applied 2026-11-01, `0023_ad_swaps` 2026-11-03, `0024_equipment`, `0025_location_setup` and `0026_equipment_photos` 2026-11-07, `0027_equipment_remote` and `0028_equipment_windows_login` 2026-11-08):
+- **Applied to Neon through `0029`** (30 rows in `drizzle.__drizzle_migrations`; `0022_sales_proposals` applied 2026-11-01, `0023_ad_swaps` 2026-11-03, `0024_equipment`, `0025_location_setup` and `0026_equipment_photos` 2026-11-07, `0027_equipment_remote` and `0028_equipment_windows_login` 2026-11-08, `0029_qr_counters` 2026-11-14):
   - `0012_location_traffic`: `locations.daily_customers` and `traffic_updated_at`
   - `0013_screen_devices`
   - `0014_direct_deposits`
@@ -582,14 +594,21 @@ Ideas not built yet: printable QR labels per device (scan → its record), offli
 - **Screen views** (`ads.view_count`): one each time a display screen actually shows the ad.
   - Sent by `display/[slug]` on each carousel `select`, plus once at load. Data refreshes never re-count.
   - Recorded by public `POST /api/ads/[id]/track` with `{event:"view", location:<slug>, device:<screen device id>}`. It only counts approved, currently running ads booked at that store, **shown on a screen registered to that store** (a `screen_devices` row with that `location_id`, set in Admin → Screens; since 2026-11-03). View Live tabs, store owners' browsers and localhost play ads but don't count. **A new store's TV must be assigned in Admin → Screens, or its views don't count.**
-  - Repeats from the same device within 5 seconds are ignored (in-memory, per server process).
+  - **At most one view per ad per screen per minute** (since 2026-11-14; was 5 seconds). Only a counted view restarts the minute. In memory, per server process, so a restart forgets it.
   - Dashboard page opens no longer count.
-- **Website visits** (`ads.website_click_count`): QR scans via `/go/[id]` plus website-link clicks on the public ad page (track route, `website_click`), both through `recordWebsiteVisit()` in `src/lib/click-tracking.ts`.
+- **Website visits** (`ads.website_click_count`): opening the advertiser's website. That's a QR scan of a website-only ad, **See the deal** on the QR page (`/go/[id]/deal`), or a website-link click on the public ad page (track route, `website_click`), both through `recordWebsiteVisit()` in `src/lib/click-tracking.ts`.
   - Counted once per IP per ad per minute (shared between both paths).
   - Bots and link-preview fetchers are skipped by user-agent.
   - Visitors are always redirected, whether or not the visit is counted.
   - The owner's own dashboard link isn't tracked, and the old `/api/ads/[id]/visit-website` route was removed.
-- **Reset:** view counts and website visits were inflated before these fixes and were reset to 0 at deploy.
+- **QR scans** (`ads.qr_scan_count`): every scan of the screen's QR code (`/go/[id]`), whatever the shopper does next. **Directions** (`directions_click_count`): taps on Get directions or the map links (`/go/[id]/map`). **Calls** (`call_click_count`): taps on Call (`{event:"call"}` on the track route). All through `recordAdEvent()`: one per IP per ad per minute per kind, bots skipped.
+- **Reset:** view counts and website visits were inflated before these fixes and were reset to 0 at deploy. **All five counters were reset to 0 again on 2026-11-14** after the one-view-per-minute fix.
+
+## QR code page (2026-11-14)
+
+- Files: `src/app/go/[id]/route.ts` (scan; decides page or straight to the website), `src/app/go/[id]/options/page.tsx` + `CallButton.tsx`, and `src/app/go/[id]/deal/route.ts` and `map/route.ts`. All of `/go/...` is in the proxy's public routes.
+- What it offers comes from `qrOffer(ad)` in `src/lib/ad-templates.ts`: deal = website shown, directions = address shown, call = phone shown. Older ads with a website but the show switch off still go to the website.
+- A route file may only export handlers, so the helpers (`websiteUrl`, `mapsUrl`, `qrOffer`, `qrLabel`, `qrCaption`) live in `ad-templates.ts`.
 
 ## To do
 

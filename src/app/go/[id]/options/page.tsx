@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { ads, locations } from "@/lib/db/schema";
 import { POSTER_TITLE, qrOffer, readSaleData, saleTitle } from "@/lib/ad-templates";
+import { MapPin } from "lucide-react";
 import CallButton from "./CallButton";
 
 export const dynamic = "force-dynamic";
@@ -69,10 +70,14 @@ export default async function QrOptionsPage({ params }: { params: Promise<{ id: 
         {address && (
           <div className="text-center text-[14px] text-white/70">
             {address}
-            <div className="mt-1">
-              <a href={`/go/${id}/map?app=google`} className="text-[#9DC4E0] underline underline-offset-2">Open in Google Maps</a>
-              <span className="text-white/30 mx-2">·</span>
-              <a href={`/go/${id}/map?app=apple`} className="text-[#9DC4E0] underline underline-offset-2">Apple Maps</a>
+            <div className="mt-2 flex items-center justify-center flex-wrap gap-x-2 gap-y-1">
+              <a href={`/go/${id}/map?app=google`} className="inline-flex items-center gap-1 text-[#9DC4E0] underline underline-offset-2">
+                <MapPin size={15} strokeWidth={2.4} className="text-[#E8563A] shrink-0" aria-hidden="true" /> Open in Google Maps
+              </a>
+              <span className="text-white/30">·</span>
+              <a href={`/go/${id}/map?app=apple`} className="inline-flex items-center gap-1 text-[#9DC4E0] underline underline-offset-2">
+                <MapPin size={15} strokeWidth={2.4} className="text-[#E8563A] shrink-0" aria-hidden="true" /> Apple Maps
+              </a>
             </div>
           </div>
         )}

@@ -3,6 +3,7 @@ import { db } from "@/lib/db/client";
 import { ads, leads, locations, users } from "@/lib/db/schema";
 import { and, asc, count, desc, eq, ilike, inArray, isNotNull, isNull, lt, lte, or, sql, type SQL } from "drizzle-orm";
 import { LEADS_PAGE_SIZE, LEAD_STAGE_VALUES, addDays, defaultLeadSort, leadToday, type LeadStage } from "@/lib/leads";
+import { quickPayFor } from "@/lib/proposal-quick";
 import SalesClient, { type LeadRow, type SalesFilters, type StoreGoal } from "./SalesClient";
 
 export const dynamic = "force-dynamic";
@@ -129,7 +130,9 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
     .limit(LEADS_PAGE_SIZE)
     .offset((page - 1) * LEADS_PAGE_SIZE);
 
-  const data: LeadRow[] = rows.map(r => ({ ...r, updatedAt: r.updatedAt.toISOString() }));
+  // "Pay now" / "Copy link" on advertiser rows: a ready proposal link, one that can be made, or why not
+  const quick = f.kind === "advertiser" ? await quickPayFor(rows) : {};
+  const data: LeadRow[] = rows.map(r => ({ ...r, updatedAt: r.updatedAt.toISOString(), quickPay: quick[r.id] ?? null }));
   const stores: StoreGoal[] = storeRows.map(s => ({
     ...s,
     label: s.storeNumber ? `${s.storeName} #${s.storeNumber.replace(/^#/, "")}` : s.storeName,

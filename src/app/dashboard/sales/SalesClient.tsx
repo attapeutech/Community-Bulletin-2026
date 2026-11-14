@@ -4,7 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Phone, Mail, Plus, ChevronLeft, ChevronRight, Store, Search } from "lucide-react";
+import { Phone, Mail, Plus, ChevronLeft, ChevronRight, Store, Search, CreditCard, Link2 } from "lucide-react";
+import type { QuickPay } from "@/lib/proposal-quick";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,7 @@ export type LeadRow = {
   storeName: string | null;
   ownerName: string | null;
   linked: boolean;
+  quickPay?: QuickPay | null;  // advertiser rows: proposal link for Pay now / Copy link
 };
 
 export type StoreGoal = {
@@ -78,6 +80,116 @@ export async function patchLead(id: string, body: object) {
   if (!json?.success) throw new Error(json?.error ?? "Something went wrong");
 }
 
+// Outline buttons on a lead row (Call, Email, Copy link). Dark mode gets its own colours: the general
+// dark remapping left a pale hover behind white text there, which was unreadable.
+const ROW_BTN = "inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-[#D8E4EE] text-[13px] text-[#1A3A5C] bg-white no-underline hover:bg-[#F0F5FA] transition-colors dark:bg-transparent dark:text-[#E6EEF6] dark:border-[#33557A] dark:hover:bg-[#2A5179] dark:hover:text-white dark:hover:border-[#5B8FC2]";
+
+/** Get the lead's proposal link (reuses an open one, or makes one from the newest demo ad) */
+async function quickLink(leadId: string, email?: string): Promise<{ url: string; made: boolean }> {
+  const res = await fetch("/api/admin/proposals/quick", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ leadId, email }),
+  });
+  const json = await res.json().catch(() => null);
+  if (!json?.success) throw new Error(json?.error ?? "Couldn't make the link");
+  return json.data;
+}
+
+/** "Pay now" (opens the proposal page to hand the phone over) and "Copy link" on an advertiser row */
+function QuickPayButtons({ lead }: { lead: LeadRow }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const q = lead.quickPay;
+  // Only while the lead is still being worked (a Won lead already paid; a Lost one isn't buying)
+  if (!q || !isOpenStage(lead.stage)) return null;
+  const missing = q.state === "missing" ? q.reason : null;
+
+  /** Leads with no email: ask for it (it's where the receipt goes); undefined = cancelled */
+  function askEmail(): string | undefined | null {
+    if (q!.state !== "need_email") return null;
+    const v = window.prompt(`${lead.businessName}'s email (for the receipt and their account):`);
+    if (v === null) return undefined;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())) { toast.error("That doesn't look like an email address"); return undefined; }
+    return v.trim();
+  }
+
+  /** If the browser blocked the new tab, offer the link in a toast (clicking it is a fresh click) */
+  function offerOpen(url: string) {
+    toast("Proposal link ready", { action: { label: "Open", onClick: () => window.open(url, "_blank", "noopener") }, duration: 15000 });
+  }
+
+  async function payNow() {
+    if (q!.state === "ready") { window.open(q!.url, "_blank", "noopener"); return; }
+    const email = askEmail();
+    if (email === undefined) return;
+    // Open the tab now (while it still counts as a click, so it isn't blocked), then point it at the link
+    const tab = window.open("about:blank", "_blank");
+    setBusy(true);
+    try {
+      const { url, made } = await quickLink(lead.id, email ?? undefined);
+      if (tab) tab.location.href = url; else offerOpen(url);
+      if (made) { toast.success(`Proposal link made for ${lead.businessName}`); router.refresh(); }
+    } catch (e: any) {
+      tab?.close();
+      toast.error(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function copyLink() {
+    if (q!.state === "ready") {
+      try { await navigator.clipboard.writeText(q!.url); toast.success("Link copied"); } catch { toast.error("Couldn't copy. Use Pay now and copy it from there."); }
+      return;
+    }
+    const email = askEmail();
+    if (email === undefined) return;
+    setBusy(true);
+    const made = quickLink(lead.id, email ?? undefined);
+    try {
+      // Safari only allows copying during the click, so hand it the link as a promise
+      if (typeof ClipboardItem !== "undefined" && navigator.clipboard?.write) {
+        await navigator.clipboard.write([new ClipboardItem({ "text/plain": made.then(({ url }) => new Blob([url], { type: "text/plain" })) })]);
+      } else {
+        await navigator.clipboard.writeText((await made).url);
+      }
+      toast.success(`Link copied for ${lead.businessName}`);
+    } catch (e: any) {
+      // If making the link failed, say why; if only copying failed, the link still exists
+      const err = await made.then(() => null, (x) => x);
+      toast.error(err ? err.message : "Couldn't copy. Use Pay now and copy it from there.");
+    } finally {
+      setBusy(false);
+      made.then(({ made }) => made && router.refresh(), () => {});
+    }
+  }
+
+  const base = "inline-flex items-center gap-1.5 h-9 px-3 rounded-md text-[13px] font-semibold no-underline disabled:opacity-50 disabled:cursor-not-allowed";
+  return (
+    <>
+      <button
+        type="button"
+        onClick={payNow}
+        disabled={busy || !!missing}
+        title={missing ?? (q.state === "ready" ? "Open their proposal to pay now" : q.state === "need_email" ? "Asks for their email, then makes the link and opens it" : "Make the proposal link and open it")}
+        className={cn(base, "bg-[#E8563A] text-white hover:bg-[#D04530]")}
+      >
+        <CreditCard size={14} /> Pay now
+      </button>
+      <button
+        type="button"
+        onClick={copyLink}
+        disabled={busy || !!missing}
+        title={missing ?? "Copy the proposal link to text them"}
+        className={cn(ROW_BTN, "font-semibold disabled:opacity-50 disabled:cursor-not-allowed")}
+      >
+        <Link2 size={14} /> Copy link
+      </button>
+    </>
+  );
+}
+
 function LeadCard({ lead, today }: { lead: LeadRow; today: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -129,17 +241,21 @@ function LeadCard({ lead, today }: { lead: LeadRow; today: string }) {
             </div>
           )}
           {open && <div className={cn("text-[12px] mt-1", fu.tone)}>{fu.text}</div>}
+          {open && lead.quickPay?.state === "missing" && (
+            <div className="text-[11px] text-[#8A6F66] mt-0.5">Pay now / Copy link: {lead.quickPay.reason.toLowerCase()}</div>
+          )}
         </div>
 
-        {/* Tap to call / email */}
-        <div className="flex gap-2 shrink-0">
+        {/* Tap to call / email; advertisers also get Pay now / Copy link */}
+        <div className="flex gap-2 shrink-0 flex-wrap justify-end">
+          <QuickPayButtons lead={lead} />
           {lead.phone && (
-            <a href={`tel:${lead.phone}`} aria-label={`Call ${lead.businessName}`} className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-[#D8E4EE] text-[13px] text-[#1A3A5C] no-underline hover:bg-[#F0F5FA]">
+            <a href={`tel:${lead.phone}`} aria-label={`Call ${lead.businessName}`} className={ROW_BTN}>
               <Phone size={14} /> Call
             </a>
           )}
           {lead.email && (
-            <a href={gmailComposeUrl(lead.email)} target="_blank" rel="noopener noreferrer" aria-label={`Email ${lead.businessName} from the sales mailbox`} className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-[#D8E4EE] text-[13px] text-[#1A3A5C] no-underline hover:bg-[#F0F5FA]">
+            <a href={gmailComposeUrl(lead.email)} target="_blank" rel="noopener noreferrer" aria-label={`Email ${lead.businessName} from the sales mailbox`} className={ROW_BTN}>
               <Mail size={14} /> Email
             </a>
           )}

@@ -7,6 +7,7 @@ import { useDashboardSocket } from "@/lib/socket/client";
 import { Check, X, RefreshCw, Trash2, MonitorPlay, Pencil, Link2, Copy, MessageSquare } from "lucide-react";
 import { smsHref } from "@/lib/proposals";
 
+import { hasQr, qrOffer } from "@/lib/ad-templates";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -1231,7 +1232,8 @@ export default function AdminPanelClient({
                               🌐 <span className="font-semibold text-[#1A3A5C]">{ad.websiteClickCount.toLocaleString()}</span> website visits
                             </span>
                           )}
-                          {(ad.qrScanCount > 0 || ad.directionsClickCount > 0 || ad.callClickCount > 0) && (
+                          {/* QR page counts: always for ads with a QR code on the screen, even at 0 */}
+                          {(hasQr(qrOffer(ad)) || ad.qrScanCount > 0 || ad.directionsClickCount > 0 || ad.callClickCount > 0) && (
                             <span className="text-[11px] text-[#4A6B82]">
                               📷 <span className="font-semibold text-[#1A3A5C]">{ad.qrScanCount.toLocaleString()}</span> scans
                               {" · "}📍 <span className="font-semibold text-[#1A3A5C]">{ad.directionsClickCount.toLocaleString()}</span> directions

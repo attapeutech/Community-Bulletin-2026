@@ -12,19 +12,22 @@ import { recordWebsiteVisit, clientIp, recordAdEvent } from "@/lib/click-trackin
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// Ignore repeat views of the same ad from the same screen within this window
-// (slides change every 8 s, so a genuine repeat can't be faster)
-const REPEAT_WINDOW_MS = 5000;
+// At most one view per ad per screen per minute. A store with a single live ad shows it slide after
+// slide (every ~10 s, 24/7), which counted ~450 "views" an hour; in a normal loop of several ads each ad
+// comes round less often than this, so those counts are unchanged. (In memory: a restart forgets it.)
+const REPEAT_WINDOW_MS = 60_000;
 const recent = new Map<string, number>();
 
 function isRepeat(key: string) {
   const now = Date.now();
   const last = recent.get(key);
+  if (last !== undefined && now - last < REPEAT_WINDOW_MS) return true;
+  // Only a counted view restarts the window (otherwise a lone ad would never count again)
   recent.set(key, now);
   if (recent.size > 10_000) {
     for (const [k, t] of recent) if (now - t > REPEAT_WINDOW_MS) recent.delete(k);
   }
-  return last !== undefined && now - last < REPEAT_WINDOW_MS;
+  return false;
 }
 
 export async function POST(

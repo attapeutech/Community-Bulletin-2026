@@ -1,4 +1,4 @@
-# Handoff: 2026-10-22 (updated 2026-11-10)
+# Handoff: 2026-10-22 (updated 2026-11-12)
 
 ## Where things stand
 
@@ -32,6 +32,21 @@
   - `LeaveFrame` (`src/components/layout/LeaveFrame.tsx`, in the root layout) moves any non-display page out of a frame
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
+
+## 2026-11-12 summary
+
+- **"Upload your own design" ads are full-screen posters** (PR #148, sales manager feedback):
+  - New template value **`poster`** (`AD_TEMPLATES` in `src/lib/ad-templates.ts`). `posterFields()` keeps only the website and is used in `POST /api/ads`, ad swaps (`src/lib/ad-swaps.ts`) and demo ad edits. Poster ads save no description, phone or address, and set `showWebsite` whenever a website is given. They don't touch the phone and address saved in the advertiser's profile.
+  - **Form** (`src/app/ads/new/page.tsx`): "Ad name (optional)", just for records; blank is saved as `POSTER_TITLE` "Poster ad" and shows empty again when editing. No description field. Contact info is hidden except **"Website for the QR code · important"**. Previews use the poster layout; the old split-layout preview code was removed.
+  - **Screen** (`src/components/display/PosterSlide.tsx`): the flyer fills the screen (`object-fit: contain`), with a blurred, darkened copy behind it so a portrait flyer has no black bars. A website shows as a "Scan to visit" QR code in the bottom-right corner, going through `/go/<id>` on store screens so scans count. Used on store screens, in the ad form previews and in Review Ads.
+  - **Older own-image ads** (`template` null) keep the old split layout with title and contact info. Editing or swapping one saves it as a poster.
+  - Title rules: `title` is `max(120)` in the schemas, with "at least 3 characters" checked in code unless the ad is a sale or poster.
+  - Checked in headless Chrome with a fake poster ad fed to `/display/<slug>?preview=1`; the user tested the form locally.
+- **Sales: search box stands out** (PR #149, `SalesClient.tsx`, both tabs): orange search icon and thicker orange border, with a peach tint only while empty. Typed text is 15px semibold dark navy on white. The colour is set inline (with `-webkit-text-fill-color`) after the user found typed text hard to read.
+- **Sales: Advertisers list opens A→Z** (PR #150):
+  - `defaultLeadSort(kind)` in `src/lib/leads.ts`: Advertisers sort by name, Store partners keep follow-up date. Switching tabs resets the sort, and the address bar and "Clear filters" only change when the sort differs from the tab's default.
+  - The database collation is **`C.UTF-8`**, so a plain `ORDER BY` puts capitals first ("EL POLLO RICO" before "Echigo"). The name sort now uses `lower(business_name)`, with newest first for identical names. Keep this in mind for any other alphabetical list.
+- **Dev machine note:** on 2026-11-12 the computer ran out of memory, and a crashed `next dev` left **~800 orphaned `postcss.js` workers** (`.next/dev/build/postcss.js`). If the machine slows down, count `node.exe` processes and stop the ones whose command line contains `Community-Bulletin-2026`. The user's other project **`champa`** also uses port 3000. Community Bulletin must run on **3000**, because `BETTER_AUTH_URL` in `.env.local` points there and sign-in fails on 3001.
 
 ## 2026-11-10 summary
 

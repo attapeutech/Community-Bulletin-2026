@@ -32,7 +32,7 @@ export type AdTemplate = (typeof AD_TEMPLATES)[number];
 export const POSTER_TITLE = "Poster ad";
 
 /**
- * Poster ads keep only the website (for the QR code): no description, phone or address, and the
+ * Poster ads keep only the website (QR code) and an optional store address (for directions) (for the QR code): no description, phone or address, and the
  * website shows whenever one is given. Shared by posting, swaps and demo ad edits.
  */
 export function posterFields<T extends {
@@ -45,10 +45,10 @@ export function posterFields<T extends {
     title: data.title.trim() || POSTER_TITLE,
     description: undefined,
     contactPhone: undefined,
-    contactAddress: undefined,
+    contactAddress: data.contactAddress?.trim() || undefined,  // optional, for "Get directions"
     contactWebsite: website,
     showPhone: false,
-    showAddress: false,
+    showAddress: !!data.contactAddress?.trim(),
     showWebsite: !!website,
   };
 }
@@ -68,4 +68,50 @@ export function readSaleData(raw: unknown): SaleTemplateData {
     businessName: str(r.businessName), offerBig: str(r.offerBig), offerSmall: str(r.offerSmall),
     headline: str(r.headline), details: str(r.details), ends: str(r.ends),
   };
+}
+
+// ── QR code: what scanning it offers ──
+// The screen's QR goes to /go/<id>. With only a website it jumps straight there; with an address
+// or phone it opens a small page: See the deal · Get directions · Call (src/app/go/[id]/options).
+
+export type QrOffer = { deal: boolean; directions: boolean; call: boolean };
+
+/** What the ad's QR page can offer, from the contact details the advertiser chose to show */
+export function qrOffer(ad: {
+  contactWebsite?: string | null; contactAddress?: string | null; contactPhone?: string | null;
+  showWebsite?: boolean | null; showAddress?: boolean | null; showPhone?: boolean | null;
+}): QrOffer {
+  return {
+    deal: !!(ad.showWebsite && ad.contactWebsite?.trim()),
+    directions: !!(ad.showAddress && ad.contactAddress?.trim()),
+    call: !!(ad.showPhone && ad.contactPhone?.trim()),
+  };
+}
+
+/** Whether the screen shows a QR code at all (a deal link or directions to give) */
+export const hasQr = (o: QrOffer) => o.deal || o.directions;
+
+/** Poster ads' smaller corner QR caption, in sentence case */
+export function qrCaption(o: QrOffer) {
+  if (o.deal && o.directions) return "Scan for deal & directions";
+  if (o.directions) return "Scan for directions";
+  return "Scan to visit";
+}
+
+/** The words under the QR code on the screen */
+export function qrLabel(o: QrOffer) {
+  if (o.deal && o.directions) return "SCAN FOR DEAL & DIRECTIONS";
+  if (o.directions) return "SCAN FOR DIRECTIONS";
+  return "SCAN FOR DEAL";
+}
+
+/** The advertiser's website as a full URL ("example.com" becomes "https://example.com") */
+export function websiteUrl(site: string) {
+  return /^https?:\/\//i.test(site) ? site : `https://${site}`;
+}
+
+/** Map links: Apple Maps on iPhone / iPad / Mac, Google Maps elsewhere (or when asked for) */
+export function mapsUrl(address: string, app: "apple" | "google") {
+  const q = encodeURIComponent(address);
+  return app === "apple" ? `https://maps.apple.com/?daddr=${q}` : `https://www.google.com/maps/dir/?api=1&destination=${q}`;
 }

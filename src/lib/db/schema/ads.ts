@@ -52,6 +52,11 @@ export const ads = pgTable("ads", {
   // Analytics counters
   viewCount:         integer("view_count").default(0).notNull(),
   websiteClickCount: integer("website_click_count").default(0).notNull(),
+  // QR code page (/go/<id>): scans of the screen's QR code, and taps on Get directions / Call there
+  // (taps on "See the deal" count as website visits above)
+  qrScanCount: integer("qr_scan_count").default(0).notNull(),
+  directionsClickCount: integer("directions_click_count").default(0).notNull(),
+  callClickCount: integer("call_click_count").default(0).notNull(),
   // Admin test ad: no payment or review, shown only on display previews (?preview=), never on store screens
   isTest: boolean("is_test").default(false).notNull(),
   // Sales demo ad (also isTest): shown only on that demo's private link, not on ?preview= screens

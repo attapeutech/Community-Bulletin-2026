@@ -204,6 +204,13 @@
       "when": 1794123746499,
       "tag": "0028_equipment_windows_login",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1794683972309,
+      "tag": "0029_qr_counters",
+      "breakpoints": true
     }
   ]
 }

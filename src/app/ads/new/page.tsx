@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { LOCAL_AD_RADIUS_MILES } from "@/types";
 import { PosterSlide } from "@/components/display/PosterSlide";
 import { SaleTemplate } from "@/components/display/templates/SaleTemplate";
-import { EMPTY_SALE, POSTER_TITLE, SALE_LIMITS, readSaleData, saleTemplateSchema, saleTitle, type SaleTemplateData } from "@/lib/ad-templates";
+import { EMPTY_SALE, POSTER_TITLE, SALE_LIMITS, hasQr, qrCaption, qrLabel, qrOffer, readSaleData, saleTemplateSchema, saleTitle, type SaleTemplateData } from "@/lib/ad-templates";
 import { useRouter } from "next/navigation";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { costPerThousandCents, formatCostPerThousand, formatShoppers } from "@/lib/traffic";
@@ -504,10 +504,10 @@ export default function NewAdPage() {
           imageKey: uploadedImageKey,
           // A poster keeps only the website, shown as a QR code
           contactPhone:   isTemplate ? contactPhone   || undefined : undefined,
-          contactAddress: isTemplate ? contactAddress || undefined : undefined,
+          contactAddress: contactAddress.trim() || undefined,  // posters: optional, for "Get directions"
           contactWebsite: contactWebsite.trim() || undefined,
           showPhone:   isTemplate ? showPhone : false,
-          showAddress: isTemplate ? showAddress : false,
+          showAddress: isTemplate ? showAddress : !!contactAddress.trim(),
           showWebsite: isTemplate ? showWebsite : !!contactWebsite.trim(),
           isTest: asTest || undefined,
           demoId: demo?.id,
@@ -539,6 +539,12 @@ export default function NewAdPage() {
     </PreviewDropTarget>
   );
 
+  // What the screen's QR code will offer (deal link, directions), for the previews' QR and its label
+  const previewOffer = isTemplate
+    ? qrOffer({ contactWebsite, contactAddress, contactPhone, showWebsite, showAddress, showPhone })
+    : qrOffer({ contactWebsite, contactAddress, showWebsite: !!contactWebsite.trim(), showAddress: !!contactAddress.trim() });
+  const previewQr = hasQr(previewOffer) ? (contactWebsite.trim() || contactAddress.trim()) : null;
+
   // The ad as it will look on a store screen: the animated template, the advertiser's own image
   // (with contact details beside it when turned on), or a placeholder until there's something to show
   // showFullscreen: the "Preview on display screen" button on the image (the desktop panel has its own in its header)
@@ -559,7 +565,8 @@ export default function NewAdPage() {
             key={replay}
             data={previewSale}
             photoUrl={uploadedImageUrl ?? imagePreview}
-            qrValue={showWebsite && contactWebsite ? contactWebsite : null}
+            qrValue={previewQr}
+            qrLabel={qrLabel(previewOffer)}
             address={showAddress && contactAddress ? contactAddress : null}
             phone={showPhone && contactPhone ? contactPhone : null}
             website={showWebsite && contactWebsite ? contactWebsite : null}
@@ -573,7 +580,7 @@ export default function NewAdPage() {
     // Own design: the poster fills the screen, with the website as a corner QR code
     return (
       <div style={{ position: "relative", width: "100%", aspectRatio: "16 / 9", borderRadius: 8, overflow: "hidden", background: "#0A1A2E" }}>
-        <PosterSlide imageUrl={img} title={adTitle} qrValue={contactWebsite.trim() || null} compact />
+        <PosterSlide imageUrl={img} title={adTitle} qrValue={previewQr} qrLabel={qrCaption(previewOffer)} compact />
         {showFullscreen && (
           <button
             onClick={(e) => { e.stopPropagation(); setShowPreview(true); }}
@@ -791,7 +798,7 @@ export default function NewAdPage() {
                     {droppablePreview(screenPreview())}
                   </div>
                   <p style={{ fontSize: 11, color: "#5B7D96", marginTop: 6 }}>
-                    Add your photo by clicking the screen preview or dropping it there. Below, the address appears on the ad and the website becomes a QR code.
+                    Add your photo by clicking the screen preview or dropping it there. Below, the address appears on the ad. Shoppers who scan the QR code can open the website (the deal) and get directions to the address.
                   </p>
                 </div>
               )}
@@ -826,13 +833,25 @@ export default function NewAdPage() {
                   <div style={{ marginBottom: 14, background: "#FFF7F3", borderRadius: 10, padding: "12px 14px", border: "1px solid #F6C9B8" }}>
                     <Label>🔳 Website for the QR code <span style={{ color: RED, fontWeight: 700 }}>· important</span></Label>
                     <p style={{ fontSize: 12, color: "#4A6B82", margin: "4px 0 8px" }}>
-                      Shown as a <strong>QR code in the corner of your poster</strong>. Shoppers scan it with their phone to visit your website, menu or booking page. Leave it empty for no QR code.
+                      Shown as a <strong>QR code in the corner of your poster</strong>. Shoppers scan it with their phone to visit your website, menu or booking page. Leave it empty (and no address below) for no QR code.
                     </p>
                     <Input
                       type="url"
                       placeholder="https://yourwebsite.com"
                       value={contactWebsite}
                       onChange={(e) => setContactWebsite(e.target.value)}
+                      maxLength={200}
+                    />
+                  </div>
+                  <div style={{ marginBottom: 14, background: "#F7F9FC", borderRadius: 10, padding: "12px 14px", border: "1px solid #D8E4EE" }}>
+                    <Label>📍 Store address for directions (optional)</Label>
+                    <p style={{ fontSize: 12, color: "#4A6B82", margin: "4px 0 8px" }}>
+                      Add it and scanning the QR code offers <strong>Get directions</strong> too, opening the shopper&apos;s maps app. It isn&apos;t printed on the screen.
+                    </p>
+                    <Input
+                      placeholder="123 Main St, Everett, WA"
+                      value={contactAddress}
+                      onChange={(e) => setContactAddress(e.target.value)}
                       maxLength={200}
                     />
                   </div>
@@ -921,7 +940,10 @@ export default function NewAdPage() {
                     </>
                   )}
                   {!isTemplate && contactWebsite.trim() && (
-                    <div><span style={{ color: "#4A6B82" }}>QR code links to:</span> {contactWebsite.trim()}</div>
+                    <div><span style={{ color: "#4A6B82" }}>QR code · deal:</span> {contactWebsite.trim()}</div>
+                  )}
+                  {!isTemplate && contactAddress.trim() && (
+                    <div><span style={{ color: "#4A6B82" }}>QR code · directions to:</span> {contactAddress.trim()}</div>
                   )}
                   {isTemplate && (showPhone || showAddress || showWebsite) && (
                     <div style={{ marginTop: 8, borderTop: "1px solid #D8E4EE", paddingTop: 8 }}>
@@ -1014,7 +1036,7 @@ export default function NewAdPage() {
               boxShadow: "0 0 0 8px #1a1a1a, 0 0 0 12px #333, 0 24px 48px rgba(0,0,0,0.8)",
             }}
           >
-            <PosterSlide imageUrl={uploadedImageUrl} title={adTitle} qrValue={contactWebsite.trim() || null} />
+            <PosterSlide imageUrl={uploadedImageUrl} title={adTitle} qrValue={previewQr} qrLabel={qrCaption(previewOffer)} />
           </div>
           <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, marginTop: 20 }}>
             This is how your ad will appear on the in-store display screen · Click anywhere or press Esc to close

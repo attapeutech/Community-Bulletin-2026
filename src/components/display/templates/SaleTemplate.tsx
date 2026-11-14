@@ -18,10 +18,11 @@ const PORTRAIT = { w: 1080, h: 1920 };
  * on any display, in landscape or portrait. `play` runs the GSAP entrance (1–2 s, then it holds still
  * with a slow push on the photo); screens set to reduce motion show it without animation.
  */
-export function SaleTemplate({ data, photoUrl, qrValue, address, phone, website, play }: {
+export function SaleTemplate({ data, photoUrl, qrValue, qrLabel = "SCAN FOR DEAL", address, phone, website, play }: {
   data: SaleTemplateData;
   photoUrl: string | null;
   qrValue: string | null;   // QR destination (the ad's /go/<id> link on screens); null = no QR
+  qrLabel?: string;         // words under the QR (qrLabel() in lib/ad-templates)
   address: string | null;   // each contact item only when the advertiser turned it on
   phone: string | null;
   website: string | null;
@@ -151,11 +152,11 @@ export function SaleTemplate({ data, photoUrl, qrValue, address, phone, website,
             )}
           </div>
 
-          {/* QR code (when the advertiser gave a website) */}
+          {/* QR code (when the advertiser gave a website or shows their address) */}
           {qrValue && (
             <div data-t="qr" style={{ position: "absolute", right: p ? 72 : 56, bottom: p ? 72 : 56, background: "#fff", borderRadius: 14, padding: 14, boxShadow: "0 10px 24px rgba(0,0,0,.35)" }}>
               <QRCodeSVG value={qrValue} size={180} level="M" marginSize={0} fgColor="#0A1A2E" bgColor="#FFFFFF" />
-              <div style={{ fontSize: 22, fontWeight: 700, color: "#1A3A5C", textAlign: "center", marginTop: 8, letterSpacing: "0.04em" }}>SCAN FOR DEAL</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: "#1A3A5C", textAlign: "center", marginTop: 8, letterSpacing: "0.04em", maxWidth: 180, lineHeight: 1.15 }}>{qrLabel}</div>
             </div>
           )}
         </div>

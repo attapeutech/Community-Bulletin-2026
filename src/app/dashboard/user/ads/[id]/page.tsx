@@ -273,7 +273,28 @@ export default async function AdDetailPage({
             <div style={{ background: "var(--cb-surface-2)", borderRadius: 10, padding: "14px 18px" }}>
               <div style={{ fontSize: 28, fontWeight: 700, color: "var(--cb-ink)" }}>{ad.websiteClickCount.toLocaleString()}</div>
               <div style={{ fontSize: 12, color: "var(--cb-ink-2)", marginTop: 2 }}>Website visits</div>
-              <div style={{ fontSize: 11, color: "var(--cb-ink-3)", marginTop: 1 }}>QR scans and link clicks</div>
+              <div style={{ fontSize: 11, color: "var(--cb-ink-3)", marginTop: 1 }}>opened your website (QR or link)</div>
+            </div>
+          )}
+          {(ad.qrScanCount > 0 || (ad.showAddress && ad.contactAddress) || (ad.showWebsite && ad.contactWebsite)) && (
+            <div style={{ background: "var(--cb-surface-2)", borderRadius: 10, padding: "14px 18px" }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: "var(--cb-ink)" }}>{ad.qrScanCount.toLocaleString()}</div>
+              <div style={{ fontSize: 12, color: "var(--cb-ink-2)", marginTop: 2 }}>QR scans</div>
+              <div style={{ fontSize: 11, color: "var(--cb-ink-3)", marginTop: 1 }}>shoppers who scanned the screen</div>
+            </div>
+          )}
+          {ad.showAddress && ad.contactAddress && (
+            <div style={{ background: "var(--cb-surface-2)", borderRadius: 10, padding: "14px 18px" }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: "var(--cb-ink)" }}>{ad.directionsClickCount.toLocaleString()}</div>
+              <div style={{ fontSize: 12, color: "var(--cb-ink-2)", marginTop: 2 }}>Directions</div>
+              <div style={{ fontSize: 11, color: "var(--cb-ink-3)", marginTop: 1 }}>opened maps to your address</div>
+            </div>
+          )}
+          {ad.showPhone && ad.contactPhone && (
+            <div style={{ background: "var(--cb-surface-2)", borderRadius: 10, padding: "14px 18px" }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: "var(--cb-ink)" }}>{ad.callClickCount.toLocaleString()}</div>
+              <div style={{ fontSize: 12, color: "var(--cb-ink-2)", marginTop: 2 }}>Calls</div>
+              <div style={{ fontSize: 11, color: "var(--cb-ink-3)", marginTop: 1 }}>tapped Call after scanning</div>
             </div>
           )}
           <div style={{ background: "var(--cb-surface-2)", borderRadius: 10, padding: "14px 18px" }}>

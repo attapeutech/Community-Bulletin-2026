@@ -107,6 +107,9 @@ type Ad = {
   showWebsite: boolean;
   viewCount: number;
   websiteClickCount: number;
+  qrScanCount: number;
+  directionsClickCount: number;
+  callClickCount: number;
   user: { id: string; name: string; email: string; phone?: string | null };
   location: { id: string; storeName: string; storeNumber: string | null; slug: string };
 };
@@ -1226,6 +1229,13 @@ export default function AdminPanelClient({
                           {ad.showWebsite && ad.contactWebsite && (
                             <span className="text-[11px] text-[#4A6B82]">
                               🌐 <span className="font-semibold text-[#1A3A5C]">{ad.websiteClickCount.toLocaleString()}</span> website visits
+                            </span>
+                          )}
+                          {(ad.qrScanCount > 0 || ad.directionsClickCount > 0 || ad.callClickCount > 0) && (
+                            <span className="text-[11px] text-[#4A6B82]">
+                              📷 <span className="font-semibold text-[#1A3A5C]">{ad.qrScanCount.toLocaleString()}</span> scans
+                              {" · "}📍 <span className="font-semibold text-[#1A3A5C]">{ad.directionsClickCount.toLocaleString()}</span> directions
+                              {" · "}📞 <span className="font-semibold text-[#1A3A5C]">{ad.callClickCount.toLocaleString()}</span> calls
                             </span>
                           )}
                         </div>

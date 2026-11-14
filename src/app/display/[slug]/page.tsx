@@ -13,6 +13,7 @@ import { ShareButton } from "@/components/ui/ShareButton";
 import { BrandFrame } from "@/components/display/BrandFrame";
 import { FpsMeter } from "@/components/display/FpsMeter";
 import { PosterSlide } from "@/components/display/PosterSlide";
+import { hasQr, qrCaption, qrLabel, qrOffer } from "@/lib/ad-templates";
 import { SaleTemplate } from "@/components/display/templates/SaleTemplate";
 import { readSaleData } from "@/lib/ad-templates";
 import { SampleAdHouseSlide, FamilyHouseSlide } from "@/components/display/HouseSlides";
@@ -521,7 +522,8 @@ export default function DisplayPage() {
                     <SaleTemplate
                       data={readSaleData(ad.templateData)}
                       photoUrl={ad.imageUrl}
-                      qrValue={ad.showWebsite && ad.contactWebsite && typeof window !== "undefined" ? `${window.location.origin}/go/${ad.id}` : null}
+                      qrValue={hasQr(qrOffer(ad)) && typeof window !== "undefined" ? `${window.location.origin}/go/${ad.id}` : null}
+                      qrLabel={qrLabel(qrOffer(ad))}
                       address={ad.showAddress ? ad.contactAddress : null}
                       phone={ad.showPhone ? ad.contactPhone : null}
                       website={ad.showWebsite ? ad.contactWebsite : null}
@@ -534,7 +536,8 @@ export default function DisplayPage() {
                     <PosterSlide
                       imageUrl={ad.imageUrl}
                       title={ad.title}
-                      qrValue={ad.showWebsite && ad.contactWebsite && typeof window !== "undefined" ? `${window.location.origin}/go/${ad.id}` : null}
+                      qrValue={hasQr(qrOffer(ad)) && typeof window !== "undefined" ? `${window.location.origin}/go/${ad.id}` : null}
+                      qrLabel={qrCaption(qrOffer(ad))}
                       zooming={idx === selectedIndex}
                     />
                   </div>

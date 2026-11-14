@@ -7,6 +7,7 @@ import { Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SaleTemplate } from "@/components/display/templates/SaleTemplate";
 import { PosterSlide } from "@/components/display/PosterSlide";
+import { hasQr, qrCaption, qrLabel, qrOffer } from "@/lib/ad-templates";
 import { readSaleData } from "@/lib/ad-templates";
 import { LOCAL_AD_RADIUS_MILES } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -222,7 +223,8 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
                     key={selected.id}
                     data={readSaleData(selected.templateData)}
                     photoUrl={selected.imageUrl}
-                    qrValue={selected.showWebsite && selected.contactWebsite ? selected.contactWebsite : null}
+                    qrValue={hasQr(qrOffer(selected)) ? (selected.contactWebsite || selected.contactAddress || "directions") : null}
+                    qrLabel={qrLabel(qrOffer(selected))}
                     address={selected.showAddress ? selected.contactAddress : null}
                     phone={selected.showPhone ? selected.contactPhone : null}
                     website={selected.showWebsite ? selected.contactWebsite : null}
@@ -235,7 +237,8 @@ export default function ApproverQueueClient({ initialAds }: { initialAds: Ad[] }
                   <PosterSlide
                     imageUrl={selected.imageUrl}
                     title={selected.title}
-                    qrValue={selected.showWebsite && selected.contactWebsite ? selected.contactWebsite : null}
+                    qrValue={hasQr(qrOffer(selected)) ? (selected.contactWebsite || selected.contactAddress || "directions") : null}
+                    qrLabel={qrCaption(qrOffer(selected))}
                     compact
                   />
                 </div>

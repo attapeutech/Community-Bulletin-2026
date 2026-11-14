@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { ads, locations, screenDevices } from "@/lib/db/schema";
 import { and, eq, gte, lte, sql } from "drizzle-orm";
-import { recordWebsiteVisit, clientIp } from "@/lib/click-tracking";
+import { recordWebsiteVisit, clientIp, recordAdEvent } from "@/lib/click-tracking";
 
 // Public — display screens are never logged in.
 // Body: { event: "view", location: "<store slug>", device: "<screen device id>" }
 //         → one time the ad was shown on a screen registered to that store (Admin → Screens)
+//       { event: "call" }                            → a tap on Call on the QR page (/go/<id>/options)
 //       { event: "website_click" }                   → a click on the ad's website link (see lib/click-tracking)
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -62,6 +63,12 @@ export async function POST(
         ))
         .returning({ id: ads.id });
       return NextResponse.json({ success: true, counted: result.length > 0 });
+    }
+
+    // "Call" on the QR page (a tel: link, so the tap is reported separately)
+    if (event === "call") {
+      const counted = await recordAdEvent(req, id, "call");
+      return NextResponse.json({ success: true, counted });
     }
 
     if (event === "website_click") {

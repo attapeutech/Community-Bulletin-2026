@@ -7,11 +7,12 @@ import { QRCodeSVG } from "qrcode.react";
  * sits in the bottom-right corner (on store screens it goes through /go/<id> so scans count).
  */
 export function PosterSlide({
-  imageUrl, title, qrValue, compact = false, zooming = false,
+  imageUrl, title, qrValue, qrLabel = "Scan to visit", compact = false, zooming = false,
 }: {
   imageUrl: string | null;
   title: string;
   qrValue: string | null;
+  qrLabel?: string;    // words under the QR (qrLabel() in lib/ad-templates)
   compact?: boolean;   // small previews in the ad form
   zooming?: boolean;   // the slide on screen: slow, gentle zoom
 }) {
@@ -52,7 +53,7 @@ export function PosterSlide({
         >
           <QRCodeSVG value={qrValue} size={256} level="M" marginSize={0} fgColor="#0A1A2E" bgColor="#FFFFFF" style={{ width: "100%", height: "auto", display: "block" }} />
           <div style={{ fontSize: compact ? 7 : "clamp(10px, 0.85vw, 16px)", fontWeight: 700, color: "#0A1A2E", marginTop: compact ? 2 : 6, lineHeight: 1.1 }}>
-            Scan to visit
+            {qrLabel}
           </div>
         </div>
       )}

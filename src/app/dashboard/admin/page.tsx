@@ -87,6 +87,9 @@ export default async function AdminDashboard() {
       showWebsite: ads.showWebsite,
       viewCount: ads.viewCount,
       websiteClickCount: ads.websiteClickCount,
+      qrScanCount: ads.qrScanCount,
+      directionsClickCount: ads.directionsClickCount,
+      callClickCount: ads.callClickCount,
       user: { id: users.id, name: users.name, email: users.email, phone: users.defaultPhone },
       location: { id: locations.id, storeName: locations.storeName, storeNumber: locations.storeNumber, slug: locations.slug },
     })

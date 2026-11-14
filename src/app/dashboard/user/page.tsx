@@ -61,9 +61,14 @@ export default async function UserDashboard() {
       createdAt: ads.createdAt,
       viewCount: ads.viewCount,
       websiteClickCount: ads.websiteClickCount,
+      qrScanCount: ads.qrScanCount,
+      directionsClickCount: ads.directionsClickCount,
+      callClickCount: ads.callClickCount,
       saveCount: sql<number>`(select count(*)::int from ${savedAds} where ${savedAds.adId} = ${ads.id})`,
       showWebsite: ads.showWebsite,
       contactWebsite: ads.contactWebsite,
+      showAddress: ads.showAddress,
+      contactAddress: ads.contactAddress,
       isTest: ads.isTest,
       demoId: ads.demoId,
       location: {
@@ -279,6 +284,22 @@ export default async function UserDashboard() {
                         {ad.showWebsite && ad.contactWebsite && (
                           <span style={{ fontSize: 11, color: "var(--cb-ink-2)" }}>
                             🌐 <strong style={{ color: "var(--cb-ink)" }}>{ad.websiteClickCount.toLocaleString()}</strong> website visits
+                          </span>
+                        )}
+                        {/* QR code page: scans, then taps on Get directions / Call */}
+                        {(ad.qrScanCount > 0 || (ad.showAddress && ad.contactAddress)) && (
+                          <span style={{ fontSize: 11, color: "var(--cb-ink-2)" }}>
+                            📷 <strong style={{ color: "var(--cb-ink)" }}>{ad.qrScanCount.toLocaleString()}</strong> QR scans
+                          </span>
+                        )}
+                        {ad.showAddress && ad.contactAddress && (
+                          <span style={{ fontSize: 11, color: "var(--cb-ink-2)" }}>
+                            📍 <strong style={{ color: "var(--cb-ink)" }}>{ad.directionsClickCount.toLocaleString()}</strong> directions
+                          </span>
+                        )}
+                        {ad.callClickCount > 0 && (
+                          <span style={{ fontSize: 11, color: "var(--cb-ink-2)" }}>
+                            📞 <strong style={{ color: "var(--cb-ink)" }}>{ad.callClickCount.toLocaleString()}</strong> calls
                           </span>
                         )}
                         <span style={{ fontSize: 11, color: "var(--cb-ink-2)" }}>

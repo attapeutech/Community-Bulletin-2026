@@ -16,6 +16,7 @@ export const LEAD_SOURCES = [
   { value: "referral", label: "Referral" },
   { value: "phone", label: "Phone" },
   { value: "event", label: "Event" },
+  { value: "nearby", label: "Nearby finder" },
   { value: "other", label: "Other" },
 ] as const;
 export const LEAD_SOURCE_VALUES = LEAD_SOURCES.map(s => s.value) as [string, ...string[]];

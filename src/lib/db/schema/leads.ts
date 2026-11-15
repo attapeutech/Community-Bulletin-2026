@@ -22,7 +22,11 @@ export const leads = pgTable("leads", {
   email: text("email"),
   city: text("city"),
   address: text("address"),
-  source: text("source"),                                // walk_in | referral | phone | event | other
+  source: text("source"),                                // walk_in | referral | phone | event | nearby | other
+  // Filled in by the nearby-business finder (Sales → Find nearby businesses); placeId = Google place id
+  website: text("website"),
+  category: text("category"),                            // e.g. "Mexican restaurant"
+  placeId: text("place_id"),
   stage: leadStageEnum("stage").default("new").notNull(),
   nextFollowUp: date("next_follow_up", { mode: "string" }), // calendar day (Pacific), "YYYY-MM-DD"
   lostReason: text("lost_reason"),
@@ -40,6 +44,7 @@ export const leads = pgTable("leads", {
   index("leads_owner_idx").on(t.ownerId),
   index("leads_user_idx").on(t.userId),
   index("leads_kind_location_idx").on(t.kind, t.locationId),
+  index("leads_place_idx").on(t.placeId),
 ]);
 
 // Time-stamped history: notes written by the sales team, plus automatic entries for stage changes

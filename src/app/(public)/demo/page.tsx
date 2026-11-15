@@ -189,43 +189,23 @@ export default function DemoPage() {
               <p className="d-plat-body">Community Bulletin isn&rsquo;t a concept waiting to be built — it&rsquo;s a complete, working platform. From the moment a business submits an ad to the moment it appears on your display, every step is automated and auditable.</p>
               <ul className="d-feat-list">
                 <li className="d-feat-item">
-                  <div className="d-feat-tick">
-                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true">
-                      <path d="M1 4L3.5 6.5L9 1" stroke="#4A90C4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
+                  <div className="d-feat-tick"><PushPin /></div>
                   <div className="d-feat-text">Web portal for local businesses to create, submit, and pay for ads — no phone call or manual process needed</div>
                 </li>
                 <li className="d-feat-item">
-                  <div className="d-feat-tick">
-                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true">
-                      <path d="M1 4L3.5 6.5L9 1" stroke="#4A90C4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
+                  <div className="d-feat-tick"><PushPin /></div>
                   <div className="d-feat-text">Secure online payment via Stripe — advertisers are charged at submission, refunded automatically if denied</div>
                 </li>
                 <li className="d-feat-item">
-                  <div className="d-feat-tick">
-                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true">
-                      <path d="M1 4L3.5 6.5L9 1" stroke="#4A90C4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
+                  <div className="d-feat-tick"><PushPin /></div>
                   <div className="d-feat-text">Human content review before any ad goes live — no inappropriate, deceptive, or competing content reaches your store</div>
                 </li>
                 <li className="d-feat-item">
-                  <div className="d-feat-tick">
-                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true">
-                      <path d="M1 4L3.5 6.5L9 1" stroke="#4A90C4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
+                  <div className="d-feat-tick"><PushPin /></div>
                   <div className="d-feat-text">Real-time display refresh — approved ads appear immediately on your screen, with automatic rotation and scheduling</div>
                 </li>
                 <li className="d-feat-item">
-                  <div className="d-feat-tick">
-                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true">
-                      <path d="M1 4L3.5 6.5L9 1" stroke="#4A90C4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
+                  <div className="d-feat-tick"><PushPin /></div>
                   <div className="d-feat-text">Partner dashboard with monthly revenue reports and a complete history of every ad displayed in your store</div>
                 </li>
               </ul>
@@ -322,5 +302,31 @@ export default function DemoPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+/** The logo's push pin (glossy coral head, darker collar, steel needle), drawn small for list bullets */
+function PushPin() {
+  return (
+    <svg width="20" height="24" viewBox="0 0 24 28" aria-hidden="true">
+      <defs>
+        <radialGradient id="cbPinHead" cx="38%" cy="32%" r="70%">
+          <stop offset="0" stopColor="#FF9A7E" />
+          <stop offset="0.45" stopColor="#E8563A" />
+          <stop offset="1" stopColor="#B23A22" />
+        </radialGradient>
+        <linearGradient id="cbPinCollar" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0" stopColor="#D24A30" />
+          <stop offset="1" stopColor="#9E3119" />
+        </linearGradient>
+      </defs>
+      <g transform="rotate(-18 12 15)">
+        <line x1="12" y1="17" x2="12" y2="27" stroke="#A9B4C2" strokeWidth="1.7" strokeLinecap="round" />
+        <ellipse cx="12" cy="17" rx="6.5" ry="2.2" fill="url(#cbPinCollar)" />
+        <path d="M8.6 9.5 C8.9 12.5 9.4 14.8 9.8 16.6 L14.2 16.6 C14.6 14.8 15.1 12.5 15.4 9.5 Z" fill="url(#cbPinCollar)" />
+        <ellipse cx="12" cy="7.5" rx="6.6" ry="5.6" fill="url(#cbPinHead)" />
+        <ellipse cx="9.6" cy="5.4" rx="1.9" ry="1.2" fill="#fff" opacity="0.65" />
+      </g>
+    </svg>
   );
 }

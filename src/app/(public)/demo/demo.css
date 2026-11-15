@@ -123,7 +123,8 @@
 .d-plat-body { font-size: 16px; color: var(--d-text-muted); line-height: 1.75; margin-bottom: 28px; }
 .d-feat-list { list-style: none; display: flex; flex-direction: column; gap: 14px; }
 .d-feat-item { display: flex; gap: 12px; align-items: flex-start; }
-.d-feat-tick { width: 20px; height: 20px; border-radius: 50%; background: var(--d-fog); border: 1.5px solid var(--d-fog-mid); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+/* List bullets: the logo's push pin (PushPin in page.tsx), no circle behind it */
+.d-feat-tick { width: 20px; height: 24px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: -2px; }
 .d-feat-text { font-size: 14px; color: var(--d-text); line-height: 1.55; }
 
 /* MINI UI */

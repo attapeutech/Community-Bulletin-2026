@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, Phone, Mail, MapPin, Store } from "lucide-react";
+import { ArrowLeft, Phone, Mail, MapPin, Store, Globe, Search, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,8 @@ export type LeadDetail = {
   email: string | null;
   city: string | null;
   address: string | null;
+  website: string | null;   // e.g. from the nearby finder
+  category: string | null;  // e.g. "Mexican restaurant"
   source: string | null;
   stage: LeadStage;
   nextFollowUp: string | null;
@@ -189,6 +191,11 @@ export default function LeadDetailClient({ lead, today, stores, demos, appointme
                         <Mail size={14} /> {lead.email}
                       </a>
                     )}
+                    {lead.website && (
+                      <a href={/^https?:\/\//i.test(lead.website) ? lead.website : `https://${lead.website}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-[#D8E4EE] text-[13px] text-[#1A3A5C] no-underline hover:bg-[#F0F5FA] break-all">
+                        <Globe size={14} /> {lead.website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
+                      </a>
+                    )}
                     {(lead.address || lead.city) && (
                       <a
                         href={`https://maps.google.com/?q=${encodeURIComponent([lead.address, lead.city].filter(Boolean).join(", "))}`}
@@ -200,7 +207,9 @@ export default function LeadDetailClient({ lead, today, stores, demos, appointme
                       </a>
                     )}
                   </div>
+                  {!lead.email && lead.website && <FindEmail leadId={lead.id} onUse={(email) => run({ email }, `Email saved: ${email}`)} />}
                   <div className="text-[13px] text-[#4A6B82]">
+                    {lead.category && <span>{lead.category} · </span>}
                     {[sourceLabel(lead.source) && `Met via ${sourceLabel(lead.source)!.toLowerCase()}`, `Added ${fmtTime(lead.createdAt)}`, lead.ownerName && `by ${lead.ownerName}`].filter(Boolean).join(" · ")}
                   </div>
                 </div>
@@ -384,6 +393,62 @@ export default function LeadDetailClient({ lead, today, stores, demos, appointme
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** "Find email": looks for emails the business published on its website; pick one to save it */
+function FindEmail({ leadId, onUse }: { leadId: string; onUse: (email: string) => Promise<unknown> }) {
+  const [state, setState] = useState<"idle" | "looking" | "done">("idle");
+  const [emails, setEmails] = useState<string[]>([]);
+  const [saving, setSaving] = useState<string | null>(null);
+
+  async function look() {
+    setState("looking");
+    try {
+      const res = await fetch(`/api/admin/leads/${leadId}/find-email`, { method: "POST" });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      setEmails(json.data.emails);
+    } catch (e: any) {
+      toast.error(e.message || "Couldn't check the website");
+      setEmails([]);
+    } finally {
+      setState("done");
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-dashed border-[#C9D9E7] bg-[#F7FAFC] px-3 py-2.5 text-[13px] dark:bg-transparent">
+      {state === "idle" && (
+        <button type="button" onClick={look} className="inline-flex items-center gap-1.5 font-semibold text-[#4A90C4] hover:underline">
+          <Search size={14} /> Find email on their website
+        </button>
+      )}
+      {state === "looking" && <span className="inline-flex items-center gap-1.5 text-[#4A6B82]"><Loader2 size={14} className="animate-spin" /> Checking their website…</span>}
+      {state === "done" && (emails.length ? (
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[#4A6B82]">Found on their website. Pick the one to save:</span>
+          <div className="flex flex-wrap gap-2">
+            {emails.map((e) => (
+              <button
+                key={e}
+                type="button"
+                disabled={!!saving}
+                onClick={async () => { setSaving(e); await onUse(e); setSaving(null); }}
+                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md border border-[#D8E4EE] bg-white text-[13px] text-[#1A3A5C] hover:bg-[#F0F5FA] disabled:opacity-50 dark:bg-transparent dark:text-[#E6EEF6]"
+              >
+                <Mail size={13} /> {saving === e ? "Saving…" : e}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <span className="text-[#4A6B82]">
+          No email listed on their website (many only have a contact form). Ask for it on the call, or check their site&apos;s contact page.{" "}
+          <button type="button" onClick={look} className="font-semibold text-[#4A90C4] hover:underline">Try again</button>
+        </span>
+      ))}
     </div>
   );
 }

@@ -121,6 +121,8 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
     email: l.email,
     city: l.city,
     address: l.address,
+    website: l.website,
+    category: l.category,
     source: l.source,
     stage: l.stage,
     nextFollowUp: l.nextFollowUp,

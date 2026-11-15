@@ -155,18 +155,18 @@ export default function DemoPage() {
             <div className="d-rev-scenarios">
               <div className="d-rev-card d-rev-card-hi">
                 <div className="d-rev-card-lbl">You provide &amp; set up the screen</div>
-                <div className="d-rev-card-amt">~$2,100<span className="d-rev-card-mo">/mo</span></div>
-                <div className="d-rev-card-desc">50% share after card fees · 40 active ads at $100 per 4 weeks · about $25,200/year</div>
+                <div className="d-rev-card-amt">~$2,000<span className="d-rev-card-mo">/mo</span></div>
+                <div className="d-rev-card-desc">50% share after card fees · 40 active ads at $100 per 4 weeks · about $24,000/year</div>
               </div>
               <div className="d-rev-card">
                 <div className="d-rev-card-lbl">We provide &amp; install the screen</div>
-                <div className="d-rev-card-amt">~$1,050<span className="d-rev-card-mo">/mo</span></div>
-                <div className="d-rev-card-desc">25% share after card fees · 40 active ads at $100 per 4 weeks · about $12,600/year</div>
+                <div className="d-rev-card-amt">~$1,000<span className="d-rev-card-mo">/mo</span></div>
+                <div className="d-rev-card-desc">25% share after card fees · 40 active ads at $100 per 4 weeks · about $12,000/year</div>
               </div>
             </div>
             <div className="d-rev-detail">
               <p>A typical ad costs <strong style={{color:"#fff"}}>$100 per 4 weeks</strong> — a fraction of what print media or social advertising costs for comparable local reach. Each location targets <strong style={{color:"#fff"}}>40 active ads</strong>, generating about $4,000 every 4 weeks in ad revenue per screen.</p>
-              <p>Supply a TV, mini PC and WiFi yourself and you earn <strong style={{color:"#fff"}}>50% of ad revenue after card processing fees (about $2,100/month at full capacity)</strong>. If Community Bulletin provides and installs the equipment, you earn <strong style={{color:"#fff"}}>25% (about $1,050/month)</strong>, with nothing to buy. Payout costs are on us — you receive your full share.</p>
+              <p>Supply a TV, mini PC and WiFi yourself and you earn <strong style={{color:"#fff"}}>50% of ad revenue after card processing fees (about $2,000/month at full capacity)</strong>. If Community Bulletin provides and installs the equipment, you earn <strong style={{color:"#fff"}}>25% (about $1,000/month)</strong>, with nothing to buy. Payout costs are on us — you receive your full share.</p>
               <p>Using equipment you already have earns you twice the share, and gets your screen running sooner because there's no installation to schedule.</p>
               <div className="d-rev-note">
                 <strong>What &ldquo;providing your own equipment&rdquo; means:</strong><br />
@@ -267,7 +267,7 @@ export default function DemoPage() {
                   <div className="d-mini-rev">
                     <div className="d-mini-sec">August Revenue</div>
                     <div className="d-mini-rev-num">
-                      $2,100<span style={{fontSize:"13px",color:"var(--d-text-faint)",fontFamily:"var(--d-sans)"}}>.00</span>
+                      $2,000<span style={{fontSize:"13px",color:"var(--d-text-faint)",fontFamily:"var(--d-sans)"}}>.00</span>
                     </div>
                     <div className="d-mini-rev-sub">40 active ads · $100 per 4 weeks each · 50% share after card fees (with your own equipment)</div>
                   </div>

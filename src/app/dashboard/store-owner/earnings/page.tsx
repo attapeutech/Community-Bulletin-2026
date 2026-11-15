@@ -135,6 +135,8 @@ export default async function EarningsPage() {
         <Card label="Payout Schedule" value={connectEnabled ? "Monthly, 15th" : "Monthly"} sub={`minimum ${formatCents(MIN_PAYOUT_CENTS)}; smaller balances roll over`} />
       </div>
 
+      {isAdmin && <AdminPayoutMinimumNote />}
+
       {/* How it works */}
       <div style={{ background: "var(--cb-surface-2)", border: "1px solid var(--cb-line)", borderRadius: 12, padding: "14px 18px", fontSize: 13, color: "var(--cb-ink-2)", marginBottom: 24, lineHeight: 1.6 }}>
         <strong style={{ color: "var(--cb-ink)" }}>How earnings work:</strong> when an advertiser pays for an ad at your store, it shows here as
@@ -229,5 +231,35 @@ export default async function EarningsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Admins only: what "minimum $25; smaller balances roll over" means (for the sales team's questions).
+// Keep in sync with MIN_PAYOUT_CENTS in src/types and the monthly payout job.
+function AdminPayoutMinimumNote() {
+  const min = formatCents(MIN_PAYOUT_CENTS);
+  return (
+    <details style={{ background: "var(--cb-surface-2)", border: "1px solid var(--cb-line)", borderRadius: 12, padding: "12px 18px", marginBottom: 24, fontSize: 13, color: "var(--cb-ink-2)", lineHeight: 1.6 }}>
+      <summary style={{ cursor: "pointer", fontWeight: 700, color: "var(--cb-ink)", fontSize: 14 }}>
+        📝 Admin notes: the {min} payout minimum
+      </summary>
+      <p style={{ margin: "10px 0 6px" }}>
+        <strong style={{ color: "var(--cb-ink)" }}>{min} is the smallest payout we send a store owner.</strong>
+      </p>
+      <ul style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 4 }}>
+        <li>Payouts go out <strong>once a month</strong>, on the 15th, by direct deposit.</li>
+        <li>An owner with <strong>{min} or more available</strong> is paid their <strong>full balance</strong>.</li>
+        <li>An owner with <strong>less than {min}</strong> gets nothing that month. The money <strong>isn&apos;t lost</strong>: it stays in their balance, adds to next month&apos;s earnings, and is paid in full once it reaches {min}.</li>
+      </ul>
+      <p style={{ margin: "10px 0 6px" }}>
+        <strong style={{ color: "var(--cb-ink)" }}>Example:</strong> a store earns $18 one month, so no payout on the 15th. The next month it earns another $30.
+        The balance is now $48, so they&apos;re paid <strong>$48</strong>.
+      </p>
+      <p style={{ margin: "6px 0 0" }}>
+        <strong style={{ color: "var(--cb-ink)" }}>Why a minimum?</strong> It avoids lots of tiny bank deposits that each take effort to track and can
+        cost more to handle than they&apos;re worth. {min} is a common threshold. It&apos;s one setting (<code>MIN_PAYOUT_CENTS</code>), so it can be
+        lowered, raised or removed.
+      </p>
+    </details>
   );
 }

@@ -36,7 +36,7 @@ export default async function ProfilePage() {
           ) : (
             <>
               <p className="text-[13px] text-[#4A6B82] mt-0 mb-3">
-                Host a Community Bulletin screen in your store and earn a share of every ad shown there. No fees — use your own TV or we&apos;ll provide one.
+                Host a Community Bulletin screen in your store and earn a share of every ad shown there. No fees — use your own TV and earn 50%, or we&apos;ll provide one and you earn 25%.
                 {application?.status === "declined" && " Your previous application wasn't approved, but you're welcome to apply again."}
               </p>
               <Link

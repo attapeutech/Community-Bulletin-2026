@@ -73,6 +73,10 @@ export const LOCAL_AD_RADIUS_MILES = 10; // ads are for businesses near the stor
 // Location pricing and revenue share — admin-controlled, enforced by the locations API
 export const MIN_PRICE_PER_RUN_CENTS = 1000;    // $10
 export const MAX_PRICE_PER_RUN_CENTS = 100000;  // $1,000
-export const DEFAULT_SHARE_RATE_BPS = 5000;      // 50% for every store owner (since 2026-10-29)
+// Store owner share (since 2026-11-15): 50% when the store provides the TV, mini PC and WiFi; 25% when
+// Community Bulletin supplies and installs the equipment. Admins can still set any rate per store.
+export const SHARE_OWN_EQUIPMENT_BPS = 5000;     // 50%
+export const SHARE_WE_SUPPLY_BPS = 2500;         // 25%
+export const DEFAULT_SHARE_RATE_BPS = SHARE_OWN_EQUIPMENT_BPS; // stores owners create themselves (admins confirm)
 export const MAX_SHARE_RATE_BPS = 9000;          // 90%
 export const MIN_PAYOUT_CENTS = 2500; // $25 — smaller owner balances roll over to next month

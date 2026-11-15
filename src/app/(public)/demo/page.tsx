@@ -106,7 +106,7 @@ export default function DemoPage() {
               </div>
               <div className="d-stat-row">
                 <div className="d-stat-num">$0</div>
-                <div className="d-stat-lbl">Fees, ever. No subscription and no platform charges. Use a screen you already have, or we provide one at no cost to you.</div>
+                <div className="d-stat-lbl">Fees, ever. No subscription and no platform charges. Use a screen you already have (50% share), or we provide one at no cost to you (25% share).</div>
               </div>
               <div className="d-stat-row">
                 <div className="d-stat-num">100%</div>
@@ -128,7 +128,7 @@ export default function DemoPage() {
               <div className="d-step-num">01</div>
               <div className="d-step-rule"></div>
               <div className="d-step-title">Set up a screen in your store</div>
-              <div className="d-step-body"><strong>Two ways to get started.</strong> Use a TV and WiFi you already have, plus an inexpensive streaming device, or we supply and install everything at no cost to you. Either way, you earn a 50% revenue share, and setup takes about an hour.</div>
+              <div className="d-step-body"><strong>Two ways to get started.</strong> Use a TV and WiFi you already have, plus an inexpensive mini PC or streaming device, and earn a <strong>50% revenue share</strong>. Or we supply and install everything at no cost to you, and you earn a <strong>25% revenue share</strong>. Either way, setup takes about an hour.</div>
             </div>
             <div>
               <div className="d-step-num">02</div>
@@ -150,7 +150,7 @@ export default function DemoPage() {
         <div className="d-wrap">
           <div className="d-rev-eyebrow">Revenue Potential</div>
           <h2 className="d-rev-h2">Passive income from space<br />you already own.</h2>
-          <p className="d-rev-sub">A typical ad slot is $100 per 4 weeks. Each location targets 40 active ads — about $4,000 every 4 weeks (about $52,000 a year) in ad revenue per screen. Every store owner earns 50% of that ad revenue after card processing fees, whoever provides the display equipment.</p>
+          <p className="d-rev-sub">A typical ad slot is $100 per 4 weeks. Each location targets 40 active ads — about $4,000 every 4 weeks (about $52,000 a year) in ad revenue per screen. Store owners earn 50% of that ad revenue after card processing fees when they provide the display equipment, or 25% when we supply and install it.</p>
           <div className="d-rev-grid">
             <div className="d-rev-scenarios">
               <div className="d-rev-card d-rev-card-hi">
@@ -160,17 +160,17 @@ export default function DemoPage() {
               </div>
               <div className="d-rev-card">
                 <div className="d-rev-card-lbl">We provide &amp; install the screen</div>
-                <div className="d-rev-card-amt">~$2,100<span className="d-rev-card-mo">/mo</span></div>
-                <div className="d-rev-card-desc">50% share after card fees · 40 active ads at $100 per 4 weeks · about $25,200/year</div>
+                <div className="d-rev-card-amt">~$1,050<span className="d-rev-card-mo">/mo</span></div>
+                <div className="d-rev-card-desc">25% share after card fees · 40 active ads at $100 per 4 weeks · about $12,600/year</div>
               </div>
             </div>
             <div className="d-rev-detail">
               <p>A typical ad costs <strong style={{color:"#fff"}}>$100 per 4 weeks</strong> — a fraction of what print media or social advertising costs for comparable local reach. Each location targets <strong style={{color:"#fff"}}>40 active ads</strong>, generating about $4,000 every 4 weeks in ad revenue per screen.</p>
-              <p>Every store owner earns <strong style={{color:"#fff"}}>50% of ad revenue after card processing fees (about $2,100/month on average)</strong>, whether you supply a TV, mini PC and WiFi yourself or Community Bulletin provides and installs the equipment. Payout costs are on us — you receive your full share.</p>
-              <p>Using equipment you already have gets your screen running sooner, because there's no installation to schedule.</p>
+              <p>Supply a TV, mini PC and WiFi yourself and you earn <strong style={{color:"#fff"}}>50% of ad revenue after card processing fees (about $2,100/month at full capacity)</strong>. If Community Bulletin provides and installs the equipment, you earn <strong style={{color:"#fff"}}>25% (about $1,050/month)</strong>, with nothing to buy. Payout costs are on us — you receive your full share.</p>
+              <p>Using equipment you already have earns you twice the share, and gets your screen running sooner because there's no installation to schedule.</p>
               <div className="d-rev-note">
                 <strong>What &ldquo;providing your own equipment&rdquo; means:</strong><br />
-                A standard flat-screen TV · a mini PC or streaming device · your existing WiFi connection. Most stores already have two of the three. If you don&rsquo;t, we provide it — your share stays 50%.
+                A standard flat-screen TV · a mini PC or streaming device · your existing WiFi connection. Most stores already have two of the three. If you&rsquo;d rather not supply them, we provide and install everything, and your share is 25%.
               </div>
             </div>
           </div>
@@ -269,7 +269,7 @@ export default function DemoPage() {
                     <div className="d-mini-rev-num">
                       $2,100<span style={{fontSize:"13px",color:"var(--d-text-faint)",fontFamily:"var(--d-sans)"}}>.00</span>
                     </div>
-                    <div className="d-mini-rev-sub">40 active ads · $100 per 4 weeks each · 50% share after card fees</div>
+                    <div className="d-mini-rev-sub">40 active ads · $100 per 4 weeks each · 50% share after card fees (with your own equipment)</div>
                   </div>
                 </div>
               </div>

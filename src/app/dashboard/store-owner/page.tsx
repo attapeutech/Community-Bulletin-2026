@@ -31,8 +31,8 @@ function AdminPricingNotes() {
       </p>
       <ul style={ul}>
         <li><strong>Price per 4 weeks:</strong> {formatCents(MIN_PRICE_PER_RUN_CENTS)}–{formatCents(MAX_PRICE_PER_RUN_CENTS)}</li>
-        <li><strong>Store owner share (%):</strong> 50% for every store owner (the standard), or any value from 0 to {MAX_SHARE_RATE_BPS / 100}% for a special deal</li>
-        <li><strong>&ldquo;Store owner provides the TV, Wi-Fi &amp; hardware&rdquo;:</strong> for information only; it does not set the share</li>
+        <li><strong>Store owner share (%):</strong> 50% when the store provides the equipment, 25% when we supply and install it (the standard since 2026-11-15), or any value from 0 to {MAX_SHARE_RATE_BPS / 100}% for a special deal</li>
+        <li><strong>&ldquo;Store owner provides the TV, Wi-Fi &amp; hardware&rdquo;:</strong> ticking it sets the share to 50%, unticking sets 25% (you can still type another rate)</li>
         <li>Changing a share affects <strong>new payments only</strong>; earnings already recorded keep their original rate</li>
       </ul>
 

@@ -17,8 +17,8 @@ export const LOCATION_COUNTS = [
 ] as const;
 
 export const HAS_SCREEN = [
-  { value: "yes", label: "Yes, I have a TV to use" },
-  { value: "no", label: "No — please provide one" },
+  { value: "yes", label: "Yes, I have a TV to use (50% share)" },
+  { value: "no", label: "No — please provide one (25% share)" },
   { value: "not_sure", label: "Not sure yet" },
 ] as const;
 

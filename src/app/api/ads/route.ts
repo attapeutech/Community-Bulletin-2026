@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db/client";
-import { ads, demos, locations, users } from "@/lib/db/schema";
+import { adOrders, ads, demos, locations, users } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth/session";
-import { eq, and, gt } from "drizzle-orm";
+import { eq, and, gt, inArray } from "drizzle-orm";
 import { AD_DURATION_DAYS } from "@/types";
 import { addDays } from "date-fns";
 import { pushDashboardUpdate } from "@/lib/socket/notify";
@@ -11,6 +11,9 @@ import { AD_TEMPLATES, posterFields, saleTemplateSchema, saleTitle } from "@/lib
 
 const createAdSchema = z.object({
   locationId: z.string().uuid(),
+  // Several stores at once: one ad per store, linked by an order and paid in one checkout
+  // (locationId is then the first of them). Not for demo ads.
+  locationIds: z.array(z.string().uuid()).min(1).max(25).optional(),
   // Poster ads may leave it blank ("Poster ad" is used); other ads need at least 3 characters
   title: z.string().max(120),
   description: z.string().max(500).optional(),
@@ -67,34 +70,43 @@ export async function POST(req: NextRequest) {
       data.description = templateData.details || undefined;
     }
 
-    // Verify location exists and is active
-    const [location] = await db
+    // The stores: one, or several for a multi-store order (the order they were picked in, no repeats)
+    const storeIds = !demo && data.locationIds && data.locationIds.length > 1
+      ? [...new Set(data.locationIds)]
+      : [data.locationId];
+
+    // Verify every store exists and is active
+    const found = await db
       .select({ id: locations.id, slug: locations.slug })
       .from(locations)
-      .where(and(eq(locations.id, data.locationId), eq(locations.isActive, true)))
-      .limit(1);
-
-    if (!location) {
+      .where(and(inArray(locations.id, storeIds), eq(locations.isActive, true)));
+    if (found.length !== storeIds.length) {
       return NextResponse.json(
-        { success: false, error: "Location not found or inactive" },
+        { success: false, error: storeIds.length > 1 ? "One of the stores isn't available anymore. Please pick again." : "Location not found or inactive" },
         { status: 404 }
       );
     }
+    const slugOf = new Map(found.map((l) => [l.id, l.slug]));
 
     const now = new Date();
-    const [ad] = await db
+    const [order] = storeIds.length > 1
+      ? await db.insert(adOrders).values({ userId }).returning({ id: adOrders.id })
+      : [null];
+
+    const created = await db
       .insert(ads)
-      .values({
+      .values(storeIds.map((storeId) => ({
         userId,
-        locationId: data.locationId,
+        locationId: storeId,
+        orderId: order?.id ?? null,
         title: data.title,
         description: data.description ?? null,
         imageUrl: data.imageUrl,
         imageKey: data.imageKey,
         // Test ads are approved straight away but stay unpaid, so every "paid ads" query (store screens,
         // Live Ads, the public ad page, earnings) ignores them; only display previews include them
-        status: data.isTest ? "approved" : "pending",
-        paymentStatus: "unpaid",
+        status: (data.isTest ? "approved" : "pending") as "approved" | "pending",
+        paymentStatus: "unpaid" as const,
         isTest: data.isTest ?? false,
         demoId: demo?.id ?? null,
         template: data.template ?? null,
@@ -110,8 +122,11 @@ export async function POST(req: NextRequest) {
         showPhone:   data.showPhone   ?? false,
         showAddress: data.showAddress ?? false,
         showWebsite: data.showWebsite ?? false,
-      })
+      })))
       .returning();
+    // Keep the picked order (the first store leads the payment page)
+    created.sort((a, b) => storeIds.indexOf(a.locationId) - storeIds.indexOf(b.locationId));
+    const ad = created[0];
 
     // Sync contact info back to user profile as defaults for next submission
     // (not from a demo ad: those are the prospect's details, not the admin's)
@@ -124,9 +139,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Notify dashboard so admin sees new submission instantly (when socket is up)
-    if (!data.isTest) pushDashboardUpdate({ adId: ad.id, status: "pending", locationSlug: location.slug }).catch(console.error);
+    if (!data.isTest) {
+      for (const a of created) pushDashboardUpdate({ adId: a.id, status: "pending", locationSlug: slugOf.get(a.locationId)! }).catch(console.error);
+    }
 
-    return NextResponse.json({ success: true, data: ad }, { status: 201 });
+    // data: the first store's ad (as before), plus the order when several stores were picked
+    return NextResponse.json({ success: true, data: { ...ad, orderId: order?.id ?? null, adIds: created.map((a) => a.id) } }, { status: 201 });
   } catch (error: any) {
     if (error.name === "ZodError") {
       return NextResponse.json(

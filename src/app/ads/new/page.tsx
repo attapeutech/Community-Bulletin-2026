@@ -261,7 +261,15 @@ export default function NewAdPage() {
   const [swapping, setSwapping] = useState<{ adId: string; endedAt: string } | null>(null);
   const [locLoading, setLocLoading] = useState(false);
   const [locSearched, setLocSearched] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  // Stores picked, in the order picked. Several = one ad per store, paid in one checkout (new ads only;
+  // demo ads, edits and swaps stay single-store). The first store leads the preview and payment page.
+  const [picked, setPicked] = useState<Location[]>([]);
+  const selectedLocation = picked[0] ?? null;
+  const setSelectedLocation = (loc: Location | null) => setPicked(loc ? [loc] : []);
+  const multiStore = !demo && !swapping && !editingAdId;
+  const totalCents = picked.reduce((sum, l) => sum + l.pricePerRunCents, 0);
+  const togglePick = (loc: Location) =>
+    setPicked((prev) => (prev.some((l) => l.id === loc.id) ? prev.filter((l) => l.id !== loc.id) : [...prev, loc]));
   // Where the advertiser came from (?from=home | stores | store, or a screen QR code), for the breadcrumb
   const [cameFrom, setCameFrom] = useState<"home" | "stores" | "store" | "screen" | null>(null);
   useEffect(() => {
@@ -496,6 +504,7 @@ export default function NewAdPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           locationId: selectedLocation.id,
+          ...(multiStore && picked.length > 1 ? { locationIds: picked.map((l) => l.id) } : {}),
           title: adTitle,
           description: isTemplate ? sale.details || undefined : undefined,
           template: isTemplate ? "sale" : "poster",
@@ -644,8 +653,12 @@ export default function NewAdPage() {
           {/* ── STEP 1: Location ── */}
           {step === 1 && (
             <div>
-              <h2 style={{ fontFamily: "Georgia,serif", fontSize: 20, color: ACCENT, marginBottom: 4 }}>Choose a location</h2>
-              <p style={{ fontSize: 13, color: "#4A6B82", marginBottom: 24 }}>Pick the store where your ad will be displayed, or search by name, city or ZIP.</p>
+              <h2 style={{ fontFamily: "Georgia,serif", fontSize: 20, color: ACCENT, marginBottom: 4 }}>{multiStore ? "Choose your stores" : "Choose a location"}</h2>
+              <p style={{ fontSize: 13, color: "#4A6B82", marginBottom: 24 }}>
+                {multiStore
+                  ? <>Tick one or more stores where your ad will be displayed, or search by name, city or ZIP. Several stores are paid in <strong>one checkout</strong>.</>
+                  : "Pick the store where your ad will be displayed, or search by name, city or ZIP."}
+              </p>
 
               <div style={{ marginBottom: 8 }}>
                 <Label>Search locations</Label>
@@ -673,30 +686,70 @@ export default function NewAdPage() {
 
               {shownLocations.length > 0 && (
                 <div style={{ border: "1px solid #D8E4EE", borderRadius: 8, overflow: "hidden", margin: "8px 0", maxHeight: 380, overflowY: "auto" }}>
+                  {/* Several stores: count, total, Select all (the stores shown, e.g. a search) and Clear; stays on top while scrolling */}
+                  {multiStore && (() => {
+                    const allShownPicked = shownLocations.every((l) => picked.some((p) => p.id === l.id));
+                    return (
+                      <div style={{ position: "sticky", top: 0, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap", padding: "8px 12px", background: "#F4F7FB", borderBottom: "1px solid #D8E4EE" }}>
+                        <span style={{ fontSize: 12, color: "#4A6B82" }}>
+                          <strong style={{ color: ACCENT }}>{picked.length}</strong> of {shownLocations.length}{locSearch.trim() ? " shown" : ""} selected
+                          {picked.length > 0 && <> · <strong style={{ color: "#E8563A" }}>{formatPrice(totalCents)}</strong></>}
+                        </span>
+                        <span style={{ display: "flex", gap: 6 }}>
+                          <button
+                            type="button"
+                            onClick={() => setPicked((prev) => allShownPicked
+                              ? prev.filter((l) => !shownLocations.some((s) => s.id === l.id))
+                              : [...prev, ...shownLocations.filter((l) => !prev.some((p) => p.id === l.id))])}
+                            style={{ fontSize: 12, fontWeight: 600, color: "#fff", background: "#4A90C4", border: "none", borderRadius: 6, padding: "5px 10px", cursor: "pointer" }}
+                          >
+                            {allShownPicked ? "Unselect these" : locSearch.trim() ? `Select all ${shownLocations.length} shown` : `Select all ${shownLocations.length}`}
+                          </button>
+                          {picked.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => setPicked([])}
+                              style={{ fontSize: 12, fontWeight: 600, color: "#4A6B82", background: "#fff", border: "1px solid #D8E4EE", borderRadius: 6, padding: "5px 10px", cursor: "pointer" }}
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </span>
+                      </div>
+                    );
+                  })()}
                   {shownLocations.map((loc, i) => {
-                    const picked = selectedLocation?.id === loc.id;
+                    const isPicked = picked.some((l) => l.id === loc.id);
                     return (
                     <button
                       key={loc.id}
-                      onClick={() => { setSelectedLocation(loc); setLocations([]); setLocSearch(""); setLocSearched(false); }}
-                      aria-pressed={picked}
+                      onClick={() => {
+                        if (multiStore) togglePick(loc);
+                        else { setSelectedLocation(loc); setLocations([]); setLocSearch(""); setLocSearched(false); }
+                      }}
+                      aria-pressed={isPicked}
                       style={{
                         width: "100%",
                         padding: "12px 16px",
                         textAlign: "left",
-                        background: picked ? "#E3F0FB" : "#fff",
+                        background: isPicked ? "#E3F0FB" : "#fff",
                         border: "none",
                         borderBottom: i < shownLocations.length - 1 ? "1px solid #D8E4EE" : "none",
                         // Picked store: blue outline drawn inside the row so the list doesn't shift
-                        boxShadow: picked ? "inset 0 0 0 2px #4A90C4" : "none",
+                        boxShadow: isPicked ? "inset 0 0 0 2px #4A90C4" : "none",
                         cursor: "pointer",
                         fontSize: 14,
                       }}
                     >
                       <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                        <span style={{ fontWeight: 600, color: ACCENT }}>
+                        <span style={{ fontWeight: 600, color: ACCENT, display: "inline-flex", alignItems: "center", gap: 8 }}>
+                          {multiStore && (
+                            <span aria-hidden="true" style={{ width: 18, height: 18, borderRadius: 4, border: isPicked ? "none" : "2px solid #B8CCDD", background: isPicked ? "#4A90C4" : "#fff", color: "#fff", fontSize: 12, fontWeight: 700, display: "inline-grid", placeItems: "center", flexShrink: 0 }}>
+                              {isPicked ? "✓" : ""}
+                            </span>
+                          )}
                           {loc.storeName}
-                          {picked && (
+                          {isPicked && !multiStore && (
                             <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: "#fff", background: "#4A90C4", borderRadius: 999, padding: "2px 8px", verticalAlign: "middle" }}>
                               ✓ Selected
                             </span>
@@ -719,8 +772,31 @@ export default function NewAdPage() {
                 📍 Screens are for <strong>local businesses</strong>: choose a store within about {LOCAL_AD_RADIUS_MILES} miles of your business, or one whose area you serve. Ads for businesses farther away may be declined and refunded.
               </p>
 
+              {/* Several stores: what's picked and the total */}
+              {multiStore && picked.length > 0 && (
+                <div style={{ background: "#F0F7FF", border: "1px solid #4A90C4", borderRadius: 8, padding: "12px 16px", marginTop: 16 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 14, fontWeight: 700, color: "#1A3A5C" }}>
+                    <span>{picked.length} store{picked.length === 1 ? "" : "s"} selected</span>
+                    <span style={{ color: "#E8563A" }}>{formatPrice(totalCents)}<span style={{ fontWeight: 400, fontSize: 12, color: "#4A6B82" }}> / 4 weeks</span></span>
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+                    {picked.map((l) => (
+                      <button
+                        key={l.id}
+                        type="button"
+                        onClick={() => togglePick(l)}
+                        title="Remove"
+                        style={{ fontSize: 12, color: "#1A3A5C", background: "#fff", border: "1px solid #C9DFF2", borderRadius: 999, padding: "3px 10px", cursor: "pointer" }}
+                      >
+                        {l.storeName} ✕
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Only when the picked store isn't in the list on screen (e.g. while searching for another) */}
-              {selectedLocation && !shownLocations.some(l => l.id === selectedLocation.id) && (
+              {!multiStore && selectedLocation && !shownLocations.some(l => l.id === selectedLocation.id) && (
                 <div style={{ background: "#F0F7FF", border: "1px solid #4A90C4", borderRadius: 8, padding: "12px 16px", marginTop: 16 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: "#1A3A5C" }}>Selected: {selectedLocation.storeName}</div>
                   <div style={{ fontSize: 12, color: "#4A6B82" }}>
@@ -732,7 +808,7 @@ export default function NewAdPage() {
               )}
 
               <div style={{ marginTop: 24, display: "flex", justifyContent: "flex-end" }}>
-                <Btn onClick={() => { if (!selectedLocation) { setError("Please select a location."); return; } setError(""); setStep(2); }} disabled={!selectedLocation}>
+                <Btn onClick={() => { if (!selectedLocation) { setError(multiStore ? "Please select at least one store." : "Please select a location."); return; } setError(""); setStep(2); }} disabled={!selectedLocation}>
                   Next: Ad Details →
                 </Btn>
               </div>
@@ -918,7 +994,7 @@ export default function NewAdPage() {
                   ? <>Confirm the demo ad. No payment: it shows only on this demo&apos;s private link.</>
                   : swapping
                   ? <>Confirm the new version. We&apos;ll review it; once approved it replaces your current ad. No payment.</>
-                  : <>Confirm your ad details. Payment of <strong>{selectedLocation ? `$${(selectedLocation.pricePerRunCents / 100).toFixed(2)}` : ""}</strong> is collected on the next step.</>}
+                  : <>Confirm your ad details. Payment of <strong>{formatPrice(totalCents)}</strong>{picked.length > 1 ? ` for ${picked.length} stores` : ""} is collected on the next step.</>}
               </p>
 
               {/* Summary */}
@@ -927,7 +1003,21 @@ export default function NewAdPage() {
                 {uploadedImageUrl && <div className="lg:hidden" style={{ marginBottom: 16 }}>{screenPreview()}</div>}
                 {/* Own text colour: the page's inherited text colour is light in dark mode, on this light box */}
                 <div style={{ display: "grid", gap: 10, fontSize: 14, color: ACCENT }}>
-                  <div><span style={{ color: "#4A6B82" }}>Location:</span> <strong>{selectedLocation?.storeName}</strong>{selectedLocation?.storeNumber && <StoreNumber value={selectedLocation.storeNumber} />}</div>
+                  {picked.length > 1 ? (
+                    <div>
+                      <span style={{ color: "#4A6B82" }}>Stores ({picked.length}):</span>
+                      <div style={{ display: "grid", gap: 4, marginTop: 4 }}>
+                        {picked.map((l) => (
+                          <div key={l.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 13 }}>
+                            <span>📍 <strong>{l.storeName}</strong>{l.storeNumber && <StoreNumber value={l.storeNumber} />}</span>
+                            <span>{formatPrice(l.pricePerRunCents)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div><span style={{ color: "#4A6B82" }}>Location:</span> <strong>{selectedLocation?.storeName}</strong>{selectedLocation?.storeNumber && <StoreNumber value={selectedLocation.storeNumber} />}</div>
+                  )}
                   <div><span style={{ color: "#4A6B82" }}>{isTemplate ? "Title" : "Name"}:</span> <strong>{adTitle}</strong><span style={{ color: "#4A6B82" }}> · {isTemplate ? "Sale template" : "Your own design (full screen)"}</span></div>
                   {demo ? (
                     <div><span style={{ color: "#4A6B82" }}>Shown:</span> on the demo link only, until it expires · no payment</div>
@@ -936,7 +1026,7 @@ export default function NewAdPage() {
                   ) : (
                     <>
                       <div><span style={{ color: "#4A6B82" }}>Duration:</span> 4 weeks (28 days)</div>
-                      <div><span style={{ color: "#4A6B82" }}>Price:</span> <strong style={{ color: RED }}>{selectedLocation ? `$${(selectedLocation.pricePerRunCents / 100).toFixed(2)}` : ""}</strong> <span style={{ color: "#4A6B82" }}>/ 4 weeks</span></div>
+                      <div><span style={{ color: "#4A6B82" }}>{picked.length > 1 ? "Total:" : "Price:"}</span> <strong style={{ color: RED }}>{formatPrice(totalCents)}</strong> <span style={{ color: "#4A6B82" }}>/ 4 weeks{picked.length > 1 ? " · one payment" : ""}</span></div>
                     </>
                   )}
                   {!isTemplate && contactWebsite.trim() && (
@@ -984,7 +1074,7 @@ export default function NewAdPage() {
                   </span>
                 ) : (
                 <span>
-                  My business is within about {LOCAL_AD_RADIUS_MILES} miles of <strong>{selectedLocation?.storeName ?? "this store"}</strong>, or serves customers in its area. I understand ads for businesses farther away may be declined and refunded.
+                  My business is within about {LOCAL_AD_RADIUS_MILES} miles of <strong>{picked.length > 1 ? picked.map((l) => l.storeName).join(", ") : selectedLocation?.storeName ?? "this store"}</strong>, or serves customers in {picked.length > 1 ? "each store's" : "its"} area. I understand ads for businesses farther away may be declined and refunded.
                 </span>
                 )}
               </label>
@@ -1014,7 +1104,9 @@ export default function NewAdPage() {
             {step >= 2 ? droppablePreview(screenPreview({ showFullscreen: false })) : screenPreview({ showFullscreen: false })}
             <div style={{ fontSize: 12, color: "#4A6B82", marginTop: 10 }}>
               {selectedLocation
-                ? <>Showing at <strong style={{ color: ACCENT }}>{selectedLocation.storeName}</strong> · {formatPrice(selectedLocation.pricePerRunCents)} / 4 weeks</>
+                ? picked.length > 1
+                  ? <>Showing at <strong style={{ color: ACCENT }}>{picked.length} stores</strong> · {formatPrice(totalCents)} / 4 weeks</>
+                  : <>Showing at <strong style={{ color: ACCENT }}>{selectedLocation.storeName}</strong> · {formatPrice(selectedLocation.pricePerRunCents)} / 4 weeks</>
                 : "Choose a store to see where your ad will run."}
             </div>
           </div>

@@ -16,7 +16,7 @@ export type RefundResult = {
 };
 
 /**
- * Looks up the payment for an ad and issues a full refund via Stripe or PayPal.
+ * Looks up the payment for an ad and refunds that payment's amount via Stripe or PayPal.
  * Updates both the payments row and ads.paymentStatus accordingly.
  * Falls back to "refund_pending" if the provider call fails.
  */
@@ -42,7 +42,9 @@ export async function processAdRefund(adId: string): Promise<RefundResult> {
 
   if (payment.provider === "stripe") {
     try {
-      const refund = await stripe.refunds.create({ payment_intent: payment.providerTxId });
+      // Refund only this ad's amount: a multi-store checkout is one Stripe payment covering several ads
+      // (for a single-store ad this is the full amount, as before)
+      const refund = await stripe.refunds.create({ payment_intent: payment.providerTxId, amount: payment.amountCents });
       await db.update(payments).set({
         status: "refunded",
         providerRefundId: refund.id,

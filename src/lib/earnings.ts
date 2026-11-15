@@ -68,13 +68,20 @@ export async function voidEarningForPayment(paymentId: string) {
     .where(and(eq(ownerEarnings.paymentId, paymentId), inArray(ownerEarnings.status, ["pending", "available"])));
 }
 
-async function fetchStripeFeeCents(paymentIntentId: string): Promise<number | null> {
+/**
+ * Stripe's fee for this payment row. A multi-store checkout is one Stripe payment covering several ads
+ * (one payment row each), so the fee is split by each row's share of the total; a single-store ad gets
+ * the whole fee, as before.
+ */
+async function fetchStripeFeeCents(paymentIntentId: string, rowAmountCents: number): Promise<number | null> {
   const pi = await stripe.paymentIntents.retrieve(paymentIntentId, {
     expand: ["latest_charge.balance_transaction"],
   });
   const charge = pi.latest_charge as Stripe.Charge | null;
   const bt = charge?.balance_transaction as Stripe.BalanceTransaction | null | undefined;
-  return bt && typeof bt === "object" ? bt.fee : null;
+  if (!bt || typeof bt !== "object") return null;
+  if (!pi.amount || rowAmountCents >= pi.amount) return bt.fee;
+  return Math.round((bt.fee * rowAmountCents) / pi.amount);
 }
 
 /**
@@ -124,7 +131,7 @@ export async function releaseEarnings(now = new Date()) {
     let fee = e.feeCents;
     if (fee === null && e.provider === "stripe") {
       try {
-        fee = await fetchStripeFeeCents(e.providerTxId);
+        fee = await fetchStripeFeeCents(e.providerTxId, e.grossCents);
         if (fee !== null) {
           await db.update(payments).set({ feeCents: fee, updatedAt: now }).where(eq(payments.id, e.paymentId));
         }

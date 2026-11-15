@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { ads, locations, users, payments, proposals } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth/session";
-import { eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 
 // GET /api/ads/[id] — get a single ad (owner or approver/admin)
 export async function GET(
@@ -28,6 +28,7 @@ export async function GET(
         startedAt: ads.startedAt,
         endedAt: ads.endedAt,
         displayOrder: ads.displayOrder,
+        orderId: ads.orderId,
         createdAt: ads.createdAt,
         updatedAt: ads.updatedAt,
         user: {
@@ -77,7 +78,17 @@ export async function GET(
     // A sales proposal's ad goes live when paid (no review), so the payment page says so
     const [fromProposal] = await db.select({ id: proposals.id }).from(proposals).where(eq(proposals.adId, id)).limit(1);
 
-    return NextResponse.json({ success: true, data: { ...row, payments: adPayments, fromProposal: !!fromProposal } });
+    // Multi-store order: every store in it, for the payment page (one line each, one total)
+    const order = row.orderId
+      ? await db
+          .select({ adId: ads.id, storeName: locations.storeName, storeNumber: locations.storeNumber, pricePerRunCents: locations.pricePerRunCents, paymentStatus: ads.paymentStatus })
+          .from(ads)
+          .innerJoin(locations, eq(ads.locationId, locations.id))
+          .where(and(eq(ads.orderId, row.orderId), eq(ads.userId, row.user.id)))
+          .orderBy(asc(ads.createdAt))
+      : null;
+
+    return NextResponse.json({ success: true, data: { ...row, payments: adPayments, fromProposal: !!fromProposal, order } });
   } catch (error: any) {
     console.error("[GET /api/ads/[id]]", error);
     return NextResponse.json(

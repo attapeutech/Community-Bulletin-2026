@@ -10,6 +10,7 @@ export * from "./auth";
 // Core domain tables
 export * from "./users";
 export * from "./locations";
+export * from "./adOrders";
 export * from "./ads";
 export * from "./payments";
 export * from "./earnings";

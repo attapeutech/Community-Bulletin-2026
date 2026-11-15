@@ -17,7 +17,19 @@ type AdSummary = {
   paymentStatus: string;
   location: { storeName: string; slug: string; pricePerRunCents: number };
   fromProposal?: boolean;   // a sales proposal's ad: live when paid, no review
+  // Multi-store order: every store in it (paid in one checkout)
+  order?: { adId: string; storeName: string; storeNumber: string | null; pricePerRunCents: number; paymentStatus: string }[] | null;
 };
+
+/** What this checkout charges: each unpaid store in the order, or just this ad's store */
+function payLines(ad: AdSummary) {
+  if (ad.order && ad.order.length > 1) {
+    return ad.order
+      .filter((o) => o.paymentStatus === "unpaid")
+      .map((o) => ({ key: o.adId, store: o.storeName + (o.storeNumber ? " #" + o.storeNumber.replace(/^#/, "") : ""), cents: o.pricePerRunCents }));
+  }
+  return [{ key: ad.id, store: ad.location.storeName, cents: ad.location.pricePerRunCents }];
+}
 
 // ─── PayPal script loader ─────────────────────────────────────────────────────
 function loadPayPalScript(): Promise<void> {
@@ -73,7 +85,7 @@ export default function PaymentPage() {
 
   // Load PayPal script when we have an unpaid ad
   useEffect(() => {
-    if (!SHOW_PAYPAL || !ad || ad.paymentStatus !== "unpaid" || !PAYPAL_CLIENT_ID || success) return;
+    if (!SHOW_PAYPAL || !ad || ad.paymentStatus !== "unpaid" || !PAYPAL_CLIENT_ID || success || (ad.order && ad.order.length > 1)) return;
     loadPayPalScript()
       .then(() => setPaypalReady(true))
       .catch(() => console.warn("PayPal SDK failed to load"));
@@ -196,6 +208,8 @@ export default function PaymentPage() {
   }
 
   // ─── Payment form ─────────────────────────────────────────────────────────────
+  const lines = payLines(ad);
+  const total = lines.reduce((sum, l) => sum + l.cents, 0);
   return (
     <div style={{ minHeight: "100vh", background: "#F4F7FB", display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 16px" }}>
       <div style={{ width: "100%", maxWidth: 560 }}>
@@ -220,10 +234,26 @@ export default function PaymentPage() {
             />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 700, fontSize: 15, color: ACCENT, marginBottom: 2 }}>{ad.title}</div>
-              <div style={{ fontSize: 12, color: "#4A6B82" }}>{ad.location.storeName} · 4-week display</div>
+              <div style={{ fontSize: 12, color: "#4A6B82" }}>
+                {lines.length > 1 ? `${lines.length} stores · 4-week display at each` : `${ad.location.storeName} · 4-week display`}
+              </div>
             </div>
-            <div style={{ fontWeight: 700, fontSize: 20, color: "#E8563A", flexShrink: 0 }}>${(ad.location.pricePerRunCents / 100).toFixed(2)}</div>
+            <div style={{ fontWeight: 700, fontSize: 20, color: "#E8563A", flexShrink: 0 }}>${(total / 100).toFixed(2)}</div>
           </div>
+          {lines.length > 1 && (
+            <div style={{ marginTop: 16, borderTop: "1px solid #E5EDF4", paddingTop: 12, display: "grid", gap: 6 }}>
+              {lines.map((l) => (
+                <div key={l.key} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: ACCENT }}>
+                  <span>📍 {l.store}</span>
+                  <span style={{ fontWeight: 600 }}>${(l.cents / 100).toFixed(2)}</span>
+                </div>
+              ))}
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, fontWeight: 700, color: ACCENT, borderTop: "1px solid #E5EDF4", paddingTop: 8, marginTop: 2 }}>
+                <span>Total · one payment</span>
+                <span>${(total / 100).toFixed(2)}</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {cancelled && (
@@ -243,7 +273,7 @@ export default function PaymentPage() {
           <h2 style={{ fontFamily: "Georgia,serif", fontSize: 18, color: ACCENT, marginBottom: 24 }}>Choose payment method</h2>
 
           {/* Stripe */}
-          <div style={{ marginBottom: SHOW_PAYPAL ? 24 : 0, padding: 20, border: "1px solid #D8E4EE", borderRadius: 12 }}>
+          <div style={{ marginBottom: SHOW_PAYPAL && !(ad.order && ad.order.length > 1) ? 24 : 0, padding: 20, border: "1px solid #D8E4EE", borderRadius: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
               <span style={{ fontSize: 20 }}>💳</span>
               <span style={{ fontWeight: 600, color: ACCENT }}>Credit / Debit Card</span>
@@ -268,12 +298,12 @@ export default function PaymentPage() {
                 opacity: payLoading ? 0.7 : 1,
               }}
             >
-              {payLoading ? "Redirecting…" : `Pay ${ad ? `$${(ad.location.pricePerRunCents / 100).toFixed(2)} ` : ""}with Stripe →`}
+              {payLoading ? "Redirecting…" : `Pay $${(total / 100).toFixed(2)} with Stripe →`}
             </button>
           </div>
 
           {/* PayPal (only when switched on) */}
-          {SHOW_PAYPAL && (
+          {SHOW_PAYPAL && !(ad.order && ad.order.length > 1) && (
           <div style={{ padding: 20, border: "1px solid #D8E4EE", borderRadius: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
               <span style={{ fontSize: 20 }}>🅿️</span>

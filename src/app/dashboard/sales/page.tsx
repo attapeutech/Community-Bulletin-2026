@@ -65,9 +65,13 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
     : [sql`${leads.nextFollowUp} asc nulls last`, desc(leads.updatedAt)];
 
   // Advertiser leads per store, for the goal cards
+  // The outer store's id, named in full. This query reads only "locations" (no join), so Drizzle writes
+  // columns without table names, and a bare "id" inside a subquery means the inner table's id
+  // (counts were always 0 before 2026-11-15).
+  const storeIdRef = sql.raw(`"locations"."id"`);
   const advertiserLeads = (stageSql: SQL) => sql<number>`(
     select count(*)::int from ${leads}
-    where ${leads.kind} = 'advertiser' and ${leads.locationId} = ${locations.id} and ${stageSql}
+    where ${leads.kind} = 'advertiser' and ${leads.locationId} = ${storeIdRef} and ${stageSql}
   )`;
 
   const [[{ total }], summary, cityRows, storeRows] = await Promise.all([
@@ -87,13 +91,13 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
       storeNumber: locations.storeNumber,
       live: sql<number>`(
         select count(*)::int from ${ads}
-        where ${ads.locationId} = ${locations.id} and ${ads.status} = 'approved'
+        where ${ads.locationId} = ${storeIdRef} and ${ads.status} = 'approved'
           and ${ads.paymentStatus} = 'paid' and ${ads.isTest} = false
           and ${ads.startedAt} <= ${now} and ${ads.endedAt} > ${now}
       )`,
       pendingReview: sql<number>`(
         select count(*)::int from ${ads}
-        where ${ads.locationId} = ${locations.id} and ${ads.status} = 'pending' and ${ads.paymentStatus} = 'paid'
+        where ${ads.locationId} = ${storeIdRef} and ${ads.status} = 'pending' and ${ads.paymentStatus} = 'paid'
       )`,
       openLeads: advertiserLeads(sql`${leads.stage} in ('new', 'contacted', 'interested')`),
       interested: advertiserLeads(sql`${leads.stage} = 'interested'`),

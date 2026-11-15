@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Phone, Mail, Plus, ChevronLeft, ChevronRight, Store, Search, CreditCard, Link2 } from "lucide-react";
+import { Phone, Mail, Plus, ChevronLeft, ChevronRight, Store, Search, CreditCard, Link2, MapPin } from "lucide-react";
 import type { QuickPay } from "@/lib/proposal-quick";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -361,9 +361,20 @@ export default function SalesClient({ leads, filters, total, pages, today, summa
             1. Sign up stores · 2. Sign up advertisers near each store · Goal: {ADS_PER_STORE_GOAL} live ads per store
           </p>
         </div>
-        <Link href={newLeadHref} className="inline-flex items-center gap-1.5 h-9 px-4 rounded-md bg-[#1A3A5C] text-white text-[13px] font-semibold no-underline">
-          <Plus size={15} /> New {isAdvertisers ? "advertiser" : "store"} lead
-        </Link>
+        <div className="flex gap-2 flex-wrap">
+          {/* Advertisers: pull businesses near a store from Google Maps and add them as leads */}
+          {isAdvertisers && (
+            <Link
+              href={`/dashboard/sales/nearby${filters.store ? `?store=${filters.store}` : ""}`}
+              className="inline-flex items-center gap-1.5 h-9 px-4 rounded-md border border-[#E8563A] text-[#E8563A] bg-white text-[13px] font-semibold no-underline hover:bg-[#FFF3EF] dark:bg-transparent"
+            >
+              <MapPin size={15} /> Find nearby businesses
+            </Link>
+          )}
+          <Link href={newLeadHref} className="inline-flex items-center gap-1.5 h-9 px-4 rounded-md bg-[#1A3A5C] text-white text-[13px] font-semibold no-underline">
+            <Plus size={15} /> New {isAdvertisers ? "advertiser" : "store"} lead
+          </Link>
+        </div>
       </div>
 
       {/* How-to, closed by default */}

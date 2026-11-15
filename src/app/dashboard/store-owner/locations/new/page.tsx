@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/lib/auth/client";
-import { AD_PRICE_CENTS, DEFAULT_SHARE_RATE_BPS, MIN_PRICE_PER_RUN_CENTS, MAX_PRICE_PER_RUN_CENTS, MAX_SHARE_RATE_BPS } from "@/types";
+import { AD_PRICE_CENTS, DEFAULT_SHARE_RATE_BPS, MIN_PRICE_PER_RUN_CENTS, MAX_PRICE_PER_RUN_CENTS, MAX_SHARE_RATE_BPS, SHARE_OWN_EQUIPMENT_BPS, SHARE_WE_SUPPLY_BPS } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -68,8 +68,8 @@ export default function NewLocationPage() {
     defaultValues: {
       currency: "USD",
       pricePerRunCents: AD_PRICE_CENTS,
-      shareRateBps: DEFAULT_SHARE_RATE_BPS,
-      equipmentProvided: false,
+      shareRateBps: SHARE_OWN_EQUIPMENT_BPS,
+      equipmentProvided: true,
     },
   });
 
@@ -153,9 +153,10 @@ export default function NewLocationPage() {
         setApplication(a);
         setValue("storeName", a.businessName, { shouldValidate: true });
         setValue("addressLine1", a.addressLine1, { shouldValidate: true });
-        if (a.hasScreen === "yes") {
-          setValue("equipmentProvided", true);
-          setValue("shareRateBps", 5000);
+        // The application's TV answer sets who supplies the equipment, and so the share (50% / 25%)
+        if (a.hasScreen === "yes" || a.hasScreen === "no") {
+          setValue("equipmentProvided", a.hasScreen === "yes");
+          setValue("shareRateBps", a.hasScreen === "yes" ? SHARE_OWN_EQUIPMENT_BPS : SHARE_WE_SUPPLY_BPS);
         }
       })
       .catch(() => {});
@@ -423,7 +424,7 @@ export default function NewLocationPage() {
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4A6B82] text-sm">%</span>
                       </div>
-                      {[50].map(pct => (
+                      {[{ pct: 50, hint: "own equipment" }, { pct: 25, hint: "we supply" }].map(({ pct, hint }) => (
                         <button
                           key={pct}
                           type="button"
@@ -435,7 +436,7 @@ export default function NewLocationPage() {
                               : "bg-white border-[#D8E4EE] text-[#4A6B82] hover:border-[#1A3A5C]"
                           )}
                         >
-                          {pct}%
+                          {pct}% <span className="opacity-70">· {hint}</span>
                         </button>
                       ))}
                     </div>
@@ -447,17 +448,23 @@ export default function NewLocationPage() {
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
-                    {...register("equipmentProvided")}
+                    {...register("equipmentProvided", {
+                      // Who supplies the equipment sets the standard share: 50% theirs, 25% ours
+                      onChange: (e) => setValue("shareRateBps", e.target.checked ? SHARE_OWN_EQUIPMENT_BPS : SHARE_WE_SUPPLY_BPS, { shouldValidate: true }),
+                    })}
                     className="mt-0.5 w-4 h-4 rounded border-[#D1DDE8] accent-[#1A3A5C]"
                   />
-                  <span className="text-sm text-[#1A3A5C]">Store owner provides the TV screen, Wi-Fi &amp; hardware</span>
+                  <span className="text-sm text-[#1A3A5C]">
+                    Store owner provides the TV screen, Wi-Fi &amp; hardware
+                    <span className="block text-[11px] text-[#5B7D96]">Ticked: 50% share. Unticked (we supply and install): 25% share.</span>
+                  </span>
                 </label>
               </>
             ) : (
               <div className="rounded-lg p-3 text-[13px] bg-[#F7F9FC] border border-[#D8E4EE] text-[#4A6B82]">
                 New locations start at <strong className="text-[#1A3A5C]">${AD_PRICE_CENTS / 100} per 4 weeks</strong> with a{" "}
                 <strong className="text-[#1A3A5C]">{DEFAULT_SHARE_RATE_BPS / 100}% revenue share</strong> for you.
-                CommunityBulletin confirms final pricing and your share with you, for example if you provide the screen and hardware.
+                That&apos;s the share when you provide the TV, mini PC and WiFi; if we supply and install them, your share is {SHARE_WE_SUPPLY_BPS / 100}%. CommunityBulletin confirms final pricing and your share with you.
               </div>
             )}
           </CardContent>

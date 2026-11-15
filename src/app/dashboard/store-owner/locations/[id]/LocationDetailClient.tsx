@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MIN_PRICE_PER_RUN_CENTS, MAX_PRICE_PER_RUN_CENTS, MAX_SHARE_RATE_BPS } from "@/types";
+import { MIN_PRICE_PER_RUN_CENTS, MAX_PRICE_PER_RUN_CENTS, MAX_SHARE_RATE_BPS, SHARE_OWN_EQUIPMENT_BPS, SHARE_WE_SUPPLY_BPS } from "@/types";
 import { costPerThousandCents, formatCostPerThousand, formatShoppers, formatTrafficDate } from "@/lib/traffic";
 
 const editSchema = z.object({
@@ -634,7 +634,7 @@ export default function LocationDetailClient({
                           />
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4A6B82] text-sm">%</span>
                         </div>
-                        {[50].map(pct => (
+                        {[{ pct: 50, hint: "own equipment" }, { pct: 25, hint: "we supply" }].map(({ pct, hint }) => (
                           <button
                             key={pct}
                             type="button"
@@ -646,7 +646,7 @@ export default function LocationDetailClient({
                                 : "bg-white border-[#D8E4EE] text-[#4A6B82] hover:border-[#1A3A5C]"
                             )}
                           >
-                            {pct}%
+                            {pct}% <span className="opacity-70">· {hint}</span>
                           </button>
                         ))}
                       </div>
@@ -680,10 +680,16 @@ export default function LocationDetailClient({
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
                       type="checkbox"
-                      {...register("equipmentProvided")}
+                      {...register("equipmentProvided", {
+                        // Who supplies the equipment sets the standard share: 50% theirs, 25% ours
+                        onChange: (e) => setValue("shareRateBps", e.target.checked ? SHARE_OWN_EQUIPMENT_BPS : SHARE_WE_SUPPLY_BPS, { shouldValidate: true, shouldDirty: true }),
+                      })}
                       className="w-4 h-4 rounded border-[#D1DDE8] accent-[#1A3A5C]"
                     />
-                    <span className="text-sm text-[#1A3A5C]">Store owner provides the TV, Wi-Fi &amp; hardware</span>
+                    <span className="text-sm text-[#1A3A5C]">
+                      Store owner provides the TV, Wi-Fi &amp; hardware
+                      <span className="block text-[11px] text-[#5B7D96]">Changing this sets the share: ticked 50%, unticked (we supply) 25%. Applies to new payments only.</span>
+                    </span>
                   </label>
                 </div>
               ) : (

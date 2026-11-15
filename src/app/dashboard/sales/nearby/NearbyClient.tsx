@@ -116,7 +116,8 @@ export default function NearbyClient({ stores, initialStore, configured }: {
             <select
               value={store}
               onChange={(e) => { setStore(e.target.value); find(e.target.value); }}
-              className="h-9 rounded-md border border-[#D1DDE8] bg-white px-2.5 text-base sm:text-sm text-[#1A3A5C] dark:bg-transparent dark:text-[#E6EEF6] dark:border-[#33557A] min-w-[220px]"
+              // Dark mode: a solid dark field, and color-scheme so the browser draws the open option list dark too
+              className="h-9 rounded-md border border-[#D1DDE8] bg-white px-2.5 text-base sm:text-sm text-[#1A3A5C] min-w-[220px] dark:bg-[#0F2540] dark:text-[#E6EEF6] dark:border-[#33557A] dark:[color-scheme:dark] [&>option]:bg-white [&>option]:text-[#1A3A5C] dark:[&>option]:bg-[#0F2540] dark:[&>option]:text-[#E6EEF6]"
               aria-label="Store"
             >
               {stores.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}

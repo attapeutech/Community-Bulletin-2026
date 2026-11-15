@@ -5,6 +5,7 @@ import { locations } from "./locations";
 import { payments } from "./payments";
 import { notifications } from "./notifications";
 import { demos } from "./demos";
+import { adOrders } from "./adOrders";
 
 export const adStatusEnum = pgEnum("ad_status", [
   "pending",
@@ -61,6 +62,8 @@ export const ads = pgTable("ads", {
   isTest: boolean("is_test").default(false).notNull(),
   // Sales demo ad (also isTest): shown only on that demo's private link, not on ?preview= screens
   demoId: uuid("demo_id").references(() => demos.id, { onDelete: "cascade" }),
+  // Posted together with other stores in one checkout (null = a single-store ad)
+  orderId: uuid("order_id").references(() => adOrders.id, { onDelete: "set null" }),
   // Built-in template ("sale", …) drawn by the screen from templateData; null = the advertiser's own image
   template: text("template"),
   templateData: jsonb("template_data"),

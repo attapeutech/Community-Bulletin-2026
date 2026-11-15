@@ -211,6 +211,13 @@
       "when": 1794683972309,
       "tag": "0029_qr_counters",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1794753609944,
+      "tag": "0030_ad_orders",
+      "breakpoints": true
     }
   ]
 }

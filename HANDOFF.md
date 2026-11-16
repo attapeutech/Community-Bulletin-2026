@@ -1,4 +1,4 @@
-# Handoff: 2026-10-22 (updated 2026-11-14)
+# Handoff: 2026-10-22 (updated 2026-11-16)
 
 ## Where things stand
 
@@ -32,6 +32,37 @@
   - `LeaveFrame` (`src/components/layout/LeaveFrame.tsx`, in the root layout) moves any non-display page out of a frame
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
+
+## 2026-11-16 summary
+
+- **Find nearby businesses: sort and filter** (PR #166, `src/app/dashboard/sales/nearby/NearbyClient.tsx`):
+  - Opens **Closest** first, as before. A **Closest | A→Z** switch sorts by name (capitals ignored, numbers in natural order).
+  - A filter box matches name, type, address, website, or any 3+ digits of the phone. It clears when you change store or search again.
+  - **Tick all** ticks only what's showing. The counter says "N businesses match" while filtering, and an empty result offers **Clear the filter**.
+  - Businesses ticked and then hidden by the filter stay ticked and are still added; the "ticked" count is always the full total.
+- This computer was synced to `main` (45 commits from the other dev machine, PRs #145–#165). No migrations today.
+
+## 2026-11-15 summary (other dev machine; written up 2026-11-16 from the commits)
+
+- **Multi-store ads, step 1** (PR #159, migration `0030_ad_orders` applied):
+  - Post a New Ad can tick several stores (new ads only; demo ads, edits and swaps stay single-store). A sticky bar shows "x of y selected · $total" with Select all and Clear.
+  - `POST /api/ads` takes `locationIds` and makes one ad per store with the same content, linked by an `ad_orders` row (`ads.order_id`). Each store's ad is reviewed, shown, counted and paid out like a single-store ad.
+  - One Stripe checkout with a line per store. `recordPaidCheckout()` (now also used by the webhook) writes one payment row per store.
+  - A refund covers only that store's payment, and the Stripe fee is split by each payment's share.
+  - Tested in Stripe test mode: 3 stores, one $300 payment, a $100 partial refund; the test data was removed.
+  - No bundle discount yet (needs partner decisions).
+- **Store share** (PR #158): 50% when the store owner provides the TV, Wi-Fi and hardware; 25% when we supply and install (`SHARE_OWN_EQUIPMENT_BPS` / `SHARE_WE_SUPPLY_BPS`).
+  - Shown on /demo, Help, the partner application and the Account page.
+  - Admin store forms have a toggle and quick buttons; any rate can still be typed. Existing stores and recorded earnings keep their rates.
+- **/demo** (PRs #160, #161): store earnings rounded to about $2,000/mo (50%) and $1,000/mo (25%); logo-style push pins replace the check marks in "The Platform".
+- **All Earnings** (PR #162): a collapsed, admin-only note on the $25 payout minimum (`MIN_PAYOUT_CENTS`).
+- **Sales: Find nearby businesses** (PR #163, migration `0031_lead_places` applied):
+  - `/dashboard/sales/nearby`: pick a store and see businesses within 1 mile from Google Places (`src/lib/nearby-places.ts`; `GOOGLE_PLACES_API_KEY`, restricted to Places API (New)). Chains are behind **Show chains**, and existing leads are marked "already a lead".
+  - Tick businesses and **Add N as leads**: they become advertiser leads with source "Nearby finder". Duplicates are skipped by place id or name. New lead columns: `website`, `category`, `place_id`.
+  - Tested at Fast Eddies: 58 businesses (48 local, 10 chains).
+- **Sales: Find email** (PR #164): on a lead with a website and no email, "Find email on their website" checks the home and contact/about pages and lists the addresses it finds; click one to save it.
+  - `src/lib/find-email.ts` refuses private/local addresses and has an 8 s / 1.5 MB limit.
+- **Fixes:** the Sales store cards always showed 0 live ads / pending / open leads (a column-name mix-up in the subquery; Fast Eddies now shows 1/40). The store dropdown on Find nearby businesses is readable in dark mode (PR #165).
 
 ## 2026-11-14 summary
 
@@ -382,7 +413,7 @@ Context: after two weeks of door-knocking, store owners and advertisers are inte
 - Production had been built with `db:push`, so Drizzle's migration history was empty. All migrations up to `0004_ad_analytics` were recorded as applied in Neon's `drizzle.__drizzle_migrations`, so `npm run db:migrate` works normally from here.
 - **Run migrations against the direct (non-pooled) Neon host:** remove `-pooler` from the hostname. Restores and DDL can fail through the pooler.
 - `0003` and `0004` have hand-written timestamps (`when: 1750…`) that are older than `0002`. They are already applied, so this is harmless, but generate future migrations with `npm run db:generate` rather than writing them by hand.
-- **Applied to Neon through `0029`** (30 rows in `drizzle.__drizzle_migrations`; `0022_sales_proposals` applied 2026-11-01, `0023_ad_swaps` 2026-11-03, `0024_equipment`, `0025_location_setup` and `0026_equipment_photos` 2026-11-07, `0027_equipment_remote` and `0028_equipment_windows_login` 2026-11-08, `0029_qr_counters` 2026-11-14):
+- **Applied to Neon through `0031`** (32 rows in `drizzle.__drizzle_migrations`; `0022_sales_proposals` applied 2026-11-01, `0023_ad_swaps` 2026-11-03, `0024_equipment`, `0025_location_setup` and `0026_equipment_photos` 2026-11-07, `0027_equipment_remote` and `0028_equipment_windows_login` 2026-11-08, `0029_qr_counters` 2026-11-14, `0030_ad_orders` and `0031_lead_places` 2026-11-15):
   - `0012_location_traffic`: `locations.daily_customers` and `traffic_updated_at`
   - `0013_screen_devices`
   - `0014_direct_deposits`
@@ -638,7 +669,10 @@ Ideas not built yet: printable QR labels per device (scan → its record), offli
 - [ ] **First real pay link:** send Rosalba a pay link for "Free Pepsi Cemitas" (Admin → All Ads → Pay link) and check that it lands in Review Ads after she pays.
 - [ ] **Pay links / proposals, ideas:** a "Pay right here" button on the lead page (opens checkout on the rep's device, without making the link first); show a Pay link on the Sales lead page when the lead is linked to an account; sending texts from CommunityBulletin.com (Twilio) instead of the rep's phone. Proposals and pay links offer Stripe only (no PayPal).
 - [ ] **Store map on `/stores`** (agreed 2026-11-09, idea #2 from the home page brainstorm): "Find screens near your business", a map with a pin per store beside the list. Needs latitude/longitude per store (a small migration the user runs) and a free map library with no API key.
-- [ ] **Multi-store bundle** (idea #3, later): one ad on several stores at a discount. Needs partner decisions on pricing.
+- [ ] **Multi-store bundle discount** (idea #3): step 1 is done (several stores, one checkout, full price each; PR #159). Next: a discount for several stores, once the partners decide the pricing.
+- [ ] **"Which store sent this customer?"** (an advertiser asked on 2026-11-09). Already in place: each ad is booked at one store, so its views, QR scans, directions and calls are per store.
+  - Next: add store tags (`utm_source=communitybulletin&utm_medium=screen&utm_campaign=<store slug>`, keeping any query string already there) where we send people to the advertiser's website: **See the deal** (`/go/[id]/deal`) and website-only QR scans (`/go/[id]`). Their own Google Analytics, Wix, Shopify or Square would then show visits per store.
+  - Later, maybe: a short store code printed on templates (e.g. **CB-FE**).
 - [ ] **Ad swap:** test **Deny** once (on the first real swap, or a test ad made "paid" by an Admin Panel edit, then deleted). Ideas: show the swap history on the ad's details page; let admins see swaps in the Admin Panel.
 - [ ] **Ad form checkboxes:** (still open) on Post a New Ad's Review step, unticked checkboxes ("Post as a test ad", "My business is within…") look filled dark grey in dark mode. Give them a light background or explicit colours.
 - [ ] **10 more mini computers:** buy one (≤$120, 8 GB RAM, SSD, Windows Pro), run a 40-ad loop on it for a day, then buy the rest.

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, ExternalLink, Loader2, MapPin, Phone, Search } from "lucide-react";
+import { ArrowLeft, ExternalLink, Loader2, MapPin, Phone, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Business = {
@@ -34,12 +34,15 @@ export default function NearbyClient({ stores, initialStore, configured }: {
   const [storeLine, setStoreLine] = useState<string | null>(null);
   const [showChains, setShowChains] = useState(false);
   const [ticked, setTicked] = useState<Set<string>>(new Set());
+  const [sort, setSort] = useState<"near" | "az">("near");
+  const [filter, setFilter] = useState("");
 
   async function find(id = store) {
     if (!id) return;
     setLoading(true);
     setResults(null);
     setTicked(new Set());
+    setFilter("");
     try {
       const res = await fetch(`/api/admin/leads/nearby?store=${id}`, { cache: "no-store" });
       const json = await res.json();
@@ -56,7 +59,21 @@ export default function NearbyClient({ stores, initialStore, configured }: {
   // Search right away when opened for a store (e.g. from the Sales list)
   useEffect(() => { if (configured && initialStore) find(initialStore); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const shown = useMemo(() => (results ?? []).filter((b) => showChains || !b.chain), [results, showChains]);
+  // Chains hidden unless asked for; quick filter on name, category, address, phone or website; closest first or A→Z
+  const shown = useMemo(() => {
+    const q = filter.trim().toLowerCase();
+    const digits = q.replace(/\D/g, "");
+    const list = (results ?? []).filter((b) => {
+      if (!showChains && b.chain) return false;
+      if (!q) return true;
+      const text = [b.name, b.category, b.address, b.website].filter(Boolean).join(" ").toLowerCase();
+      return text.includes(q) || (digits.length >= 3 && (b.phone ?? "").replace(/\D/g, "").includes(digits));
+    });
+    return list.sort((a, b) =>
+      sort === "near"
+        ? a.distanceMi - b.distanceMi || a.name.localeCompare(b.name, "en", { sensitivity: "base" })
+        : a.name.localeCompare(b.name, "en", { sensitivity: "base", numeric: true }));
+  }, [results, showChains, filter, sort]);
   const addable = shown.filter((b) => !b.leadId);
   const chainCount = (results ?? []).filter((b) => b.chain).length;
   const allTicked = addable.length > 0 && addable.every((b) => ticked.has(b.placeId));
@@ -102,7 +119,7 @@ export default function NearbyClient({ stores, initialStore, configured }: {
       </Link>
       <h1 className="font-serif text-[26px] font-bold text-[#1A3A5C] mt-2 mb-1">Find nearby businesses</h1>
       <p className="text-sm text-[#4A6B82] mb-5">
-        Local businesses within a mile of a store, closest first (from Google Maps). Tick the ones worth contacting and add them as
+        Local businesses within a mile of a store (from Google Maps), closest first or A→Z. Tick the ones worth contacting and add them as
         advertiser leads for that store; then use Call, demo ads and Pay now as usual.
       </p>
 
@@ -134,6 +151,43 @@ export default function NearbyClient({ stores, initialStore, configured }: {
           </div>
           {storeLine && <p className="text-xs text-[#6B7A8C] mb-3 flex items-center gap-1"><MapPin size={12} className="text-[#E8563A]" /> {storeLine}</p>}
 
+          {results && !loading && results.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <div className="relative flex-1 min-w-[220px] max-w-[420px]">
+                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#E8563A] pointer-events-none" aria-hidden="true" />
+                <input
+                  type="search"
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  placeholder="Filter by name, type, street or phone…"
+                  aria-label="Filter businesses"
+                  className="w-full h-10 rounded-lg border-2 border-[#C9D9E7] bg-white pl-9 pr-9 text-base sm:text-sm text-[#1A3A5C] placeholder:text-[#7A93A8] focus:outline-none focus:border-[#4A90C4] dark:bg-[#0F2540] dark:text-[#E6EEF6] dark:border-[#33557A] dark:placeholder:text-[#8FA9C0]"
+                />
+                {filter && (
+                  <button type="button" onClick={() => setFilter("")} aria-label="Clear filter" className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-[#4A6B82] hover:text-[#1A3A5C] bg-transparent border-0 cursor-pointer dark:text-[#9DC4E0]">
+                    <X size={15} />
+                  </button>
+                )}
+              </div>
+              <div className="inline-flex rounded-md border border-[#D8E4EE] overflow-hidden dark:border-[#33557A]" role="group" aria-label="Sort">
+                {([["near", "Closest"], ["az", "A→Z"]] as const).map(([k, label]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    aria-pressed={sort === k}
+                    onClick={() => setSort(k)}
+                    className={cn(
+                      "h-9 px-3 text-[13px] font-semibold border-0 cursor-pointer",
+                      sort === k ? "bg-[#1A3A5C] text-white" : "bg-white text-[#1A3A5C] hover:bg-[#F0F5FA] dark:bg-transparent dark:text-[#E6EEF6] dark:hover:bg-[#2A5179]",
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {loading && <div className="py-10 text-center text-sm text-[#4A6B82]"><Loader2 className="inline animate-spin mr-2" size={16} />Looking up nearby businesses…</div>}
 
           {results && !loading && (
@@ -141,7 +195,7 @@ export default function NearbyClient({ stores, initialStore, configured }: {
               {/* Count, Select all, Add — stays on top while scrolling */}
               <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-[#F7FAFC] border-b border-[#E5EDF4]">
                 <span className="text-xs text-[#4A6B82]">
-                  <strong className="text-[#1A3A5C]">{shown.length}</strong> businesses · {shown.length - addable.length} already leads ·{" "}
+                  <strong className="text-[#1A3A5C]">{shown.length}</strong> businesses{filter.trim() ? " match" : ""} · {shown.length - addable.length} already leads ·{" "}
                   <strong className="text-[#1A3A5C]">{ticked.size}</strong> ticked
                 </span>
                 <span className="flex gap-2">
@@ -165,7 +219,13 @@ export default function NearbyClient({ stores, initialStore, configured }: {
                 </span>
               </div>
 
-              {!shown.length && <div className="p-8 text-center text-sm text-[#4A6B82]">No businesses found within a mile.</div>}
+              {!shown.length && (
+                <div className="p-8 text-center text-sm text-[#4A6B82]">
+                  {filter.trim()
+                    ? <>No businesses match &ldquo;{filter.trim()}&rdquo;. <button type="button" onClick={() => setFilter("")} className="text-[#4A90C4] hover:underline bg-transparent border-0 p-0 cursor-pointer text-sm">Clear the filter</button></>
+                    : "No businesses found within a mile."}
+                </div>
+              )}
 
               <ul className="divide-y divide-[#EEF3F8]">
                 {shown.map((b) => (

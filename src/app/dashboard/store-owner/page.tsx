@@ -3,6 +3,7 @@ import { db } from "@/lib/db/client";
 import { locations, ads, users, countries, states, cities, postalCodes, ownerEarnings } from "@/lib/db/schema";
 import { eq, and, count, sum, desc, inArray } from "drizzle-orm";
 import Link from "next/link";
+import { MapPin } from "lucide-react";
 import { AD_PRICE_CENTS, DEFAULT_SHARE_RATE_BPS, MIN_PRICE_PER_RUN_CENTS, MAX_PRICE_PER_RUN_CENTS, MAX_SHARE_RATE_BPS } from "@/types";
 
 const ACCENT = "#1A3A5C";
@@ -180,9 +181,18 @@ export default async function StoreOwnerPage({ searchParams }: { searchParams: P
                       {loc.category && <Badge bg="#EEF2FF" color="#3730A3">{loc.category}</Badge>}
                       {isAdmin && <Badge bg="#E8EFF6" color="#1A3A5C">{loc.storeOwner.name}</Badge>}
                     </div>
-                    <div style={{ fontSize: 13, color: "var(--cb-ink-2)" }}>
-                      {loc.addressLine1} · {loc.city.name}, {loc.state.code} {loc.postalCode.code}
-                    </div>
+                    {/* The store's address: opens Google Maps */}
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${loc.storeName}, ${loc.addressLine1.trim()}, ${loc.city.name}, ${loc.state.code} ${loc.postalCode.code}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Open in Maps"
+                      className="hover:underline"
+                      style={{ display: "inline-flex", alignItems: "flex-start", gap: 4, fontSize: 13, color: "#4A90C4", textDecoration: "none" }}
+                    >
+                      <MapPin size={13} color="#E8563A" style={{ flexShrink: 0, marginTop: 2 }} aria-hidden="true" />
+                      <span>{loc.addressLine1.trim()} · {loc.city.name}, {loc.state.code} {loc.postalCode.code}</span>
+                    </a>
                     <div style={{ fontSize: 11, color: "var(--cb-ink-3)", marginTop: 4, fontFamily: "monospace", overflowWrap: "anywhere" }}>
                       /display/{loc.slug}
                     </div>

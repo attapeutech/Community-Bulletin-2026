@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { and, eq, gt } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { ads, demos, leadNotes, leads, locations, proposals } from "@/lib/db/schema";
+import { ads, demos, leadNotes, leads, locations, proposals, cities, states, postalCodes } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/auth/session";
 import { newProposalToken, proposalPath } from "@/lib/proposals";
 import { sendProposalEmail } from "@/lib/email/templates";
@@ -32,10 +32,16 @@ export async function POST(req: NextRequest) {
 
     // The demo must still be open, and the ad must be one of its demo ads
     const [demo] = await db
-      .select({ id: demos.id, leadId: demos.leadId, businessName: leads.businessName, storeName: locations.storeName, price: locations.pricePerRunCents })
+      .select({
+        id: demos.id, leadId: demos.leadId, businessName: leads.businessName, storeName: locations.storeName, price: locations.pricePerRunCents,
+        addressLine1: locations.addressLine1, city: cities.name, state: states.code, zip: postalCodes.code,
+      })
       .from(demos)
       .innerJoin(leads, eq(demos.leadId, leads.id))
       .innerJoin(locations, eq(demos.locationId, locations.id))
+      .leftJoin(cities, eq(locations.cityId, cities.id))
+      .leftJoin(states, eq(locations.stateId, states.id))
+      .leftJoin(postalCodes, eq(locations.postalCodeId, postalCodes.id))
       .where(and(eq(demos.id, d.demoId), gt(demos.expiresAt, new Date())))
       .limit(1);
     if (!demo) return NextResponse.json({ success: false, error: "This demo has expired or was deleted" }, { status: 404 });
@@ -62,6 +68,7 @@ export async function POST(req: NextRequest) {
       message: d.message,
       businessName: demo.businessName,
       storeName: demo.storeName,
+      storeAddress: [demo.addressLine1?.trim(), demo.city, [demo.state, demo.zip].filter(Boolean).join(" ")].filter(Boolean).join(", ") || null,
       price: formatPrice(demo.price),
       url,
     });

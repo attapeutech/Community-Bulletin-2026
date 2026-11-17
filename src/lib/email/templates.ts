@@ -422,21 +422,29 @@ export async function sendPartnerDeclinedEmail({ to, name, businessName, reason 
 const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 /** A sales proposal: the manager's message, the offer, and a button to the advertiser's proposal page */
-export async function sendProposalEmail({ to, replyTo, subject, message, businessName, storeName, price, url }: {
-  to: string; replyTo: string; subject: string; message: string; businessName: string; storeName: string; price: string; url: string;
+export async function sendProposalEmail({ to, replyTo, subject, message, businessName, storeName, storeAddress, price, url }: {
+  to: string; replyTo: string; subject: string; message: string; businessName: string; storeName: string;
+  storeAddress?: string | null;   // "15218 Smokey Point Blvd, Marysville, WA 98271": shown with a map link
+  price: string; url: string;
 }) {
+  const mapUrl = storeAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${storeName}, ${storeAddress}`)}` : null;
   // The message is the manager's plain text: escape it and keep its paragraphs
   const paragraphs = escapeHtml(message).split(/\n{2,}/).map(p => `<p style="color:#1A3A5C;font-size:14px;line-height:1.6;margin:0 0 14px">${p.replace(/\n/g, "<br>")}</p>`).join("");
   return sendEmail({
     to,
     replyTo,
     subject,
-    text: `${message}\n\nSee your ad: ${url}`,
+    text: `${message}\n\n${storeAddress ? `Screen: ${storeName}, ${storeAddress}\nMap: ${mapUrl}\n\n` : ""}See your ad: ${url}`,
     html: emailWrapper(`
       ${paragraphs}
       ${detailTable([
         { label: "Your ad", value: escapeHtml(businessName) },
-        { label: "Screen", value: escapeHtml(storeName) },
+        {
+          label: "Screen",
+          value: escapeHtml(storeName) + (storeAddress && mapUrl
+            ? `<br><a href="${mapUrl}" style="color:#4A90C4;text-decoration:none;font-size:13px">📍 ${escapeHtml(storeAddress)}</a>`
+            : ""),
+        },
         { label: "Price", value: `<strong>${escapeHtml(price)}</strong> for 4 weeks` },
       ])}
       ${primaryButton(url, "See your ad &amp; pay", CORAL_COLOR)}

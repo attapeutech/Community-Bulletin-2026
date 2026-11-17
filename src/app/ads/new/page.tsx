@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { Home } from "lucide-react";
 import { LOCAL_AD_RADIUS_MILES } from "@/types";
 import { PosterSlide } from "@/components/display/PosterSlide";
 import { SaleTemplate } from "@/components/display/templates/SaleTemplate";
@@ -1159,9 +1160,20 @@ export default function NewAdPage() {
 function Breadcrumb({ trail, current }: { trail: { label: string; href: string }[]; current: string }) {
   return (
     <nav aria-label="Breadcrumb" style={{ fontSize: 13, color: "#4A6B82", display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6, marginBottom: 24 }}>
-      {trail.map(step => (
+      {trail.map((step, i) => (
         <span key={step.href} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-          <a href={step.href} style={{ color: "#4A6B82", textDecoration: "none", fontWeight: 600 }} className="hover:underline">{step.label}</a>
+          {i === 0 ? (
+            // The first step (usually Home) stands out: a pill with a house icon, like the "← Sales" button
+            <a
+              href={step.href}
+              className="group inline-flex items-center gap-1.5 rounded-full border border-[#C9D9E7] bg-white pl-2.5 pr-3 py-1 text-[13px] font-semibold text-[#1A3A5C] no-underline shadow-sm transition-colors hover:border-[#1A3A5C] hover:bg-[#1A3A5C] hover:text-white"
+            >
+              {step.label === "Home" && <Home size={14} strokeWidth={2.4} className="text-[#E8563A] group-hover:text-white" aria-hidden="true" />}
+              {step.label}
+            </a>
+          ) : (
+            <a href={step.href} style={{ color: "#4A6B82", textDecoration: "none", fontWeight: 600 }} className="hover:underline">{step.label}</a>
+          )}
           <span aria-hidden="true" style={{ color: "#A0B4C5" }}>›</span>
         </span>
       ))}

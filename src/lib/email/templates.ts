@@ -21,7 +21,7 @@ function emailWrapper(content: string) {
       </div>
       <!-- Footer -->
       <div style="padding:20px 40px;text-align:center;font-size:11px;color:#9DC4E0;font-family:sans-serif">
-        © ${new Date().getFullYear()} ${BRAND_NAME} · Digital in-store advertising
+        © ${new Date().getFullYear()} ${BRAND_NAME} · Digital in-store advertising · Powered by <a href="https://adsez.com" style="color:#9DC4E0;text-decoration:none">ADSEZ.com</a>
       </div>
     </div>
   `;

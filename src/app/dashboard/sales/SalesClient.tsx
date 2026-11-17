@@ -23,6 +23,9 @@ export type LeadRow = {
   nextFollowUp: string | null;
   updatedAt: string;
   storeName: string | null;
+  storeNumber: string | null;
+  storeAddress: string | null;  // street, city, state
+  address: string | null;       // the business's own address
   ownerName: string | null;
   linked: boolean;
   quickPay?: QuickPay | null;  // advertiser rows: proposal link for Pay now / Copy link
@@ -84,6 +87,9 @@ export async function patchLead(id: string, body: object) {
 // Outline buttons on a lead row (Call, Email, Copy link). Dark mode gets its own colours: the general
 // dark remapping left a pale hover behind white text there, which was unreadable.
 const ROW_BTN = "inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-[#D8E4EE] text-[13px] text-[#1A3A5C] bg-white no-underline hover:bg-[#F0F5FA] transition-colors dark:bg-transparent dark:text-[#E6EEF6] dark:border-[#33557A] dark:hover:bg-[#2A5179] dark:hover:text-white dark:hover:border-[#5B8FC2]";
+
+/** Google Maps search link for an address (opens the Maps app on phones) */
+const mapsLink = (q: string) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
 
 /** Get the lead's proposal link (reuses an open one, or makes one from the newest demo ad) */
 async function quickLink(leadId: string, email?: string): Promise<{ url: string; made: boolean }> {
@@ -234,11 +240,39 @@ function LeadCard({ lead, today }: { lead: LeadRow; today: string }) {
             {lead.linked && <span className="text-[10px] font-semibold text-[#4A6B82] border border-[#D8E4EE] rounded-full px-2 py-0.5">account linked</span>}
           </div>
           <div className="text-[13px] text-[#4A6B82] mt-0.5">
-            {[lead.contactName, lead.city].filter(Boolean).join(" · ") || "No contact details yet"}
+            {[lead.contactName, !lead.address && lead.city].filter(Boolean).join(" · ") || (lead.address ? null : "No contact details yet")}
           </div>
+          {/* The business's address (opens Maps) */}
+          {lead.address && (
+            <a
+              href={mapsLink([lead.businessName, lead.address].join(", "))}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[12px] text-[#4A6B82] mt-0.5 flex items-start gap-1 no-underline hover:underline min-w-0"
+              title="Open in Maps"
+            >
+              <MapPin size={12} className="text-[#E8563A] shrink-0 mt-0.5" aria-hidden="true" />
+              <span className="break-words">{[lead.address, lead.address.toLowerCase().includes((lead.city ?? "").toLowerCase()) ? null : lead.city].filter(Boolean).join(", ")}</span>
+            </a>
+          )}
+          {/* The store it's for: name, store number and its address (opens Maps) */}
           {lead.kind === "advertiser" && (
-            <div className="text-[12px] text-[#4A6B82] mt-0.5 flex items-center gap-1">
-              <Store size={12} /> {lead.storeName ?? <span className="italic">No store chosen</span>}
+            <div className="text-[12px] text-[#4A6B82] mt-0.5 flex items-start gap-1 min-w-0">
+              <Store size={12} className="shrink-0 mt-0.5" />
+              {lead.storeName ? (
+                <span className="min-w-0 break-words">
+                  <span className="font-semibold text-[#1A3A5C]">{lead.storeName}</span>
+                  {lead.storeNumber && <span className="text-[#E8563A] font-semibold"> #{lead.storeNumber.replace(/^#/, "")}</span>}
+                  {lead.storeAddress && (
+                    <>
+                      {" · "}
+                      <a href={mapsLink(`${lead.storeName}, ${lead.storeAddress}`)} target="_blank" rel="noopener noreferrer" className="text-[#4A90C4] no-underline hover:underline" title="Open in Maps">
+                        {lead.storeAddress}
+                      </a>
+                    </>
+                  )}
+                </span>
+              ) : <span className="italic">No store chosen</span>}
             </div>
           )}
           {open && <div className={cn("text-[12px] mt-1", fu.tone)}>{fu.text}</div>}

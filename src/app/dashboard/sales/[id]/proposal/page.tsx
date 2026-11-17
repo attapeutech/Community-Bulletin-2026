@@ -52,7 +52,7 @@ export default async function ProposalPage({ params, searchParams }: { params: P
       price={price}
       demoAds={demoAds}
       defaults={{
-        subject: `Your ad at ${row.storeName} is ready to see`,
+        subject: `Your Demo ad at ${row.storeName} is ready to see`,
         message: defaultProposalMessage({ contactName: row.contactName, businessName: row.businessName, storeName: row.storeName, shoppers: row.shoppers, price }),
       }}
     />

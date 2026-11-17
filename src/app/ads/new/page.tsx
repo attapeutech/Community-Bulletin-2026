@@ -631,12 +631,28 @@ export default function NewAdPage() {
         <h1 style={{ fontFamily: "Georgia,serif", fontSize: 28, fontWeight: 700, color: ACCENT, marginBottom: 4 }}>
           {demo ? `${editingAdId ? "Edit demo ad" : "Demo ad"} · ${demo.name}` : swapping ? "Swap your ad" : "Post a New Ad"}
         </h1>
-        <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 32 }}>
+        <p style={{ color: "#4A6B82", fontSize: 14, marginBottom: 32, display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
           {demo
             ? `${selectedLocation?.storeName ?? ""} · Shown only on this demo's private link, never on the store TV. No payment.`
             : swapping
             ? `${selectedLocation?.storeName ?? ""} · Replace your running ad with a new one for the same business, e.g. the next car for sale. No payment; your current ad keeps running until the new one is approved.`
             : <>{selectedLocation ? `${formatPrice(selectedLocation.pricePerRunCents)} / 4 weeks` : "Priced per store · 4 weeks"} · Displayed on in-store screens at your chosen location.</>}
+          {/* Where the store is (one store picked): tap to open the map */}
+          {selectedLocation && picked.length === 1 && (() => {
+            const place = [selectedLocation.addressLine1?.trim(), selectedLocation.city?.name, [selectedLocation.state?.code, selectedLocation.postalCode?.code].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+            return (
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${selectedLocation.storeName}, ${place}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Open in Maps"
+                style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, fontSize: 13, color: "#4A90C4", textDecoration: "none" }}
+                className="hover:underline"
+              >
+                <span aria-hidden="true">📍</span> {selectedLocation.storeName} · {place}
+              </a>
+            );
+          })()}
         </p>
 
         <StepBar current={step} />

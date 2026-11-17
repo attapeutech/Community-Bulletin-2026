@@ -79,7 +79,15 @@ export default function ProposalClient({ token, businessName, store, price, prev
               : <div className="absolute inset-0 grid place-items-center text-white/70 text-sm">Preview unavailable</div>}
           </div>
           <div className="flex flex-wrap gap-x-6 gap-y-2 text-[14px] text-[#1A3A5C]">
-            <span className="inline-flex items-center gap-1.5"><MapPin size={15} className="text-[#E8563A]" /> {store.name} · {store.place}</span>
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${store.name}, ${store.place}`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 no-underline text-inherit hover:underline"
+              title="Open in Maps"
+            >
+              <MapPin size={15} className="text-[#E8563A]" /> {store.name} · {store.place}
+            </a>
             {store.shoppers && <span className="inline-flex items-center gap-1.5"><Users size={15} className="text-[#E8563A]" /> about {store.shoppers.toLocaleString("en-US")} shoppers a day</span>}
           </div>
         </div>

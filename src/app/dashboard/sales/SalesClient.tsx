@@ -31,6 +31,7 @@ export type LeadRow = {
 export type StoreGoal = {
   id: string;
   label: string;
+  address: string | null; // street, city, state
   live: number;           // ads live on the screen now
   pendingReview: number;  // paid, waiting for approval
   openLeads: number;      // advertiser leads still being worked for this store
@@ -470,6 +471,12 @@ export default function SalesClient({ leads, filters, total, pages, today, summa
                   <span className="font-semibold text-[14px] text-[#1A3A5C] truncate">{st.label}</span>
                   <span className="text-[13px] text-[#1A3A5C] shrink-0"><b>{st.live}</b> / {ADS_PER_STORE_GOAL} live</span>
                 </div>
+                {st.address && (
+                  <div className="flex items-center gap-1 text-[12px] text-[#4A6B82] mt-0.5 min-w-0">
+                    <MapPin size={12} className="text-[#E8563A] shrink-0" aria-hidden="true" />
+                    <span className="truncate" title={st.address}>{st.address}</span>
+                  </div>
+                )}
                 <div className="h-2 rounded-full bg-[#E8EFF6] mt-2 overflow-hidden" role="progressbar" aria-valuenow={st.live} aria-valuemin={0} aria-valuemax={ADS_PER_STORE_GOAL} aria-label={`${st.label}: ${st.live} of ${ADS_PER_STORE_GOAL} ads`}>
                   <div className={cn("h-full rounded-full", pct >= 100 ? "bg-green-600" : "bg-[#E8563A]")} style={{ width: `${pct}%` }} />
                 </div>

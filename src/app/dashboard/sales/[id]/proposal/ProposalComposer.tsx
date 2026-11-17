@@ -180,7 +180,7 @@ export default function ProposalComposer({ demoId, lead, store, demoToken, expir
                         <Label className={fieldLabel}>Message</Label>
                         <Textarea value={message} onChange={e => setMessage(e.target.value)} rows={12} className="bg-white text-[14px] leading-relaxed" />
                         <div className="text-[12px] text-[#4A6B82] mt-1">
-                          Below your message the email shows the ad, the store and the price, and a <b>See your ad &amp; pay</b> button. Replies go to sales@communitybulletin.com.
+                          Below your message the email shows the ad, the store with its address (tap 📍 for the map) and the price, and a <b>See your ad &amp; pay</b> button. Replies go to sales@communitybulletin.com.
                         </div>
                       </div>
                     </>

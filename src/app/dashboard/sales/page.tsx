@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
-import { ads, leads, locations, users } from "@/lib/db/schema";
+import { ads, leads, locations, users, cities, states } from "@/lib/db/schema";
 import { and, asc, count, desc, eq, ilike, inArray, isNotNull, isNull, lt, lte, or, sql, type SQL } from "drizzle-orm";
 import { LEADS_PAGE_SIZE, LEAD_STAGE_VALUES, addDays, defaultLeadSort, leadToday, type LeadStage } from "@/lib/leads";
 import { quickPayFor } from "@/lib/proposal-quick";
@@ -89,6 +89,9 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
       id: locations.id,
       storeName: locations.storeName,
       storeNumber: locations.storeNumber,
+      addressLine1: locations.addressLine1,
+      city: cities.name,
+      state: states.code,
       live: sql<number>`(
         select count(*)::int from ${ads}
         where ${ads.locationId} = ${storeIdRef} and ${ads.status} = 'approved'
@@ -103,6 +106,8 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
       interested: advertiserLeads(sql`${leads.stage} = 'interested'`),
     })
       .from(locations)
+      .leftJoin(cities, eq(locations.cityId, cities.id))
+      .leftJoin(states, eq(locations.stateId, states.id))
       .where(eq(locations.isActive, true))
       .orderBy(asc(locations.storeName)),
   ]);
@@ -137,9 +142,11 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   // "Pay now" / "Copy link" on advertiser rows: a ready proposal link, one that can be made, or why not
   const quick = f.kind === "advertiser" ? await quickPayFor(rows) : {};
   const data: LeadRow[] = rows.map(r => ({ ...r, updatedAt: r.updatedAt.toISOString(), quickPay: quick[r.id] ?? null }));
-  const stores: StoreGoal[] = storeRows.map(s => ({
+  const stores: StoreGoal[] = storeRows.map(({ addressLine1, city, state, ...s }) => ({
     ...s,
     label: s.storeNumber ? `${s.storeName} #${s.storeNumber.replace(/^#/, "")}` : s.storeName,
+    // "11801 Hwy 99, Everett, WA" under the store name
+    address: [addressLine1, city, state].map(v => v?.trim()).filter(Boolean).join(", ") || null,
   }));
 
   return (

@@ -124,16 +124,23 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
       phone: leads.phone,
       email: leads.email,
       city: leads.city,
+      address: leads.address,
       stage: leads.stage,
       nextFollowUp: leads.nextFollowUp,
       updatedAt: leads.updatedAt,
       storeName: locations.storeName,
+      storeNumber: locations.storeNumber,
+      storeStreet: locations.addressLine1,
+      storeCity: cities.name,
+      storeState: states.code,
       ownerName: users.name,
       linked: sql<boolean>`${leads.userId} is not null`,
     })
     .from(leads)
     .leftJoin(users, eq(leads.ownerId, users.id))
     .leftJoin(locations, eq(leads.locationId, locations.id))
+    .leftJoin(cities, eq(locations.cityId, cities.id))
+    .leftJoin(states, eq(locations.stateId, states.id))
     .where(filter)
     .orderBy(...orderBy)
     .limit(LEADS_PAGE_SIZE)
@@ -141,7 +148,12 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
 
   // "Pay now" / "Copy link" on advertiser rows: a ready proposal link, one that can be made, or why not
   const quick = f.kind === "advertiser" ? await quickPayFor(rows) : {};
-  const data: LeadRow[] = rows.map(r => ({ ...r, updatedAt: r.updatedAt.toISOString(), quickPay: quick[r.id] ?? null }));
+  const data: LeadRow[] = rows.map(({ storeStreet, storeCity, storeState, ...r }) => ({
+    ...r,
+    updatedAt: r.updatedAt.toISOString(),
+    quickPay: quick[r.id] ?? null,
+    storeAddress: [storeStreet, storeCity, storeState].map(v => v?.trim()).filter(Boolean).join(", ") || null,
+  }));
   const stores: StoreGoal[] = storeRows.map(({ addressLine1, city, state, ...s }) => ({
     ...s,
     label: s.storeNumber ? `${s.storeName} #${s.storeNumber.replace(/^#/, "")}` : s.storeName,

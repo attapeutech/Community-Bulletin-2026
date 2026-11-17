@@ -1,4 +1,4 @@
-# Handoff: 2026-10-22 (updated 2026-11-15)
+# Handoff: 2026-10-22 (updated 2026-11-16)
 
 ## Where things stand
 
@@ -32,6 +32,21 @@
   - `LeaveFrame` (`src/components/layout/LeaveFrame.tsx`, in the root layout) moves any non-display page out of a frame
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
+
+## 2026-11-16 summary
+
+- **Find nearby businesses: Closest / A→Z sort and a quick filter** (PR #166, from another session).
+- **Store locations everywhere** (PRs #167, #168 and the `feat/nearby-store-address` branch). Store and business addresses now show with an orange 📍 and open **Google Maps** (`https://www.google.com/maps/search/?api=1&query=…`):
+  - **Sales → Advertisers store cards:** street, city and state under the name.
+  - **Sales lead rows:** the business's address, plus the store with its number and address.
+  - **Proposal email:** the Screen row shows the store address as a map link (plain-text version too). The **proposal page** (`/p/<token>`) location opens Maps.
+  - **Post a New Ad / demo ad / swap:** "📍 Store · address" under the subtitle (one store picked).
+  - **Find nearby businesses:** the store dropdown shows name, number and address; the chosen store's location line and each **business address** are links. A business link adds `query_place_id` so Maps opens the business's own listing.
+  - **All Locations / My Locations** (`/dashboard/store-owner`): each store address is a link.
+  - **Data to fix:** Marathon's street line reads "130 128 SE Everett washington" (Manage → Edit). It now shows on cards, in proposal emails and in the dropdown.
+- **Proposal default subject:** "Your Demo ad at <store> is ready to see" (`sales/[id]/proposal/page.tsx`). **Every email's footer** now ends "· Powered by ADSEZ.com" (link), in the shared `emailWrapper` in `src/lib/email/templates.ts`.
+- **Post a New Ad breadcrumb:** the first step is a pill (house icon only on "Home"; Sales / My Ads / Dashboard also get the pill) that fills navy on hover.
+- **Local dev now uses Webpack: `npm run dev` = `next dev --webpack`.** On the user's Windows machine, Turbopack's dev server kept starting `postcss.js` workers (around 1,000 at times) until memory ran out, stalling the machine and Claude sessions; orphaned workers survived the server. A guarded test (`next dev --webpack`, pages loaded for 70 s) stayed at **2 node processes with no workers**. Production (`npm run build` in Coolify) is unchanged. `caniuse-lite` was updated to silence "browsers data is 7 months old" (no target browser changes). **If the machine slows down:** count `node.exe` processes and stop leftover `…Community-Bulletin-2026…postcss.js` ones; don't switch dev back to Turbopack without testing.
 
 ## 2026-11-15 summary
 

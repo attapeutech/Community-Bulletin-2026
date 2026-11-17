@@ -134,7 +134,7 @@ export default function NearbyClient({ stores, initialStore, configured }: {
               value={store}
               onChange={(e) => { setStore(e.target.value); find(e.target.value); }}
               // Dark mode: a solid dark field, and color-scheme so the browser draws the open option list dark too
-              className="h-9 rounded-md border border-[#D1DDE8] bg-white px-2.5 text-base sm:text-sm text-[#1A3A5C] min-w-[220px] dark:bg-[#0F2540] dark:text-[#E6EEF6] dark:border-[#33557A] dark:[color-scheme:dark] [&>option]:bg-white [&>option]:text-[#1A3A5C] dark:[&>option]:bg-[#0F2540] dark:[&>option]:text-[#E6EEF6]"
+              className="h-9 rounded-md border border-[#D1DDE8] bg-white px-2.5 text-base sm:text-sm text-[#1A3A5C] min-w-[220px] max-w-full dark:bg-[#0F2540] dark:text-[#E6EEF6] dark:border-[#33557A] dark:[color-scheme:dark] [&>option]:bg-white [&>option]:text-[#1A3A5C] dark:[&>option]:bg-[#0F2540] dark:[&>option]:text-[#E6EEF6]"
               aria-label="Store"
             >
               {stores.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
@@ -149,7 +149,18 @@ export default function NearbyClient({ stores, initialStore, configured }: {
               </label>
             )}
           </div>
-          {storeLine && <p className="text-xs text-[#6B7A8C] mb-3 flex items-center gap-1"><MapPin size={12} className="text-[#E8563A]" /> {storeLine}</p>}
+          {/* The chosen store's location: opens Google Maps */}
+          {storeLine && (
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(storeLine.replace(" · ", ", "))}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Open in Maps"
+              className="inline-flex items-center gap-1 mb-3 text-xs text-[#4A90C4] no-underline hover:underline"
+            >
+              <MapPin size={13} className="text-[#E8563A] shrink-0" aria-hidden="true" /> {storeLine}
+            </a>
+          )}
 
           {results && !loading && results.length > 0 && (
             <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -249,7 +260,24 @@ export default function NearbyClient({ stores, initialStore, configured }: {
                           </Link>
                         )}
                       </div>
-                      <div className="text-xs text-[#4A6B82] mt-0.5">{b.distanceMi} mi · {b.address ?? "address not listed"}</div>
+                      <div className="text-xs text-[#4A6B82] mt-0.5 flex items-start gap-1 flex-wrap">
+                        <span>{b.distanceMi} mi ·</span>
+                        {b.address ? (
+                          // The business's address: opens Google Maps (by place id, so it lands on the business)
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${b.name}, ${b.address}`)}&query_place_id=${encodeURIComponent(b.placeId)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Open in Maps"
+                            className="inline-flex items-start gap-1 text-[#4A90C4] no-underline hover:underline"
+                          >
+                            <MapPin size={12} className="text-[#E8563A] shrink-0 mt-0.5" aria-hidden="true" />
+                            <span className="break-words">{b.address}</span>
+                          </a>
+                        ) : (
+                          <span>address not listed</span>
+                        )}
+                      </div>
                       <div className="text-xs mt-0.5 flex flex-wrap gap-x-3">
                         {b.phone ? <a href={`tel:${b.phone}`} className="text-[#4A90C4] inline-flex items-center gap-1"><Phone size={11} /> {b.phone}</a> : <span className="text-[#9AA7B5]">no phone listed</span>}
                         {b.website && (

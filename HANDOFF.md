@@ -1,4 +1,4 @@
-# Handoff: 2026-10-22 (updated 2026-11-14)
+# Handoff: 2026-10-22 (updated 2026-11-16)
 
 ## Where things stand
 
@@ -32,6 +32,35 @@
   - `LeaveFrame` (`src/components/layout/LeaveFrame.tsx`, in the root layout) moves any non-display page out of a frame
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
+
+## 2026-11-16 summary
+
+- **Find nearby businesses: Closest / A→Z sort and a quick filter** (PR #166, from another session).
+- **Store locations everywhere** (PRs #167, #168 and the `feat/nearby-store-address` branch). Store and business addresses now show with an orange 📍 and open **Google Maps** (`https://www.google.com/maps/search/?api=1&query=…`):
+  - **Sales → Advertisers store cards:** street, city and state under the name.
+  - **Sales lead rows:** the business's address, plus the store with its number and address.
+  - **Proposal email:** the Screen row shows the store address as a map link (plain-text version too). The **proposal page** (`/p/<token>`) location opens Maps.
+  - **Post a New Ad / demo ad / swap:** "📍 Store · address" under the subtitle (one store picked).
+  - **Find nearby businesses:** the store dropdown shows name, number and address; the chosen store's location line and each **business address** are links. A business link adds `query_place_id` so Maps opens the business's own listing.
+  - **All Locations / My Locations** (`/dashboard/store-owner`): each store address is a link.
+  - **Data to fix:** Marathon's street line reads "130 128 SE Everett washington" (Manage → Edit). It now shows on cards, in proposal emails and in the dropdown.
+- **Proposal default subject:** "Your Demo ad at <store> is ready to see" (`sales/[id]/proposal/page.tsx`). **Every email's footer** now ends "· Powered by ADSEZ.com" (link), in the shared `emailWrapper` in `src/lib/email/templates.ts`.
+- **Post a New Ad breadcrumb:** the first step is a pill (house icon only on "Home"; Sales / My Ads / Dashboard also get the pill) that fills navy on hover.
+- **Local dev now uses Webpack: `npm run dev` = `next dev --webpack`.** On the user's Windows machine, Turbopack's dev server kept starting `postcss.js` workers (around 1,000 at times) until memory ran out, stalling the machine and Claude sessions; orphaned workers survived the server. A guarded test (`next dev --webpack`, pages loaded for 70 s) stayed at **2 node processes with no workers**. Production (`npm run build` in Coolify) is unchanged. `caniuse-lite` was updated to silence "browsers data is 7 months old" (no target browser changes). **If the machine slows down:** count `node.exe` processes and stop leftover `…Community-Bulletin-2026…postcss.js` ones; don't switch dev back to Turbopack without testing.
+
+## 2026-11-15 summary
+
+- **Store share: 50% with own equipment, 25% when we supply and install** (PR #158). `SHARE_OWN_EQUIPMENT_BPS` (5000) / `SHARE_WE_SUPPLY_BPS` (2500) in `src/types/index.ts`.
+  - Public wording updated everywhere it appeared: `/demo` (setup step, revenue intro, the two earnings cards, details and note), Help FAQ, partner application and Account page. The partner application's TV question shows each share.
+  - Admin store forms: ticking "Store owner provides the TV, Wi-Fi & hardware" sets 50% and unticking sets 25% (any rate can still be typed); quick buttons "50% · own equipment" / "25% · we supply". New stores made from an application pre-fill from the TV answer.
+  - **Existing 4 stores kept 50%** and recorded earnings keep their rates. The store partner agreement needs updating to match (see To do).
+- **/demo earnings rounded** (PR #160): ~$2,000/mo and about $24,000/yr at 50%; ~$1,000/mo and about $12,000/yr at 25%; the "August Revenue" preview shows $2,000.00.
+- **/demo "The Platform" bullets** (PR #161): a logo-style push pin SVG (`PushPin` in `demo/page.tsx`) replaces the five check circles.
+- **Multi-store ads, step 1** (PR #159, migration `0030_ad_orders` applied). See "Multi-store orders" below. Tested in Stripe test mode, and the test data was removed.
+- **All Earnings: admin-only note** on the $25 payout minimum (PR #162), a collapsed box using `MIN_PAYOUT_CENTS`.
+- **Sales: store cards always showed 0** (PR #163, first commit). The store-goal query reads only `locations` (no join), so Drizzle wrote columns without table names and the subqueries compared each ad/lead's `location_id` with its own `id`. Fixed by naming `"locations"."id"` in full (`storeIdRef`). **Watch for this:** in a single-table Drizzle query, a correlated subquery must reference the outer table explicitly. Queries with a join are qualified automatically; the other similar subqueries (My Ads saves, the screen-view check, `listedAd`) were checked and are fine.
+- **Sales: Find nearby businesses** (PR #163, migration `0031_lead_places` applied) and **Find email** (PR #164); dark-mode store dropdown (PR #165). See "Nearby finder and Find email" below. `GOOGLE_PLACES_API_KEY` was added to `.env.local` and Coolify on 2026-11-15.
+- **Brainstormed, not built:** the store-owner "neighbor invite" tool (store owners invite nearby businesses). The user wants it for the sales manager first, which is what the nearby finder does. Store-owner invites can come later.
 
 ## 2026-11-14 summary
 
@@ -374,6 +403,7 @@ Context: after two weeks of door-knocking, store owners and advertisers are inte
 - **`DATABASE_URL`** ends with `?sslmode=verify-full&channel_binding=require` (locally and in Coolify).
 - **Google sign-in:** `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (a Coolify **build variable**) and `GOOGLE_CLIENT_SECRET`, in both `.env.local` and Coolify.
 - **Stripe** runs on **live** keys in production (since 2026-10-28): `STRIPE_SECRET_KEY` (`sk_live_…`) and the live-mode `STRIPE_WEBHOOK_SECRET`. Checkout uses Stripe-hosted pages, so no publishable key is needed (`NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` and `APP_URL` in `.env.local` are unused). **Keep test keys in `.env.local`:** it points at the production database. With test keys, local scripts can't look up live payments.
+- **`GOOGLE_PLACES_API_KEY`** (2026-11-15): Google Places API (New) for Sales → Find nearby businesses. It's a dedicated key named "Community Bulletin – Places (server)" in the user's "laotech" Google Cloud project, restricted to **Places API (New)** only, with no application restriction (server-side only). Without it the finder page says it isn't set up; nothing else breaks. `.env.example` has an empty placeholder. Google's terms limit how long some place details may be kept; storing businesses as sales leads you're working is the intended use, so don't export or resell lists.
 - **`ENCRYPTION_KEY`** (2026-11-07): encrypts store WiFi passwords and the mini computers' Google password, PIN and Windows password; same value in `.env.local` and Coolify. See "Equipment and store setup".
 - **PayPal is off** (2026-10-26) unless `NEXT_PUBLIC_PAYPAL_ENABLED=true` (`src/lib/payment-options.ts`). While it's off, checkout shows card only, `create-order` refuses, and the Help and home page text drops PayPal. Refunds of older PayPal payments still work. Turning it on needs a redeploy (build-time variable), plus `PAYPAL_MODE=live` and live credentials.
 
@@ -382,7 +412,7 @@ Context: after two weeks of door-knocking, store owners and advertisers are inte
 - Production had been built with `db:push`, so Drizzle's migration history was empty. All migrations up to `0004_ad_analytics` were recorded as applied in Neon's `drizzle.__drizzle_migrations`, so `npm run db:migrate` works normally from here.
 - **Run migrations against the direct (non-pooled) Neon host:** remove `-pooler` from the hostname. Restores and DDL can fail through the pooler.
 - `0003` and `0004` have hand-written timestamps (`when: 1750…`) that are older than `0002`. They are already applied, so this is harmless, but generate future migrations with `npm run db:generate` rather than writing them by hand.
-- **Applied to Neon through `0029`** (30 rows in `drizzle.__drizzle_migrations`; `0022_sales_proposals` applied 2026-11-01, `0023_ad_swaps` 2026-11-03, `0024_equipment`, `0025_location_setup` and `0026_equipment_photos` 2026-11-07, `0027_equipment_remote` and `0028_equipment_windows_login` 2026-11-08, `0029_qr_counters` 2026-11-14):
+- **Applied to Neon through `0031`** (32 rows in `drizzle.__drizzle_migrations`; `0030_ad_orders` and `0031_lead_places` 2026-11-15; `0022_sales_proposals` applied 2026-11-01, `0023_ad_swaps` 2026-11-03, `0024_equipment`, `0025_location_setup` and `0026_equipment_photos` 2026-11-07, `0027_equipment_remote` and `0028_equipment_windows_login` 2026-11-08, `0029_qr_counters` 2026-11-14):
   - `0012_location_traffic`: `locations.daily_customers` and `traffic_updated_at`
   - `0013_screen_devices`
   - `0014_direct_deposits`
@@ -610,6 +640,30 @@ Ideas not built yet: printable QR labels per device (scan → its record), offli
 - What it offers comes from `qrOffer(ad)` in `src/lib/ad-templates.ts`: deal = website shown, directions = address shown, call = phone shown. Older ads with a website but the show switch off still go to the website.
 - A route file may only export handlers, so the helpers (`websiteUrl`, `mapsUrl`, `qrOffer`, `qrLabel`, `qrCaption`) live in `ad-templates.ts`.
 
+## Multi-store orders (2026-11-15)
+
+- **Model:** one checkout for the same ad at several stores. Each store still gets **its own ad row** (`ads.order_id` → `ad_orders`), with its own payment row, review, screen, counts and store earnings. Screens, earnings, payouts and the QR page needed no changes.
+- **Ad form** (`src/app/ads/new/page.tsx`): new ads can tick several stores (`picked[]`; `selectedLocation` is the first). Demo ads, edits and swaps stay single-store (`multiStore`). A sticky bar in the list shows "x of y selected · $total" with **Select all** (all *shown* after a search) and **Clear**; the review step lists stores and the total.
+- **Posting** (`POST /api/ads`): `locationIds[]` (max 25) creates an `ad_orders` row and one ad per store; the response is the first ad plus `orderId` and `adIds`.
+- **Checkout** (`create-checkout`): for an ad with `orderId`, one Stripe session with **a line per unpaid store**, each line's product carrying `metadata.adId`; session metadata `{adId: first ad, userId, orderId}`. The payment page lists the stores and "Total · one payment"; PayPal is hidden for orders.
+- **Recording** (`recordPaidCheckout()` in `src/lib/stripe-checkout.ts`, **now also used by the webhook**): for an order, it reads the session's line items (`listLineItems`, product metadata) and writes **one payment row per store** with that line's amount, all sharing the payment intent. It marks the ads paid, sets `ad_orders.paid_at`, and sends one receipt, one "submitted" and one review email per order. Single-store ads are recorded as before.
+- **Money safety for shared payments:** `processAdRefund` passes `amount: payment.amountCents` (refunds only that store's share; same as before for single ads), and the Stripe fee lookup at earnings release splits the fee by each row's share of the payment intent (`fetchStripeFeeCents(intent, rowAmount)` in `src/lib/earnings.ts`).
+- **Tested 2026-11-15** (Stripe test mode, admin-owned stores so no earnings): 3 stores gave one $300 payment and three $100 payment rows; refunding one store refunded $100 of $300 in Stripe; each store's preview screen showed its copy of the ad. The test rows were deleted.
+- **Step 2 (not built):** group an order in My Ads ("Running at 3 stores") and Review Ads; one "new ad to review" notice per order (today each store's ad notifies every admin/approver, 12 bells for a 3-store order); optional multi-store discount and "select all in a city".
+
+## Nearby finder and Find email (2026-11-15)
+
+- **Find nearby businesses:** Sales → Advertisers → **📍 Find nearby businesses** → `/dashboard/sales/nearby` (admin only).
+  - Pick a store and it lists businesses **within 1 mile, closest first**: name, Google type, distance, address, phone and website. **Chains** are hidden behind "Show chains (N)" (a name list in `src/lib/nearby-places.ts`). Rows already in the pipeline show "already a lead ↗".
+  - Tick businesses (or **Tick all**), then **Add N as leads**: advertiser leads for that store, source `nearby` ("Nearby finder"), `ownerId` = the admin, with a note giving type and distance. Duplicates are skipped by `place_id` or the same business name.
+  - **API:** `GET /api/admin/leads/nearby?store=<id>` and `POST /api/admin/leads/nearby {storeId, businesses}`.
+  - `src/lib/nearby-places.ts`: Places API (New) **Text Search** places the store from its address (cached per process), then **3 Nearby Searches** (max 20 each) over business-type groups likely to buy local ads; results are merged, open businesses only, closest first. Not every Google "type" name is accepted ("tax_preparation_service" was rejected, so "accounting" is used instead).
+  - New lead columns: `website`, `category`, `place_id` (indexed).
+  - Fast Eddies on 2026-11-15: 58 within 1 mile (48 local, 10 chains), 53 with a phone, 43 with a website.
+- **Find email:** on a lead's page (`sales/[id]`), the website and business type now show. With a website and no email, **"Find email on their website"** calls `POST /api/admin/leads/[id]/find-email`, which reads the home page plus its contact/about page and lists published emails (own domain first, max 5). Clicking one saves it through the normal lead edit. **Google Places never provides emails.**
+  - `src/lib/find-email.ts` **fetches public http(s) sites only.** Every address, redirects included, is resolved and refused if it's private or local (localhost, 10.x, 172.16–31.x, 192.168.x, 169.254.x, IPv6 local, other ports, `file:`). Limits: 8 s and 1.5 MB per page. Refused or unreachable sites simply return none. Keep these checks if you change it.
+  - Tested: Woods Coffee gave info@ and donations@; Dick's Drive-In and Bento Time list none (contact forms only).
+
 ## To do
 
 - [ ] **Stripe: enter the EIN** (Dashboard → Settings → Business → Account status → "Provide a tax ID for Bulletin Board"). If it's missing, payouts to our bank pause on 2026-11-27 or after $600 in volume.
@@ -641,6 +695,9 @@ Ideas not built yet: printable QR labels per device (scan → its record), offli
 - [ ] **Multi-store bundle** (idea #3, later): one ad on several stores at a discount. Needs partner decisions on pricing.
 - [ ] **Ad swap:** test **Deny** once (on the first real swap, or a test ad made "paid" by an Admin Panel edit, then deleted). Ideas: show the swap history on the ad's details page; let admins see swaps in the Admin Panel.
 - [ ] **Ad form checkboxes:** (still open) on Post a New Ad's Review step, unticked checkboxes ("Post as a test ad", "My business is within…") look filled dark grey in dark mode. Give them a light background or explicit colours.
+- [ ] **Store partner agreement:** update it for the new shares (50% with the store's own equipment, 25% when we supply and install) before signing new stores. Decide whether any existing store where we supplied equipment should move to 25% (Manage → Edit; affects new payments only).
+- [ ] **Multi-store ads, step 2:** grouped order views in My Ads and Review Ads, one review notice per order, optional discount (see "Multi-store orders").
+- [ ] **Store-owner neighbor invites (later):** a "My neighbors" page where store owners invite nearby businesses with a text from their own phone, reusing the nearby finder's leads and the proposal flow.
 - [ ] **10 more mini computers:** buy one (≤$120, 8 GB RAM, SSD, Windows Pro), run a 40-ad loop on it for a day, then buy the rest.
 - [ ] **Store setup (moved to 2026-11-09):** set up the 10 stores using Admin → Equipment: add each store's mini computer (with its remote access and Windows login) / TV / cables, tick the checklist, save WiFi details, and on the Screens page assign each new screen to its store (then link the mini computer to it in the Equipment list). Remove test entries made on 2026-11-07 if any are left.
 - [ ] **New logo, remaining:** the link preview image (`src/app/opengraph-image.tsx`, shown when the site is shared) still writes "CommunityBulletin" in text; switch it to the new logo. The old `src/components/layout/Logo.tsx` is unused and can go. Optional: a light outline around the logo icon on navy backgrounds (dashboard sidebar, sign-in left panel), where the navy box blends in.

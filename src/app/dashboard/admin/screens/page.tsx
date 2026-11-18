@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
-import { screenDevices, locations } from "@/lib/db/schema";
+import { screenDevices, locations, cities, states, postalCodes } from "@/lib/db/schema";
 import { and, asc, desc, eq, gte, isNull, lt, or, isNotNull } from "drizzle-orm";
 import ScreensClient, { type ScreenRow } from "./ScreensClient";
 
@@ -27,12 +27,20 @@ export default async function AdminScreensPage() {
       label: screenDevices.label,
       locationId: screenDevices.locationId,
       locationName: locations.storeName,
+      street: locations.addressLine1,
+      street2: locations.addressLine2,
+      city: cities.name,
+      state: states.code,
+      zip: postalCodes.code,
       checkins: screenDevices.checkins,
       firstSeenAt: screenDevices.firstSeenAt,
       lastSeenAt: screenDevices.lastSeenAt,
     })
     .from(screenDevices)
     .leftJoin(locations, eq(screenDevices.locationId, locations.id))
+    .leftJoin(cities, eq(locations.cityId, cities.id))
+    .leftJoin(states, eq(locations.stateId, states.id))
+    .leftJoin(postalCodes, eq(locations.postalCodeId, postalCodes.id))
     // Assigned screens always; others if seen in the last 7 days
     .where(or(isNotNull(screenDevices.locationId), gte(screenDevices.lastSeenAt, new Date(now - 7 * DAY_MS))))
     .orderBy(desc(screenDevices.lastSeenAt))
@@ -44,8 +52,15 @@ export default async function AdminScreensPage() {
     .where(eq(locations.isActive, true))
     .orderBy(asc(locations.storeName));
 
-  const screens: ScreenRow[] = rows.map((r) => ({
+  const screens: ScreenRow[] = rows.map(({ street, street2, city, state, zip, ...r }) => ({
     ...r,
+    // "11801 Hwy 99, Everett, WA 98204" — the assigned store's address, for the map link
+    locationAddress: r.locationId
+      ? [street, street2, city, [state, zip].map((v) => v?.trim()).filter(Boolean).join(" ")]
+          .map((v) => v?.trim())
+          .filter(Boolean)
+          .join(", ") || null
+      : null,
     firstSeenAt: r.firstSeenAt.toISOString(),
     lastSeenAt: r.lastSeenAt.toISOString(),
   }));

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -14,6 +15,7 @@ export type ScreenRow = {
   label: string | null;
   locationId: string | null;
   locationName: string | null;
+  locationAddress: string | null;
   checkins: number;
   firstSeenAt: string;
   lastSeenAt: string;
@@ -102,6 +104,21 @@ function ScreenCard({ screen, locations, nowIso }: { screen: ScreenRow; location
             )}{" "}
             · IP {screen.ip ?? "—"}
           </div>
+          {/* The assigned store's location: opens Google Maps */}
+          {screen.locationAddress && (
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                `${screen.locationName ?? ""}, ${screen.locationAddress}`,
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Open in Maps"
+              className="mt-1.5 inline-flex items-start gap-1 text-xs text-[#1A3A5C] hover:underline"
+            >
+              <MapPin size={13} className="text-[#E8563A] shrink-0 mt-px" aria-hidden="true" />
+              {screen.locationAddress}
+            </a>
+          )}
         </div>
         <div className="text-right text-xs text-[#4A6B82]">
           <div><strong className="text-[#1A3A5C]">{online ? "Online" : `Last seen ${ago(screen.lastSeenAt, nowIso)}`}</strong></div>

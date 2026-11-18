@@ -35,6 +35,12 @@
 
 ## 2026-11-17 summary
 
+- **Ads: switch to hide our QR code** (PR #171, migration `0032_ad_show_qr` applied, 33 rows). Grease Monkey wants to advertise with a flyer that already has its own QR code.
+  - `ads.show_qr` and `ad_swaps.show_qr`, **default true**: all 40 existing ads (including the live Cemitas ad at Fast Eddies) were set on, so no screen changed.
+  - Ad form: a **"Show the Community Bulletin QR code on the screen"** checkbox, ticked by default (poster: above the website box; Sale template: end of Contact info). When off, the website and address are still saved and the previews drop the QR code.
+  - `showsQr(ad)` in `src/lib/ad-templates.ts` = something to offer (`hasQr(qrOffer(ad))`) **and** `showQr !== false`. Used by the store screen (`display/[slug]`) and the Review Ads previews. The setting is carried through `POST /api/ads`, swaps (create and approve), demo ad edits and the display API.
+  - Checked in headless Chrome with a poster fed to a preview screen: QR shown when on, none when off.
+  - **For Grease Monkey:** post with Upload your own design and untick the box.
 - **Admin → Screens: store address with a map pin** (PR #172, no migration). Each screen assigned to a location shows the store's street, city, state and ZIP under its details line, with the orange 📍. Clicking it opens Google Maps for "<store>, <address>". Unassigned screens are unchanged. The address is built in `dashboard/admin/screens/page.tsx` (joins `cities`, `states` and `postal_codes`) and shown in `ScreensClient.tsx`. Merged, redeployed, and confirmed working in production.
 - **Idea, not built:** one map at the top of Screens with a pin for every store. `locations` has no latitude/longitude, so this needs a migration plus geocoding each address (the Google API key is already set up).
 - **This computer** (`~/Community-Bulletin-2026`) had been stuck on the April "Phase 1" commit. It's now synced to `main` with `npm install` done. The `new projects/Community-Bulletin-2026` folder is not a git checkout; ignore it.
@@ -418,7 +424,7 @@ Context: after two weeks of door-knocking, store owners and advertisers are inte
 - Production had been built with `db:push`, so Drizzle's migration history was empty. All migrations up to `0004_ad_analytics` were recorded as applied in Neon's `drizzle.__drizzle_migrations`, so `npm run db:migrate` works normally from here.
 - **Run migrations against the direct (non-pooled) Neon host:** remove `-pooler` from the hostname. Restores and DDL can fail through the pooler.
 - `0003` and `0004` have hand-written timestamps (`when: 1750…`) that are older than `0002`. They are already applied, so this is harmless, but generate future migrations with `npm run db:generate` rather than writing them by hand.
-- **Applied to Neon through `0031`** (32 rows in `drizzle.__drizzle_migrations`; `0030_ad_orders` and `0031_lead_places` 2026-11-15; `0022_sales_proposals` applied 2026-11-01, `0023_ad_swaps` 2026-11-03, `0024_equipment`, `0025_location_setup` and `0026_equipment_photos` 2026-11-07, `0027_equipment_remote` and `0028_equipment_windows_login` 2026-11-08, `0029_qr_counters` 2026-11-14):
+- **Applied to Neon through `0032`** (33 rows in `drizzle.__drizzle_migrations`; `0032_ad_show_qr` 2026-11-17; `0030_ad_orders` and `0031_lead_places` 2026-11-15; `0022_sales_proposals` applied 2026-11-01, `0023_ad_swaps` 2026-11-03, `0024_equipment`, `0025_location_setup` and `0026_equipment_photos` 2026-11-07, `0027_equipment_remote` and `0028_equipment_windows_login` 2026-11-08, `0029_qr_counters` 2026-11-14):
   - `0012_location_traffic`: `locations.daily_customers` and `traffic_updated_at`
   - `0013_screen_devices`
   - `0014_direct_deposits`
@@ -642,6 +648,7 @@ Ideas not built yet: printable QR labels per device (scan → its record), offli
 
 ## QR code page (2026-11-14)
 
+- **An ad can turn our QR code off** (`ads.show_qr`, since 2026-11-17): use `showsQr(ad)` rather than `hasQr(qrOffer(ad))` wherever the screen decides whether to draw the QR.
 - Files: `src/app/go/[id]/route.ts` (scan; decides page or straight to the website), `src/app/go/[id]/options/page.tsx` + `CallButton.tsx`, and `src/app/go/[id]/deal/route.ts` and `map/route.ts`. All of `/go/...` is in the proxy's public routes.
 - What it offers comes from `qrOffer(ad)` in `src/lib/ad-templates.ts`: deal = website shown, directions = address shown, call = phone shown. Older ads with a website but the show switch off still go to the website.
 - A route file may only export handlers, so the helpers (`websiteUrl`, `mapsUrl`, `qrOffer`, `qrLabel`, `qrCaption`) live in `ad-templates.ts`.

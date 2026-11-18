@@ -54,7 +54,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         await tx.update(ads).set({
           title: s.title, description: s.description, imageUrl: s.imageUrl, imageKey: s.imageKey,
           contactPhone: s.contactPhone, contactAddress: s.contactAddress, contactWebsite: s.contactWebsite,
-          showPhone: s.showPhone, showAddress: s.showAddress, showWebsite: s.showWebsite,
+          showPhone: s.showPhone, showAddress: s.showAddress, showWebsite: s.showWebsite, showQr: s.showQr,
           template: s.template, templateData: s.templateData,
           reviewedBy: reviewerId, reviewedAt: now, updatedAt: now,
         }).where(eq(ads.id, row.ad.id));

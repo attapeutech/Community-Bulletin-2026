@@ -25,6 +25,7 @@ const createAdSchema = z.object({
   showPhone:   z.boolean().optional(),
   showAddress: z.boolean().optional(),
   showWebsite: z.boolean().optional(),
+  showQr: z.boolean().optional(),   // false: no QR on the screen (their flyer has its own)
   // Admin only: a test ad skips payment and review and shows only on display previews (?preview=)
   isTest: z.boolean().optional(),
   // Admin only: a sales demo ad (a test ad shown only on that demo's private link)
@@ -122,6 +123,7 @@ export async function POST(req: NextRequest) {
         showPhone:   data.showPhone   ?? false,
         showAddress: data.showAddress ?? false,
         showWebsite: data.showWebsite ?? false,
+        showQr: data.showQr ?? true,
       })))
       .returning();
     // Keep the picked order (the first store leads the payment page)

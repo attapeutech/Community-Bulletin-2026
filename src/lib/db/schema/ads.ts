@@ -50,6 +50,8 @@ export const ads = pgTable("ads", {
   showPhone:      boolean("show_phone").default(false).notNull(),
   showAddress:    boolean("show_address").default(false).notNull(),
   showWebsite:    boolean("show_website").default(false).notNull(),
+  // Our QR code on the screen (website / directions). Off when the advertiser's own flyer has its QR code.
+  showQr: boolean("show_qr").default(true).notNull(),
   // Analytics counters
   viewCount:         integer("view_count").default(0).notNull(),
   websiteClickCount: integer("website_click_count").default(0).notNull(),

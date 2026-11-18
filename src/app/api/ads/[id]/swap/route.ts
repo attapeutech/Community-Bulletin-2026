@@ -52,7 +52,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       data: {
         id: a.id, title: a.title, description: a.description, imageUrl: a.imageUrl, imageKey: a.imageKey,
         contactPhone: a.contactPhone, contactAddress: a.contactAddress, contactWebsite: a.contactWebsite,
-        showPhone: a.showPhone, showAddress: a.showAddress, showWebsite: a.showWebsite,
+        showPhone: a.showPhone, showAddress: a.showAddress, showWebsite: a.showWebsite, showQr: a.showQr,
         template: a.template, templateData: a.templateData, endedAt: a.endedAt,
         locationSlug: row.location.slug,
         canSwap: canSwap(a),

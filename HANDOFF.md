@@ -1,4 +1,4 @@
-# Handoff: 2026-10-22 (updated 2026-11-16)
+# Handoff: 2026-10-22 (updated 2026-11-17)
 
 ## Where things stand
 
@@ -32,6 +32,12 @@
   - `LeaveFrame` (`src/components/layout/LeaveFrame.tsx`, in the root layout) moves any non-display page out of a frame
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
+
+## 2026-11-17 summary
+
+- **Admin → Screens: store address with a map pin** (PR #172, no migration). Each screen assigned to a location shows the store's street, city, state and ZIP under its details line, with the orange 📍. Clicking it opens Google Maps for "<store>, <address>". Unassigned screens are unchanged. The address is built in `dashboard/admin/screens/page.tsx` (joins `cities`, `states` and `postal_codes`) and shown in `ScreensClient.tsx`. Merged, redeployed, and confirmed working in production.
+- **Idea, not built:** one map at the top of Screens with a pin for every store. `locations` has no latitude/longitude, so this needs a migration plus geocoding each address (the Google API key is already set up).
+- **This computer** (`~/Community-Bulletin-2026`) had been stuck on the April "Phase 1" commit. It's now synced to `main` with `npm install` done. The `new projects/Community-Bulletin-2026` folder is not a git checkout; ignore it.
 
 ## 2026-11-16 summary
 

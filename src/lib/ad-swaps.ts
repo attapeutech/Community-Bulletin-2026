@@ -14,6 +14,7 @@ export const swapContentSchema = z.object({
   showPhone:   z.boolean().optional(),
   showAddress: z.boolean().optional(),
   showWebsite: z.boolean().optional(),
+  showQr: z.boolean().optional(),
   template: z.enum(AD_TEMPLATES).optional(),
   templateData: z.unknown().optional(),
 });
@@ -45,6 +46,7 @@ export function swapColumns(input: z.infer<typeof swapContentSchema>) {
       showPhone:   data.showPhone   ?? false,
       showAddress: data.showAddress ?? false,
       showWebsite: data.showWebsite ?? false,
+      showQr: data.showQr ?? true,
       template: data.template ?? null,
       templateData,
     },

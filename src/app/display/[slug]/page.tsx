@@ -13,7 +13,7 @@ import { ShareButton } from "@/components/ui/ShareButton";
 import { BrandFrame } from "@/components/display/BrandFrame";
 import { FpsMeter } from "@/components/display/FpsMeter";
 import { PosterSlide } from "@/components/display/PosterSlide";
-import { hasQr, qrCaption, qrLabel, qrOffer } from "@/lib/ad-templates";
+import { hasQr, qrCaption, qrLabel, qrOffer, showsQr } from "@/lib/ad-templates";
 import { SaleTemplate } from "@/components/display/templates/SaleTemplate";
 import { readSaleData } from "@/lib/ad-templates";
 import { SampleAdHouseSlide, FamilyHouseSlide } from "@/components/display/HouseSlides";
@@ -34,6 +34,7 @@ type Ad = {
   isTest?: boolean;   // admin test ad: only on ?preview= screens
   template?: string | null;    // "sale" = drawn by the screen from templateData
   templateData?: unknown;
+  showQr?: boolean;            // false: no QR (their flyer has its own)
 };
 
 type AdvertiseSlideSettings = {
@@ -522,7 +523,7 @@ export default function DisplayPage() {
                     <SaleTemplate
                       data={readSaleData(ad.templateData)}
                       photoUrl={ad.imageUrl}
-                      qrValue={hasQr(qrOffer(ad)) && typeof window !== "undefined" ? `${window.location.origin}/go/${ad.id}` : null}
+                      qrValue={showsQr(ad) && typeof window !== "undefined" ? `${window.location.origin}/go/${ad.id}` : null}
                       qrLabel={qrLabel(qrOffer(ad))}
                       address={ad.showAddress ? ad.contactAddress : null}
                       phone={ad.showPhone ? ad.contactPhone : null}
@@ -536,7 +537,7 @@ export default function DisplayPage() {
                     <PosterSlide
                       imageUrl={ad.imageUrl}
                       title={ad.title}
-                      qrValue={hasQr(qrOffer(ad)) && typeof window !== "undefined" ? `${window.location.origin}/go/${ad.id}` : null}
+                      qrValue={showsQr(ad) && typeof window !== "undefined" ? `${window.location.origin}/go/${ad.id}` : null}
                       qrLabel={qrCaption(qrOffer(ad))}
                       zooming={idx === selectedIndex}
                     />

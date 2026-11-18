@@ -91,6 +91,11 @@ export function qrOffer(ad: {
 /** Whether the screen shows a QR code at all (a deal link or directions to give) */
 export const hasQr = (o: QrOffer) => o.deal || o.directions;
 
+/** Whether this ad's screen shows our QR code: something to offer, and the advertiser didn't turn it off */
+export function showsQr(ad: Parameters<typeof qrOffer>[0] & { showQr?: boolean | null }) {
+  return ad.showQr !== false && hasQr(qrOffer(ad));
+}
+
 /** Poster ads' smaller corner QR caption, in sentence case */
 export function qrCaption(o: QrOffer) {
   if (o.deal && o.directions) return "Scan for deal & directions";

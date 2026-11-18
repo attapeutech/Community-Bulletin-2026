@@ -24,6 +24,7 @@ export default async function ApproverDashboard() {
       showPhone:   ads.showPhone,
       showAddress: ads.showAddress,
       showWebsite: ads.showWebsite,
+      showQr: ads.showQr,
       user: {
         id: users.id,
         name: users.name,
@@ -70,6 +71,7 @@ export default async function ApproverDashboard() {
       showPhone:   adSwaps.showPhone,
       showAddress: adSwaps.showAddress,
       showWebsite: adSwaps.showWebsite,
+      showQr: adSwaps.showQr,
       current: { id: ads.id, title: ads.title, imageUrl: ads.imageUrl, endedAt: ads.endedAt },
       user: { id: users.id, name: users.name, email: users.email },
       location: {

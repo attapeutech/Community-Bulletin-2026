@@ -301,6 +301,8 @@ export default function NewAdPage() {
   const [showPhone,   setShowPhone]   = useState(false);
   const [showAddress, setShowAddress] = useState(false);
   const [showWebsite, setShowWebsite] = useState(false);
+  // Our QR code on the screen; off when their own flyer already has a QR code
+  const [showQr, setShowQr] = useState(true);
 
   // Pre-fill contact info from user profile (not on a demo ad: that's the prospect's business, not the admin's;
   // not on a swap: it starts from the running ad's details)
@@ -360,7 +362,7 @@ export default function NewAdPage() {
         }
         setUploadedImageUrl(a.imageUrl); setUploadedImageKey(a.imageKey);
         setContactPhone(a.contactPhone ?? ""); setContactAddress(a.contactAddress ?? ""); setContactWebsite(a.contactWebsite ?? "");
-        setShowPhone(a.showPhone); setShowAddress(a.showAddress); setShowWebsite(a.showWebsite);
+        setShowPhone(a.showPhone); setShowAddress(a.showAddress); setShowWebsite(a.showWebsite); setShowQr(a.showQr !== false);
         return;
       }
 
@@ -396,7 +398,7 @@ export default function NewAdPage() {
       }
       setUploadedImageUrl(a.imageUrl); setUploadedImageKey(a.imageKey);
       setContactPhone(a.contactPhone ?? ""); setContactAddress(a.contactAddress ?? ""); setContactWebsite(a.contactWebsite ?? "");
-      setShowPhone(a.showPhone); setShowAddress(a.showAddress); setShowWebsite(a.showWebsite);
+      setShowPhone(a.showPhone); setShowAddress(a.showAddress); setShowWebsite(a.showWebsite); setShowQr(a.showQr !== false);
     })();
   }, []);
 
@@ -519,6 +521,7 @@ export default function NewAdPage() {
           showPhone:   isTemplate ? showPhone : false,
           showAddress: isTemplate ? showAddress : !!contactAddress.trim(),
           showWebsite: isTemplate ? showWebsite : !!contactWebsite.trim(),
+          showQr,
           isTest: asTest || undefined,
           demoId: demo?.id,
         }),
@@ -553,7 +556,27 @@ export default function NewAdPage() {
   const previewOffer = isTemplate
     ? qrOffer({ contactWebsite, contactAddress, contactPhone, showWebsite, showAddress, showPhone })
     : qrOffer({ contactWebsite, contactAddress, showWebsite: !!contactWebsite.trim(), showAddress: !!contactAddress.trim() });
-  const previewQr = hasQr(previewOffer) ? (contactWebsite.trim() || contactAddress.trim()) : null;
+  const previewQr = showQr && hasQr(previewOffer) ? (contactWebsite.trim() || contactAddress.trim()) : null;
+
+  // "Show our QR code" switch (both designs)
+  const qrSwitch = (
+    <label style={{ display: "flex", gap: 10, alignItems: "flex-start", background: showQr ? "#F0F7FF" : "#FFF7ED", border: `1px solid ${showQr ? "#C9DFF2" : "#FCD9A8"}`, borderRadius: 10, padding: "12px 14px", marginBottom: 14, cursor: "pointer" }}>
+      <input
+        type="checkbox"
+        checked={showQr}
+        onChange={(e) => setShowQr(e.target.checked)}
+        style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0, accentColor: "#1A3A5C" }}
+      />
+      <span style={{ fontSize: 13, color: "#1A3A5C", lineHeight: 1.5 }}>
+        <strong>Show the Community Bulletin QR code on the screen</strong>
+        <span style={{ display: "block", fontSize: 12, color: "#4A6B82" }}>
+          {showQr
+            ? "Shoppers scan it for your website and directions, and you see how many scanned. Turn it off if your flyer already has its own QR code."
+            : "Off: no QR code from us on the screen (your flyer's own QR code stays). Your website and address are still saved."}
+        </span>
+      </span>
+    </label>
+  );
 
   // The ad as it will look on a store screen: the animated template, the advertiser's own image
   // (with contact details beside it when turned on), or a placeholder until there's something to show
@@ -923,6 +946,7 @@ export default function NewAdPage() {
               {/* Own design: only the website, which becomes a QR code on the poster */}
               {!isTemplate && (
                 <div style={{ borderTop: "1px solid #D8E4EE", paddingTop: 20, marginBottom: 20 }}>
+                  {qrSwitch}
                   <div style={{ marginBottom: 14, background: "#FFF7F3", borderRadius: 10, padding: "12px 14px", border: "1px solid #F6C9B8" }}>
                     <Label>🔳 Website for the QR code <span style={{ color: RED, fontWeight: 700 }}>· important</span></Label>
                     <p style={{ fontSize: 12, color: "#4A6B82", margin: "4px 0 8px" }}>
@@ -982,6 +1006,7 @@ export default function NewAdPage() {
                   Contact info is saved to your profile and pre-filled on future ads.
                 </p>
                 )}
+                <div style={{ marginTop: 14 }}>{qrSwitch}</div>
               </div>
               )}
 

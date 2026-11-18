@@ -26,6 +26,7 @@ async function findDemoAd(demoId: string, adId: string) {
       showPhone: ads.showPhone,
       showAddress: ads.showAddress,
       showWebsite: ads.showWebsite,
+      showQr: ads.showQr,
     })
     .from(ads)
     .where(and(eq(ads.id, adId), eq(ads.demoId, demoId)))
@@ -59,6 +60,7 @@ const editSchema = z.object({
   showPhone:   z.boolean().optional(),
   showAddress: z.boolean().optional(),
   showWebsite: z.boolean().optional(),
+  showQr: z.boolean().optional(),
   template: z.enum(AD_TEMPLATES).optional(),
   templateData: z.unknown().optional(),
 });
@@ -100,6 +102,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       showPhone:   data.showPhone   ?? false,
       showAddress: data.showAddress ?? false,
       showWebsite: data.showWebsite ?? false,
+      showQr: data.showQr ?? true,
       updatedAt: new Date(),
     }).where(eq(ads.id, adId));
 

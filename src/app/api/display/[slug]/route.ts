@@ -24,6 +24,7 @@ const adColumns = {
   showPhone:   ads.showPhone,
   showAddress: ads.showAddress,
   showWebsite: ads.showWebsite,
+  showQr: ads.showQr,
   isTest: ads.isTest,
   template: ads.template,
   templateData: ads.templateData,

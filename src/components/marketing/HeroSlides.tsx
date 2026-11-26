@@ -156,7 +156,7 @@ function YoursSlide({ price }: { price: string }) {
       <div className="text-[10px] sm:text-xs font-bold tracking-[0.14em] uppercase text-[#9DC4E0]">This spot is open</div>
       <div className="font-serif font-bold text-white text-xl sm:text-3xl leading-tight mt-1">Your ad could be here</div>
       <div className="h-1.5 w-20 bg-[#E8563A] rounded-full my-3 sm:my-4" />
-      <div className="text-sm sm:text-lg text-white">From <strong className="text-[#E8563A]">{price}</strong> for 4 weeks</div>
+      <div className="text-sm sm:text-lg text-white">From <strong className="text-[#E8563A]">{price}</strong> + tax for 4 weeks</div>
       <div className="text-[11px] sm:text-sm text-[#9DC4E0] mt-1">No contracts · Full refund if not approved</div>
     </div>
   );

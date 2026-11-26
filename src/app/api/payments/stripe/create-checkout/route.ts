@@ -5,6 +5,7 @@ import { db } from "@/lib/db/client";
 import { ads, locations } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth/session";
 import { eq, and } from "drizzle-orm";
+import { stripeTaxRateIds } from "@/lib/stripe-tax";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-12-18.acacia" as any });
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
     const [row] = await db
       .select({
         ad: ads,
-        location: { storeName: locations.storeName, slug: locations.slug, pricePerRunCents: locations.pricePerRunCents },
+        location: { storeName: locations.storeName, slug: locations.slug, pricePerRunCents: locations.pricePerRunCents, taxRateBps: locations.taxRateBps, taxLocationCode: locations.taxLocationCode, taxAreaName: locations.taxAreaName },
       })
       .from(ads)
       .innerJoin(locations, eq(ads.locationId, locations.id))
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
     // so the payment can be split per store when it's recorded)
     if (row.ad.orderId) {
       const orderAds = await db
-        .select({ id: ads.id, title: ads.title, storeName: locations.storeName, price: locations.pricePerRunCents })
+        .select({ id: ads.id, title: ads.title, storeName: locations.storeName, price: locations.pricePerRunCents, taxRateBps: locations.taxRateBps, taxLocationCode: locations.taxLocationCode, taxAreaName: locations.taxAreaName })
         .from(ads)
         .innerJoin(locations, eq(ads.locationId, locations.id))
         .where(and(eq(ads.orderId, row.ad.orderId), eq(ads.userId, userId), eq(ads.paymentStatus, "unpaid")));
@@ -63,7 +64,8 @@ export async function POST(req: NextRequest) {
         mode: "payment",
         payment_method_types: ["card"],
         customer_email: userEmail,
-        line_items: orderAds.map((a) => ({
+        // Each store's own sales tax (ads are taxed where they're shown)
+        line_items: await Promise.all(orderAds.map(async (a) => ({
           price_data: {
             currency: "usd",
             unit_amount: a.price,
@@ -74,7 +76,8 @@ export async function POST(req: NextRequest) {
             },
           },
           quantity: 1,
-        })),
+          tax_rates: await stripeTaxRateIds(a),
+        }))),
         metadata: { adId, userId, orderId: row.ad.orderId },
         success_url: `${APP_URL}/ads/${adId}/payment?success=true&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${APP_URL}/ads/${adId}/payment?cancelled=true`,
@@ -97,6 +100,7 @@ export async function POST(req: NextRequest) {
             },
           },
           quantity: 1,
+          tax_rates: await stripeTaxRateIds(row.location),
         },
       ],
       metadata: {

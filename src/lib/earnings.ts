@@ -18,6 +18,7 @@ export async function recordEarning(paymentId: string) {
   const [row] = await db
     .select({
       amountCents:       payments.amountCents,
+      taxCents:          payments.taxCents,
       currency:          payments.currency,
       adTitle:           ads.title,
       locationId:        locations.id,
@@ -41,7 +42,7 @@ export async function recordEarning(paymentId: string) {
       ownerId:      row.ownerId,
       locationId:   row.locationId,
       adTitle:      row.adTitle,
-      grossCents:   row.amountCents,
+      grossCents:   row.amountCents - row.taxCents,   // the ad price: sales tax isn't shared
       shareRateBps: row.shareRateBps,
       currency:     row.currency,
     })
@@ -113,6 +114,7 @@ export async function releaseEarnings(now = new Date()) {
       provider:      payments.provider,
       providerTxId:  payments.providerTxId,
       feeCents:      payments.feeCents,
+      paymentCents:  payments.amountCents,
     })
     .from(ownerEarnings)
     .innerJoin(payments, eq(ownerEarnings.paymentId, payments.id))
@@ -131,7 +133,7 @@ export async function releaseEarnings(now = new Date()) {
     let fee = e.feeCents;
     if (fee === null && e.provider === "stripe") {
       try {
-        fee = await fetchStripeFeeCents(e.providerTxId, e.grossCents);
+        fee = await fetchStripeFeeCents(e.providerTxId, e.paymentCents);
         if (fee !== null) {
           await db.update(payments).set({ feeCents: fee, updatedAt: now }).where(eq(payments.id, e.paymentId));
         }
@@ -145,10 +147,14 @@ export async function releaseEarnings(now = new Date()) {
       continue;
     }
 
-    const amountCents = Math.round(((e.grossCents - fee) * e.shareRateBps) / 10000);
+    // The payment's fee covers the sales tax too; the store shares only the fee on the ad price
+    const ownerFee = e.paymentCents > e.grossCents && e.paymentCents > 0
+      ? Math.round((fee * e.grossCents) / e.paymentCents)
+      : fee;
+    const amountCents = Math.round(((e.grossCents - ownerFee) * e.shareRateBps) / 10000);
     await db
       .update(ownerEarnings)
-      .set({ status: "available", feeCents: fee, amountCents, releasedAt: now, updatedAt: now })
+      .set({ status: "available", feeCents: ownerFee, amountCents, releasedAt: now, updatedAt: now })
       .where(and(eq(ownerEarnings.id, e.id), eq(ownerEarnings.status, "pending")));
     released++;
     const t = releasedByOwner.get(e.ownerId) ?? { cents: 0, count: 0 };

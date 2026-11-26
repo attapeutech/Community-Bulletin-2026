@@ -42,6 +42,8 @@ export async function GET(
           slug: locations.slug,
           addressLine1: locations.addressLine1,
           pricePerRunCents: locations.pricePerRunCents,
+          taxRateBps: locations.taxRateBps,
+          taxAreaName: locations.taxAreaName,
         },
       })
       .from(ads)
@@ -81,7 +83,7 @@ export async function GET(
     // Multi-store order: every store in it, for the payment page (one line each, one total)
     const order = row.orderId
       ? await db
-          .select({ adId: ads.id, storeName: locations.storeName, storeNumber: locations.storeNumber, pricePerRunCents: locations.pricePerRunCents, paymentStatus: ads.paymentStatus })
+          .select({ adId: ads.id, storeName: locations.storeName, storeNumber: locations.storeNumber, pricePerRunCents: locations.pricePerRunCents, taxRateBps: locations.taxRateBps, paymentStatus: ads.paymentStatus })
           .from(ads)
           .innerJoin(locations, eq(ads.locationId, locations.id))
           .where(and(eq(ads.orderId, row.orderId), eq(ads.userId, row.user.id)))

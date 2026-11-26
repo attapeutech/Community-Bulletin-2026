@@ -7,6 +7,7 @@ import { getSession } from "@/lib/auth/session";
 import { loadProposal, proposalBlocked } from "@/lib/proposal-access";
 import { notifyUser } from "@/lib/notifications";
 import { formatPrice } from "@/lib/pricing";
+import { taxSummary } from "@/lib/sales-tax";
 import { stripe } from "@/lib/stripe";
 import { recordPaidCheckout } from "@/lib/stripe-checkout";
 import ProposalClient from "./ProposalClient";
@@ -64,6 +65,7 @@ export default async function ProposalPage({ params, searchParams }: { params: P
       businessName={p.businessName}
       store={{ name: p.storeName, place: `${p.storeAddress}, ${p.city}, ${p.state}`, shoppers: p.shoppers }}
       price={formatPrice(p.price)}
+      tax={taxSummary(p.price, p.taxRateBps, p.taxAreaName)}
       previewSrc={p.demoAdId ? `/display/${p.storeSlug}?demo=${p.demoToken}&ad=${p.demoAdId}&only=1` : null}
       blocked={proposalBlocked(p)}
       paid={!!p.paidAt}

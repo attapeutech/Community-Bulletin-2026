@@ -180,9 +180,10 @@ export async function sendAdSwapResultEmail({
 }
 
 export async function sendPaymentReceiptEmail({
-  to, userName, adTitle, locationName, amountFormatted, provider, adId,
+  to, userName, adTitle, locationName, amountFormatted, taxFormatted, provider, adId,
 }: {
   to: string; userName: string; adTitle: string; locationName: string; amountFormatted: string; provider: string; adId: string;
+  taxFormatted?: string;   // WA sales tax included in amountFormatted
 }) {
   return sendEmail({
     to,
@@ -193,7 +194,7 @@ export async function sendPaymentReceiptEmail({
       ${detailTable([
         { label: "Ad title", value: `<strong>${adTitle}</strong>` },
         { label: "Location", value: locationName },
-        { label: "Amount paid", value: `<strong style="color:${CORAL_COLOR}">${amountFormatted}</strong>` },
+        { label: "Amount paid", value: `<strong style="color:${CORAL_COLOR}">${amountFormatted}</strong>${taxFormatted ? ` <span style="color:#4A6B82;font-size:12px">(includes ${taxFormatted} sales tax)</span>` : ""}` },
         { label: "Payment method", value: provider.charAt(0).toUpperCase() + provider.slice(1) },
         { label: "Duration", value: "4 weeks (28 days)" },
       ])}
@@ -445,7 +446,7 @@ export async function sendProposalEmail({ to, replyTo, subject, message, busines
             ? `<br><a href="${mapUrl}" style="color:#4A90C4;text-decoration:none;font-size:13px">📍 ${escapeHtml(storeAddress)}</a>`
             : ""),
         },
-        { label: "Price", value: `<strong>${escapeHtml(price)}</strong> for 4 weeks` },
+        { label: "Price", value: `<strong>${escapeHtml(price)}</strong> + sales tax for 4 weeks` },
       ])}
       ${primaryButton(url, "See your ad &amp; pay", CORAL_COLOR)}
       <p style="color:#9DC4E0;font-size:12px;margin-top:24px">Questions? Reply to this email and our sales team will get back to you.</p>

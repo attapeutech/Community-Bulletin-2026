@@ -50,6 +50,9 @@ export async function recordPaidCheckout(checkoutSession: Stripe.Checkout.Sessio
 
   const now = new Date();
   const amountCents = checkoutSession.amount_total ?? 10000;
+  // Sales tax is inside the total; the store's rate and area are kept with the payment for the tax report
+  const taxCents = checkoutSession.total_details?.amount_tax ?? 0;
+  const [tax] = await storeTax([adId]);
 
   const [payment] = await db.insert(payments).values({
     adId,
@@ -59,6 +62,7 @@ export async function recordPaidCheckout(checkoutSession: Stripe.Checkout.Sessio
     status: "paid",
     amountCents,
     currency: (checkoutSession.currency ?? "usd").toUpperCase(),
+    ...taxFields(taxCents, tax),
   }).returning({ id: payments.id });
 
   // A sales proposal ad goes live at once, without review
@@ -80,6 +84,7 @@ export async function recordPaidCheckout(checkoutSession: Stripe.Checkout.Sessio
       adTitle: row.ad.title,
       locationName,
       amountFormatted: `$${(amountCents / 100).toFixed(2)}`,
+      taxFormatted: taxCents > 0 ? `$${(taxCents / 100).toFixed(2)}` : undefined,
       provider: "stripe",
       adId,
     }).catch(console.error);
@@ -105,10 +110,15 @@ async function recordPaidOrder(checkoutSession: Stripe.Checkout.Session, orderId
   // Each line was created with its ad's id (see create-checkout)
   const lines = await stripe.checkout.sessions.listLineItems(checkoutSession.id, { limit: 100, expand: ["data.price.product"] });
   const amountByAd = new Map<string, number>();
+  const taxByAd = new Map<string, number>();
   for (const li of lines.data) {
     const product = li.price?.product as Stripe.Product | string | undefined;
     const lineAdId = product && typeof product === "object" ? product.metadata?.adId : undefined;
-    if (lineAdId) amountByAd.set(lineAdId, (amountByAd.get(lineAdId) ?? 0) + (li.amount_total ?? 0));
+    if (lineAdId) {
+      // amount_total includes the line's sales tax
+      amountByAd.set(lineAdId, (amountByAd.get(lineAdId) ?? 0) + (li.amount_total ?? 0));
+      taxByAd.set(lineAdId, (taxByAd.get(lineAdId) ?? 0) + (li.amount_tax ?? 0));
+    }
   }
 
   if (!amountByAd.size) {
@@ -126,6 +136,7 @@ async function recordPaidOrder(checkoutSession: Stripe.Checkout.Session, orderId
 
   const now = new Date();
   const currency = (checkoutSession.currency ?? "usd").toUpperCase();
+  const taxes = new Map((await storeTax(toRecord.map((a) => a.id))).map((t) => [t.adId, t]));
   const inserted = await db.insert(payments).values(toRecord.map((a) => ({
     adId: a.id,
     userId,
@@ -134,7 +145,8 @@ async function recordPaidOrder(checkoutSession: Stripe.Checkout.Session, orderId
     status: "paid",
     amountCents: amountByAd.get(a.id) ?? 0,
     currency,
-  }))).returning({ id: payments.id, adId: payments.adId, amountCents: payments.amountCents });
+    ...taxFields(taxByAd.get(a.id) ?? 0, taxes.get(a.id)),
+  }))).returning({ id: payments.id, adId: payments.adId, amountCents: payments.amountCents, taxCents: payments.taxCents });
 
   for (const p of inserted) {
     await recordEarning(p.id);
@@ -150,15 +162,33 @@ async function recordPaidOrder(checkoutSession: Stripe.Checkout.Session, orderId
     const stores = rows.map((r) => formatLocationLabel(r.location));
     const locationName = stores.length === 1 ? stores[0] : `${stores.length} stores: ${stores.join("; ")}`;
     const total = inserted.reduce((sum, p) => sum + p.amountCents, 0);
+    const taxTotal = inserted.reduce((sum, p) => sum + p.taxCents, 0);
     sendPaymentReceiptEmail({
       to: first.user.email, userName: first.user.name, adTitle: first.ad.title, locationName,
       amountFormatted: `$${(total / 100).toFixed(2)}`, provider: "stripe", adId: first.ad.id,
+      taxFormatted: taxTotal > 0 ? `$${(taxTotal / 100).toFixed(2)}` : undefined,
     }).catch(console.error);
     sendAdSubmittedEmail({ to: first.user.email, userName: first.user.name, adTitle: first.ad.title, locationName, adId: first.ad.id }).catch(console.error);
     sendAdReviewNotificationEmail({ adTitle: first.ad.title, locationName, userName: first.user.name, adId: first.ad.id }).catch(console.error);
   }
 
   return { ok: true as const, alreadyPaid: false };
+}
+
+/** Each ad's store tax rate and area at the time of payment */
+async function storeTax(adIds: string[]) {
+  if (!adIds.length) return [];
+  return db
+    .select({ adId: ads.id, taxRateBps: locations.taxRateBps, taxLocationCode: locations.taxLocationCode, taxAreaName: locations.taxAreaName })
+    .from(ads)
+    .innerJoin(locations, eq(ads.locationId, locations.id))
+    .where(inArray(ads.id, adIds));
+}
+
+/** Tax columns for a payment row: the tax Stripe charged, with the store's rate and area (none when no tax) */
+function taxFields(taxCents: number, store?: { taxRateBps: number | null; taxLocationCode: string | null; taxAreaName: string | null }) {
+  if (!taxCents) return { taxCents: 0 };
+  return { taxCents, taxRateBps: store?.taxRateBps ?? null, taxLocationCode: store?.taxLocationCode ?? null, taxAreaName: store?.taxAreaName ?? null };
 }
 
 /** Ad, advertiser and store address for confirmation emails */

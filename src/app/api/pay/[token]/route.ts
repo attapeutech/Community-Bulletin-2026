@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { loadPayLinkAd, payLinkBlocked, payLinkPath, readPayLinkToken } from "@/lib/pay-links";
 import { stripe } from "@/lib/stripe";
 import { SITE_URL } from "@/lib/site";
+import { stripeTaxRateIds } from "@/lib/stripe-tax";
 
 // POST /api/pay/[token] — public, no sign-in: start Stripe Checkout for the ad behind a pay link.
 // The payment is the ad owner's, as if they paid from My Ads; the ad then goes to review as usual.
@@ -29,6 +30,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ to
           product_data: { name: `Community Bulletin Ad — ${ad.title}`, description: `4-week display at ${ad.storeName}` },
         },
         quantity: 1,
+        tax_rates: await stripeTaxRateIds(ad),
       }],
       metadata: { adId: ad.id, userId: ad.userId, locationSlug: ad.storeSlug },
       success_url: `${back}?session_id={CHECKOUT_SESSION_ID}`,

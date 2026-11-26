@@ -9,6 +9,7 @@ import { EMPTY_SALE, POSTER_TITLE, SALE_LIMITS, hasQr, qrCaption, qrLabel, qrOff
 import { useRouter } from "next/navigation";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { costPerThousandCents, formatCostPerThousand, formatShoppers } from "@/lib/traffic";
+import { formatTaxRate, taxCentsFor } from "@/lib/sales-tax";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type Location = {
@@ -16,6 +17,8 @@ type Location = {
   storeName: string;
   storeNumber?: string | null;
   pricePerRunCents: number;
+  taxRateBps?: number | null;     // the store's sales tax (added at checkout)
+  taxAreaName?: string | null;
   dailyCustomers?: number | null;
   slug: string;
   addressLine1: string;
@@ -40,6 +43,10 @@ function ShopperReach({ loc }: { loc: Location }) {
 
 function formatPrice(cents: number) {
   return `$${(cents / 100).toFixed(cents % 100 === 0 ? 0 : 2)}`;
+}
+/** Always with cents ("$10.50", "$110.50"): tax amounts and totals */
+function formatCents(cents: number) {
+  return `$${(cents / 100).toFixed(2)}`;
 }
 
 function StoreNumber({ value }: { value: string }) {
@@ -269,6 +276,8 @@ export default function NewAdPage() {
   const setSelectedLocation = (loc: Location | null) => setPicked(loc ? [loc] : []);
   const multiStore = !demo && !swapping && !editingAdId;
   const totalCents = picked.reduce((sum, l) => sum + l.pricePerRunCents, 0);
+  // Sales tax by each store's rate (ads are taxed where they're shown), as checkout will add it
+  const taxTotalCents = picked.reduce((sum, l) => sum + taxCentsFor(l.pricePerRunCents, l.taxRateBps), 0);
   const togglePick = (loc: Location) =>
     setPicked((prev) => (prev.some((l) => l.id === loc.id) ? prev.filter((l) => l.id !== loc.id) : [...prev, loc]));
   // Where the advertiser came from (?from=home | stores | store, or a screen QR code), for the breadcrumb
@@ -660,7 +669,7 @@ export default function NewAdPage() {
             ? `${selectedLocation?.storeName ?? ""} · Shown only on this demo's private link, never on the store TV. No payment.`
             : swapping
             ? `${selectedLocation?.storeName ?? ""} · Replace your running ad with a new one for the same business, e.g. the next car for sale. No payment; your current ad keeps running until the new one is approved.`
-            : <>{selectedLocation ? `${formatPrice(selectedLocation.pricePerRunCents)} / 4 weeks` : "Priced per store · 4 weeks"} · Displayed on in-store screens at your chosen location.</>}
+            : <>{selectedLocation ? `${formatPrice(selectedLocation.pricePerRunCents)} + tax / 4 weeks` : "Priced per store · 4 weeks"} · Displayed on in-store screens at your chosen location.</>}
           {/* Where the store is (one store picked): tap to open the map */}
           {selectedLocation && picked.length === 1 && (() => {
             const place = [selectedLocation.addressLine1?.trim(), selectedLocation.city?.name, [selectedLocation.state?.code, selectedLocation.postalCode?.code].filter(Boolean).join(" ")].filter(Boolean).join(", ");
@@ -733,7 +742,7 @@ export default function NewAdPage() {
                       <div style={{ position: "sticky", top: 0, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap", padding: "8px 12px", background: "#F4F7FB", borderBottom: "1px solid #D8E4EE" }}>
                         <span style={{ fontSize: 12, color: "#4A6B82" }}>
                           <strong style={{ color: ACCENT }}>{picked.length}</strong> of {shownLocations.length}{locSearch.trim() ? " shown" : ""} selected
-                          {picked.length > 0 && <> · <strong style={{ color: "#E8563A" }}>{formatPrice(totalCents)}</strong></>}
+                          {picked.length > 0 && <> · <strong style={{ color: "#E8563A" }}>{formatPrice(totalCents)}</strong> + tax</>}
                         </span>
                         <span style={{ display: "flex", gap: 6 }}>
                           <button
@@ -795,7 +804,7 @@ export default function NewAdPage() {
                             </span>
                           )}
                         </span>
-                        <span style={{ fontWeight: 700, color: "#E8563A", whiteSpace: "nowrap" }}>{formatPrice(loc.pricePerRunCents)}<span style={{ fontWeight: 400, fontSize: 12, color: "#4A6B82" }}> / 4 weeks</span></span>
+                        <span style={{ fontWeight: 700, color: "#E8563A", whiteSpace: "nowrap" }}>{formatPrice(loc.pricePerRunCents)}<span style={{ fontWeight: 400, fontSize: 12, color: "#4A6B82" }}> + tax / 4 weeks</span></span>
                       </div>
                       <div style={{ fontSize: 12, color: "#4A6B82" }}>
                         {loc.addressLine1}, {loc.city.name}, {loc.state.code} {loc.postalCode?.code}
@@ -817,7 +826,7 @@ export default function NewAdPage() {
                 <div style={{ background: "#F0F7FF", border: "1px solid #4A90C4", borderRadius: 8, padding: "12px 16px", marginTop: 16 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 14, fontWeight: 700, color: "#1A3A5C" }}>
                     <span>{picked.length} store{picked.length === 1 ? "" : "s"} selected</span>
-                    <span style={{ color: "#E8563A" }}>{formatPrice(totalCents)}<span style={{ fontWeight: 400, fontSize: 12, color: "#4A6B82" }}> / 4 weeks</span></span>
+                    <span style={{ color: "#E8563A" }}>{formatPrice(totalCents)}<span style={{ fontWeight: 400, fontSize: 12, color: "#4A6B82" }}> + tax / 4 weeks</span></span>
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
                     {picked.map((l) => (
@@ -1036,7 +1045,7 @@ export default function NewAdPage() {
                   ? <>Confirm the demo ad. No payment: it shows only on this demo&apos;s private link.</>
                   : swapping
                   ? <>Confirm the new version. We&apos;ll review it; once approved it replaces your current ad. No payment.</>
-                  : <>Confirm your ad details. Payment of <strong>{formatPrice(totalCents)}</strong>{picked.length > 1 ? ` for ${picked.length} stores` : ""} is collected on the next step.</>}
+                  : <>Confirm your ad details. Payment of <strong>{formatPrice(totalCents + taxTotalCents)}</strong>{taxTotalCents > 0 ? " (with sales tax)" : ""}{picked.length > 1 ? ` for ${picked.length} stores` : ""} is collected on the next step.</>}
               </p>
 
               {/* Summary */}
@@ -1068,7 +1077,16 @@ export default function NewAdPage() {
                   ) : (
                     <>
                       <div><span style={{ color: "#4A6B82" }}>Duration:</span> 4 weeks (28 days)</div>
-                      <div><span style={{ color: "#4A6B82" }}>{picked.length > 1 ? "Total:" : "Price:"}</span> <strong style={{ color: RED }}>{formatPrice(totalCents)}</strong> <span style={{ color: "#4A6B82" }}>/ 4 weeks{picked.length > 1 ? " · one payment" : ""}</span></div>
+                      <div><span style={{ color: "#4A6B82" }}>Price:</span> <strong>{formatPrice(totalCents)}</strong> <span style={{ color: "#4A6B82" }}>/ 4 weeks{picked.length > 1 ? ` · ${picked.length} stores` : ""}</span></div>
+                      {taxTotalCents > 0 && (
+                        <div>
+                          <span style={{ color: "#4A6B82" }}>Sales tax:</span> {formatCents(taxTotalCents)}
+                          <span style={{ color: "#4A6B82" }}> · {picked.length === 1 && selectedLocation?.taxRateBps
+                            ? `${formatTaxRate(selectedLocation.taxRateBps)}${selectedLocation.taxAreaName ? `, ${selectedLocation.taxAreaName}` : ""}`
+                            : "each store's local rate"}</span>
+                        </div>
+                      )}
+                      <div><span style={{ color: "#4A6B82" }}>Total:</span> <strong style={{ color: RED }}>{formatCents(totalCents + taxTotalCents)}</strong>{picked.length > 1 && <span style={{ color: "#4A6B82" }}> · one payment</span>}</div>
                     </>
                   )}
                   {!isTemplate && contactWebsite.trim() && (
@@ -1147,8 +1165,8 @@ export default function NewAdPage() {
             <div style={{ fontSize: 12, color: "#4A6B82", marginTop: 10 }}>
               {selectedLocation
                 ? picked.length > 1
-                  ? <>Showing at <strong style={{ color: ACCENT }}>{picked.length} stores</strong> · {formatPrice(totalCents)} / 4 weeks</>
-                  : <>Showing at <strong style={{ color: ACCENT }}>{selectedLocation.storeName}</strong> · {formatPrice(selectedLocation.pricePerRunCents)} / 4 weeks</>
+                  ? <>Showing at <strong style={{ color: ACCENT }}>{picked.length} stores</strong> · {formatPrice(totalCents)} + tax / 4 weeks</>
+                  : <>Showing at <strong style={{ color: ACCENT }}>{selectedLocation.storeName}</strong> · {formatPrice(selectedLocation.pricePerRunCents)} + tax / 4 weeks</>
                 : "Choose a store to see where your ad will run."}
             </div>
           </div>

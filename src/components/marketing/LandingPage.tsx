@@ -18,7 +18,7 @@ const FEATURES = (price: LandingPrice) => [
   { icon: "⚡", title: "Goes live instantly", desc: "Once approved, your ad pushes live to the display screen in real-time via Socket.io — no delays." },
   { icon: "🔄", title: "Carousel slideshow", desc: "Multiple approved ads rotate in a smooth carousel so every advertiser gets equal screen time." },
   { icon: "✅", title: "Human review process", desc: "Every ad is reviewed by our team before going live, keeping the platform trusted and high quality." },
-  { icon: "💳", title: "Simple, upfront pricing", desc: `Priced per store, from ${price.amount} for 4 weeks — you see the exact price before you pay. Full refund if your ad is not approved.` },
+  { icon: "💳", title: "Simple, upfront pricing", desc: `Priced per store, from ${price.amount} + tax for 4 weeks — you see the exact price, with tax, before you pay. Full refund if your ad is not approved.` },
 ];
 
 const HOW_IT_WORKS = [
@@ -96,7 +96,7 @@ export default function LandingPage({ price, network, citiesLabel }: { price: La
               {/* The price rides on the main button */}
               <Link href={session ? "/ads/new?from=home" : "/register"} className="no-underline bg-[#E8563A] text-white px-8 py-2.5 rounded-xl hover:bg-[#D14A30] transition-colors flex flex-col items-center justify-center leading-tight">
                 <span className="text-base font-bold tracking-wide">Post your first ad</span>
-                <span className="text-xs font-semibold text-white/85 mt-0.5">{price.amount} for 4 weeks · no contract</span>
+                <span className="text-xs font-semibold text-white/85 mt-0.5">{price.amount} + tax for 4 weeks · no contract</span>
               </Link>
             </div>
 
@@ -219,7 +219,7 @@ export default function LandingPage({ price, network, citiesLabel }: { price: La
             <div className="relative bg-white dark:bg-[#0F1E2E] rounded-2xl border-2 border-[#1A3A5C] dark:border-[#4A90C4] p-8 sm:p-10 max-w-sm w-full">
               <div className="text-sm font-semibold text-[#4A6B82] dark:text-[#7AA8C4] -mb-1">Starting at</div>
               <div className="font-serif text-5xl font-bold text-[#1A3A5C] dark:text-white">{price.amount}</div>
-              <div className="text-sm text-[#4A6B82] dark:text-[#7AA8C4]">per location / 4 weeks</div>
+              <div className="text-sm text-[#4A6B82] dark:text-[#7AA8C4]">+ tax · per location / 4 weeks</div>
               <p className="text-xs text-[#5B7D96] dark:text-[#7AA8C4] mt-2 mb-6">
                 Price varies by store — you&apos;ll see the exact price before you pay.
               </p>

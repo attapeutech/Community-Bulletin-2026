@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import { ads, users, locations, payments } from "@/lib/db/schema";
-import { eq, and, desc, count, sum } from "drizzle-orm";
+import { eq, and, desc, count, sum, sql } from "drizzle-orm";
 import { listedAd } from "@/lib/ad-filters";
 import AdminPanelClient from "./AdminPanelClient";
 
@@ -31,7 +31,8 @@ export default async function AdminDashboard() {
     db.select({ count: count() }).from(ads).where(and(eq(ads.status, "denied"), notDemo)),
     db.select({ count: count() }).from(users),
     db.select({ count: count() }).from(locations),
-    db.select({ total: sum(payments.amountCents) }).from(payments).where(eq(payments.status, "paid")),
+    db.select({ total: sql<number>`sum(${payments.amountCents} - ${payments.taxCents})` })  // revenue excludes sales tax
+      .from(payments).where(eq(payments.status, "paid")),
     db.select({ total: sum(ads.viewCount) }).from(ads).where(notDemo),
     db.select({ total: sum(ads.websiteClickCount) }).from(ads).where(notDemo),
   ]);

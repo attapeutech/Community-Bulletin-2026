@@ -34,6 +34,13 @@ export const locations = pgTable("locations", {
   pricePerRunCents: integer("price_per_week_cents").default(10000).notNull(), // default $100 per 4-week run (column name predates 4-week pricing)
   equipmentProvided: boolean("equipment_provided").default(false).notNull(),   // store owner supplied the screen (informational)
   shareRateBps: integer("share_rate_bps").default(5000).notNull(),            // owner revenue share, 5000 = 50%; admin-set
+  // Sales tax on ads, from the WA Department of Revenue rate lookup for the store's address (ads are taxed
+  // where they're shown). Null rate = no tax set up for this store yet (checkout charges no tax).
+  taxRateBps: integer("tax_rate_bps"),               // 1050 = 10.5%
+  taxLocationCode: text("tax_location_code"),        // DOR location code, e.g. "3131" (used on the tax return)
+  taxAreaName: text("tax_area_name"),                // e.g. "Unincorporated Snohomish County", "Everett"
+  taxRatePeriod: text("tax_rate_period"),            // DOR quarter the rate is for, e.g. "Q42026"
+  taxRateCheckedAt: timestamp("tax_rate_checked_at"),
   description: text("description"),
   category: text("category"),
   logoUrl: text("logo_url"),

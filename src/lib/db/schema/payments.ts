@@ -23,6 +23,12 @@ export const payments = pgTable("payments", {
   amountCents: integer("amount_cents").notNull(),       // e.g. 10000 = $100.00
   currency: text("currency").default("USD").notNull(),  // ISO 4217
   feeCents: integer("fee_cents"),                       // processor fee; null until known
+  // Sales tax inside amountCents (amountCents is what the customer paid, tax included). The ad price is
+  // amountCents - taxCents; store shares and revenue use that. Rate and area are copied from the store at payment.
+  taxCents: integer("tax_cents").default(0).notNull(),
+  taxRateBps: integer("tax_rate_bps"),
+  taxLocationCode: text("tax_location_code"),
+  taxAreaName: text("tax_area_name"),
   refundedAt: timestamp("refunded_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

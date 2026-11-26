@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { ads, users, locations, payments } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/auth/session";
-import { eq, and, count, sum, gte } from "drizzle-orm";
+import { eq, and, count, gte, sql } from "drizzle-orm";
 import { listedAd } from "@/lib/ad-filters";
 
 // GET /api/admin/stats
@@ -29,7 +29,8 @@ export async function GET() {
       db.select({ count: count() }).from(ads).where(and(eq(ads.status, "denied"), notDemo)),
       db.select({ count: count() }).from(users),
       db.select({ count: count() }).from(locations),
-      db.select({ total: sum(payments.amountCents) }).from(payments).where(eq(payments.status, "paid")),
+      db.select({ total: sql<number>`sum(${payments.amountCents} - ${payments.taxCents})` })  // revenue excludes sales tax
+      .from(payments).where(eq(payments.status, "paid")),
     ]);
 
     return NextResponse.json({

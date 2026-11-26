@@ -30,6 +30,7 @@ export default async function DashboardLayout({
     { href: "/dashboard/admin",       label: "Admin Panel",   icon: "admin",     roles: ["admin"] },
     { href: "/dashboard/sales",       label: "Sales",         icon: "sales",     roles: ["admin"] },
     { href: "/dashboard/admin/applications", label: "Applications", icon: "applications", roles: ["admin"] },
+    { href: "/dashboard/admin/revenue", label: "Revenue",     icon: "revenue",   roles: ["admin"] },
     { href: "/dashboard/admin/payouts", label: "Payouts",     icon: "payouts",   roles: ["admin"] },
     { href: "/dashboard/admin/taxes",   label: "Sales Tax",   icon: "taxes",     roles: ["admin"] },
     { href: "/dashboard/admin/screens", label: "Screens",     icon: "screens",   roles: ["admin"] },

@@ -71,6 +71,7 @@ type Stats = {
   totalUsers: number;
   totalLocations: number;
   totalRevenueCents: number;
+  cbKeepsCents: number;
   totalViews: number;
   totalWebsiteClicks: number;
 };
@@ -855,7 +856,8 @@ export default function AdminPanelClient({
         <TabsContent value="overview" className="mt-0">
           {/* Stat cards */}
           <div className="flex flex-wrap gap-4 mb-8">
-            <StatCard label="Total Revenue" value={`$${(stats.totalRevenueCents / 100).toFixed(2)}`} sub="from paid ads" accentClass="text-green-800" />
+            <StatCard label="Total Revenue" value={`$${(stats.totalRevenueCents / 100).toFixed(2)}`} sub="ad sales, before tax" accentClass="text-green-800" />
+            <StatCard label="CB Keeps" value={`$${(stats.cbKeepsCents / 100).toFixed(2)}`} sub="after store shares, Stripe & tax" accentClass="text-green-800" onClick={() => { window.location.href = "/dashboard/admin/revenue?m=all"; }} />
             <StatCard label="Total Ads" value={ads.length} onClick={() => { setStatusFilter("all"); setAdSearch(""); setActiveTab("ads"); }} />
             <StatCard label="Pending Review" value={stats.pendingAds} accentClass={stats.pendingAds > 0 ? "text-yellow-800" : "text-[#1A3A5C]"} onClick={() => { setStatusFilter("pending"); setAdSearch(""); setActiveTab("ads"); }} />
             <StatCard label="Approved" value={stats.approvedAds} accentClass="text-green-800" onClick={() => { setStatusFilter("approved"); setAdSearch(""); setActiveTab("ads"); }} />

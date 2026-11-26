@@ -2,7 +2,8 @@ import Stripe from "stripe";
 import { db } from "@/lib/db/client";
 import { ads, locations, payments, users, ownerEarnings } from "@/lib/db/schema";
 import { eq, and, inArray, isNull, isNotNull, lte, or, sql } from "drizzle-orm";
-import { notifyEarningsAvailable } from "@/lib/notifications";
+import { notifyEarningsAvailable, type EarningLine } from "@/lib/notifications";
+import { storeEarning } from "@/lib/store-earning";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-12-18.acacia" as any });
@@ -86,8 +87,44 @@ async function fetchStripeFeeCents(paymentIntentId: string, rowAmountCents: numb
 }
 
 /**
+ * Saves Stripe's actual fee on payment rows that don't have it yet (for CB's books: Revenue page).
+ * By payment intent (a multi-store checkout has one row per store), or, with no id, the most recent
+ * paid Stripe payments still missing it (the daily job). Never throws.
+ */
+export async function fillStripeFees(paymentIntentId?: string, limit = 50) {
+  let filled = 0;
+  try {
+    const rows = await db
+      .select({ id: payments.id, providerTxId: payments.providerTxId, amountCents: payments.amountCents })
+      .from(payments)
+      .where(and(
+        eq(payments.provider, "stripe"),
+        eq(payments.status, "paid"),
+        isNull(payments.feeCents),
+        paymentIntentId ? eq(payments.providerTxId, paymentIntentId) : sql`${payments.createdAt} > now() - interval '120 days'`,
+      ))
+      .orderBy(sql`${payments.createdAt} desc`)
+      .limit(limit);
+    for (const r of rows) {
+      try {
+        const fee = await fetchStripeFeeCents(r.providerTxId, r.amountCents);
+        if (fee === null) continue;
+        await db.update(payments).set({ feeCents: fee, updatedAt: new Date() }).where(eq(payments.id, r.id));
+        filled++;
+      } catch (err) {
+        console.error(`[earnings] Stripe fee lookup failed for ${r.providerTxId}`, err);
+      }
+    }
+  } catch (err) {
+    console.error("[earnings] fillStripeFees failed", err);
+  }
+  return filled;
+}
+
+/**
  * Daily job: moves pending earnings to available once the ad run has ended
- * (or the ad was ended early), computing the owner's amount net of processor fees.
+ * (or the ad was ended early). The owner earns their share of the ad price less the card fee
+ * (2.9% of the share + 30¢, see store-earning.ts).
  * Voids earnings whose payment was refunded or deleted.
  */
 export async function releaseEarnings(now = new Date()) {
@@ -110,6 +147,7 @@ export async function releaseEarnings(now = new Date()) {
       ownerId:       ownerEarnings.ownerId,
       grossCents:    ownerEarnings.grossCents,
       shareRateBps:  ownerEarnings.shareRateBps,
+      adTitle:       ownerEarnings.adTitle,
       paymentId:     payments.id,
       provider:      payments.provider,
       providerTxId:  payments.providerTxId,
@@ -126,46 +164,37 @@ export async function releaseEarnings(now = new Date()) {
     ));
 
   let released = 0;
-  const failed: string[] = [];
-  const releasedByOwner = new Map<string, { cents: number; count: number }>();
+  const releasedByOwner = new Map<string, EarningLine[]>();
 
   for (const e of due) {
-    let fee = e.feeCents;
-    if (fee === null && e.provider === "stripe") {
+    // Stripe's actual fee, for our own books only (the owner's fee is the fixed formula below)
+    if (e.feeCents === null && e.provider === "stripe") {
       try {
-        fee = await fetchStripeFeeCents(e.providerTxId, e.paymentCents);
-        if (fee !== null) {
-          await db.update(payments).set({ feeCents: fee, updatedAt: now }).where(eq(payments.id, e.paymentId));
-        }
+        const fee = await fetchStripeFeeCents(e.providerTxId, e.paymentCents);
+        if (fee !== null) await db.update(payments).set({ feeCents: fee, updatedAt: now }).where(eq(payments.id, e.paymentId));
       } catch (err) {
         console.error(`[earnings] Stripe fee lookup failed for ${e.providerTxId}`, err);
       }
     }
-    // Fee still unknown → leave pending and retry on the next run
-    if (fee === null) {
-      failed.push(e.id);
-      continue;
-    }
 
-    // The payment's fee covers the sales tax too; the store shares only the fee on the ad price
-    const ownerFee = e.paymentCents > e.grossCents && e.paymentCents > 0
-      ? Math.round((fee * e.grossCents) / e.paymentCents)
-      : fee;
-    const amountCents = Math.round(((e.grossCents - ownerFee) * e.shareRateBps) / 10000);
-    await db
+    const earned = storeEarning(e.grossCents, e.shareRateBps);
+    const [updated] = await db
       .update(ownerEarnings)
-      .set({ status: "available", feeCents: ownerFee, amountCents, releasedAt: now, updatedAt: now })
-      .where(and(eq(ownerEarnings.id, e.id), eq(ownerEarnings.status, "pending")));
+      .set({ status: "available", feeCents: earned.feeCents, amountCents: earned.netCents, releasedAt: now, updatedAt: now })
+      .where(and(eq(ownerEarnings.id, e.id), eq(ownerEarnings.status, "pending")))
+      .returning({ id: ownerEarnings.id });
+    if (!updated) continue;
     released++;
-    const t = releasedByOwner.get(e.ownerId) ?? { cents: 0, count: 0 };
-    releasedByOwner.set(e.ownerId, { cents: t.cents + amountCents, count: t.count + 1 });
+    const lines = releasedByOwner.get(e.ownerId) ?? [];
+    lines.push({ adTitle: e.adTitle, adPriceCents: e.grossCents, shareRateBps: e.shareRateBps, ...earned });
+    releasedByOwner.set(e.ownerId, lines);
   }
 
-  for (const [ownerId, t] of releasedByOwner) {
-    await notifyEarningsAvailable(ownerId, t.cents, t.count);
+  for (const [ownerId, lines] of releasedByOwner) {
+    await notifyEarningsAvailable(ownerId, lines);
   }
 
-  return { released, voided: voided.length, retryLater: failed.length };
+  return { released, voided: voided.length };
 }
 
 /** Available balance per owner, for the admin Payouts screen. */

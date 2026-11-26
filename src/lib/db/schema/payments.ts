@@ -29,6 +29,12 @@ export const payments = pgTable("payments", {
   taxRateBps: integer("tax_rate_bps"),
   taxLocationCode: text("tax_location_code"),
   taxAreaName: text("tax_area_name"),
+  // Store owner paid outside the system (cash, Zelle, check), e.g. before their store had a store-owner
+  // account. Admin-recorded on the Revenue page; counts as the store's share of this ad in CB's numbers.
+  offlineStorePaidCents: integer("offline_store_paid_cents"),
+  offlineStorePaidMethod: text("offline_store_paid_method"),   // "cash" | "zelle" | "check"
+  offlineStorePaidOn: text("offline_store_paid_on"),           // YYYY-MM-DD
+  offlineStorePaidNote: text("offline_store_paid_note"),
   refundedAt: timestamp("refunded_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

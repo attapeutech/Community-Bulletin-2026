@@ -3,7 +3,7 @@ import { db } from "@/lib/db/client";
 import { ads, locations } from "@/lib/db/schema";
 import { eq, and, lt, inArray } from "drizzle-orm";
 import { pushDisplayRefresh } from "@/lib/socket/notify";
-import { releaseEarnings } from "@/lib/earnings";
+import { releaseEarnings, fillStripeFees } from "@/lib/earnings";
 import { notifyAdsExpired, notifyAdsExpiringSoon, notifyLeadFollowUps, notifyTodaysAppointments } from "@/lib/notifications";
 import { stripeConnectEnabled } from "@/lib/stripe";
 import { runDirectDeposits, payoutDayOfMonth, PAYOUT_DAY } from "@/lib/direct-deposits";
@@ -28,9 +28,12 @@ export async function POST(req: NextRequest) {
 
   // Release store-owner earnings for finished runs
   const earnings = await releaseEarnings(now);
-  if (earnings.released || earnings.voided || earnings.retryLater) {
-    console.log(`[cron/expire-ads] Earnings: ${earnings.released} released, ${earnings.voided} voided, ${earnings.retryLater} retry later`);
+  if (earnings.released || earnings.voided) {
+    console.log(`[cron/expire-ads] Earnings: ${earnings.released} released, ${earnings.voided} voided`);
   }
+  // Stripe's actual fee on recent payments still missing it (CB's Revenue page)
+  const feesFilled = await fillStripeFees();
+  if (feesFilled) console.log(`[cron/expire-ads] Stripe fees saved for ${feesFilled} payments`);
 
   // Monthly direct deposits: from the 15th on, each daily run pays anyone eligible who hasn't been
   // paid this month (so a missed day catches up; nobody is paid twice)

@@ -1,4 +1,4 @@
-# Handoff: 2026-10-22 (updated 2026-11-17)
+# Handoff: 2026-10-22 (updated 2026-11-26)
 
 ## Where things stand
 
@@ -32,6 +32,32 @@
   - `LeaveFrame` (`src/components/layout/LeaveFrame.tsx`, in the root layout) moves any non-display page out of a frame
   - before this, tapping Home inside the Live Ads full-screen view loaded the site inside the iframe, where Stripe checkout can't open
 - **This computer** (the second dev machine) was synced to `main`. Its `.env.local` now uses `sslmode=verify-full`, but it still lacks the Google sign-in variables.
+
+## 2026-11-26 summary
+
+- **Sales tax on ads** (PR #174, migration `0033_sales_tax` applied). Washington taxes advertising as a retail sale since Oct 1, 2025 (ESSB 5814; the 2026 rollback, ESSB 6346, kept advertising taxable). Ads are taxed where they're shown, so each store has the rate for its own address.
+  - Rates come from the **WA DOR address rate service** (free, no key: `webgis.dor.wa.gov/webapi/addressrates.aspx`), in `src/lib/sales-tax.ts`. Saved on `locations` (`tax_rate_bps`, `tax_location_code`, `tax_area_name`, `tax_rate_period`, `tax_rate_checked_at`). New stores and address changes look up their rate automatically (`src/lib/store-tax.ts`).
+  - Current stores (Q4 2026): Fast Eddies, Marathon, New Berry = **Unincorporated Snohomish County (3131), 10.5%**, despite Everett/Lynnwood mailing addresses; SAS Food Mart = **Everett (3105), 9.9%**; M&M Mart = **Marysville (3111), 9.4%**.
+  - All three Stripe checkouts add a Stripe Tax Rate per line (`src/lib/stripe-tax.ts`). Tax Rates are found or made by `metadata.cb_key` in whichever Stripe mode the keys are for, so nothing Stripe-specific is saved (local test keys share the production database).
+  - `payments.tax_cents` (inside `amount_cents`) plus the rate, code and area at payment time. **Store shares and Total Revenue use `amount_cents - tax_cents`.**
+  - Prices read "$100 + tax"; the review, payment, pay-link and proposal pages show tax and total; the receipt email says how much tax is included.
+  - **Admin → Sales Tax:** store rates (Refresh all from WA DOR; Edit by hand) and tax collected per quarter by county → taxing area with DOR location codes, for the excise tax return. **Refresh rates each quarter** (Jan, Apr, Jul, Oct).
+  - Tested in Stripe test mode: M&M Mart ad charged $109.40 with $9.40 tax, recorded with area and code. Test ad removed.
+- **Earnings breakdowns** (PR #175, migration `0034_offline_store_paid` applied).
+  - **Store owners:** their share of the ad price (before tax) less a **card fee of 2.9% of the share + 30¢** (`STORE_CARD_FEE_BPS`, `STORE_CARD_FEE_FIXED_CENTS` in `src/types/index.ts`; `storeEarning()` in `src/lib/store-earning.ts`). $100 at 50% = $50.00 − $1.75 = **$48.25**; at 25% = $25.00 − $1.03 = $23.97. Release no longer waits for Stripe's fee. Shown per ad on Earnings, in a **new earnings-available email** (`sendEarningsAvailableEmail`; before, it was only a bell notice), and as a "What you earn from one $100 ad" card on /demo. Earnings released before this keep their old amounts.
+  - **Community Bulletin (admin only):** our part + tax collected − our part of Stripe's real fee (Stripe's total − the store's card fee; Stripe's 30¢ is charged once) − tax owed to WA = **CB keeps** (`cbEarning()` in `src/lib/cb-earning.ts`, rows in `src/lib/cb-revenue.ts`). Example: $50.00 + $9.40 − $1.72 − $9.40 = $48.28; it reconciles to Stripe's deposit ($109.40 − $3.47 = $48.25 store + $9.40 tax + $48.28 CB).
+  - **Admin → Revenue** (new): per month or all time, totals, per-ad store and CB breakdowns, and a "How to read this page" note for partners. A CB box on the admin Earnings view; a **CB Keeps** card on the Admin Panel.
+  - Stripe's real fee is saved when a payment is recorded (`fillStripeFees`), and the daily cron fills any missing ones. Until then rows show "est." (2.9% + 30¢).
+  - **Record cash payment** on Revenue rows with no system share (`payments.offline_store_paid_*`): for store owners paid in cash/Zelle/check outside the system, e.g. Fast Eddies' owner for the Cemitas ad. It counts as the store's share; CB pays the whole Stripe fee on it.
+  - Not included yet: Stripe Connect payout costs (0.25% + 25¢ per payout, $2 per active owner per month).
+- **Research shared with the partner** (no code): WA sales tax for Everett and Marysville, Stripe Connect benefits and fees, ACH Direct Debit (0.8%, $5 cap).
+- **Still open**
+  - **Stripe EIN:** the 2026-10-28 note says Stripe pauses payouts to our bank on **2026-11-27** without the tax ID. Check the Stripe Dashboard.
+  - **Back sales tax:** ad sales from Oct 1, 2025 until today charged no tax. Ask a CPA, and about DOR's penalty-waiver program for the newly taxable services.
+  - **Store ownership:** Fast Eddies, New Berry, SAS Food Mart and M&M Mart are under admin accounts, so they create no store share. Move each to its owner's store-owner account with the right share, or keep using Record cash payment.
+  - **ACH bank payments:** waiting on the partner's decision (add `us_bank_account` to the three checkouts, a processing state, `async_payment_failed`, enable in Stripe).
+  - Possibly turn off Klarna in Stripe (it appeared on the Sandbox checkout via Link).
+- **This computer:** synced to `main` (`a171e8a`), merged branches deleted, dev server stopped. Neon is through **`0034`**.
 
 ## 2026-11-17 summary
 

@@ -5,17 +5,18 @@ import { eq, desc, sql, inArray } from "drizzle-orm";
 import PayoutsClient, { type OwnerBalance, type PayoutRow } from "./PayoutsClient";
 import { stripeConnectEnabled, stripeTestMode } from "@/lib/stripe";
 import { lastDirectDepositRun } from "@/lib/direct-deposits";
+import { STORE_CARD_FEE_BPS, STORE_CARD_FEE_FIXED_CENTS } from "@/types";
 
 export default async function AdminPayoutsPage() {
   await requireAdmin();
 
-  // Per-owner totals by status (amounts for pending rows are estimates before fees)
+  // Per-owner totals by status (pending rows: what they'll earn, share less 2.9% + 30¢; see store-earning.ts)
   const totals = await db
     .select({
       ownerId: ownerEarnings.ownerId,
       availableCents: sql<number>`coalesce(sum(${ownerEarnings.amountCents}) filter (where ${ownerEarnings.status} = 'available'), 0)::int`,
       availableCount: sql<number>`(count(*) filter (where ${ownerEarnings.status} = 'available'))::int`,
-      pendingCents:   sql<number>`coalesce(sum(${ownerEarnings.grossCents} * ${ownerEarnings.shareRateBps} / 10000) filter (where ${ownerEarnings.status} = 'pending'), 0)::int`,
+      pendingCents:   sql<number>`coalesce(sum(greatest(0, round(${ownerEarnings.grossCents} * ${ownerEarnings.shareRateBps} / 10000.0) * (1 - ${STORE_CARD_FEE_BPS} / 10000.0) - ${STORE_CARD_FEE_FIXED_CENTS})) filter (where ${ownerEarnings.status} = 'pending'), 0)::int`,
       pendingCount:   sql<number>`(count(*) filter (where ${ownerEarnings.status} = 'pending'))::int`,
     })
     .from(ownerEarnings)

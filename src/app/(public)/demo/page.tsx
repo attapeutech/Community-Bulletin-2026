@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./demo.css";
+import { storeEarning } from "@/lib/store-earning";
+import { AD_PRICE_CENTS, SHARE_OWN_EQUIPMENT_BPS, SHARE_WE_SUPPLY_BPS } from "@/types";
 
 export const metadata: Metadata = {
   title: { absolute: "Community Bulletin — Store Partner Opportunity" },
@@ -163,6 +165,7 @@ export default function DemoPage() {
                 <div className="d-rev-card-amt">~$1,000<span className="d-rev-card-mo">/mo</span></div>
                 <div className="d-rev-card-desc">25% share after card fees · 40 active ads at $100 per 4 weeks · about $12,000/year</div>
               </div>
+              <PerAdExample />
             </div>
             <div className="d-rev-detail">
               <p>A typical ad costs <strong style={{color:"#fff"}}>$100 per 4 weeks</strong> — a fraction of what print media or social advertising costs for comparable local reach. Each location targets <strong style={{color:"#fff"}}>40 active ads</strong>, generating about $4,000 every 4 weeks in ad revenue per screen.</p>
@@ -175,7 +178,7 @@ export default function DemoPage() {
             </div>
           </div>
           <p style={{marginTop:"32px",fontSize:"12px",color:"rgba(255,255,255,.6)",lineHeight:"1.6"}}>
-            <strong style={{color:"rgba(255,255,255,.8)"}}>Disclaimer:</strong> Revenue figures are projections based on full capacity (40 active ads at $100 per 4 weeks, 13 runs a year, after card processing fees of about 3%) — not a guarantee. Actual results will vary based on advertiser demand at your location.
+            <strong style={{color:"rgba(255,255,255,.8)"}}>Disclaimer:</strong> Revenue figures are projections based on full capacity (40 active ads at $100 per 4 weeks, 13 runs a year, less a card fee of 2.9% of your share + 30¢ per ad) — not a guarantee. Actual results will vary based on advertiser demand at your location.
           </p>
         </div>
       </section>
@@ -328,5 +331,37 @@ function PushPin() {
         <ellipse cx="9.6" cy="5.4" rx="1.9" ry="1.2" fill="#fff" opacity="0.65" />
       </g>
     </svg>
+  );
+}
+
+/** What a store earns from one $100 ad, both share options: share − card fee (2.9% of the share + 30¢) */
+function PerAdExample() {
+  const m = (c: number) => `$${(c / 100).toFixed(2)}`;
+  const rows = [
+    { label: "Your own screen (50%)", bps: SHARE_OWN_EQUIPMENT_BPS },
+    { label: "We supply it (25%)", bps: SHARE_WE_SUPPLY_BPS },
+  ];
+  return (
+    <div className="d-rev-card" style={{ fontVariantNumeric: "tabular-nums" }}>
+      <div className="d-rev-card-lbl">What you earn from one ${AD_PRICE_CENTS / 100} ad</div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: "14px 24px", marginTop: 10 }}>
+        {rows.map((r) => {
+          const e = storeEarning(AD_PRICE_CENTS, r.bps);
+          return (
+            <div key={r.bps} style={{ fontSize: 13, color: "rgba(255,255,255,.75)", lineHeight: 1.7 }}>
+              <div style={{ fontWeight: 600, color: "#fff", marginBottom: 2 }}>{r.label}</div>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><span>{r.bps / 100}% of ${AD_PRICE_CENTS / 100}</span><span>{m(e.shareCents)}</span></div>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 10, color: "rgba(255,255,255,.55)" }}>
+                <span>− Card fee</span><span style={{ whiteSpace: "nowrap" }}>−{m(e.feeCents)}</span>
+              </div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,.45)", lineHeight: 1.3, paddingLeft: 10 }}>{m(e.percentFeeCents)} (2.9%) + {m(e.fixedFeeCents)}</div>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 10, borderTop: "1px solid rgba(255,255,255,.18)", marginTop: 3, paddingTop: 3, fontWeight: 700, color: "#fff" }}>
+                <span>You earn</span><span style={{ color: "#4ADE80" }}>{m(e.netCents)}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

@@ -453,3 +453,37 @@ export async function sendProposalEmail({ to, replyTo, subject, message, busines
     `),
   });
 }
+
+// ─── Store owner earnings ────────────────────────────────────────────────────
+
+export type EarningEmailLine = {
+  adTitle: string; adPriceCents: number; shareRateBps: number;
+  shareCents: number; percentFeeCents: number; fixedFeeCents: number; netCents: number;
+};
+
+/** Earnings from finished ad runs are available: each ad's share, less the card fee (2.9% + 30¢), and the total */
+export async function sendEarningsAvailableEmail({ to, userName, lines }: { to: string; userName: string; lines: EarningEmailLine[] }) {
+  const m = (c: number) => `$${(c / 100).toFixed(2)}`;
+  const total = lines.reduce((sum, l) => sum + l.netCents, 0);
+  const cell = "padding:4px 0;font-size:13px;color:#1A3A5C";
+  const blocks = lines.map((l) => `
+    <div style="border:1px solid #e2eaf2;border-radius:8px;padding:12px 16px;margin:0 0 10px">
+      <div style="font-weight:600;color:#1A3A5C;font-size:14px;margin-bottom:6px">${escapeHtml(l.adTitle)}</div>
+      <table style="border-collapse:collapse;width:100%">
+        <tr><td style="${cell}">Your ${l.shareRateBps / 100}% share of the ${m(l.adPriceCents)} ad</td><td style="${cell};text-align:right">${m(l.shareCents)}</td></tr>
+        <tr><td style="${cell};color:#4A6B82">− Card processing fee <span style="font-size:12px">(${m(l.percentFeeCents)} (2.9%) + ${m(l.fixedFeeCents)})</span></td><td style="${cell};text-align:right;color:#4A6B82">−${m(l.percentFeeCents + l.fixedFeeCents)}</td></tr>
+        <tr><td style="${cell};font-weight:700;border-top:1px solid #e2eaf2;padding-top:6px">You earn</td><td style="${cell};font-weight:700;text-align:right;border-top:1px solid #e2eaf2;padding-top:6px;color:#15803D">${m(l.netCents)}</td></tr>
+      </table>
+    </div>`).join("");
+  return sendEmail({
+    to,
+    subject: `${m(total)} in earnings now available`,
+    html: emailWrapper(`
+      <h2 style="margin:0 0 8px;color:#15803D;font-size:20px">${m(total)} in earnings available</h2>
+      <p style="color:#4A6B82;font-size:14px;margin:0 0 20px">Hi ${escapeHtml(userName)}, ${lines.length === 1 ? "an ad run" : `${lines.length} ad runs`} at your store finished. Here&rsquo;s what you earned. It will be included in your next monthly payout.</p>
+      ${blocks}
+      ${lines.length > 1 ? `<div style="text-align:right;font-size:15px;font-weight:700;color:#1A3A5C;margin:4px 0 16px">Total: <span style="color:#15803D">${m(total)}</span></div>` : ""}
+      ${primaryButton(`${APP_URL}/dashboard/store-owner/earnings`, "See your earnings")}
+    `),
+  });
+}

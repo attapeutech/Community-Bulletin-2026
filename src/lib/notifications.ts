@@ -4,6 +4,9 @@ import { and, eq, gt, gte, inArray, isNull, lt, lte, notExists, sql, type SQL } 
 import { notifyUserSocket } from "@/lib/socket/server";
 import { LEADS_TZ, leadToday } from "@/lib/leads";
 import { appointmentType } from "@/lib/appointments";
+import { sendEarningsAvailableEmail, type EarningEmailLine } from "@/lib/email/templates";
+
+export type EarningLine = EarningEmailLine;
 
 type NotificationType = typeof notifications.$inferInsert["type"];
 
@@ -185,13 +188,23 @@ export async function notifyAdsExpiringSoon(now = new Date()) {
   return rows.length;
 }
 
-export async function notifyEarningsAvailable(ownerId: string, amountCents: number, count: number) {
+/** Earnings released: a bell notice, and an email with each ad's breakdown (share − card fee = earned) */
+export async function notifyEarningsAvailable(ownerId: string, lines: EarningLine[]) {
+  if (!lines.length) return;
+  const amountCents = lines.reduce((sum, l) => sum + l.netCents, 0);
+  const count = lines.length;
   await notifyUser(ownerId, {
     type: "earnings_available",
     subject: `${money(amountCents)} in earnings now available`,
-    body: `From ${count} finished ad run${count !== 1 ? "s" : ""}. It will be included in your next monthly payout.`,
+    body: `From ${count} finished ad run${count !== 1 ? "s" : ""}, after card fees. It will be included in your next monthly payout.`,
     link: "/dashboard/store-owner/earnings",
   });
+  try {
+    const [owner] = await db.select({ email: users.email, name: users.name }).from(users).where(eq(users.id, ownerId)).limit(1);
+    if (owner?.email) await sendEarningsAvailableEmail({ to: owner.email, userName: owner.name, lines });
+  } catch (err) {
+    console.error("[notifications] earnings email failed", ownerId, err);
+  }
 }
 
 export async function notifyPayoutSent(ownerId: string, amountCents: number, method: "zelle" | "check" | "stripe") {

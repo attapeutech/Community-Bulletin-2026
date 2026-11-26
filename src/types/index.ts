@@ -79,4 +79,8 @@ export const SHARE_OWN_EQUIPMENT_BPS = 5000;     // 50%
 export const SHARE_WE_SUPPLY_BPS = 2500;         // 25%
 export const DEFAULT_SHARE_RATE_BPS = SHARE_OWN_EQUIPMENT_BPS; // stores owners create themselves (admins confirm)
 export const MAX_SHARE_RATE_BPS = 9000;          // 90%
+// Card fee taken from the store owner's share (since 2026-11-26): 2.9% of their share + 30¢ per ad.
+// E.g. a $50.00 share: $1.45 + $0.30 = $1.75, so they earn $48.25. Community Bulletin pays the rest of Stripe's fee.
+export const STORE_CARD_FEE_BPS = 290;           // 2.9%
+export const STORE_CARD_FEE_FIXED_CENTS = 30;    // $0.30
 export const MIN_PAYOUT_CENTS = 2500; // $25 — smaller owner balances roll over to next month

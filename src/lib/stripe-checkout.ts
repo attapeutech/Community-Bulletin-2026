@@ -3,7 +3,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { adOrders, ads, payments, users, locations, cities, states, postalCodes } from "@/lib/db/schema";
 import { sendAdSubmittedEmail, sendPaymentReceiptEmail, sendAdReviewNotificationEmail } from "@/lib/email/templates";
-import { recordEarning } from "@/lib/earnings";
+import { fillStripeFees, recordEarning } from "@/lib/earnings";
 import { notifyPaymentRecorded } from "@/lib/notifications";
 import { completeProposalPayment, proposalForAd } from "@/lib/proposal-payments";
 import { formatLocationLabel } from "@/lib/location-label";
@@ -72,6 +72,7 @@ export async function recordPaidCheckout(checkoutSession: Stripe.Checkout.Sessio
 
   await db.update(ads).set({ paymentStatus: "paid", updatedAt: now }).where(eq(ads.id, adId));
   if (fromProposal) await completeProposalPayment(adId, amountCents);
+  await fillStripeFees(paymentIntentId);   // Stripe's fee, for CB's Revenue page (the daily job retries)
 
   // Confirmation emails
   const rows = await adEmailRows([adId]);
@@ -154,6 +155,7 @@ async function recordPaidOrder(checkoutSession: Stripe.Checkout.Session, orderId
   }
   await db.update(ads).set({ paymentStatus: "paid", updatedAt: now }).where(inArray(ads.id, toRecord.map((a) => a.id)));
   await db.update(adOrders).set({ paidAt: now }).where(eq(adOrders.id, orderId));
+  await fillStripeFees(paymentIntentId);   // split across the stores' rows by amount
 
   // One receipt and one "submitted" email for the whole order; one review email listing the stores
   const rows = await adEmailRows(toRecord.map((a) => a.id));

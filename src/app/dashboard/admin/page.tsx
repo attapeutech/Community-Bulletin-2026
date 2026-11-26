@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import { ads, users, locations, payments } from "@/lib/db/schema";
 import { eq, and, desc, count, sum, sql } from "drizzle-orm";
+import { loadCbRevenue, sumCbRevenue } from "@/lib/cb-revenue";
 import { listedAd } from "@/lib/ad-filters";
 import AdminPanelClient from "./AdminPanelClient";
 
@@ -45,6 +46,8 @@ export default async function AdminDashboard() {
     totalUsers: totalUsersRow[0].count,
     totalLocations: totalLocationsRow[0].count,
     totalRevenueCents: Number(revenueRow[0].total ?? 0),
+    // What CB keeps after store shares, Stripe and sales tax (Revenue page)
+    cbKeepsCents: sumCbRevenue(await loadCbRevenue()).keepsCents,
     totalViews: Number(viewsRow[0].total ?? 0),
     totalWebsiteClicks: Number(clicksRow[0].total ?? 0),
   };

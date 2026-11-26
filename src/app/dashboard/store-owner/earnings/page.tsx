@@ -1,4 +1,7 @@
 import { requireStoreOwner } from "@/lib/auth/session";
+import { storeEarning } from "@/lib/store-earning";
+import { loadCbRevenue } from "@/lib/cb-revenue";
+import { CbBreakdown } from "@/components/admin/CbBreakdown";
 import { db } from "@/lib/db/client";
 import { locations, users, ownerEarnings, payouts } from "@/lib/db/schema";
 import { eq, desc, ne, and } from "drizzle-orm";
@@ -45,6 +48,7 @@ export default async function EarningsPage() {
   const rows = await db
     .select({
       id:           ownerEarnings.id,
+      paymentId:    ownerEarnings.paymentId,
       adTitle:      ownerEarnings.adTitle,
       grossCents:   ownerEarnings.grossCents,
       feeCents:     ownerEarnings.feeCents,
@@ -62,6 +66,9 @@ export default async function EarningsPage() {
     .innerJoin(users, eq(ownerEarnings.ownerId, users.id))
     .where(whereClause)
     .orderBy(desc(ownerEarnings.createdAt));
+
+  // Admins also see Community Bulletin's side of each ad (never shown to store owners)
+  const cbByPayment = isAdmin ? new Map((await loadCbRevenue()).map((r) => [r.paymentId, r])) : null;
 
   const payoutRows = await db
     .select({
@@ -96,8 +103,8 @@ export default async function EarningsPage() {
   // Zelle/check is the fallback only when direct deposit is off, or as an admin-approved exception
   const showManualDetails = !connectEnabled || !!me?.manualPayoutAllowed;
 
-  // Pending amounts are estimates until the run ends and the processor fee is known
-  const estimate = (r: typeof rows[number]) => Math.round((r.grossCents * r.shareRateBps) / 10000);
+  // Pending: what they'll earn when the run ends (share less 2.9% + 30¢); available/paid: the amount released
+  const estimate = (r: typeof rows[number]) => storeEarning(r.grossCents, r.shareRateBps).netCents;
   const pending   = rows.filter(r => r.status === "pending");
   const available = rows.filter(r => r.status === "available");
   const pendingCents   = pending.reduce((s, r) => s + estimate(r), 0);
@@ -141,7 +148,8 @@ export default async function EarningsPage() {
       <div style={{ background: "var(--cb-surface-2)", border: "1px solid var(--cb-line)", borderRadius: 12, padding: "14px 18px", fontSize: 13, color: "var(--cb-ink-2)", marginBottom: 24, lineHeight: 1.6 }}>
         <strong style={{ color: "var(--cb-ink)" }}>How earnings work:</strong> when an advertiser pays for an ad at your store, it shows here as
         <strong> pending</strong>. Once the ad&apos;s run ends, it becomes <strong>available</strong>: your share
-        (the percentage agreed for each location, shown on every ad below) of the ad price after card processing fees. Available earnings are paid out monthly.
+        (the percentage agreed for each location) of the ad price, less a card processing fee of 2.9% of your share + 30¢.
+        For example, a $100 ad at 50%: $50.00 − $1.75 ($1.45 + $0.30) = <strong>$48.25</strong>. Sales tax the advertiser pays isn&apos;t part of the ad price. Available earnings are paid out monthly.
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -211,18 +219,17 @@ export default async function EarningsPage() {
                         {r.status === "pending" && !r.availableAt && " · awaiting ad approval"}
                       </div>
                     </div>
-                    <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <div style={{ fontSize: 11, color: "var(--cb-ink-2)", marginBottom: 2 }}>
-                        Ad price: <span style={{ fontWeight: 600, color: "var(--cb-ink)" }}>{formatCents(r.grossCents, r.currency)}</span>
-                        {r.feeCents !== null && <> · fee {formatCents(r.feeCents, r.currency)}</>}
-                      </div>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: "var(--cb-green)" }}>
-                        {r.amountCents !== null ? formatCents(r.amountCents, r.currency) : `≈ ${formatCents(estimate(r), r.currency)}`}
-                      </div>
-                      <div style={{ fontSize: 10, color: "var(--cb-ink-3)" }}>
-                        {r.amountCents !== null ? `your ${rate} share` : `your ${rate} share, before fees`}
-                      </div>
-                    </div>
+                    <EarningBreakdown row={r} rate={rate} />
+                    {(() => {
+                      const cb = r.paymentId ? cbByPayment?.get(r.paymentId) : undefined;
+                      if (!cb) return null;
+                      return (
+                        <div style={{ flex: "0 1 280px", minWidth: 230, background: "#F4F9F5", border: "1px solid #CFE6D6", borderRadius: 8, padding: "8px 10px" }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#15803D", marginBottom: 4 }}>Community Bulletin · admin only</div>
+                          <CbBreakdown ad={cb} cb={cb.cb} />
+                        </div>
+                      );
+                    })()}
                   </div>
                 );
               })}
@@ -261,5 +268,42 @@ function AdminPayoutMinimumNote() {
         lowered, raised or removed.
       </p>
     </details>
+  );
+}
+
+/**
+ * One ad's earnings, as the owner would work it out:
+ *   $50.00  Your 50% share of the $100.00 ad
+ * − $1.75   Card fee  $1.45 (2.9%) + $0.30
+ *   $48.25  You earn
+ * Earnings released before this formula (Nov 26, 2026) show their recorded fee as one amount.
+ */
+function EarningBreakdown({ row: r, rate }: {
+  row: { grossCents: number; shareRateBps: number; amountCents: number | null; status: string; currency: string };
+  rate: string;
+}) {
+  const e = storeEarning(r.grossCents, r.shareRateBps);
+  const released = r.amountCents !== null;
+  const net = released ? r.amountCents! : e.netCents;
+  const fee = e.shareCents - net;
+  const split = !released || r.amountCents === e.netCents;   // the 2.9% + 30¢ formula applies
+  const m = (c: number) => formatCents(c, r.currency);
+  const line = { display: "flex", justifyContent: "space-between", gap: 14, fontSize: 12, color: "var(--cb-ink-2)" } as const;
+  return (
+    <div style={{ flex: "0 1 280px", minWidth: 220, fontVariantNumeric: "tabular-nums" }}>
+      <div style={line}>
+        <span>Your {rate} share of the {m(r.grossCents)} ad</span>
+        <span style={{ color: "var(--cb-ink)", fontWeight: 600 }}>{m(e.shareCents)}</span>
+      </div>
+      <div style={line}>
+        <span>− Card fee</span>
+        <span style={{ whiteSpace: "nowrap" }}>−{m(fee)}</span>
+      </div>
+      {split && <div style={{ fontSize: 11, color: "var(--cb-ink-3)", paddingLeft: 10 }}>{m(e.percentFeeCents)} (2.9%) + {m(e.fixedFeeCents)}</div>}
+      <div style={{ ...line, borderTop: "1px solid var(--cb-line)", marginTop: 4, paddingTop: 4, fontSize: 13 }}>
+        <span style={{ fontWeight: 700, color: "var(--cb-ink)" }}>{r.status === "void" ? "Not earned (refunded)" : released ? "You earn" : "You'll earn"}</span>
+        <span style={{ fontSize: 15, fontWeight: 700, color: r.status === "void" ? "var(--cb-ink-3)" : "var(--cb-green)", textDecoration: r.status === "void" ? "line-through" : "none" }}>{m(net)}</span>
+      </div>
+    </div>
   );
 }

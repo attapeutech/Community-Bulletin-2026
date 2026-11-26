@@ -239,6 +239,13 @@
       "when": 1795715191770,
       "tag": "0033_sales_tax",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1795723806223,
+      "tag": "0034_offline_store_paid",
+      "breakpoints": true
     }
   ]
 }

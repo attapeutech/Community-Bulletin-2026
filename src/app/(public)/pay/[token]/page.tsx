@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CheckCircle2, MapPin, Users } from "lucide-react";
 import { loadPayLinkAd, payLinkBlocked, readPayLinkToken } from "@/lib/pay-links";
 import { formatPrice } from "@/lib/pricing";
+import { taxSummary } from "@/lib/sales-tax";
 import { stripe } from "@/lib/stripe";
 import { recordPaidCheckout } from "@/lib/stripe-checkout";
 import PayButton from "./PayButton";
@@ -42,6 +43,7 @@ export default async function PayLinkPage({ params, searchParams }: { params: Pr
   const paid = ad.paymentStatus === "paid";
   const blocked = paid ? null : payLinkBlocked(ad);
   const price = formatPrice(ad.price);
+  const tax = taxSummary(ad.price, ad.taxRateBps, ad.taxAreaName);
 
   return (
     <Shell>
@@ -67,6 +69,7 @@ export default async function PayLinkPage({ params, searchParams }: { params: Pr
             <span className="font-serif text-[34px] font-bold">{price}</span>
             <span className="text-[#4A6B82] text-[14px]">for 4 weeks</span>
           </div>
+          {tax.note && <div className="text-[13px] text-[#4A6B82] -mt-0.5 mb-2">{tax.note} · total <b className="text-[#1A3A5C]">{tax.totalLabel}</b></div>}
           <ul className="text-[13px] text-[#4A6B82] mb-5 flex flex-col gap-1 list-none p-0 m-0">
             <li>✓ Shown all day, every day, on the store&apos;s screen</li>
             <li>✓ Goes live as soon as it&apos;s approved</li>
@@ -84,7 +87,7 @@ export default async function PayLinkPage({ params, searchParams }: { params: Pr
           ) : blocked ? (
             <div className="rounded-lg bg-amber-50 border border-amber-200 text-amber-800 p-4 text-[14px]">{blocked}</div>
           ) : (
-            <PayButton token={token} price={price} email={ad.userEmail} />
+            <PayButton token={token} price={tax.totalLabel ?? price} email={ad.userEmail} />
           )}
         </div>
       </div>

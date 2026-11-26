@@ -232,6 +232,13 @@
       "when": 1794971464821,
       "tag": "0032_ad_show_qr",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1795715191770,
+      "tag": "0033_sales_tax",
+      "breakpoints": true
     }
   ]
 }

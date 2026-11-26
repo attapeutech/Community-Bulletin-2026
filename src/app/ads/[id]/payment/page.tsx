@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { paypalEnabled } from "@/lib/payment-options";
+import { formatTaxRate, taxCentsFor } from "@/lib/sales-tax";
 
 const ACCENT = "#1A3A5C";
 const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? "";
@@ -15,10 +16,10 @@ type AdSummary = {
   imageUrl: string;
   status: string;
   paymentStatus: string;
-  location: { storeName: string; slug: string; pricePerRunCents: number };
+  location: { storeName: string; slug: string; pricePerRunCents: number; taxRateBps?: number | null; taxAreaName?: string | null };
   fromProposal?: boolean;   // a sales proposal's ad: live when paid, no review
   // Multi-store order: every store in it (paid in one checkout)
-  order?: { adId: string; storeName: string; storeNumber: string | null; pricePerRunCents: number; paymentStatus: string }[] | null;
+  order?: { adId: string; storeName: string; storeNumber: string | null; pricePerRunCents: number; taxRateBps?: number | null; paymentStatus: string }[] | null;
 };
 
 /** What this checkout charges: each unpaid store in the order, or just this ad's store */
@@ -26,9 +27,9 @@ function payLines(ad: AdSummary) {
   if (ad.order && ad.order.length > 1) {
     return ad.order
       .filter((o) => o.paymentStatus === "unpaid")
-      .map((o) => ({ key: o.adId, store: o.storeName + (o.storeNumber ? " #" + o.storeNumber.replace(/^#/, "") : ""), cents: o.pricePerRunCents }));
+      .map((o) => ({ key: o.adId, store: o.storeName + (o.storeNumber ? " #" + o.storeNumber.replace(/^#/, "") : ""), cents: o.pricePerRunCents, tax: taxCentsFor(o.pricePerRunCents, o.taxRateBps) }));
   }
-  return [{ key: ad.id, store: ad.location.storeName, cents: ad.location.pricePerRunCents }];
+  return [{ key: ad.id, store: ad.location.storeName, cents: ad.location.pricePerRunCents, tax: taxCentsFor(ad.location.pricePerRunCents, ad.location.taxRateBps) }];
 }
 
 // ─── PayPal script loader ─────────────────────────────────────────────────────
@@ -209,7 +210,13 @@ export default function PaymentPage() {
 
   // ─── Payment form ─────────────────────────────────────────────────────────────
   const lines = payLines(ad);
-  const total = lines.reduce((sum, l) => sum + l.cents, 0);
+  // Ad price plus each store's sales tax: what Stripe will charge
+  const subtotal = lines.reduce((sum, l) => sum + l.cents, 0);
+  const tax = lines.reduce((sum, l) => sum + l.tax, 0);
+  const total = subtotal + tax;
+  const taxNote = lines.length === 1 && ad.location.taxRateBps
+    ? `${formatTaxRate(ad.location.taxRateBps)}${ad.location.taxAreaName ? ` · ${ad.location.taxAreaName}` : ""}`
+    : "each store's local rate";
   return (
     <div style={{ minHeight: "100vh", background: "#F4F7FB", display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 16px" }}>
       <div style={{ width: "100%", maxWidth: 560 }}>
@@ -240,16 +247,27 @@ export default function PaymentPage() {
             </div>
             <div style={{ fontWeight: 700, fontSize: 20, color: "#E8563A", flexShrink: 0 }}>${(total / 100).toFixed(2)}</div>
           </div>
-          {lines.length > 1 && (
+          {(lines.length > 1 || tax > 0) && (
             <div style={{ marginTop: 16, borderTop: "1px solid #E5EDF4", paddingTop: 12, display: "grid", gap: 6 }}>
-              {lines.map((l) => (
+              {lines.length > 1 ? lines.map((l) => (
                 <div key={l.key} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: ACCENT }}>
                   <span>📍 {l.store}</span>
                   <span style={{ fontWeight: 600 }}>${(l.cents / 100).toFixed(2)}</span>
                 </div>
-              ))}
+              )) : (
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: ACCENT }}>
+                  <span>Ad · 4 weeks</span>
+                  <span style={{ fontWeight: 600 }}>${(subtotal / 100).toFixed(2)}</span>
+                </div>
+              )}
+              {tax > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: ACCENT }}>
+                  <span>Sales tax <span style={{ color: "#4A6B82" }}>({taxNote})</span></span>
+                  <span style={{ fontWeight: 600 }}>${(tax / 100).toFixed(2)}</span>
+                </div>
+              )}
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, fontWeight: 700, color: ACCENT, borderTop: "1px solid #E5EDF4", paddingTop: 8, marginTop: 2 }}>
-                <span>Total · one payment</span>
+                <span>Total{lines.length > 1 ? " · one payment" : ""}</span>
                 <span>${(total / 100).toFixed(2)}</span>
               </div>
             </div>

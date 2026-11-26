@@ -5,11 +5,12 @@ import Link from "next/link";
 import { CheckCircle2, MapPin, Users } from "lucide-react";
 import { LOCAL_AD_RADIUS_MILES } from "@/types";
 
-export default function ProposalClient({ token, businessName, store, price, previewSrc, blocked, paid, email, signedIn, canSignIn }: {
+export default function ProposalClient({ token, businessName, store, price, tax, previewSrc, blocked, paid, email, signedIn, canSignIn }: {
   token: string;
   businessName: string;
   store: { name: string; place: string; shoppers: number | null };
   price: string;
+  tax: { note: string | null; totalLabel: string | null };   // the store's sales tax, added at checkout
   previewSrc: string | null;
   blocked: string | null;
   paid: boolean;
@@ -97,6 +98,7 @@ export default function ProposalClient({ token, businessName, store, price, prev
             <span className="font-serif text-[34px] font-bold">{price}</span>
             <span className="text-[#4A6B82] text-[14px]">for 4 weeks</span>
           </div>
+          {tax.note && <div className="text-[13px] text-[#4A6B82] -mt-0.5 mb-2">{tax.note} · total <b className="text-[#1A3A5C]">{tax.totalLabel}</b></div>}
           <ul className="text-[13px] text-[#4A6B82] mb-5 flex flex-col gap-1 list-none p-0 m-0">
             <li>✓ Starts as soon as you pay</li>
             <li>✓ Shown all day, every day, on the store&apos;s screen</li>
@@ -140,7 +142,7 @@ export default function ProposalClient({ token, businessName, store, price, prev
               </label>
               {error && <div className="rounded-md bg-red-50 border border-red-200 text-red-700 px-3 py-2 text-[13px]">{error}</div>}
               <button type="submit" disabled={busy} className="h-11 rounded-md bg-[#E8563A] text-white text-[15px] font-semibold disabled:opacity-60">
-                {busy ? "One moment…" : `Pay ${price}`}
+                {busy ? "One moment…" : `Pay ${tax.totalLabel ?? price}`}
               </button>
               <div className="text-[12px] text-[#4A6B82] text-center">Secure payment by Stripe on the next page. Card, Apple Pay or Google Pay.</div>
             </form>

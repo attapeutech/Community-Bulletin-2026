@@ -6,6 +6,7 @@ import { eq, and, ilike, or } from "drizzle-orm";
 import { getSession } from "@/lib/auth/session";
 import { MIN_PRICE_PER_RUN_CENTS, MAX_PRICE_PER_RUN_CENTS, MAX_SHARE_RATE_BPS, AD_PRICE_CENTS, DEFAULT_SHARE_RATE_BPS } from "@/types";
 import slugify from "slugify";
+import { refreshStoreTaxRate } from "@/lib/store-tax";
 import { nanoid } from "nanoid";
 
 // ─── GET /api/locations ───────────────────────────────────────────────────────
@@ -59,6 +60,8 @@ export async function GET(req: NextRequest) {
         storeName: locations.storeName,
         storeNumber: locations.storeNumber,
         pricePerRunCents: locations.pricePerRunCents,
+        taxRateBps: locations.taxRateBps,
+        taxAreaName: locations.taxAreaName,
         dailyCustomers: locations.dailyCustomers,
         addressLine1: locations.addressLine1,
         addressLine2: locations.addressLine2,
@@ -218,6 +221,9 @@ export async function POST(req: NextRequest) {
         body: `Store set up: ${location.storeName}${won ? " (marked Won)" : ""}`,
       });
     }
+
+    // Sales tax rate for the store's address (WA DOR); a failed lookup can be redone on Admin → Sales Tax
+    await refreshStoreTaxRate(location.id).catch((err) => console.error("[locations] tax lookup", err));
 
     return NextResponse.json({ success: true, data: location }, { status: 201 });
   } catch (error: any) {

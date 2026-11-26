@@ -4,6 +4,7 @@ import { db } from "@/lib/db/client";
 import { locations, states, cities, postalCodes, ads, payments, ownerEarnings } from "@/lib/db/schema";
 import { and, eq, count } from "drizzle-orm";
 import { getSession } from "@/lib/auth/session";
+import { refreshStoreTaxRate } from "@/lib/store-tax";
 import { MIN_PRICE_PER_RUN_CENTS, MAX_PRICE_PER_RUN_CENTS, MAX_SHARE_RATE_BPS } from "@/types";
 
 const updateSchema = z.object({
@@ -96,6 +97,14 @@ export async function PATCH(
       })
       .where(eq(locations.id, id))
       .returning();
+
+    // Address moved: look up the sales tax rate for the new one (WA DOR)
+    const moved =
+      (data.addressLine1 !== undefined && data.addressLine1 !== location.addressLine1) ||
+      (data.cityId !== undefined && data.cityId !== location.cityId) ||
+      (data.postalCodeId !== undefined && data.postalCodeId !== location.postalCodeId) ||
+      (data.stateId !== undefined && data.stateId !== location.stateId);
+    if (moved) await refreshStoreTaxRate(id).catch((err) => console.error("[locations] tax lookup", err));
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error: any) {

@@ -62,7 +62,7 @@ export default async function StoresPage() {
                     )}
                     <div>
                       <div className="font-bold text-[#1A3A5C]">{formatPrice(s.priceCents)}</div>
-                      <div className="text-xs text-[#5B7D96]">for 4 weeks</div>
+                      <div className="text-xs text-[#5B7D96]">+ tax · 4 weeks</div>
                     </div>
                   </div>
 

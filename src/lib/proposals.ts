@@ -32,7 +32,7 @@ export function defaultProposalMessage(o: { contactName: string | null; business
 
 Thanks for talking with us. We made an ad for ${o.businessName} to show on the Community Bulletin screen at ${o.storeName}.${reach}
 
-Click the button below to see it playing just as it would on the screen. If you like it, you can pay online in a minute, no sign-up needed: ${o.price} for 4 weeks, and it starts right away.
+Click the button below to see it playing just as it would on the screen. If you like it, you can pay online in a minute, no sign-up needed: ${o.price} plus sales tax for 4 weeks, and it starts right away.
 
 Want any changes? Just reply to this email.`;
 }

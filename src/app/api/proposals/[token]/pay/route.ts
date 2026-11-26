@@ -9,6 +9,7 @@ import { loadProposal, proposalBlocked } from "@/lib/proposal-access";
 import { proposalPath } from "@/lib/proposals";
 import { stripe } from "@/lib/stripe";
 import { SITE_URL } from "@/lib/site";
+import { stripeTaxRateIds } from "@/lib/stripe-tax";
 import { AD_DURATION_DAYS } from "@/types";
 
 const schema = z.object({
@@ -111,6 +112,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
           product_data: { name: `Community Bulletin Ad — ${p.businessName}`, description: `4-week display at ${p.storeName}` },
         },
         quantity: 1,
+        tax_rates: await stripeTaxRateIds(p),
       }],
       metadata: { adId, userId: user.id, locationSlug: p.storeSlug, proposalId: p.id },
       success_url: `${back}?session_id={CHECKOUT_SESSION_ID}`,
